@@ -21,6 +21,8 @@ New players have three kinds of help:
 
 First-time visitors are offered the tutorial when the game opens.
 
+**On phones** the game works best held sideways, and it asks you to turn the phone if it's upright (with a "Play upright anyway" option). Because the board is scaled down a lot on a phone, the space beside it is used for large buttons (Menu, Draw card / To battle / To end / Pass turn, Attack directly, Cancel), and in the tutorial for the coach panel, which repeats each step's button at full size. Page scrolling, zooming and long-press menus are switched off on the game screen, and the board stays clear of the notch.
+
 The short version:
 
 - Each player starts with 20 health and 6 cards from a 35-card deck. Reduce the other player to 0 health to win. Drawing from an empty deck loses.

@@ -68,18 +68,73 @@ function renderHint() {
   box.classList.toggle("collapsed", !note && !U.hintOpen);
 
   // Beside the board when there is room, otherwise over its bottom-left corner.
+  // The wrap is the screen minus any notch, so nothing lands under it.
   const sr = document.getElementById("stage").getBoundingClientRect();
-  const gutter = sr.left;
+  const wr = document.getElementById("stage-wrap").getBoundingClientRect();
+  const gutter = sr.left - wr.left;
   box.classList.toggle("narrow", gutter >= 120 && gutter < 200);
+  box.style.maxHeight = wr.height - 16 + "px";
   if (gutter >= 120) {
     const w = Math.min(gutter - 12, 300);
-    Object.assign(box.style, { left: (gutter - w) / 2 + "px", width: w + "px", top: "", bottom: "" });
-    box.style.top = Math.max(8, sr.top + sr.height * 0.5 - box.offsetHeight / 2) + "px";
+    Object.assign(box.style, { left: wr.left + (gutter - w) / 2 + "px", width: w + "px", top: "", bottom: "" });
+    box.style.top = Math.max(wr.top + 8, sr.top + sr.height * 0.5 - box.offsetHeight / 2) + "px";
   } else {
     const w = Math.max(180, Math.min(320, 500 * U.scale));
     Object.assign(box.style, { left: sr.left + 10 + "px", width: w + "px", top: "", bottom: innerHeight - sr.bottom + 72 * U.scale + "px" });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Phone controls: on a small screen the board's buttons are only a few pixels
+// tall, so the main ones are repeated at full size in the space beside the board.
+// Each one presses the matching board button, so the rules stay in one place.
+// ---------------------------------------------------------------------------
+function renderControls() {
+  const bar = document.getElementById("controls");
+  const sr = document.getElementById("stage").getBoundingClientRect();
+  const wr = document.getElementById("stage-wrap").getBoundingClientRect();
+  const gutter = wr.right - sr.right;
+  if (U.screen !== "game" || !S || !U.small || U.tutorial || gutter < 96) { bar.hidden = true; return; }
+  const board = document.getElementById("board");
+  const btn = (act, cls = "") => {
+    const b = board.querySelector(`[data-act="${act}"]`);
+    if (!b) return "";
+    return `<button type="button" class="btn ${cls}" data-press="${act}" ${b.disabled ? "disabled" : ""}>${esc(b.textContent.trim())}</button>`;
+  };
+  let h = btn("menu", "btn-small");
+  if (U.curtain) h += btn("curtain", "btn-primary");
+  else if (U.ended) h += btn("again", "btn-primary") + btn("tomenu");
+  else {
+    h += btn("face", "danger");
+    if (U.armed || U.selected || (S.pending?.kind === "target" && !S.pending.required && !S.players[S.pending.owner].isAI)) h += `<button type="button" class="btn" data-press="cancel">Cancel</button>`;
+    h += btn("phase", S.phase === PHASE.DRAW ? "btn-primary" : "");
+    if (S.phase !== PHASE.END) h += btn("pass");
+  }
+  bar.hidden = false;
+  bar.innerHTML = h;
+  const w = Math.min(gutter - 16, 190);
+  Object.assign(bar.style, { left: sr.right + (gutter - w) / 2 + "px", width: w + "px", top: wr.top + 8 + "px", height: wr.height - 16 + "px" });
+}
+document.getElementById("controls").addEventListener("click", e => {
+  const b = e.target.closest("[data-press]");
+  if (!b) return;
+  if (b.dataset.press === "cancel") cancelSomething();
+  else document.querySelector(`#board [data-act="${b.dataset.press}"]`)?.click();
+});
+
+// Held upright, a phone shows the board very small. Suggest turning it sideways,
+// but let people carry on if their screen won't rotate.
+let portraitOk = false;
+function renderRotate() {
+  const el = document.getElementById("rotate");
+  const upright = innerWidth < innerHeight && innerWidth < 700;
+  el.hidden = U.screen !== "game" || !upright || portraitOk;
+}
+document.getElementById("rotate").addEventListener("click", e => {
+  if (!e.target.closest("[data-upright]")) return;
+  portraitOk = true;
+  renderRotate();
+});
 
 document.getElementById("hint").addEventListener("click", e => {
   const b = e.target.closest("[data-hint]");

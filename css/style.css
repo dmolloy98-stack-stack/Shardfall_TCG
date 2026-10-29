@@ -305,8 +305,20 @@ button { font: inherit; color: inherit; }
 }
 
 /* ------------------------------------------------------------------ game */
-#game { position: fixed; inset: 0; overflow: hidden; background: #0d0805; }
-#stage-wrap { position: absolute; inset: 0; }
+#game {
+  position: fixed; inset: 0; overflow: hidden; background: #0d0805;
+  /* Phones: no scrolling, zooming, text selection or long-press menus on the table. */
+  touch-action: none; overscroll-behavior: none;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+}
+/* The board stays clear of a phone's notch and home bar. */
+#stage-wrap {
+  position: absolute;
+  top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px);
+  bottom: env(safe-area-inset-bottom, 0px); left: env(safe-area-inset-left, 0px);
+}
+html.in-game, html.in-game body { overflow: hidden; overscroll-behavior: none; height: 100%; }
+button, .btn { touch-action: manipulation; }
 #stage {
   position: absolute; left: 0; top: 0;
   width: 1440px; height: 1000px;
@@ -547,14 +559,29 @@ button { font: inherit; color: inherit; }
 .curtain .btn { font-size: 26px; }
 .endscreen h2 { font-size: 80px; }
 
-.rotate-hint { display: none; }
-@media (orientation: portrait) and (max-width: 700px) {
-  .rotate-hint {
-    display: block; position: absolute; left: 0; right: 0; bottom: 12px; margin: 0; text-align: center;
-    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-    color: var(--muted); font-size: 14px;
-  }
+/* Phones held upright: suggest turning sideways. */
+.rotate {
+  position: absolute; inset: 0; z-index: 150;
+  display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
+  background: radial-gradient(circle, #2a180c, #0b0604);
 }
+.rotate h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 2rem; color: var(--brass); line-height: 1.1; }
+.rotate p { margin: 0; max-width: 32ch; }
+.rotate .small { color: var(--muted); font-size: 0.92rem; }
+.rotate .btn { margin-top: 8px; }
+.rotate-phone { width: 72px; height: 72px; color: var(--brass); animation: turn 2.4s ease-in-out infinite; }
+@keyframes turn { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+
+/* Phone controls beside the board */
+.controls {
+  position: absolute; z-index: 110;
+  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+}
+.controls .btn { width: 100%; min-height: 48px; padding: 0.3em 0.5em; font-size: 1rem; line-height: 1.15; }
+.controls .btn-small { min-height: 40px; font-size: 0.9rem; }
+.controls [data-press="menu"] { position: absolute; top: 0; }
+.controls .danger { border-color: var(--danger); background: linear-gradient(#8a2a17, #4d140a); }
 
 /* ------------------------------------------------------------------- modal */
 .modal { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; }
@@ -619,7 +646,8 @@ button { font: inherit; color: inherit; }
 .coach-box {
   position: absolute; pointer-events: auto;
   width: min(360px, calc(100vw - 24px)); box-sizing: border-box;
-  max-height: calc(100vh - 24px); overflow: auto;
+  max-height: calc(100vh - 24px); overflow: auto; touch-action: pan-y;
+  display: flex; flex-direction: column; container-type: inline-size;
   padding: 16px 18px 14px;
   background: linear-gradient(#2b190d, #1a0f08);
   border: 2px solid var(--brass); border-radius: 12px;
@@ -627,6 +655,12 @@ button { font: inherit; color: inherit; }
   font-size: 16px; line-height: 1.45;
 }
 .coach-box.wide { width: min(620px, calc(100vw - 24px)); }
+/* Phones: the coach fills its own panel; the text scrolls and the buttons stay in view. */
+.coach-box.docked { font-size: 14.5px; padding: 12px 14px 10px; overflow: hidden; }
+.coach-box.docked h2 { font-size: 1.25rem; margin-bottom: 4px; }
+.coach-box.docked .coach-text { overflow: auto; min-height: 0; flex: 1 1 auto; touch-action: pan-y; }
+.coach-box.docked .coach-foot { flex: none; margin-top: 8px; }
+.coach-box.docked .coach-foot .btn { min-height: 44px; }
 .coach-box h2 { margin: 0 0 6px; font-family: var(--font-display); font-weight: 400; font-size: 1.45rem; color: var(--brass); line-height: 1.15; }
 .coach-text p { margin: 0 0 8px; }
 .coach-text ol, .coach-text ul { margin: 6px 0; padding-left: 1.3em; }
@@ -634,7 +668,7 @@ button { font: inherit; color: inherit; }
 .coach-text b { color: #ffe3a8; }
 .coach-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
 .coach-foot .btn { font-size: 1rem; padding: 0.4em 1.1em; }
-.coach-foot [data-coach="next"] { margin-left: auto; }
+.coach-foot [data-coach="next"], .coach-foot [data-coach="do"] { margin-left: auto; }
 .coach-progress { width: 90px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
 .coach-progress span { display: block; height: 100%; background: var(--brass); }
 .coach-quit, .link-btn {
@@ -646,7 +680,7 @@ button { font: inherit; color: inherit; }
 @keyframes nudge { 20% { translate: -8px 0; } 40% { translate: 7px 0; } 60% { translate: -5px 0; } 80% { translate: 3px 0; } }
 
 /* Card anatomy: a big card with labelled parts. Everything is in em. */
-.anatomy { position: relative; width: 35em; height: 15.8em; margin: 4px auto 10px; font-size: min(15px, calc((100vw - 64px) / 35), calc((100vh - 210px) / 16)); }
+.anatomy { position: relative; width: 35em; height: 15.8em; margin: 4px auto 10px; font-size: min(15px, calc((100vw - 64px) / 35)); font-size: min(15px, calc(100cqw / 35)); }
 @media (max-height: 520px) {
   .coach-box { font-size: 14.5px; padding: 12px 14px 10px; }
   .coach-box h2 { font-size: 1.25rem; }
@@ -665,7 +699,7 @@ button { font: inherit; color: inherit; }
 
 /* Beginner hints */
 .hint {
-  position: absolute; z-index: 110; box-sizing: border-box;
+  position: absolute; z-index: 110; box-sizing: border-box; overflow: auto;
   padding: 10px 12px;
   background: rgba(20, 11, 5, 0.94); border: 2px solid var(--brass-dim); border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);

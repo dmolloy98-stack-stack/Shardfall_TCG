@@ -310,6 +310,8 @@ function renderOverlays() {
   tutUpdate();
   renderCoach();
   renderHint();
+  renderControls();
+  renderRotate();
 }
 
 function renderHand(p) {
@@ -715,6 +717,8 @@ document.addEventListener("keydown", e => {
 // ---------------------------------------------------------------------------
 function showScreen(name) {
   U.screen = name;
+  // The game screen behaves like an app: no page scrolling, bouncing or zooming.
+  document.documentElement.classList.toggle("in-game", name === "game");
   for (const id of ["menu", "almanac", "guide", "game"]) $("#" + id).hidden = id !== name;
   if (name === "menu") { renderMenu(); storm.start(); } else storm.stop();
   if (name === "almanac") renderAlmanac();
@@ -723,13 +727,35 @@ function showScreen(name) {
   window.scrollTo(0, 0);
 }
 
+// On phones the board is shrunk a lot, so the space around it is put to use: the
+// tutorial coach gets its own panel beside the board (or under it, held upright),
+// and normal games get large buttons at the side (see renderControls).
 function fitStage() {
   const wrap = $("#stage-wrap");
   const w = wrap.clientWidth, h = wrap.clientHeight;
-  U.scale = Math.min(w / W, h / H);
-  $("#stage").style.transform = `translate(${(w - W * U.scale) / 2}px, ${(h - H * U.scale) / 2}px) scale(${U.scale})`;
+  U.small = Math.min(w / W, h / H) < 0.62;
+  U.dock = null;
+  let bw = w, bh = h;
+  if (U.tutorial && U.small) {
+    if (w > h) {
+      const pw = Math.round(Math.min(400, Math.max(260, w - (h * W) / H)));
+      U.dock = { x: w - pw, y: 0, w: pw, h };
+      bw = w - pw;
+    } else {
+      const ph = Math.round(Math.max(h * 0.45, h - (w * H) / W));
+      U.dock = { x: 0, y: h - ph, w, h: ph };
+      bh = h - ph;
+    }
+  }
+  U.scale = Math.min(bw / W, bh / H);
+  $("#stage").style.transform = `translate(${(bw - W * U.scale) / 2}px, ${(bh - H * U.scale) / 2}px) scale(${U.scale})`;
 }
-window.addEventListener("resize", () => { if (U.screen === "game") { fitStage(); renderOverlays(); } });
+// Phones resize the page when the browser bars slide in and out, and on rotation.
+function onResize() { if (U.screen === "game") { fitStage(); renderOverlays(); } }
+window.addEventListener("resize", onResize);
+window.visualViewport?.addEventListener("resize", onResize);
+// iPhone browsers allow pinch zoom even when the page asks not to; block it on the table.
+document.addEventListener("gesturestart", e => { if (U.screen === "game") e.preventDefault(); });
 
 function renderMenu() {
   $("#deck-list").innerHTML = DATA.deckOrder.filter(id => DATA.decks[id].isPlayable).map(id => {
