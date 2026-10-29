@@ -191,6 +191,7 @@ function sendToGraveyard(p, c) {
   updateRally(p);
   emit("death", { uid: c.uid });
   log(`${c.name} was destroyed.`);
+  sweepDeaths();   // losing a Rally partner or a synergy source can drop others to 0 health
 }
 
 // A character dies when its effective health (including area and synergy bonuses) reaches 0.
@@ -559,6 +560,9 @@ function newGame({ deckId, opponentDeckId, mode }) {
     for (let k = 0; k < RULES.startingHand; k++) drawCard(p);
   }
   startTurn(S.players[0]);
+  // The first player skips their first draw to offset the advantage of going first.
+  S.players[0].hasDrawn = true;
+  S.phase = PHASE.SETUP;
   log(`${S.players[0].name} (${S.players[0].faction}) vs ${S.players[1].name} (${S.players[1].faction})`);
   emit("newGame", {});
   return S;
