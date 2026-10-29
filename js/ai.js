@@ -73,6 +73,9 @@ function aiSetupActions() {
       tryAction(`play ${c.name}`, () => playCard(c.uid));
     }
   }
+  for (const a of p.field.areas) {
+    if (canActivateArea(a, p)) tryAction(`activate ${a.name}`, () => activateArea(a.uid));
+  }
   for (const e of p.field.equips) {
     if (!canAttachFromField(e, p)) continue;
     for (const t of p.field.chars) tryAction(`attach ${e.name}`, () => attachFieldEquipment(e.uid, t.uid));
@@ -115,6 +118,8 @@ function aiStep() {
   if (S.phase === PHASE.SETUP) {
     const [best] = aiSetupActions();
     if (best) { best.run(); return true; }
+    // Spend the one-time mana token only when the extra mana unlocks a good play.
+    if (active().manaToken && simulate(() => useManaToken() && aiSetupActions().length > 0)) { useManaToken(); return true; }
     advancePhase(); return true;
   }
   if (S.phase === PHASE.BATTLE) {

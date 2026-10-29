@@ -157,15 +157,39 @@ function transformCharacter(c, newName) {
   log(`${t.name} appears through Transform.`);
 }
 
-function levelUp(c) {
-  if (hasSkill(c, "Level Up") && (c.levelUpCount || 0) < 3) {
-    c.attack++; c.currentHealth++; c.speed++; c.levelUpCount = (c.levelUpCount || 0) + 1;
-    emit("text", { uid: c.uid, text: "LEVEL UP", color: "#ffd25e" });
-    if (c.levelUpCount >= 3) {
+// Level Up: +1 to all stats, up to 3 times, then the skill is used up.
+// Boss Level has no limit, Pesky Programmer grows +2 Attack and +2 Speed instead,
+// and a Data Collector takes the stats when another of your characters levels up.
+const levelCap = c => (named(c, "Boss Level") ? Infinity : 3);
+function levelUp(c, times = 1) {
+  for (let k = 0; k < times; k++) {
+    if (!hasSkill(c, "Level Up") || (c.levelUpCount || 0) >= levelCap(c)) return;
+    c.levelUpCount = (c.levelUpCount || 0) + 1;
+    const collector = ownerOf(c).field.chars.find(x => x !== c && named(x, "Data Collector"));
+    const gains = named(c, "Pesky Programmer") ? [2, 0, 2] : [1, 1, 1];
+    const into = collector || c;
+    into.attack += gains[0]; into.currentHealth += gains[1]; into.speed += gains[2];
+    into.keptLevels = (into.keptLevels || 0) + 1;   // levels whose stats this character holds
+    emit("text", { uid: c.uid, text: collector ? "DATA SENT" : "LEVEL UP", color: "#ffd25e" });
+    if (collector) emit("text", { uid: collector.uid, text: "+DATA", color: "#6fe3ff" });
+    if (c.levelUpCount >= levelCap(c)) {
       removeSkill(c, "Level Up");
       if (named(c, "White Belt Student")) transformCharacter(c, "Black Belt Student");
     }
   }
+}
+
+// Undo one Level Up (Data Transfer). The skill comes back if it was used up.
+function levelDown(c) {
+  if (!(c.keptLevels > 0)) return false;
+  c.keptLevels--;
+  if (c.levelUpCount > 0) c.levelUpCount--;
+  if (named(c, "Pesky Programmer")) { c.attack -= 2; c.speed -= 2; }
+  else { c.attack--; c.currentHealth--; c.speed--; }
+  if (!hasSkill(c, "Level Up")) c.skills.push("Level Up");
+  emit("text", { uid: c.uid, text: "LEVEL DOWN", color: "#c9c9c9" });
+  checkDeath(c);
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -443,6 +467,35 @@ const EFFECTS = {
   "Bite the Ear": { target: "char", intent: "harm", apply: loseHealth(1) },
   "Crane Kick": { target: "char", intent: "harm", apply: loseHealth(7) },
 
+  // Digital
+  "Digital Girlfriend": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t) },
+  "Spam Bot": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t) },
+  "Upgrade": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t) },
+  "Gymfluencer": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t, 2) },
+  "Catfish": {
+    target: "char", intent: "harm",
+    apply: (ctx, t) => { t.attack -= 1; t.speed -= 1; t.currentHealth -= 1; emit("charDamage", { uid: t.uid, amount: 1 }); checkDeath(t); },
+  },
+  "Secure the Data": {
+    target: "char", intent: "help",
+    apply: (ctx, t) => { if (!hasSkill(t, "Cloak")) { t.skills.push("Cloak"); t.tempCloak = true; } emit("text", { uid: t.uid, text: "SECURED", color: "#6fe3ff" }); },
+  },
+  "Data Transfer": {   // activated from the field during your Setup phase, once per turn
+    target: "char", intent: "help", filter: (c, ctx) => c.owner === ctx.owner.idx && c.keptLevels > 0,
+    apply: (ctx, t) => { if (levelDown(t)) healPlayer(ctx.owner, 2); },
+  },
+  "Digital Drainage": {
+    now: ctx => {
+      const levelers = ctx.owner.field.chars.filter(c => hasSkill(c, "Level Up"));
+      for (const c of levelers) levelUp(c, 3);
+      const alive = levelers.filter(c => ctx.owner.field.chars.includes(c));
+      if (!alive.length) return;
+      const top = alive.reduce((a, b) => (stats(b).a > stats(a).a ? b : a));
+      const drain = top.levelUpCount || 0;
+      for (const c of foeOf(ctx.owner).field.chars) { c.attack -= drain; emit("text", { uid: c.uid, text: `-${drain} ATK`, color: "#ff8a6b" }); }
+    },
+  },
+
   // Neutral
   "Flame Surge": { now: () => damageEverything(1) },
   "Fire Storm": { now: () => damageEverything(3) },
@@ -498,7 +551,7 @@ function triggerSignal(c, owner) {
 // Valid targets for a targeted effect. Spells cannot target Cloak characters.
 function validTargets(fx, ctx) {
   if (fx.target === "area") return S.players.flatMap(p => p.field.areas);
-  const chars = allChars().filter(c => !(ctx.spell && hasSkill(c, "Cloak")) && !(c === ctx.card && fx.intent !== "help"));
+  const chars = allChars().filter(c => !(ctx.spell && hasSkill(c, "Cloak")) && !(c === ctx.card && fx.intent !== "help") && (!fx.filter || fx.filter(c, ctx)));
   if (fx.target === "charOrPlayer") return [...chars, ...S.players.map(p => ({ isPlayer: true, idx: p.idx }))];
   return chars;
 }
@@ -544,7 +597,38 @@ function startTurn(p) {
   p.manaMax += RULES.manaGrowth;
   p.mana = p.manaMax;
   p.hasDrawn = false;
-  for (const c of p.field.chars) c.hasAttacked = false;
+  for (const c of p.field.chars) {
+    c.hasAttacked = false;
+    c.attackedThisTurn = false;
+    if (c.tempCloak) { removeSkill(c, "Cloak"); c.tempCloak = false; }   // Secure the Data lasts until your next turn
+  }
+}
+
+// One-time bonus for the player who goes second: +1 mana this turn.
+function useManaToken() {
+  const p = active();
+  if (S.over || !p.manaToken || S.pending) return false;
+  p.manaToken = false;
+  p.mana += 1;
+  emit("manaToken", { player: p.idx });
+  log(`${p.name} uses their bonus mana token.`);
+  return true;
+}
+
+// Area abilities you can use from the field (Data Transfer).
+function canActivateArea(a, p) {
+  p = p || active();
+  if (S.over || S.pending || !p.hasDrawn || S.phase !== PHASE.SETUP || a.disabled) return false;
+  if (a.name !== "Data Transfer" || a.usedRound === S.round || !p.field.areas.includes(a)) return false;
+  return validTargets(EFFECTS["Data Transfer"], { card: a, owner: p, spell: false }).length > 0;
+}
+function activateArea(uid) {
+  const p = active();
+  const a = p.field.areas.find(x => x.uid === uid);
+  if (!a || !canActivateArea(a, p)) return false;
+  a.usedRound = S.round;
+  S.pending = { kind: "target", source: a, owner: p.idx, spell: false, targetType: "char", intent: "help" };
+  return true;
 }
 
 function newGame({ deckId, opponentDeckId, mode }) {
@@ -560,9 +644,11 @@ function newGame({ deckId, opponentDeckId, mode }) {
     for (let k = 0; k < RULES.startingHand; k++) drawCard(p);
   }
   startTurn(S.players[0]);
-  // The first player skips their first draw to offset the advantage of going first.
+  // The first player skips their first draw, and the second player gets a one-time +1 mana token,
+  // to offset the advantage of going first.
   S.players[0].hasDrawn = true;
   S.phase = PHASE.SETUP;
+  S.players[1].manaToken = true;
   log(`${S.players[0].name} (${S.players[0].faction}) vs ${S.players[1].name} (${S.players[1].faction})`);
   emit("newGame", {});
   return S;
@@ -672,6 +758,7 @@ function playCard(uid, opts = {}) {
 function attach(e, target) {
   target.equipped.push(e);
   target.currentHealth += e.health || 0;   // equipment health is current health, not max
+  if (e.name === "API Key" && !hasSkill(target, "Level Up") && (target.levelUpCount || 0) < levelCap(target)) target.skills.push("Level Up");
   emit("text", { uid: target.uid, text: "EQUIP", color: "#7fd6ff" });
 }
 
@@ -717,6 +804,7 @@ function chooseTarget(target) {
 
 function cancelPending() {
   if (!S.pending || S.pending.required) return false;
+  if (S.pending.source?.type === "Area") S.pending.source.usedRound = null;   // cancelling Data Transfer keeps its use
   S.pending = null;
   return true;
 }
@@ -777,6 +865,7 @@ function attack(attackerUid, targetUid) {
   if (forced) target = forced;
 
   a.hasAttacked = true;
+  a.attackedThisTurn = true;
   emit("lunge", { uid: a.uid });
   const as = stats(a);
   if (!target) {
@@ -805,6 +894,7 @@ function attack(attackerUid, targetUid) {
     if (alive(a)) hitTarget();
   }
   recordCombatSurvival(a); recordCombatSurvival(target);
+  if (alive(a) && !alive(target) && named(a, "Pro Gamer")) levelUp(a);   // levels up after a knockout
   return true;
 }
 
@@ -838,6 +928,19 @@ function advancePhase() {
 
 // End-of-turn abilities (port of endPhase in Lua)
 function endPhaseEffects(p) {
+  // Digital: Server Farm, API Key, Beta Tester and Data Transfer level characters up at the end of your turn
+  const farms = p.field.chars.filter(c => named(c, "Server Farm")).length;
+  for (const c of p.field.chars.slice()) {
+    if (farms) levelUp(c, farms);
+    const keys = (c.equipped || []).filter(e => e.name === "API Key").length;
+    if (keys) levelUp(c, keys);
+    if (named(c, "Beta Tester")) levelUp(c);
+  }
+  for (const a of p.field.areas) {
+    if (a.name !== "Data Transfer" || a.disabled) continue;
+    const levelers = p.field.chars.filter(c => hasSkill(c, "Level Up"));
+    if (levelers.length) levelUp(levelers.reduce((x, y) => (stats(y).a > stats(x).a ? y : x)));
+  }
   for (const c of p.field.chars.slice()) {
     if (named(c, "Simple Defender")) c.currentHealth += 2;
     if (named(c, "Banana Tree")) { const b = takeFromDeck(p, x => x.name === "Banana"); if (b) { p.hand.push(b); emit("handAdd", { player: p.idx }); } }
