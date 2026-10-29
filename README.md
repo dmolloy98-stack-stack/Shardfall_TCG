@@ -12,7 +12,7 @@ To put it online, turn on GitHub Pages for this repository (Settings → Pages �
 
 ## How to play
 
-- Each player starts with 20 health and 6 cards. Reduce the other player to 0 health to win. Drawing from an empty deck loses.
+- Each player starts with 20 health and 6 cards from a 35-card deck. Reduce the other player to 0 health to win. Drawing from an empty deck loses.
 - **Draw → Setup → Battle → End.** Your maximum mana grows by 1 each turn, with no cap.
 - **Setup:** drag cards from your hand onto the table, or tap a card and press Play.
 - **Battle:** tap one of your characters, then an enemy character, or "Attack directly". The faster character strikes first.
@@ -38,8 +38,22 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `js/ui.js` | Board rendering, input, menu, Almanac |
 | `original-lua/main.lua` | The LÖVE2D source this was ported from |
 
+## The starter decks
+
+Each deck has 35 cards and follows the deck rules from the design sheet: at most 4 copies of a card, and at most 2 of an Unknown card.
+
+| Deck | Plan | Cards costing 0–2 / 3–4 / 5+ | Characters |
+|---|---|---|---|
+| Simple | Flood the field with farmers and simple fighters, then back them with tools | 21 / 8 / 6 | 21 |
+| Monkey | Swarm with Rally monkeys so they power each other up (19 Rally characters) | 18 / 3 / 14 | 25 |
+| Zombie | Undead walls and corpses that keep coming back, then big payoffs like Plaguemancer and Midnight Madness | 13 / 4 / 18 | 22 |
+| Fighter | Cheap martial artists that grow with every piece of equipment | 22 / 5 / 8 | 21 |
+
+The lists were tuned over thousands of computer-vs-computer games. Simple, Monkey and Fighter each win about half their games; Zombie wins about 43%.
+
 ## Changes from the Lua version
 
+- **Rally** gives +1 to all stats, as written in the design sheet. The Lua version only gave +1 Attack and Speed.
 - **New:** a computer opponent, and a pass-the-device screen between turns in two-player mode.
 - **Newly working cards** (they had text but no effect in Lua): Area Denial, Call Back, Disable, Simplicity, Simple Messenger, Ripen, Arboreal Intelligence, Call of the Jungle, Rise from the Dead, They Just Keep Coming, Rotten Finger (now lets you pick the discard), Baboon, The Man Ape (defending bonus) and Tree Branch (cost reduction).
 - **Fix:** characters now die when their *displayed* health reaches 0, so area bonuses count toward survival.

@@ -116,7 +116,7 @@ function rawStats(c) {
   const rally = c.rallyBonus || 0;
   return {
     a: c.attack + e.a + ar.a + buff + rally + extraA,
-    h: c.currentHealth + ar.h + buff,
+    h: c.currentHealth + ar.h + buff + rally,
     s: c.speed + e.s + ar.s + buff + rally,
     parry: hasSkill(c, "Parry") || ar.parry,
   };
@@ -191,6 +191,7 @@ function sendToGraveyard(p, c) {
   updateRally(p);
   emit("death", { uid: c.uid });
   log(`${c.name} was destroyed.`);
+  sweepDeaths();   // losing a Rally partner or a synergy source can drop others to 0 health
 }
 
 // A character dies when its effective health (including area and synergy bonuses) reaches 0.

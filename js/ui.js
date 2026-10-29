@@ -583,7 +583,7 @@ function showGameMenu() {
 
 function showRules() {
   openModal(`<div class="rules"><h2 id="modal-title">How to play</h2>
-    <p>Each player starts with ${RULES.startingHealth} health and a hand of ${RULES.startingHand} cards from a 20-card faction deck. Bring the other player to 0 health to win. A player who has to draw from an empty deck loses.</p>
+    <p>Each player starts with ${RULES.startingHealth} health and a hand of ${RULES.startingHand} cards from a ${DATA.decks[U.deckId].cards.reduce((n, e) => n + e.quantity, 0)}-card faction deck. Bring the other player to 0 health to win. A player who has to draw from an empty deck loses.</p>
     <h3>Your turn</h3>
     <ul>
       <li><b>Draw.</b> Draw one card. Your mana refills, and your maximum grows by ${RULES.manaGrowth} every turn with no cap.</li>
