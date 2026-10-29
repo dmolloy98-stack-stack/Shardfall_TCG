@@ -13,7 +13,7 @@ To put it online, turn on GitHub Pages for this repository (Settings → Pages �
 ## How to play
 
 - Each player starts with 20 health and 6 cards from a 35-card deck. Reduce the other player to 0 health to win. Drawing from an empty deck loses.
-- **Draw → Setup → Battle → End.** Your maximum mana grows by 1 each turn, with no cap.
+- **Draw → Setup → Battle → End.** Your maximum mana grows by 1 each turn, with no cap. The player who goes first skips their first draw.
 - **Setup:** drag cards from your hand onto the table, or tap a card and press Play.
 - **Battle:** tap one of your characters, then an enemy character, or "Attack directly". The faster character strikes first.
 - Tap or right-click any card to read it. Escape or right-click cancels a choice.
@@ -53,6 +53,7 @@ The lists were tuned over thousands of computer-vs-computer games. Simple, Monke
 
 ## Changes from the Lua version
 
+- **The first player skips their first draw**, to offset the advantage of going first.
 - **Rally** gives +1 Attack and Speed (not health), as in the Lua version. Play-testing showed +1 to all stats made Monkey decks too strong.
 - **New:** a computer opponent, and a pass-the-device screen between turns in two-player mode.
 - **Newly working cards** (they had text but no effect in Lua): Area Denial, Call Back, Disable, Simplicity, Simple Messenger, Ripen, Arboreal Intelligence, Call of the Jungle, Rise from the Dead, They Just Keep Coming, Rotten Finger (now lets you pick the discard), Baboon, The Man Ape (defending bonus) and Tree Branch (cost reduction).
