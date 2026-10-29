@@ -68,7 +68,8 @@ FactionID,Name,ColorR,ColorG,ColorB,SymbolKey,Description,DisplayOrder
 Simple,Simple,0.30,0.64,0.36,sprout,Nature and humble beginnings,10
 Monkey,Monkey,0.84,0.58,0.17,paw,Agility and mischief,20
 Zombie,Zombie,0.40,0.63,0.42,skull,Decay and resurrection,30
-Fighter,Fighter,0.78,0.28,0.24,swords,Combat and discipline,40`;
+Fighter,Fighter,0.78,0.28,0.24,swords,Combat and discipline,40
+Digital,Digital,0.18,0.68,0.86,chip,Glass cannons that level up,50`;
 
 CSV.cards = `# CARDS
 # One row per card. CardID is the permanent internal ID; never change it after using it in a deck.
@@ -166,17 +167,39 @@ master_rat,10,Master Rat,Exotic,Character,N/A,Fighter,5+5+5,Parry,Summon 4 1+1+1
 crane_kick,5,Crane Kick,Exotic,Spell,N/A,Fighter,---,---,Target character loses 7 health,,crane_kick
 shaolin_warrior,20,Shaolin Warrior,Divine,Character,N/A,Fighter,10+10+10,Challenge,Each character and equipment on the field makes this card cost 1 less,,shaolin_warrior
 kenshis_blade,7,Kenshi's Blade,Divine,Equipment,N/A,Fighter,8+0+2,---,Once per Battle Phase on your turn choose to deal 3 damage to target character,,kenshis_blade
-ip_man,6,IP Man,Unknown,Character,N/A,Fighter,4+6+3,Parry,Once per turn redirect the first instance of damage that would be caused to you to another source including players,,ip_man`;
+ip_man,6,IP Man,Unknown,Character,N/A,Fighter,4+6+3,Parry,Once per turn redirect the first instance of damage that would be caused to you to another source including players,,ip_man
+noob,0,Noob,Basic,Character,N/A,Digital,1+1+0,Level Up,---,,noob
+glitch,1,Glitch,Basic,Character,N/A,Digital,2+1+1,Level Up+Rush,---,,glitch
+spam_bot,1,Spam Bot,Basic,Character,N/A,Digital,1+1+1,Signal,Trigger target character's Level Up,,spam_bot
+gaming_headset,1,Gaming Headset,Basic,Equipment,N/A,Digital,1+0+1,---,---,,gaming_headset
+speedrunner,2,Speedrunner,Basic,Character,N/A,Digital,2+1+2,Rush,---,,speedrunner
+beta_tester,2,Beta Tester,Basic,Character,N/A,Digital,1+2+1,Level Up,Levels Up during your End Phase,,beta_tester
+upgrade,2,Upgrade,Basic,Spell,N/A,Digital,---,---,Trigger target character's Level Up,,upgrade
+digital_girlfriend,3,Digital Girlfriend,Basic,Character,N/A,Digital,2+1+0,Signal,Trigger target character's Level Up,,digital_girlfriend
+catfish,3,Catfish,Basic,Spell,N/A,Digital,---,Flash,Target character loses -1 to all stats,,catfish
+secure_the_data,3,Secure the Data,Basic,Spell,N/A,Digital,---,Flash,Target character gains Cloak until the start of your next turn,,secure_the_data
+pro_gamer,3,Pro Gamer,Rare,Character,N/A,Digital,3+1+1,Level Up,Levels Up each time it destroys a character in battle and survives,,pro_gamer
+pesky_programmer,4,Pesky Programmer,Rare,Character,N/A,Digital,2+1+2,Level Up,When this character Levels Up it gains +2 Attack and +2 Speed but +0 Health,,pesky_programmer
+hacker,4,Hacker,Rare,Character,N/A,Digital,3+1+3,Cloak,---,,hacker
+gymfluencer,5,Gymfluencer,Rare,Character,N/A,Digital,1+2+2,Signal,Trigger target character's Level Up twice,,gymfluencer
+api_key,5,API Key,Rare,Equipment,N/A,Digital,1+1+0,---,This character gains Level Up. The character holding this Levels Up during your End Phase,,api_key
+overclocker,5,Overclocker,Exotic,Character,N/A,Digital,7+1+0,Level Up,---,,overclocker
+data_collector,6,Data Collector,Exotic,Character,N/A,Digital,2+2+2,Level Up+Challenge,When your other characters Level Up the Level Up stats go to Data Collector instead,,data_collector
+server_farm,6,Server Farm,Exotic,Character,N/A,Digital,1+6+1,Tower,Your characters Level Up during your End Phase,,server_farm
+data_transfer,6,Data Transfer,Divine,Area,N/A,Digital,---,---,Once during each of your Setup phases you may remove a Level from one of your characters to gain 2 HP. During your End Phase your strongest Level Up character Levels Up,,data_transfer
+digital_drainage,12,Digital Drainage,Divine,Spell,N/A,Digital,---,---,Your Level Up characters Level Up 3 times. Each opposing character loses Attack equal to the number of Levels of your highest-Attack Level Up character,,digital_drainage
+boss_level,10,Boss Level,Unknown,Character,N/A,Digital,6+2+2,Level Up,This character has no limit to Level Up,,boss_level`;
 
 CSV.decks = `# DECKS
 # One row per deck. CardList format: CardID:Quantity|CardID:Quantity
 # Deck rules (from game_rules): at least 35 cards, at most 4 copies of a card, at most 2 of an Unknown card.
-# Lists were tuned with computer-vs-computer games. Win rates: Simple ~55%, Monkey ~52%, Fighter ~52%, Zombie ~41%.
+# Lists were tuned with computer-vs-computer games. Win rates: Simple ~58%, Monkey ~51%, Fighter ~52%, Digital ~49%, Zombie ~40%.
 DeckID,Name,Faction,Description,IsPlayable,IsAI,CardList
 simple_starter,Simple Starter,Simple,"A straightforward deck: flood the field with farmers and simple fighters, then back them up with tools",true,false,"simple_farmer:4|simple_barkeep:3|simple_swordsman:3|simple_bowman:2|simple_wanderer:1|sword:2|bow:1|helm:1|slap:2|staff:2|simple_messenger:2|simplify:1|simple_wizard:2|herd:2|sabre:1|simpler_farmer:2|simple_defender:1|simpledom:1|simplicity:1|the_simplistic:1"
 monkey_starter,Monkey Starter,Monkey,"A synergy deck: swarm the field with Rally monkeys so they power each other up",true,false,"baby_monkey:3|fat_monkey:3|smart_monkey:3|chimp:3|monkey_apprentice:3|banana:3|peel:2|tree_branch:2|jungle:1|orangutan:2|ape:2|primate:2|gorilla:2|banana_tree:1|arboreal_intelligence:1|call_of_the_jungle:1|the_man_ape:1"
 zombie_starter,Zombie Starter,Zombie,"A big-cost, high-reward deck: undead walls and corpses that keep coming back, sweeping spells, and heavy hitters late",true,false,"breathing_wall:3|hungry_corpse:4|lurker:1|reanimated_corpse:2|sneaky_skinbag:3|shadow_stitched_soldier:3|soul_shepard:2|zombombadier:2|plaguemancer:2|extra_arm:3|rise_from_the_dead:2|infection:2|deaths_grasp:1|midnight_madness:3|flame_surge:2"
-fighter_starter,Fighter Starter,Fighter,"A combat deck: cheap martial artists that grow stronger with every piece of equipment",true,false,"white_belt_student:4|weapons_enthusiast:4|seasoned_monk:4|black_belt_student:3|sensei:2|fight_choreographer:1|ip_man:1|fifth_degree_master:1|master_rat:1|nunchucks:4|bo_staff:4|mc_knuckle_dusters:1|bite_the_ear:2|crane_kick:1|dojo:1|kenshis_blade:1"`;
+fighter_starter,Fighter Starter,Fighter,"A combat deck: cheap martial artists that grow stronger with every piece of equipment",true,false,"white_belt_student:4|weapons_enthusiast:4|seasoned_monk:4|black_belt_student:3|sensei:2|fight_choreographer:1|ip_man:1|fifth_degree_master:1|master_rat:1|nunchucks:4|bo_staff:4|mc_knuckle_dusters:1|bite_the_ear:2|crane_kick:1|dojo:1|kenshis_blade:1"
+digital_starter,Digital Starter,Digital,"A glass-cannon deck: fragile, hard-hitting characters that Level Up again and again",true,false,"noob:2|glitch:4|spam_bot:4|beta_tester:4|speedrunner:2|upgrade:2|digital_girlfriend:2|gaming_headset:1|catfish:1|pro_gamer:2|pesky_programmer:2|hacker:1|gymfluencer:1|api_key:1|overclocker:1|data_collector:1|server_farm:1|data_transfer:1|boss_level:1|digital_drainage:1"`;
 
 // ---------------------------------------------------------------------------
 // Loaders (port of the DATA.load* functions in main.lua)

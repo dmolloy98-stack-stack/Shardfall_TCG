@@ -35,6 +35,7 @@ const GLYPHS = {
   Monkey: '<circle cx="12" cy="14" r="3.6" fill="currentColor"/><circle cx="7.6" cy="10" r="2.3" fill="currentColor"/><circle cx="16.4" cy="10" r="2.3" fill="currentColor"/><circle cx="10.4" cy="6.6" r="1.8" fill="currentColor"/><circle cx="13.6" cy="6.6" r="1.8" fill="currentColor"/>',
   Zombie: '<rect x="6.5" y="6" width="11" height="9.5" rx="2" fill="currentColor"/><rect x="9" y="9" width="2" height="2.4" fill="var(--g-bg)"/><rect x="13" y="9" width="2" height="2.4" fill="var(--g-bg)"/><path d="M8.5 18h7M10 15.5v3M12 15.5v3M14 15.5v3" stroke="currentColor" stroke-width="1.4"/>',
   Fighter: '<path d="M6 6l11 11M18 6L7 17M8.4 4.8l-3.4 3.4M15.6 4.8l3.4 3.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/>',
+  Digital: '<rect x="7.5" y="7.5" width="9" height="9" rx="1.2" fill="currentColor"/><rect x="10.3" y="10.3" width="3.4" height="3.4" fill="var(--g-bg)"/><path d="M10 4.5v3M14 4.5v3M10 16.5v3M14 16.5v3M4.5 10h3M4.5 14h3M16.5 10h3M16.5 14h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
   "N/A": '<path d="M12 4l6 8-6 8-6-8z" fill="currentColor"/><path d="M12 4v16M6 12h12" stroke="var(--g-bg)" stroke-width="0.8"/>',
 };
 function medal(group, cls = "medal") {
@@ -163,6 +164,8 @@ onGameEvent((type, d) => {
     U.lunges.set(d.uid, now);
   } else if (type === "draw") {
     U.drawn.set(d.uid, now);
+  } else if (type === "manaToken") {
+    floatText(sideOf(d.player) === "bottom" ? 223 : 1203, sideOf(d.player) === "bottom" ? 470 : 250, "+1 MANA", "#ffd27a", true);
   } else if (type === "turn") {
     U.selected = null; U.armed = null;
     if (S.mode === "hotseat") U.curtain = true;
@@ -208,7 +211,8 @@ function fieldHTML(p, side) {
     const x = L.areasX + i * L.slot;
     if (!a) { h += `<div class="slot" style="left:${x}px;top:${y.support}px"></div>`; continue; }
     const tgt = humanPending && pd.kind === "target" && pd.targetType === "area";
-    h += `<div class="small-card${tgt ? " targetable" : ""}" data-act="area" data-uid="${a.uid}" style="left:${x}px;top:${y.support}px">${cardHTML(a)}</div>`;
+    const usable = human && p === active() && canActivateArea(a, p);
+    h += `<div class="small-card${tgt ? " targetable" : ""}${usable ? " activatable" : ""}" data-act="area" data-uid="${a.uid}" style="left:${x}px;top:${y.support}px">${cardHTML(a)}</div>`;
   }
   for (let i = 0; i < RULES.maxEquips; i++) {
     const e = p.field.equips[i];
@@ -242,7 +246,12 @@ function fieldHTML(p, side) {
 
 function manaHTML(p, side) {
   const pos = side === "bottom" ? "left:200px;top:470px" : "left:1180px;top:250px";
-  return `<div class="mana" style="${pos}"><div class="gem">${p.mana}</div>MANA ${p.mana}/${p.manaMax}</div>`;
+  let token = "";
+  if (p.manaToken) {
+    const usable = humanTurn() && p === active() && !S.pending;
+    token = `<button type="button" class="mana-token" data-act="token" ${usable ? "" : "disabled"} title="One-time bonus for going second: tap to gain +1 mana this turn" aria-label="Use bonus mana token, plus 1 mana this turn">+1</button>`;
+  }
+  return `<div class="mana" style="${pos}"><div class="gem">${p.mana}</div>${token}MANA ${p.mana}/${p.manaMax}</div>`;
 }
 
 function render() {
@@ -311,7 +320,7 @@ function renderPrompt() {
   let msg = null, cancel = true;
   if (U.curtain || U.ended) msg = null;
   else if (pd?.kind === "target" && !S.players[pd.owner].isAI) {
-    const what = pd.targetType === "area" ? "an area" : pd.targetType === "charOrPlayer" ? "a character or player" : "a character";
+    const what = pd.source.name === "Data Transfer" ? "one of your characters to lose a Level (you gain 2 HP)" : pd.targetType === "area" ? "an area" : pd.targetType === "charOrPlayer" ? "a character or player" : "a character";
     msg = `${pd.source.name}: choose ${what}`;
     cancel = !pd.required;
   } else if (U.armed) {
@@ -586,7 +595,7 @@ function showRules() {
     <p>Each player starts with ${RULES.startingHealth} health and a hand of ${RULES.startingHand} cards from a ${DATA.decks[U.deckId].cards.reduce((n, e) => n + e.quantity, 0)}-card faction deck. Bring the other player to 0 health to win. A player who has to draw from an empty deck loses.</p>
     <h3>Your turn</h3>
     <ul>
-      <li><b>Draw.</b> Draw one card. The player who goes first skips this on their first turn. Your mana refills, and your maximum grows by ${RULES.manaGrowth} every turn with no cap.</li>
+      <li><b>Draw.</b> Draw one card. The player who goes first skips this on their first turn. Your mana refills, and your maximum grows by ${RULES.manaGrowth} every turn with no cap. The player who goes second gets a one-time <b>+1</b> token beside their mana: tap it on any of your turns for 1 extra mana that turn.</li>
       <li><b>Setup.</b> Drag cards from your hand onto the table, or tap a card and press Play. Characters, areas, equipment and spells are played here.</li>
       <li><b>Battle.</b> Tap one of your characters, then tap an enemy character, or use “Attack directly” to hit the player. Only Flash cards can be played in this phase.</li>
       <li><b>End.</b> End-of-turn abilities resolve and play passes to the other player.</li>
@@ -638,6 +647,7 @@ $("#board").addEventListener("click", e => {
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; act(endTurn); } return; }
   if (a === "face") { if (U.selected) { const s = U.selected; U.selected = null; act(() => attack(s, null)); } return; }
   if (a === "char") return clickChar(uid, el.dataset.side);
+  if (a === "token") { if (human) act(useManaToken); return; }
   if (a === "grave") return showGrave(S.players[Number(el.dataset.player)]);
   if (a === "deck") { if (human && Number(el.dataset.player) === S.active && S.phase === PHASE.DRAW) onPhaseButton(); return; }
   if (a === "plate") {
@@ -649,8 +659,10 @@ $("#board").addEventListener("click", e => {
   }
   if (a === "area") {
     const pd = S.pending;
+    const found = findArea(uid);
     if (human && pd?.kind === "target" && pd.targetType === "area") act(() => chooseTarget({ uid }));
-    else showDetail(findArea(uid).c);
+    else if (human && found.p === active() && canActivateArea(found.c)) act(() => activateArea(uid));
+    else showDetail(found.c);
     return;
   }
   if (a === "equip") {
