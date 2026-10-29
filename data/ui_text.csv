@@ -1,0 +1,8 @@
+TextID,Text,Category
+button_start_game,START GAME,Button
+button_almanac,ALMANAC,Button
+button_restart,RESTART,Button
+button_main_menu,MAIN MENU,Button
+tutorial_draw,Click DRAW CARD to begin,Tutorial
+tutorial_setup,Drag cards with green glow onto the field to play them,Tutorial
+tutorial_battle,Click one of your characters then click an enemy,Tutorial

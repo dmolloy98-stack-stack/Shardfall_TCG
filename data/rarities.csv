@@ -1,0 +1,6 @@
+RarityID,Name,EdgeR,EdgeG,EdgeB,EquipmentAttachCost,DisplayOrder
+basic,Basic,0.56,0.59,0.64,1,10
+rare,Rare,0.22,0.48,0.95,2,20
+exotic,Exotic,0.68,0.28,0.88,3,30
+divine,Divine,0.25,0.72,0.35,4,40
+unknown,Unknown,0.95,0.68,0.18,5,50

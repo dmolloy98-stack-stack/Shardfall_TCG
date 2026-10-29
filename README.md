@@ -6,9 +6,10 @@ This is a port of the original LÖVE2D / Lua version (`original-lua/main.lua`, k
 
 ## Play it
 
-Open `index.html` in any modern browser. No install, no build step, no server needed.
+The game loads its cards from the `data/` folder, so it needs to be opened from a web address rather than by double-clicking `index.html`. Either:
 
-To put it online, turn on GitHub Pages for this repository (Settings → Pages → deploy from the `main` branch, root folder) and share the link.
+- **GitHub Pages (recommended):** in this repository go to Settings → Pages, choose "Deploy from a branch", pick `main` and the root folder, and save. After a minute the game is at `https://dmolloy98-stack-stack.github.io/Shardfall_TCG/`. Every change merged into `main` (including CSV edits) goes live there automatically.
+- **On your own computer:** open a terminal in this folder, run `python3 -m http.server`, then visit http://localhost:8000.
 
 ## How to play
 
@@ -22,7 +23,18 @@ The in-game "How to play" button has the full rules.
 
 ## Editing cards, decks and rules
 
-All game content lives in `js/data.js` as the same CSV tables the Lua version used (`cards`, `decks`, `skills`, `rarities`, `factions`, `game_rules`, `phases`, `ui_text`). Edit a row, save, and reload the page.
+All cards, decks, skills and balance numbers are CSV files in the [`data/`](data/) folder, one table per file:
+
+| File | What's in it |
+|---|---|
+| [`data/cards.csv`](data/cards.csv) | Every card: cost, stats, skills, rarity, ability text |
+| [`data/decks.csv`](data/decks.csv) | The starter decks and their card lists |
+| [`data/skills.csv`](data/skills.csv) | Skill keywords and their descriptions |
+| [`data/game_rules.csv`](data/game_rules.csv) | Starting health, hand size, mana growth, field limits, deck-building rules |
+| [`data/rarities.csv`](data/rarities.csv), [`data/factions.csv`](data/factions.csv) | Colors, symbols, equipment attach costs |
+| [`data/phases.csv`](data/phases.csv), [`data/ui_text.csv`](data/ui_text.csv) | Phase names, on-screen instructions, button labels |
+
+GitHub displays each file as a table. Edit it with the pencil icon, or open it in Excel or Google Sheets, then save it as CSV and upload it back. [`data/README.md`](data/README.md) explains every column. In the game, the **Almanac** (on the main menu) shows every card as it currently reads in these files.
 
 Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the faction symbol on that card.
 
@@ -32,7 +44,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 |---|---|
 | `index.html` | Page structure |
 | `css/style.css` | All styling and animations |
-| `js/data.js` | Card, deck and rule data (CSV) and loaders |
+| `data/*.csv` | Cards, decks, skills and rules (see above) |
+| `js/data.js` | Loads and checks the CSV files, then starts the game |
 | `js/engine.js` | Game rules: turns, combat, skills, card effects |
 | `js/ai.js` | Computer opponent |
 | `js/ui.js` | Board rendering, input, menu, Almanac |
@@ -40,25 +53,86 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 
 ## The starter decks
 
-Each deck has 35 cards and follows the deck rules from the design sheet: at most 4 copies of a card, and at most 2 of an Unknown card.
+Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and at most 2 of an Unknown card. They are meant as introductions to each faction; custom decks are where the real strategy lives. Over thousands of computer-vs-computer games, Monkey, Fighter and Digital each win about half their games, Simple about 58% and Zombie about 40%. With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
 
-| Deck | Plan | Cards costing 0–2 / 3–4 / 5+ | Characters |
+| Deck | Style | Cards costing 0–2 / 3–4 / 5+ | Characters |
 |---|---|---|---|
-| Simple | Flood the field with farmers and simple fighters, then back them with tools | 21 / 8 / 6 | 21 |
-| Monkey | Swarm with Rally monkeys so they power each other up (20 Rally characters) | 20 / 3 / 12 | 25 |
-| Zombie | Undead walls and corpses that keep coming back, then big payoffs like Plaguemancer and Midnight Madness | 13 / 4 / 18 | 22 |
-| Fighter | Cheap martial artists that grow with every piece of equipment | 22 / 5 / 8 | 21 |
-| Digital | Glass cannons: fragile, hard-hitting characters that Level Up again and again | 19 / 8 / 8 | 28 |
+| Simple | Go wide with humble characters and basic tools | 21 / 8 / 6 | 21 |
+| Monkey | Synergy: Rally monkeys power each other up | 20 / 3 / 12 | 25 |
+| Zombie | Big cost, high reward, slightly spell reliant | 13 / 4 / 18 | 22 |
+| Fighter | Martial artists that grow with equipment | 22 / 5 / 8 | 21 |
+| Digital | Glass cannons that Level Up | 19 / 8 / 8 | 28 |
 
-The lists were tuned over thousands of computer-vs-computer games. Monkey, Fighter and Digital each win about half their games, Simple about 58% and Zombie about 40%. With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
+### Simple: a very simple way to play
 
-### The Digital faction
+The beginner's deck. Its cards do one clear thing each, so it's the best place to learn how combat, mana and equipment work.
 
-Digital is built around **Level Up** (+1 to all stats, up to 3 times). Cards that trigger Level Up: Spam Bot, Digital Girlfriend, Upgrade, Gymfluencer (twice), API Key and Server Farm (each End Phase), Beta Tester (levels itself each End Phase), Pro Gamer (after a knockout), Data Transfer and Digital Drainage. Data Collector takes the Level Up stats of your other characters, Pesky Programmer grows +2 Attack and +2 Speed per level, and Boss Level has no limit.
+**How it plays:** fill the table early with 1- and 2-mana characters, then make them hit harder with cheap equipment (Sword, Bow, Helm, Staff) and the Simpledom area (+2 to all stats for Simple characters).
 
-The design sheet left some Digital slots blank; these were filled in to fit the deck's style: Noob, Glitch, Spam Bot, Gaming Headset, Speedrunner, Beta Tester, Pro Gamer, Hacker, the name and cost of Overclocker (7+1+0), and the name Server Farm (1+6+1 Tower). Rarities were assigned to all Digital cards.
+**Key cards**
+- **Simple Farmer** (4 copies): when played, it pulls another Simple Farmer from your deck into your hand. With three Farmers on the table, **Simpler Farmer** jumps onto the field from your deck, and it gets stronger for each Farmer beside it.
+- **Herd** puts three Farmers on the table at once, often enough to call the Simpler Farmer by itself.
+- **Simple Wizard** and **Slap** pick off small enemies. **Simplify** turns any big threat into a 1/1/1.
+- **Simple Defender** (Challenge and Tower) forces enemies to attack it and grows +2 health every turn.
+- Finishers: **Simplicity** shrinks the whole enemy side by 2 in every stat and heals you, and **The Simplistic** is a 10-mana 5/5/3.
 
-Three Digital cards were interpreted where the sheet's wording left a choice:
+**Strengths and weaknesses:** steady and forgiving, with an answer for most situations, but each card is modest on its own. Area damage like Flame Surge can wipe out a board of 1-health characters.
+
+### Monkey: reliant on synergy
+
+**How it plays:** flood the table with cheap monkeys. Once you control three or more Rally characters of the same faction, each one gets **+1 Attack and +1 Speed**, so the swarm hits hard and strikes first. The deck has 20 Rally characters so Rally switches on in most games.
+
+**Key cards**
+- **Baby Monkey, Fat Monkey, Smart Monkey and Chimp** (3 copies each, 0–1 mana): the Rally swarm.
+- **Monkey Apprentice** fetches a **Banana** (+1 health to a character), and each Banana fetches a **Peel** (1 damage, or 2 with three monkeys out).
+- **Primate** puts two cheap monkeys from your deck straight onto the table. **Orangutan** gains health for every other monkey you control.
+- **Jungle** (+1 Speed) and **Tree Branch** (costs 1 with three monkeys out) reward a full table.
+- Finishers: **Arboreal Intelligence** gives every monkey +5 to all stats, **Gorilla** grows every time it survives damage, and **The Man Ape** defends with +10 to all stats. **Call of the Jungle** returns up to three Monkey cards from your graveyard to your hand.
+
+**Strengths and weaknesses:** overwhelming when the swarm lands. Most monkeys are small, though, so losing a few characters can switch Rally off for the whole team, and area damage hurts.
+
+### Zombie: big cost, high reward, slightly spell reliant
+
+**How it plays:** survive the early turns behind walls and corpses that come back from the dead, then take over with expensive payoff cards. Zombie is the slowest starter. It wins long games.
+
+**Key cards**
+- **Breathing Wall** (0/5/0 with Challenge and Tower): enemies must attack it first, which shields the rest of your table.
+- **Hungry Corpse** and **Reanimated Corpse** have **Reanimate**: they come back once after dying. Hungry Corpse returns stronger.
+- **Sneaky Skinbag** makes a new Reanimated Corpse every turn. **Shadow-Stitched Soldier** comes back with +3 to all stats.
+- **Midnight Madness** gives every Undead character +2 to all stats.
+- Spells: **Flame Surge** clears small swarms (your walls survive it), **Infection** steals an enemy character, **Death's Grasp** destroys anything, and **Rise from the Dead** returns a fallen Zombie.
+- Finishers: **Plaguemancer** steals an enemy and gives it Reanimate. **Zombombadier** deals damage to every character and player when it arrives, and Evolves (+3 to all stats) when it reanimates.
+
+**Strengths and weaknesses:** very hard to grind down late in the game, but slow to start. A fast deck can do a lot of damage before the big cards come online.
+
+### Fighter: combat and discipline
+
+**How it plays:** cheap martial artists pick up weapons and grow stronger with every piece of equipment.
+
+**Key cards**
+- **White Belt Student** levels up each time equipment enters the field. After three level-ups it becomes a **Black Belt Student**, which becomes a **5th Degree Master** after surviving three combats.
+- **Weapons Enthusiast** equips for free, and **Sensei** makes all your equipment free while it's on the table.
+- **Nunchucks** and **Bo Staff** (4 copies each, 2 mana): efficient weapons with Flash, so you can equip them in the middle of Battle.
+- **Seasoned Monk** and **Black Belt Student** have **Parry** and hit back twice as hard when defending. **Dojo** gives every Fighter Parry and +1 to all stats.
+- **Fight Choreographer** gives every other Fighter +2 to all stats. **Master Rat** brings four Turtles that power each other up.
+- Removal: **Bite the Ear** and **Crane Kick** (7 damage).
+
+**Strengths and weaknesses:** strong in fights and punishing to attack into because of Parry. Removing a well-equipped character costs it a lot of investment, though.
+
+### Digital: glass cannons that Level Up
+
+**How it plays:** fragile, hard-hitting characters that grow with **Level Up** (+1 to all stats, up to 3 times). Get cheap characters out, level them quickly, and win before their low health catches up with them.
+
+**Key cards**
+- **Glitch** (Level Up and Rush) and **Speedrunner** (Rush) attack the turn they arrive.
+- Level Up triggers: **Spam Bot**, **Digital Girlfriend**, **Upgrade**, **Gymfluencer** (twice), **API Key** and **Server Farm** (every End Phase), **Beta Tester** (levels itself every End Phase), **Pro Gamer** (after winning a fight) and the **Data Transfer** area.
+- **Pesky Programmer** gains +2 Attack and +2 Speed per level. **Overclocker** is a 7/1/0 that can level up too.
+- **Data Collector** takes the Level Up stats of your other characters and becomes a huge Challenge wall.
+- Finishers: **Boss Level** has no limit on Level Up, and **Digital Drainage** levels up your whole team three times and weakens every enemy.
+
+**Strengths and weaknesses:** explosive if your characters survive long enough to level, but nearly all of them have 1 health. Area damage and fast removal hit Digital hardest.
+
+The design sheet left some Digital slots blank; these were filled in to fit the deck's style: Noob, Glitch, Spam Bot, Gaming Headset, Speedrunner, Beta Tester, Pro Gamer, Hacker, the name and cost of Overclocker (7+1+0), and the name Server Farm (1+6+1 Tower). Rarities were assigned to all Digital cards. Three cards were interpreted where the sheet's wording left a choice:
 - **Secure the Data** grants Cloak until the start of your next turn, since spells cannot be cast on the other player's turn yet.
 - **Digital Drainage** lowers each opposing character's Attack by the number of Levels on your highest-Attack Level Up character.
 - **Data Transfer** levels up your strongest Level Up character at the end of your turn. Its once-per-turn "remove a Level for 2 HP" is used by tapping the area during Setup.

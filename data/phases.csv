@@ -1,0 +1,5 @@
+PhaseID,Name,DisplayOrder,Instruction,AllowsCardPlay,AllowsAttack,RequiresDraw
+Draw,Draw,1,Click DRAW CARD to draw from your deck,false,false,true
+Setup,Setup,2,Drag cards from your hand to play them,true,false,false
+Battle,Battle,3,Click your character then click an enemy to attack,false,true,false
+End,End,4,Resolve end-of-turn effects and pass the turn,false,false,false
