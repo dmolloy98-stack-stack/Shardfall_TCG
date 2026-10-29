@@ -5,7 +5,7 @@
 // and then starts the game scripts.
 
 const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks"];
-const GAME_SCRIPTS = ["js/engine.js", "js/ai.js", "js/ui.js"];
+const GAME_SCRIPTS = ["js/engine.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/ui.js"];
 let DATA = null;
 
 // Parsing (port of the DATA.load* functions in main.lua)
@@ -121,15 +121,21 @@ function buildData(CSV) {
 // ---------------------------------------------------------------------------
 // Browser startup: load every data file, then the game scripts in order.
 // ---------------------------------------------------------------------------
-async function loadGame() {
+// Throws a readable error if a data file is missing or wrong.
+async function loadData() {
   const texts = {};
+  await Promise.all(DATA_FILES.map(async name => {
+    const res = await fetch(`data/${name}.csv`, { cache: "no-cache" });
+    if (!res.ok) throw new Error(`data/${name}.csv could not be loaded (${res.status})`);
+    texts[name] = await res.text();
+  }));
+  DATA = buildData(texts);
+  return DATA;
+}
+
+async function loadGame() {
   try {
-    await Promise.all(DATA_FILES.map(async name => {
-      const res = await fetch(`data/${name}.csv`, { cache: "no-cache" });
-      if (!res.ok) throw new Error(`data/${name}.csv could not be loaded (${res.status})`);
-      texts[name] = await res.text();
-    }));
-    DATA = buildData(texts);
+    await loadData();
   } catch (err) {
     showDataError(err);
     return;
@@ -158,4 +164,5 @@ function showDataError(err) {
   console.error(err);
 }
 
-if (typeof window !== "undefined" && typeof document !== "undefined") loadGame();
+// Pages that only need the data (the How to play guide) load this script with data-only.
+if (typeof document !== "undefined" && !document.currentScript?.hasAttribute("data-only")) loadGame();

@@ -23,8 +23,12 @@ const U = {
   aiTimer: null,
   undo: [],
   spawn: new Map(), hits: new Map(), lunges: new Map(), drawn: new Map(),
-  almanacTab: "cards", almanacFilter: "All", almanacReturn: "menu",
+  almanacTab: "cards", almanacFilter: "All", almanacReturn: "menu", guideReturn: "menu",
   scale: 1,
+  tutorial: null,        // the running tutorial (js/tutorial.js), if any
+  hints: PREFS.get("hints", true),
+  hintOpen: true,
+  hintNoteUntil: 0,
 };
 
 // ---------------------------------------------------------------------------
@@ -169,7 +173,7 @@ onGameEvent((type, d) => {
   } else if (type === "turn") {
     U.selected = null; U.armed = null;
     if (S.mode === "hotseat") U.curtain = true;
-    else banner(active().isAI ? "Computer's turn" : "Your turn");
+    else banner(active().isAI ? `${active().name}'s turn` : "Your turn");
   } else if (type === "gameOver") {
     U.ended = true;
   }
@@ -251,7 +255,7 @@ function manaHTML(p, side) {
     const usable = humanTurn() && p === active() && !S.pending;
     token = `<button type="button" class="mana-token" data-act="token" ${usable ? "" : "disabled"} title="One-time bonus for going second: tap to gain +1 mana this turn" aria-label="Use bonus mana token, plus 1 mana this turn">+1</button>`;
   }
-  return `<div class="mana" style="${pos}"><div class="gem">${p.mana}</div>${token}MANA ${p.mana}/${p.manaMax}</div>`;
+  return `<div class="mana" data-player="${p.idx}" style="${pos}"><div class="gem">${p.mana}</div>${token}MANA ${p.mana}/${p.manaMax}</div>`;
 }
 
 function render() {
@@ -277,7 +281,7 @@ function render() {
       ? `<div class="instruction">${esc(forced.name)} has Challenge and must be attacked first</div>`
       : `<button type="button" class="face-btn" data-act="face">⚔ Attack ${esc(them.name)} directly</button>`;
   } else if (!S.over) {
-    const instr = active().isAI ? "The computer is thinking…" : DATA.phases[S.phase]?.instruction || "";
+    const instr = active().isAI ? `${active().name === "Computer" ? "The computer" : active().name} is taking its turn…` : DATA.phases[S.phase]?.instruction || "";
     h += `<div class="instruction">${esc(instr)}</div>`;
   }
 
@@ -289,7 +293,7 @@ function render() {
 
   if (U.curtain) {
     h += `<div class="curtain"><p>Pass the device to</p><h2>${esc(active().name)}</h2><p>${esc(active().faction)} deck · Round ${S.round}</p><button type="button" class="btn btn-primary" data-act="curtain">Start turn</button></div>`;
-  } else if (U.ended) {
+  } else if (U.ended && !U.tutorial) {
     const title = S.winner == null ? "A draw" : S.mode === "ai" ? (S.winner === 0 ? "Victory" : "Defeat") : `${S.players[S.winner].name} wins`;
     const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;
     h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p><div class="detail-actions"><button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button></div></div>`;
@@ -297,6 +301,15 @@ function render() {
   $("#board").innerHTML = h;
   renderHand(me);
   renderPrompt();
+  renderOverlays();
+}
+
+// Tutorial coach and beginner hints sit above the board in screen space, so their
+// text stays readable however small the board is scaled.
+function renderOverlays() {
+  tutUpdate();
+  renderCoach();
+  renderHint();
 }
 
 function renderHand(p) {
@@ -357,7 +370,7 @@ function afterAction() {
 }
 function scheduleAI() {
   clearTimeout(U.aiTimer);
-  if (!S || S.over || !active().isAI || U.screen !== "game") return;
+  if (!S || S.over || !active().isAI || U.screen !== "game" || U.tutorial) return;
   U.aiTimer = setTimeout(() => {
     const more = aiStep();
     render();
@@ -366,6 +379,7 @@ function scheduleAI() {
 }
 
 function startGame() {
+  endTutorial();
   clearTimeout(U.aiTimer);
   Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [] });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
@@ -575,10 +589,21 @@ function showChoose() {
 
 function showGameMenu() {
   const canUndo = U.undo.length && humanTurn();
+  if (U.tutorial) {
+    openModal(`<h2 id="modal-title">Tutorial</h2>
+      <div class="menu-list">
+        <button type="button" class="btn" data-m="resume">Resume</button>
+        <button type="button" class="btn" data-m="restart">Start the tutorial over</button>
+        <button type="button" class="btn" data-m="rules">How to play</button>
+        <button type="button" class="btn" data-m="mainmenu">Leave tutorial</button>
+      </div>`);
+    return;
+  }
   openModal(`<h2 id="modal-title">Game menu</h2>
     <div class="menu-list">
       <button type="button" class="btn" data-m="resume">Resume</button>
       <button type="button" class="btn" data-m="restart">${esc(DATA.text("button_restart", "Restart"))}</button>
+      <button type="button" class="btn" data-m="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
       <button type="button" class="btn" data-m="almanac">${esc(DATA.text("button_almanac", "Almanac"))}</button>
       <button type="button" class="btn" data-m="rules">How to play</button>
       <button type="button" class="btn" data-m="mainmenu">${esc(DATA.text("button_main_menu", "Main menu"))}</button>
@@ -588,27 +613,6 @@ function showGameMenu() {
       <button type="button" class="btn btn-small" data-m="mana" ${humanTurn() ? "" : "disabled"}>+1 mana</button>
       <button type="button" class="btn btn-small" data-m="qadraw" ${humanTurn() ? "" : "disabled"}>Draw a card</button>
     </div></div>`);
-}
-
-function showRules() {
-  openModal(`<div class="rules"><h2 id="modal-title">How to play</h2>
-    <p>Each player starts with ${RULES.startingHealth} health and a hand of ${RULES.startingHand} cards from a ${DATA.decks[U.deckId].cards.reduce((n, e) => n + e.quantity, 0)}-card faction deck. Bring the other player to 0 health to win. A player who has to draw from an empty deck loses.</p>
-    <h3>Your turn</h3>
-    <ul>
-      <li><b>Draw.</b> Draw one card. The player who goes first skips this on their first turn. Your mana refills, and your maximum grows by ${RULES.manaGrowth} every turn with no cap. The player who goes second gets a one-time <b>+1</b> token beside their mana: tap it on any of your turns for 1 extra mana that turn.</li>
-      <li><b>Setup.</b> Drag cards from your hand onto the table, or tap a card and press Play. Characters, areas, equipment and spells are played here.</li>
-      <li><b>Battle.</b> Tap one of your characters, then tap an enemy character, or use “Attack directly” to hit the player. Only Flash cards can be played in this phase.</li>
-      <li><b>End.</b> End-of-turn abilities resolve and play passes to the other player.</li>
-    </ul>
-    <h3>Combat</h3>
-    <p>Speed decides who strikes first. The faster character deals its Attack first; if the other survives, it hits back. On a tie, the attacker strikes first. New characters cannot attack on the turn they arrive unless they have Rush.</p>
-    <h3>Equipment</h3>
-    <p>Drag equipment onto a character to equip it, or into the equipment row to store it. Stored equipment can be attached later for a cost set by its rarity: Basic 1, Rare 2, Exotic 3, Divine 4, Unknown 5.</p>
-    <h3>Card limits</h3>
-    <p>Each side holds up to ${RULES.maxChars} characters, ${RULES.maxAreas} areas and ${RULES.maxEquips} stored equipment cards.</p>
-    <h3>Controls</h3>
-    <p>Tap or right-click any card to read it. Tap a graveyard to look through it. Press Escape or right-click to cancel a choice.</p>
-    <div class="detail-actions"><button type="button" class="btn btn-small" data-close>Close</button></div></div>`);
 }
 
 $("#modal").addEventListener("click", e => {
@@ -621,10 +625,11 @@ $("#modal").addEventListener("click", e => {
   if (m === "play") act(() => playCard(uid));
   else if (m === "arm") { U.armed = { uid, from: "hand" }; render(); }
   else if (m === "tofield") act(() => playCard(uid, { toField: true }));
-  else if (m === "restart") startGame();
+  else if (m === "restart") U.tutorial ? startTutorial() : startGame();
+  else if (m === "hints") { setHints(!U.hints); showGameMenu(); }
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
-  else if (m === "rules") showRules();
-  else if (m === "mainmenu") { clearTimeout(U.aiTimer); showScreen("menu"); }
+  else if (m === "rules") showGuide();
+  else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); showScreen("menu"); }
   else if (m === "undo") { if (U.undo.length) { S = U.undo.pop(); U.selected = null; U.armed = null; U.ended = S.over; render(); } }
   else if (m === "mana") act(() => { active().mana++; });
   else if (m === "qadraw") act(() => { drawCard(active()); });
@@ -642,7 +647,7 @@ $("#board").addEventListener("click", e => {
   if (a === "menu") return showGameMenu();
   if (a === "curtain") { U.curtain = false; render(); const b = $("#board"); b.classList.remove("rotate-in"); void b.offsetWidth; b.classList.add("rotate-in"); banner(`${active().name}'s turn`); return; }
   if (a === "again") return startGame();
-  if (a === "tomenu") return showScreen("menu");
+  if (a === "tomenu") { endTutorial(); return showScreen("menu"); }
   if (a === "phase") return onPhaseButton();
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; act(endTurn); } return; }
   if (a === "face") { if (U.selected) { const s = U.selected; U.selected = null; act(() => attack(s, null)); } return; }
@@ -710,9 +715,10 @@ document.addEventListener("keydown", e => {
 // ---------------------------------------------------------------------------
 function showScreen(name) {
   U.screen = name;
-  for (const id of ["menu", "almanac", "game"]) $("#" + id).hidden = id !== name;
+  for (const id of ["menu", "almanac", "guide", "game"]) $("#" + id).hidden = id !== name;
   if (name === "menu") { renderMenu(); storm.start(); } else storm.stop();
   if (name === "almanac") renderAlmanac();
+  if (name === "guide") loadGuide();
   if (name === "game") { fitStage(); render(); scheduleAI(); }
   window.scrollTo(0, 0);
 }
@@ -723,7 +729,7 @@ function fitStage() {
   U.scale = Math.min(w / W, h / H);
   $("#stage").style.transform = `translate(${(w - W * U.scale) / 2}px, ${(h - H * U.scale) / 2}px) scale(${U.scale})`;
 }
-window.addEventListener("resize", () => { if (U.screen === "game") fitStage(); });
+window.addEventListener("resize", () => { if (U.screen === "game") { fitStage(); renderOverlays(); } });
 
 function renderMenu() {
   $("#deck-list").innerHTML = DATA.deckOrder.filter(id => DATA.decks[id].isPlayable).map(id => {
@@ -738,7 +744,10 @@ $("#mode-ai").addEventListener("click", () => { U.mode = "ai"; renderMenu(); });
 $("#mode-hotseat").addEventListener("click", () => { U.mode = "hotseat"; renderMenu(); });
 $("#btn-start").addEventListener("click", startGame);
 $("#btn-almanac").addEventListener("click", () => { U.almanacReturn = "menu"; showScreen("almanac"); });
-$("#btn-rules").addEventListener("click", showRules);
+$("#btn-rules").addEventListener("click", () => showGuide());
+$("#btn-tutorial").addEventListener("click", startTutorial);
+$("#guide-back").addEventListener("click", () => showScreen(U.guideReturn === "game" && S ? "game" : "menu"));
+$("#guide-tutorial").addEventListener("click", startTutorial);
 $("#alm-back").addEventListener("click", () => showScreen(U.almanacReturn === "game" && S ? "game" : "menu"));
 
 function renderAlmanac() {
@@ -827,11 +836,14 @@ const storm = (() => {
 // ---------------------------------------------------------------------------
 // Boot. Keeps an in-progress game across live updates of the hosted page.
 // ---------------------------------------------------------------------------
-window.claude?.hot?.snapshot?.(() => ({ S, screen: U.screen, deckId: U.deckId, mode: U.mode }));
+window.claude?.hot?.snapshot?.(() => ({ S: U.tutorial ? null : S, screen: U.screen, deckId: U.deckId, mode: U.mode }));
 function boot(saved) {
   if (saved?.deckId) U.deckId = saved.deckId;
   if (saved?.mode) U.mode = saved.mode;
-  if (saved?.S) { S = saved.S; U.ended = S.over; showScreen(saved.screen === "almanac" ? "almanac" : "game"); }
-  else showScreen("menu");
+  if (saved?.S) { S = saved.S; U.ended = S.over; showScreen(saved.screen === "almanac" ? "almanac" : "game"); return; }
+  showScreen("menu");
+  if (location.hash === "#tutorial") startTutorial();
+  else if (location.hash === "#how-to-play") showGuide();
+  else if (!PREFS.get("welcomed", false)) showWelcome();
 }
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});

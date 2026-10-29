@@ -22,6 +22,11 @@ let S = null;              // live game state
 let listeners = [];
 let muted = 0;             // >0 while the AI simulates moves on a cloned state
 
+// Optional check run before each player action. The tutorial sets it to keep the
+// player on the current step; returning false refuses the action.
+let actionGuard = null;
+const allowed = (name, ...args) => muted || !actionGuard || actionGuard(name, ...args);
+
 function emit(type, data) { if (!muted) for (const fn of listeners) fn(type, data || {}); }
 function onGameEvent(fn) { listeners.push(fn); }
 function log(msg) { if (!muted) { S.log.push(msg); if (S.log.length > 60) S.log.shift(); emit("log", { msg }); } }
@@ -606,6 +611,7 @@ function startTurn(p) {
 
 // One-time bonus for the player who goes second: +1 mana this turn.
 function useManaToken() {
+  if (!allowed("useManaToken")) return false;
   const p = active();
   if (S.over || !p.manaToken || S.pending) return false;
   p.manaToken = false;
@@ -623,6 +629,7 @@ function canActivateArea(a, p) {
   return validTargets(EFFECTS["Data Transfer"], { card: a, owner: p, spell: false }).length > 0;
 }
 function activateArea(uid) {
+  if (!allowed("activateArea", uid)) return false;
   const p = active();
   const a = p.field.areas.find(x => x.uid === uid);
   if (!a || !canActivateArea(a, p)) return false;
@@ -702,6 +709,7 @@ const canPlay = (c, p) => !playBlocker(c, p);
 // opts.target: a battlefield character (for equipment)
 // opts.toField: place equipment in the equipment row
 function playCard(uid, opts = {}) {
+  if (!allowed("playCard", uid, opts)) return false;
   const p = active();
   const index = p.hand.findIndex(c => c.uid === uid);
   const c = p.hand[index];
@@ -764,6 +772,7 @@ function attach(e, target) {
 
 // Equip a card sitting in the equipment row onto one of your characters.
 function attachFieldEquipment(equipUid, targetUid) {
+  if (!allowed("attachFieldEquipment", equipUid, targetUid)) return false;
   const p = active();
   const i = p.field.equips.findIndex(e => e.uid === equipUid);
   const e = p.field.equips[i];
@@ -790,6 +799,7 @@ function canAttachFromField(e, p) {
 // Pending choices (targets and pick-a-card dialogs)
 // ---------------------------------------------------------------------------
 function chooseTarget(target) {
+  if (!allowed("chooseTarget", target)) return false;
   const pd = S.pending;
   if (!pd || pd.kind !== "target" || !isValidTarget(target)) return false;
   const fx = effectFor(pd.source) || EFFECTS[pd.source.name];
@@ -803,6 +813,7 @@ function chooseTarget(target) {
 }
 
 function cancelPending() {
+  if (!allowed("cancelPending")) return false;
   if (!S.pending || S.pending.required) return false;
   if (S.pending.source?.type === "Area") S.pending.source.usedRound = null;   // cancelling Data Transfer keeps its use
   S.pending = null;
@@ -811,6 +822,7 @@ function cancelPending() {
 
 // Resolve a "choose" dialog. picks = array of card uids, option = option id.
 function resolveChoice(picks, option) {
+  if (!allowed("resolveChoice", picks, option)) return false;
   const pd = S.pending;
   if (!pd || pd.kind !== "choose") return false;
   const owner = S.players[pd.owner];
@@ -856,6 +868,7 @@ function canAttack(c) {
 function forcedTarget(defender) { return defender.field.chars.find(c => hasSkill(c, "Challenge")) || null; }
 
 function attack(attackerUid, targetUid) {
+  if (!allowed("attack", attackerUid, targetUid)) return false;
   const p = active();
   const a = p.field.chars.find(c => c.uid === attackerUid);
   if (!a || !canAttack(a)) return false;
@@ -909,6 +922,7 @@ function recordCombatSurvival(c) {
 // Phases
 // ---------------------------------------------------------------------------
 function doDraw() {
+  if (!allowed("doDraw")) return false;
   const p = active();
   if (S.phase !== PHASE.DRAW || S.over) return false;
   const c = drawCard(p);
@@ -920,6 +934,7 @@ function doDraw() {
 }
 
 function advancePhase() {
+  if (!allowed("advancePhase")) return false;
   if (S.over || S.pending || S.phase === PHASE.DRAW) return false;
   if (S.phase < PHASE.END) S.phase++;
   emit("phase", {});
@@ -953,6 +968,7 @@ function endPhaseEffects(p) {
 }
 
 function endTurn() {
+  if (!allowed("endTurn")) return false;
   if (S.over) return false;
   if (S.pending && S.pending.kind === "target") S.pending = null;
   if (S.pending) return false;
