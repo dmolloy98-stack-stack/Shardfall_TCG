@@ -49,7 +49,7 @@ parry,Parry,↯,Deals double damage when defending,60
 tower,Tower,▰,Cannot attack but blocks,70
 challenge,Challenge,!,Enemies must attack this character,80
 signal,Signal,⌁,Triggers an ability when entering the field,90
-rally,Rally,♜,+1 to all stats while you control 3+ Rally characters of the same faction,100
+rally,Rally,♜,+1 Attack and Speed while you control 3+ Rally characters of the same faction,100
 level_up,Level Up,↑,Grows stronger when its condition is met,110
 evolve,Evolve,✧,+3 to all stats once its condition is met,120
 transform,Transform,⇄,Changes into another card,130`;
@@ -171,10 +171,10 @@ ip_man,6,IP Man,Unknown,Character,N/A,Fighter,4+6+3,Parry,Once per turn redirect
 CSV.decks = `# DECKS
 # One row per deck. CardList format: CardID:Quantity|CardID:Quantity
 # Deck rules (from game_rules): at least 35 cards, at most 4 copies of a card, at most 2 of an Unknown card.
-# Lists were tuned with computer-vs-computer games. Win rates: Simple ~55%, Monkey ~51%, Fighter ~51%, Zombie ~43%.
+# Lists were tuned with computer-vs-computer games. Win rates: Simple ~55%, Monkey ~52%, Fighter ~52%, Zombie ~41%.
 DeckID,Name,Faction,Description,IsPlayable,IsAI,CardList
 simple_starter,Simple Starter,Simple,"A straightforward deck: flood the field with farmers and simple fighters, then back them up with tools",true,false,"simple_farmer:4|simple_barkeep:3|simple_swordsman:3|simple_bowman:2|simple_wanderer:1|sword:2|bow:1|helm:1|slap:2|staff:2|simple_messenger:2|simplify:1|simple_wizard:2|herd:2|sabre:1|simpler_farmer:2|simple_defender:1|simpledom:1|simplicity:1|the_simplistic:1"
-monkey_starter,Monkey Starter,Monkey,"A synergy deck: swarm the field with Rally monkeys so they power each other up",true,false,"baby_monkey:2|fat_monkey:2|smart_monkey:3|chimp:3|monkey_apprentice:3|banana:3|peel:2|tree_branch:2|jungle:1|orangutan:2|ape:2|primate:2|gorilla:2|banana_tree:2|baboon:1|arboreal_intelligence:1|call_of_the_jungle:1|the_man_ape:1"
+monkey_starter,Monkey Starter,Monkey,"A synergy deck: swarm the field with Rally monkeys so they power each other up",true,false,"baby_monkey:3|fat_monkey:3|smart_monkey:3|chimp:3|monkey_apprentice:3|banana:3|peel:2|tree_branch:2|jungle:1|orangutan:2|ape:2|primate:2|gorilla:2|banana_tree:1|arboreal_intelligence:1|call_of_the_jungle:1|the_man_ape:1"
 zombie_starter,Zombie Starter,Zombie,"A big-cost, high-reward deck: undead walls and corpses that keep coming back, sweeping spells, and heavy hitters late",true,false,"breathing_wall:3|hungry_corpse:4|lurker:1|reanimated_corpse:2|sneaky_skinbag:3|shadow_stitched_soldier:3|soul_shepard:2|zombombadier:2|plaguemancer:2|extra_arm:3|rise_from_the_dead:2|infection:2|deaths_grasp:1|midnight_madness:3|flame_surge:2"
 fighter_starter,Fighter Starter,Fighter,"A combat deck: cheap martial artists that grow stronger with every piece of equipment",true,false,"white_belt_student:4|weapons_enthusiast:4|seasoned_monk:4|black_belt_student:3|sensei:2|fight_choreographer:1|ip_man:1|fifth_degree_master:1|master_rat:1|nunchucks:4|bo_staff:4|mc_knuckle_dusters:1|bite_the_ear:2|crane_kick:1|dojo:1|kenshis_blade:1"`;
 

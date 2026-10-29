@@ -45,15 +45,15 @@ Each deck has 35 cards and follows the deck rules from the design sheet: at most
 | Deck | Plan | Cards costing 0–2 / 3–4 / 5+ | Characters |
 |---|---|---|---|
 | Simple | Flood the field with farmers and simple fighters, then back them with tools | 21 / 8 / 6 | 21 |
-| Monkey | Swarm with Rally monkeys so they power each other up (19 Rally characters) | 18 / 3 / 14 | 25 |
+| Monkey | Swarm with Rally monkeys so they power each other up (20 Rally characters) | 20 / 3 / 12 | 25 |
 | Zombie | Undead walls and corpses that keep coming back, then big payoffs like Plaguemancer and Midnight Madness | 13 / 4 / 18 | 22 |
 | Fighter | Cheap martial artists that grow with every piece of equipment | 22 / 5 / 8 | 21 |
 
-The lists were tuned over thousands of computer-vs-computer games. Simple, Monkey and Fighter each win about half their games; Zombie wins about 43%.
+The lists were tuned over thousands of computer-vs-computer games. Simple, Monkey and Fighter each win about half their games; Zombie wins about 41%.
 
 ## Changes from the Lua version
 
-- **Rally** gives +1 to all stats, as written in the design sheet. The Lua version only gave +1 Attack and Speed.
+- **Rally** gives +1 Attack and Speed (not health), as in the Lua version. Play-testing showed +1 to all stats made Monkey decks too strong.
 - **New:** a computer opponent, and a pass-the-device screen between turns in two-player mode.
 - **Newly working cards** (they had text but no effect in Lua): Area Denial, Call Back, Disable, Simplicity, Simple Messenger, Ripen, Arboreal Intelligence, Call of the Jungle, Rise from the Dead, They Just Keep Coming, Rotten Finger (now lets you pick the discard), Baboon, The Man Ape (defending bonus) and Tree Branch (cost reduction).
 - **Fix:** characters now die when their *displayed* health reaches 0, so area bonuses count toward survival.

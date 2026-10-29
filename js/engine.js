@@ -116,7 +116,7 @@ function rawStats(c) {
   const rally = c.rallyBonus || 0;
   return {
     a: c.attack + e.a + ar.a + buff + rally + extraA,
-    h: c.currentHealth + ar.h + buff + rally,
+    h: c.currentHealth + ar.h + buff,
     s: c.speed + e.s + ar.s + buff + rally,
     parry: hasSkill(c, "Parry") || ar.parry,
   };
