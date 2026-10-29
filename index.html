@@ -38,8 +38,9 @@
 
         <div class="menu-actions">
           <button type="button" id="btn-start" class="btn btn-primary">Start game</button>
-          <button type="button" id="btn-almanac" class="btn">Almanac</button>
+          <button type="button" id="btn-tutorial" class="btn">Tutorial</button>
           <button type="button" id="btn-rules" class="btn">How to play</button>
+          <button type="button" id="btn-almanac" class="btn">Almanac</button>
         </div>
       </div>
     </div>
@@ -61,6 +62,16 @@
     </div>
   </section>
 
+  <!-- HOW TO PLAY (the content comes from guide.html) -->
+  <section id="guide" class="screen" hidden>
+    <div class="almanac-bar">
+      <button type="button" id="guide-back" class="btn btn-small">&larr; Back</button>
+      <h1>How to play</h1>
+      <button type="button" id="guide-tutorial" class="btn btn-small guide-bar-btn">Start the tutorial</button>
+    </div>
+    <div id="guide-content" class="guide-body"></div>
+  </section>
+
   <!-- GAME -->
   <section id="game" class="screen" hidden>
     <div id="stage-wrap">
@@ -72,6 +83,8 @@
         <div id="prompt" hidden></div>
       </div>
     </div>
+    <div id="hint" class="hint" hidden></div>
+    <div id="coach" class="coach" hidden></div>
     <p class="rotate-hint">Turn your phone sideways for a bigger board.</p>
   </section>
 

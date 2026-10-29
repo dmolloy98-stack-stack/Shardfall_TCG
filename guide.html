@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How to play Shardfall</title>
+<meta name="description" content="An illustrated beginner's guide to Shardfall: reading a card, taking a turn, fighting, and how cards work together.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="guide-page">
+<!-- This page is also shown inside the game (How to play), which uses only the
+     <main id="guide-main"> part. The pictures in guide/ are made by tools/guide-shots.js. -->
+<div class="almanac-bar">
+  <a class="btn btn-small" href="index.html">&larr; Play Shardfall</a>
+  <h1>How to play</h1>
+  <a class="btn btn-small guide-bar-btn" href="index.html#tutorial">Start the tutorial</a>
+</div>
+
+<main id="guide-main" class="guide-body">
+  <p class="guide-lead">Shardfall is a card game for two players. Each of you brings a deck of cards, takes turns playing them, and sends characters to fight. You don't need to know any other card game. Everything is explained below.</p>
+  <div class="guide-callout">
+    <p><b>Learn by playing.</b> The <a href="index.html#tutorial">tutorial</a> walks you through a short game one step at a time and takes about five minutes. In normal games, beginner hints tell you what you can do next. You can turn them off from ☰ Menu.</p>
+  </div>
+
+  <ol class="guide-toc">
+    <li><a href="#win">How to win</a></li>
+    <li><a href="#table">The table</a></li>
+    <li><a href="#card">Reading a card</a></li>
+    <li><a href="#turn">Your turn, step by step</a></li>
+    <li><a href="#playing">Playing cards</a></li>
+    <li><a href="#battle">Battle</a></li>
+    <li><a href="#together">How cards work together</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#decks">The decks</a></li>
+    <li><a href="#tips">Tips for your first games</a></li>
+    <li><a href="#words">Words to know</a></li>
+  </ol>
+
+  <h2 id="win">1. How to win</h2>
+  <ul>
+    <li>Both players start with <b><span data-rule="starting_player_health">20</span> health</b>. Bring the other player's health to <b>0</b> and you win.</li>
+    <li>You lose if you have to draw a card when your deck is empty. This is rare.</li>
+  </ul>
+
+  <h2 id="table">2. The table</h2>
+  <p>Your side is the bottom half of the screen and your opponent's is the top. Both halves are laid out the same way.</p>
+  <figure>
+    <img src="guide/board.jpg" width="1440" height="1000" alt="The game board with its parts numbered 1 to 13">
+  </figure>
+  <ul class="legend">
+    <li><span class="badge-num">1</span><span><b>Opponent's health.</b> Bring it to 0 to win.</span></li>
+    <li><span class="badge-num">2</span><span><b>Opponent's hand.</b> Cards face down, so you can see how many they hold.</span></li>
+    <li><span class="badge-num">3</span><span><b>Opponent's characters.</b> These fight against you.</span></li>
+    <li><span class="badge-num">4</span><span><b>Your characters.</b> These fight for you.</span></li>
+    <li><span class="badge-num">5</span><span><b>Your hand.</b> Only you can see these. Cards glowing green are ones you can play right now.</span></li>
+    <li><span class="badge-num">6</span><span><b>Your mana.</b> How much you can spend this turn, and your maximum.</span></li>
+    <li><span class="badge-num">7</span><span><b>Turn steps.</b> The lit-up step shows where you are in your turn.</span></li>
+    <li><span class="badge-num">8</span><span><b>Next-step button.</b> Moves your turn forward: Draw card, To battle, To end, Pass turn.</span></li>
+    <li><span class="badge-num">9</span><span><b>Deck and graveyard.</b> Your deck is face down. Used and defeated cards go to the graveyard. Tap it to look inside.</span></li>
+    <li><span class="badge-num">10</span><span><b>Areas.</b> Area cards stay here and keep working.</span></li>
+    <li><span class="badge-num">11</span><span><b>Equipment row.</b> Equipment you're saving for later.</span></li>
+    <li><span class="badge-num">12</span><span><b>Your health.</b></span></li>
+    <li><span class="badge-num">13</span><span><b>Menu.</b> These rules, the Almanac of every card, beginner hints, restart.</span></li>
+  </ul>
+  <p>The list of recent moves on the right says what just happened, such as who attacked whom.</p>
+
+  <h2 id="card">3. Reading a card</h2>
+  <figure class="fit">
+    <img src="guide/card.png" width="597" height="307" alt="A Simple Bowman card with each part labelled: faction, card type, skills, attack, mana cost, rarity, health and speed">
+  </figure>
+  <p>The three numbers at the bottom are a character's <b>stats</b>:</p>
+  <ul>
+    <li><b>⚔ Attack</b>: the damage it deals when it fights.</li>
+    <li><b>♥ Health</b>: how much damage it can take. At 0 it is knocked out.</li>
+    <li><b>⚡ Speed</b>: in a fight, the faster character strikes first.</li>
+  </ul>
+  <p>The number in the orange diamond is the card's <b>mana cost</b>. <b>Tap any card</b> to see it large with its full <b>ability</b> (what it does) and an explanation of each skill.</p>
+
+  <h3>The four kinds of card</h3>
+  <div class="types">
+    <div><b>Character</b>Stays on the table and fights. Most of your cards are characters.</div>
+    <div><b>Spell</b>Does something once, like dealing damage, then goes to the graveyard.</div>
+    <div><b>Equipment</b>Attaches to one of your characters and adds its numbers to that character's stats.</div>
+    <div><b>Area</b>Stays on your side of the table and keeps affecting the game, for example giving your characters +1 Speed.</div>
+  </div>
+
+  <h3>Rarity</h3>
+  <p>The colored edge of a card shows how rare it is. Rarer cards are usually stronger and cost more.</p>
+  <ul class="plain-list" data-fill="rarities">
+    <li>Basic · Rare · Exotic · Divine · Unknown</li>
+  </ul>
+
+  <h2 id="turn">4. Your turn, step by step</h2>
+  <p>Players take turns. Every turn goes through the same four steps, in order. The step strip in the middle of the table lights up the one you're on, and the big button on the right moves you to the next.</p>
+  <div class="steps">
+    <div class="step"><h4>Draw</h4><p>Press <b>Draw card</b> to take the top card of your deck into your hand.</p></div>
+    <div class="step"><h4>Setup</h4><p>Play cards from your hand by paying their mana cost. Play as many as your mana allows.</p></div>
+    <div class="step"><h4>Battle</h4><p>Your characters attack. Each one can attack once.</p></div>
+    <div class="step"><h4>End</h4><p>Some cards do something now. Then press <b>Pass turn</b> and it's your opponent's turn.</p></div>
+  </div>
+  <h3>Mana</h3>
+  <ul>
+    <li>Mana is what you spend to play cards. At the start of every turn your mana <b>refills</b>, and your maximum grows by <b><span data-rule="mana_growth_per_turn">1</span></b>. So you have 1 mana on your first turn, 2 on your second, and so on.</li>
+    <li>Mana you don't spend is lost at the end of the turn, so try to use it.</li>
+    <li>Going first is an advantage, so the first player <b>skips their first Draw</b>, and the second player gets a one-time <b>+1</b> token next to their mana. Tap it on any of your turns for 1 extra mana that turn.</li>
+  </ul>
+
+  <h2 id="playing">5. Playing cards</h2>
+  <figure>
+    <img src="guide/play.jpg" width="1440" height="640" alt="Dragging a glowing card from the hand onto the table">
+  </figure>
+  <ul>
+    <li>During <b>Setup</b>, <b>drag</b> a card from your hand onto the table. You can also <b>tap</b> it to read it, then press <b>Play</b>.</li>
+    <li>Cards glowing <b>green</b> are ones you have enough mana for.</li>
+    <li>A new character <b>can't attack on the turn it's played</b>, unless it has the <b>Rush</b> skill.</li>
+    <li>If a card needs a <b>target</b> (for example “deal 2 damage to a character”), the cards you can choose glow blue. Tap one.</li>
+    <li>Some abilities happen right away when a card is played. Cards with the <b>Signal</b> skill use their ability as they enter the table.</li>
+    <li>Each side can hold up to <span data-rule="max_field_characters">7</span> characters, <span data-rule="max_field_areas">5</span> areas and <span data-rule="max_field_equipment">5</span> stored equipment.</li>
+  </ul>
+  <h3>Equipment</h3>
+  <figure class="fit">
+    <img src="guide/equip.png" width="692" height="265" alt="Simple Farmer plus Sword equals a Farmer with 2 Attack">
+  </figure>
+  <ul>
+    <li>Drag equipment onto one of your characters to attach it. Its numbers are added to the character's stats.</li>
+    <li>Or drop it in your <b>equipment row</b> to save it. Attaching it later costs mana depending on its rarity: tap it, then tap a character.</li>
+    <li>If the character is knocked out, its equipment is lost with it.</li>
+  </ul>
+
+  <h2 id="battle">6. Battle</h2>
+  <figure>
+    <img src="guide/battle.jpg" width="1440" height="534" alt="Attacking: tap your character, then tap an enemy or attack the player directly">
+  </figure>
+  <ol>
+    <li>Press <b>To battle →</b>. Characters that can attack have a <b>green outline</b>.</li>
+    <li><b>Tap one of your characters</b> to choose it.</li>
+    <li><b>Tap an enemy character</b> to fight it, or press <b>Attack directly</b> to hit the other player. You choose: enemy characters don't block you automatically.</li>
+  </ol>
+  <h3>How a fight works</h3>
+  <figure class="fit">
+    <img src="guide/fight.png" width="657" height="386" alt="Simple Bowman (Speed 2) attacks Simple Farmer (Speed 1) and strikes first">
+  </figure>
+  <ol>
+    <li>Compare <b>⚡ Speed</b>. The faster character strikes first. If they're tied, the <b>attacker</b> strikes first.</li>
+    <li>The first striker deals its <b>⚔ Attack</b> as damage to the other's <b>♥ Health</b>.</li>
+    <li>If the other character survives, it strikes back with its own Attack.</li>
+    <li>A character at 0 Health is <b>knocked out</b> and goes to the graveyard.</li>
+  </ol>
+  <ul>
+    <li>Damage <b>stays</b>. A hurt character doesn't heal at the end of the turn.</li>
+    <li>Attacking the player directly is safe: the player doesn't strike back.</li>
+    <li>Each character attacks once per turn. Characters with <b>Tower</b> never attack. They only block.</li>
+    <li>If the other side has a character with <b>Challenge</b>, every attack must go to it until it's gone.</li>
+  </ul>
+
+  <h2 id="together">7. How cards work together</h2>
+  <p>Single cards are simple. Shardfall gets interesting when cards combine.</p>
+  <ul>
+    <li><b>Bonuses add up.</b> A character's stats on the table include its equipment, areas and other cards' abilities. An <u>underlined</u> number means it has a bonus. Tap a character to see its equipment.</li>
+    <li><b>Read the ability.</b> Ability text says <i>when</i> something happens: when played, at the end of your turn, while you control something, or when it is knocked out.</li>
+    <li><b>Answer big threats with spells.</b> In the tutorial, <b>Simplify</b> turns a 5-Health wall into a 1 / 1 / 1 that any character can beat.</li>
+    <li><b>Build around a plan.</b> Each faction has a style. Simple Farmers bring more Farmers. Monkeys with <b>Rally</b> get stronger in groups. Zombies <b>Reanimate</b> after being knocked out. Fighters grow with equipment. Digital characters <b>Level Up</b>.</li>
+  </ul>
+  <p>Counter spells (Nullify, Nope for One, Nope for All, Return to Sender and Try Again) can't be played yet.</p>
+
+  <h2 id="skills">8. Skills</h2>
+  <p>Skills are keywords printed on a card, each with its own rule. They show on the card with their symbol.</p>
+  <div class="g-skills" data-fill="skills">
+    <div class="g-skill"><span class="icon">➜</span><b>Rush</b><p>Can attack on the turn it is played</p></div>
+    <div class="g-skill"><span class="icon">!</span><b>Challenge</b><p>Enemies must attack this character</p></div>
+    <div class="g-skill"><span class="icon">▰</span><b>Tower</b><p>Cannot attack but blocks</p></div>
+    <div class="g-skill"><span class="icon">⌁</span><b>Signal</b><p>Triggers an ability when entering the field</p></div>
+  </div>
+
+  <h2 id="decks">9. The decks</h2>
+  <p>Pick a deck on the main menu. Each belongs to a faction with its own style. <b>Simple</b> is the best place to start: its cards each do one clear thing.</p>
+  <ul class="plain-list" data-fill="decks">
+    <li>Simple, Monkey, Zombie, Fighter and Digital</li>
+  </ul>
+  <p>The <b>Almanac</b> on the main menu shows every card in the game.</p>
+
+  <h2 id="tips">10. Tips for your first games</h2>
+  <ul>
+    <li><b>Spend your mana every turn.</b> Cheap characters early on add up.</li>
+    <li><b>Check Speed before you attack.</b> If the enemy is faster and its Attack is at least your Health, your character is knocked out before it hits back.</li>
+    <li><b>Hit the player when it's safe.</b> If you can't win a fight, attacking directly still gets you closer to winning.</li>
+    <li><b>Tap cards to read them.</b> Especially the computer's: you can read its characters too.</li>
+    <li><b>Use the +1 token</b> if you're the second player and one more mana lets you play a card.</li>
+  </ul>
+
+  <h2 id="words">11. Words to know</h2>
+  <dl class="words">
+    <dt>Mana</dt><dd>What you spend to play cards. It refills every turn.</dd>
+    <dt>Hand</dt><dd>The cards you hold. Only you can see them.</dd>
+    <dt>Deck</dt><dd>Your face-down pile. You draw from it.</dd>
+    <dt>Table</dt><dd>Where played characters, areas and equipment sit. Also called the field or battlefield.</dd>
+    <dt>Graveyard</dt><dd>Where used spells and knocked-out cards go.</dd>
+    <dt>Stats</dt><dd>A character's Attack, Health and Speed.</dd>
+    <dt>Ability</dt><dd>The text on a card describing what it does.</dd>
+    <dt>Skill</dt><dd>A keyword with a rule, like Rush or Challenge.</dd>
+    <dt>Target</dt><dd>The card or player an ability affects. You pick it by tapping.</dd>
+    <dt>Knocked out</dt><dd>A character whose Health reached 0. It goes to the graveyard.</dd>
+    <dt>Faction</dt><dd>The family a card belongs to: Simple, Monkey, Zombie, Fighter or Digital. Some cards are Neutral.</dd>
+  </dl>
+</main>
+
+<script src="js/data.js" data-only></script>
+<script src="js/guide.js"></script>
+<script>loadData().then(d => fillGuide(document.getElementById("guide-main"), d)).catch(() => {});</script>
+</body>
+</html>

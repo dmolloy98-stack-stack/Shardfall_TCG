@@ -605,3 +605,135 @@ button { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------------------------------------------------------------- tutorial
+   The coach layer covers the game screen in screen pixels (not the scaled
+   board), so its text stays readable on phones. It lets clicks through to the
+   board; only the coach box itself takes input. */
+.coach { position: absolute; inset: 0; z-index: 120; pointer-events: none; }
+.coach-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.coach-ring rect { fill: none; stroke: #ffd27a; stroke-width: 3; animation: ring 1.3s ease-in-out infinite; }
+@keyframes ring { 50% { stroke-opacity: 0.35; } }
+.coach-arrow { fill: none; stroke: #ffd27a; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 10 8; animation: march 0.8s linear infinite; filter: drop-shadow(0 1px 2px #000); }
+@keyframes march { to { stroke-dashoffset: -18; } }
+.coach-box {
+  position: absolute; pointer-events: auto;
+  width: min(360px, calc(100vw - 24px)); box-sizing: border-box;
+  max-height: calc(100vh - 24px); overflow: auto;
+  padding: 16px 18px 14px;
+  background: linear-gradient(#2b190d, #1a0f08);
+  border: 2px solid var(--brass); border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  font-size: 16px; line-height: 1.45;
+}
+.coach-box.wide { width: min(620px, calc(100vw - 24px)); }
+.coach-box h2 { margin: 0 0 6px; font-family: var(--font-display); font-weight: 400; font-size: 1.45rem; color: var(--brass); line-height: 1.15; }
+.coach-text p { margin: 0 0 8px; }
+.coach-text ol, .coach-text ul { margin: 6px 0; padding-left: 1.3em; }
+.coach-text li + li { margin-top: 3px; }
+.coach-text b { color: #ffe3a8; }
+.coach-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
+.coach-foot .btn { font-size: 1rem; padding: 0.4em 1.1em; }
+.coach-foot [data-coach="next"] { margin-left: auto; }
+.coach-progress { width: 90px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.coach-progress span { display: block; height: 100%; background: var(--brass); }
+.coach-quit, .link-btn {
+  appearance: none; border: 0; background: none; padding: 0; cursor: pointer;
+  color: var(--muted); font-size: 0.85rem; text-decoration: underline; text-underline-offset: 2px;
+}
+.coach-nudge { margin: 8px 0 0; color: #ffd27a; font-weight: 700; }
+.coach-box.nudge { animation: nudge 0.4s; }
+@keyframes nudge { 20% { translate: -8px 0; } 40% { translate: 7px 0; } 60% { translate: -5px 0; } 80% { translate: 3px 0; } }
+
+/* Card anatomy: a big card with labelled parts. Everything is in em. */
+.anatomy { position: relative; width: 35em; height: 15.8em; margin: 4px auto 10px; font-size: min(15px, calc((100vw - 64px) / 35), calc((100vh - 210px) / 16)); }
+@media (max-height: 520px) {
+  .coach-box { font-size: 14.5px; padding: 12px 14px 10px; }
+  .coach-box h2 { font-size: 1.25rem; }
+  .coach-foot { margin-top: 8px; }
+}
+.anatomy > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.anatomy > svg path { stroke: #ffd27a; stroke-width: 0.07; fill: none; }
+.anatomy > svg circle { fill: #ffd27a; }
+.anat-card { position: absolute; }
+.anat-card .card { font-size: 1.1em; }
+.anat-label { position: absolute; width: 10.4em; display: grid; line-height: 1.2; }
+.anat-label.L { left: 0; text-align: right; }
+.anat-label.R { left: 24.1em; }
+.anat-label b { color: #ffe3a8; font-size: 1.05em; }
+.anat-label span { color: var(--muted); font-size: 0.9em; }
+
+/* Beginner hints */
+.hint {
+  position: absolute; z-index: 110; box-sizing: border-box;
+  padding: 10px 12px;
+  background: rgba(20, 11, 5, 0.94); border: 2px solid var(--brass-dim); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  font-size: 14px; line-height: 1.4;
+}
+.hint.narrow { font-size: 12.5px; padding: 8px 9px; }
+.hint.collapsed { width: auto !important; padding: 0; border: 0; background: none; box-shadow: none; }
+.hint p { margin: 4px 0 6px; }
+.hint-head { display: flex; justify-content: space-between; align-items: center; color: var(--brass); }
+.hint-x { appearance: none; border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 4px; }
+.hint-off { appearance: none; border: 0; background: none; padding: 0; color: var(--muted); font-size: 12.5px; text-decoration: underline; cursor: pointer; }
+.hint-chip {
+  appearance: none; cursor: pointer; padding: 6px 12px; border-radius: 999px;
+  background: rgba(20, 11, 5, 0.94); border: 2px solid var(--brass-dim); font-size: 14px; font-weight: 700;
+}
+
+/* First-visit welcome */
+.welcome { display: grid; gap: 12px; max-width: 46ch; }
+.welcome p { margin: 0; }
+.welcome .link-btn { justify-self: start; }
+
+/* ------------------------------------------------------------------- guide
+   Shared by guide.html and the How to play screen in the game. */
+#guide { background: radial-gradient(ellipse at top, #2a1a0f, var(--table) 70%); }
+.guide-bar-btn { margin-left: auto; }
+.guide-body {
+  max-width: 900px; margin: 0 auto;
+  padding-block: 20px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  font-size: 17px; line-height: 1.55;
+}
+.guide-body h2 { font-family: var(--font-display); font-weight: 400; color: var(--brass); font-size: 2rem; margin: 40px 0 8px; line-height: 1.15; }
+.guide-body h3 { font-family: var(--font-display); font-weight: 400; color: #ffe3a8; font-size: 1.35rem; margin: 22px 0 6px; }
+.guide-body p, .guide-body ul, .guide-body ol { margin: 0 0 12px; }
+.guide-body li + li { margin-top: 4px; }
+.guide-body a { color: #ffd27a; }
+.guide-body b { color: #ffe3a8; }
+.guide-body figure { margin: 14px 0 18px; }
+.guide-body figure img { display: block; width: 100%; height: auto; border-radius: 10px; border: 2px solid var(--brass-dim); background: #1c110a; }
+.guide-body figure.fit img { width: auto; max-width: 100%; margin: 0 auto; border: 0; }
+.guide-body figcaption { margin-top: 6px; color: var(--muted); font-size: 0.92rem; }
+.guide-lead { font-size: 1.12rem; }
+.guide-callout { padding: 14px 16px; border-radius: 10px; background: rgba(217, 166, 76, 0.1); border: 1px solid var(--brass-dim); margin: 0 0 16px; }
+.guide-callout p:last-child { margin: 0; }
+.guide-toc { columns: 2 220px; padding-left: 1.2em; }
+.legend { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 6px 18px; }
+.legend li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; margin: 0 !important; }
+.badge-num {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: #ffd27a; color: var(--ink); font-weight: 800; font-size: 14px; line-height: 1;
+}
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 8px 0 16px; counter-reset: step; }
+.step { padding: 12px 14px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); }
+.step h4 { margin: 0 0 4px; font-size: 1rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brass); }
+.step h4::before { counter-increment: step; content: counter(step) ". "; }
+.step p { margin: 0; font-size: 0.95rem; }
+.types { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 8px 0 16px; }
+.types div { padding: 12px 14px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); }
+.types b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; }
+.g-skills { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.g-skill { display: grid; grid-template-columns: 34px 1fr; gap: 0 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); }
+.g-skill .icon { grid-row: span 2; font-size: 1.5rem; color: var(--brass); text-align: center; line-height: 1.2; }
+.g-skill p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+.swatch { display: inline-block; width: 0.9em; height: 0.9em; border-radius: 3px; margin-right: 6px; vertical-align: -0.1em; border: 1px solid rgba(0, 0, 0, 0.5); }
+.plain-list { list-style: none; padding: 0; }
+dl.words { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; }
+dl.words dt { font-weight: 800; color: #ffe3a8; }
+dl.words dd { margin: 0; }
+@media (max-width: 560px) { dl.words { grid-template-columns: 1fr; } dl.words dd { margin-bottom: 8px; } }
+.guide-page .almanac-bar a.btn { text-decoration: none; }

@@ -13,13 +13,23 @@ The game loads its cards from the `data/` folder, so it needs to be opened from 
 
 ## How to play
 
+New players have three kinds of help:
+
+- **Tutorial** (main menu, or `index.html#tutorial`): a five-minute scripted game against a gentle Trainer using Simple cards. A coach box explains one idea at a time, dims the rest of the screen and points at what to tap or drag: reading a card, mana, the four turn steps, playing characters, abilities, equipment, combat and Speed, spells, skills (Signal, Rush, Challenge, Tower) and combining cards.
+- **How to play guide** ([`guide.html`](guide.html)): an illustrated page with annotated screenshots of the table, a labelled card, turns, playing cards, battle and how cards work together, plus a skills glossary and beginner words. It's the same page the in-game "How to play" button opens, and it can be shared on its own: `https://dmolloy98-stack-stack.github.io/Shardfall_TCG/guide.html`.
+- **Beginner hints**: during a game, a small panel says what you can do right now. Hide it with ✕, turn it off with "Turn off hints", or switch it back on in ☰ Menu. The choice is remembered on that device.
+
+First-time visitors are offered the tutorial when the game opens.
+
+The short version:
+
 - Each player starts with 20 health and 6 cards from a 35-card deck. Reduce the other player to 0 health to win. Drawing from an empty deck loses.
 - **Draw → Setup → Battle → End.** Your maximum mana grows by 1 each turn, with no cap. The player who goes first skips their first draw; the player who goes second gets a one-time **+1** mana token beside their mana, usable on any of their turns.
 - **Setup:** drag cards from your hand onto the table, or tap a card and press Play.
 - **Battle:** tap one of your characters, then an enemy character, or "Attack directly". The faster character strikes first.
 - Tap or right-click any card to read it. Escape or right-click cancels a choice.
 
-The in-game "How to play" button has the full rules.
+The guide has the full rules.
 
 ## Editing cards, decks and rules
 
@@ -43,12 +53,18 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | File | What it does |
 |---|---|
 | `index.html` | Page structure |
+| `guide.html` | The illustrated How to play guide (also shown inside the game) |
+| `guide/` | Pictures for the guide, made by `tools/guide-shots.js` |
 | `css/style.css` | All styling and animations |
 | `data/*.csv` | Cards, decks, skills and rules (see above) |
 | `js/data.js` | Loads and checks the CSV files, then starts the game |
 | `js/engine.js` | Game rules: turns, combat, skills, card effects |
 | `js/ai.js` | Computer opponent |
 | `js/ui.js` | Board rendering, input, menu, Almanac |
+| `js/tutorial.js` | The tutorial: scripted steps, coach box, spotlight and arrows |
+| `js/help.js` | Beginner hints, the first-visit welcome, the in-game guide screen |
+| `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
+| `tools/guide-shots.js` | Retakes the annotated guide pictures: `node tools/guide-shots.js` (needs Node.js and Playwright) |
 | `original-lua/main.lua` | The LÖVE2D source this was ported from |
 
 ## The starter decks
