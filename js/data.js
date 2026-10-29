@@ -1,0 +1,278 @@
+// Shardfall game data.
+// These blocks are the same CSV files the Lua version read from data/*.csv.
+// Edit them here to change cards, decks and balance; the game parses them at startup.
+// Lines beginning with # are instructions and are ignored by the loader.
+// If a value contains a comma, wrap the whole value in double quotes.
+
+const CSV = {};
+
+CSV.game_rules = `# GAME RULES
+# Global balance and game setup values. Value is read according to ValueType.
+RuleID,Value,ValueType,Description
+starting_player_health,20,number,Initial health for each player
+starting_hand_size,6,number,Cards drawn at the beginning of a game
+mana_growth_per_turn,1,number,Mana maximum gained at the start of each turn
+max_field_characters,7,number,Maximum characters on one battlefield
+max_field_equipment,5,number,Maximum equipment cards on one battlefield
+max_field_areas,5,number,Maximum area cards on one battlefield`;
+
+CSV.phases = `# PHASES
+# Turn phases are listed in order. The engine owns the phase behavior; this controls labels and help text.
+PhaseID,Name,DisplayOrder,Instruction,AllowsCardPlay,AllowsAttack,RequiresDraw
+Draw,Draw,1,Click DRAW CARD to draw from your deck,false,false,true
+Setup,Setup,2,Drag cards from your hand to play them,true,false,false
+Battle,Battle,3,Click your character then click an enemy to attack,false,true,false
+End,End,4,Resolve end-of-turn effects and pass the turn,false,false,false`;
+
+CSV.ui_text = `# UI TEXT
+TextID,Text,Category
+button_start_game,START GAME,Button
+button_almanac,ALMANAC,Button
+button_restart,RESTART,Button
+button_main_menu,MAIN MENU,Button
+tutorial_draw,Click DRAW CARD to begin,Tutorial
+tutorial_setup,Drag cards with green glow onto the field to play them,Tutorial
+tutorial_battle,Click one of your characters then click an enemy,Tutorial`;
+
+CSV.skills = `# SKILLS
+# One row per skill keyword. DisplayOrder controls the Almanac order.
+SkillID,Name,IconKey,Description,DisplayOrder
+flash,Flash,✦,Can be played during the Battle phase,10
+cloak,Cloak,◉,Cannot be targeted by spells,20
+reanimate,Reanimate,↺,Returns to the battlefield once after dying,30
+rush,Rush,➜,Can attack on the turn it is played,40
+overwhelm,Overwhelm,⚔,Excess damage hits the opposing player,50
+parry,Parry,↯,Deals double damage when defending,60
+tower,Tower,▰,Cannot attack but blocks,70
+challenge,Challenge,!,Enemies must attack this character,80
+signal,Signal,⌁,Triggers an ability when entering the field,90
+rally,Rally,♜,+1 Attack and Speed while you control 3+ Rally characters of its faction,100
+level_up,Level Up,↑,Grows stronger when its condition is met,110
+evolve,Evolve,✧,+3 to all stats once its condition is met,120
+transform,Transform,⇄,Changes into another card,130`;
+
+CSV.rarities = `# RARITIES
+# Edge colors use RGB values from 0 to 1. EquipmentAttachCost is the cost to attach equipment already on the field.
+RarityID,Name,EdgeR,EdgeG,EdgeB,EquipmentAttachCost,DisplayOrder
+basic,Basic,0.56,0.59,0.64,1,10
+rare,Rare,0.22,0.48,0.95,2,20
+exotic,Exotic,0.68,0.28,0.88,3,30
+divine,Divine,0.25,0.72,0.35,4,40
+unknown,Unknown,0.95,0.68,0.18,5,50`;
+
+CSV.factions = `# FACTIONS
+FactionID,Name,ColorR,ColorG,ColorB,SymbolKey,Description,DisplayOrder
+Simple,Simple,0.30,0.64,0.36,sprout,Nature and humble beginnings,10
+Monkey,Monkey,0.84,0.58,0.17,paw,Agility and mischief,20
+Zombie,Zombie,0.40,0.63,0.42,skull,Decay and resurrection,30
+Fighter,Fighter,0.78,0.28,0.24,swords,Combat and discipline,40`;
+
+CSV.cards = `# CARDS
+# One row per card. CardID is the permanent internal ID; never change it after using it in a deck.
+# Cost is mana. Stats use Attack+Health+Speed. Skills are separated with +. Use --- for none.
+# ArtKey maps to assets/cards/<ArtKey>.png (optional; cards without art show their faction symbol).
+CardID,Cost,Name,Rarity,Type,Race,Faction,Stats,Skills,Ability,Description,ArtKey
+flame_surge,3,Flame Surge,Basic,Spell,N/A,N/A,---,---,Deal 1 damage to all characters and players,,flame_surge
+fire_storm,5,Fire Storm,Rare,Spell,N/A,N/A,---,---,Deal 3 damage to all characters and players,,fire_storm
+whirlpool,4,Whirlpool,Basic,Area,N/A,N/A,---,---,All characters take 1 damage upon entering the field and have their speed reduced by 1,,whirlpool
+call_back,4,Call Back,Rare,Spell,N/A,N/A,---,---,Return target character from a graveyard to your hand,,call_back
+nullify,4,Nullify,Rare,Spell,N/A,N/A,---,Flash,Counter target character or spell,,nullify
+disable,3,Disable,Divine,Spell,N/A,N/A,---,---,Choose a character. That character now has no abilities,,disable
+nope_for_one,2,Nope for One,Basic,Spell,N/A,N/A,---,Flash,Counter target spell which targets a single character,,nope_for_one
+nope_for_all,2,Nope for All,Basic,Spell,N/A,N/A,---,Flash,Counter target spell which targets more than 1 character,,nope_for_all
+return_to_sender,3,Return to Sender,Basic,Spell,N/A,N/A,---,Flash,Counter target character,,return_to_sender
+try_again,3,Try Again,Basic,Spell,N/A,N/A,---,Flash,Counter target spell,,try_again
+mana_horder,7,Mana Horder,Exotic,Character,Goblin,N/A,2+2+1,Signal,Steal a mana from an opposing player and add it to your own maximum mana,,mana_horder
+area_denial,3,Area Denial,Basic,Spell,N/A,N/A,---,---,Destroy target Area,,area_denial
+simple_farmer,1,Simple Farmer,Basic,Character,N/A,Simple,1+1+1,---,"When played, search your deck for a Simple Farmer and add it to your hand. Once you control 3 Simple Farmers on the field, search your deck for a Simpler Farmer and put him on the field",,simple_farmer
+simple_barkeep,1,Simple Barkeep,Basic,Character,N/A,Simple,1+1+1,Signal,Add +1 health to target character,,simple_barkeep
+simple_swordsman,2,Simple Swordsman,Basic,Character,N/A,Simple,2+1+1,---,---,,simple_swordsman
+simple_bowman,2,Simple Bowman,Basic,Character,N/A,Simple,1+1+2,Rush,---,,simple_bowman
+simple_wanderer,2,Simple Wanderer,Basic,Character,N/A,Simple,1+2+1,---,---,,simple_wanderer
+sword,1,Sword,Basic,Equipment,N/A,Simple,1+0+0,---,---,,sword
+bow,1,Bow,Basic,Equipment,N/A,Simple,0+0+1,---,---,,bow
+helm,1,Helm,Basic,Equipment,N/A,Simple,0+1+0,---,---,,helm
+slap,1,Slap,Basic,Spell,N/A,Simple,---,Signal,Target character loses 1 Health.,,slap
+simple_wizard,4,Simple Wizard,Rare,Character,N/A,Simple,3+1+2,Signal,Choose target player or character - deal 2 damage to the target,,simple_wizard
+simple_messenger,3,Simple Messenger,Rare,Character,N/A,Simple,1+2+1,Signal,Look at the top card of your opponent's deck - choose to place it on the top of your deck or discard it,,simple_messenger
+staff,2,Staff,Rare,Equipment,N/A,Simple,3+1+0,---,---,,staff
+herd,4,Herd,Rare,Spell,N/A,Simple,---,---,Add 3 Simple Farmers to the field under your control,,herd
+simplify,3,Simplify,Rare,Spell,N/A,Simple,---,---,Target character's stats become 1+1+1,,simplify
+simpler_farmer,5,Simpler Farmer,Exotic,Character,N/A,Simple,2+4+2,Signal,Simpler Farmer gets +1 Attack and Speed for each other Simple Farmer on the field,,simpler_farmer
+simple_defender,5,Simple Defender,Exotic,Character,N/A,Simple,1+6+0,Challenge+Tower,Add +2 health to this character during your End Phase,,simple_defender
+simpledom,5,Simpledom,Exotic,Area,N/A,Simple,---,---,Simple characters gain +2 in all stats,,simpledom
+sabre,4,Sabre,Divine,Equipment,N/A,Simple,5+0+5,---,---,,sabre
+simplicity,7,Simplicity,Divine,Spell,N/A,Simple,---,---,Reduce all target player's character's stats by -2 in all categories. You gain +2 HP for each character effected,,simplicity
+the_simplistic,10,The Simplistic,Unknown,Character,N/A,Simple,5+5+3,Signal,"Simple cards gain immunity from targeted spells and +5 each stat for characters/equipment/spells.",,the_simplistic
+fat_monkey,1,Fat Monkey,Basic,Character,Animal,Monkey,1+3+0,Rally,---,,fat_monkey
+smart_monkey,1,Smart Monkey,Basic,Character,Animal,Monkey,1+1+2,Rally,---,,smart_monkey
+baby_monkey,0,Baby Monkey,Basic,Character,Animal,Monkey,0+1+0,Rally,---,,baby_monkey
+monkey_apprentice,2,Monkey Apprentice,Basic,Character,Animal,Monkey,2+1+1,Signal,Add a Banana from your deck to your hand. Shuffle your deck,,monkey_apprentice
+chimp,1,Chimp,Basic,Character,Animal,Monkey,1+2+1,Rally,---,,chimp
+tree_branch,3,Tree Branch,Basic,Equipment,N/A,Monkey,2+1+0,---,If there are 3 or more monkeys on the field this costs 1,,tree_branch
+banana,1,Banana,Basic,Spell,N/A,Monkey,---,---,Target character gains +1 health. Add a Peel from your deck to your hand shuffle your deck,,banana
+peel,1,Peel,Basic,Spell,N/A,Monkey,---,---,Target character loses -1 health. If you control 3 or more monkeys it loses 2 health instead,,peel
+jungle,3,Jungle,Basic,Area,N/A,Monkey,---,---,All Monkey cards gain +1 speed,,jungle
+orangutan,5,Orangutan,Rare,Character,Animal,Monkey,1+4+0,Signal+Rally,Gain +1 health for each other Monkey you control on the field,,orangutan
+baboon,5,Baboon,Rare,Character,Animal,Monkey,0+2+3,Rush+Overwhelm,Gain +1 attack for each character on the field,,baboon
+banana_tree,5,Banana Tree,Rare,Character,Animal,Monkey,0+5+0,Tower,During your end phase add a Banana to your hand,,banana_tree
+ape,5,Ape,Rare,Character,N/A,Monkey,3+3+0,Rally,---,,ape
+ripen,3,Ripen,Rare,Spell,N/A,Monkey,---,---,For the rest of the game Banana also adds +1 attack,,ripen
+primate,6,Primate,Exotic,Character,Animal,Monkey,2+2+2,Signal+Rally,Search your deck for 2 other Monkey cards that cost 2 or less and put them on the field,,primate
+gorilla,6,Gorilla,Exotic,Character,Animal,Monkey,3+4+1,Rally,Each time Gorilla survives damage gain +1 Attack and +1 Speed,,gorilla
+arboreal_intelligence,8,Arboreal Intelligence,Exotic,Spell,N/A,Monkey,---,---,Give all Monkey character cards +5 to all stats,,arboreal_intelligence
+call_of_the_jungle,6,Call of the Jungle,Divine,Spell,N/A,Monkey,---,---,Select 3 or less Monkey cards from your Graveyard return them to your hand,,call_of_the_jungle
+primeval_forest,7,Primeval Forest,Divine,Area,N/A,Monkey,---,---,All Monkey character cards have +3 to all stats,,primeval_forest
+the_man_ape,7,The Man Ape,Unknown,Character,Animal,Monkey,4+4+4,Challenge+Cloak,When defending gain +10 to all stats. After each battle you may sacrifice a Monkey you control to permanently give Tarzan +1 to all stats and fully heal,,the_man_ape
+reanimated_corpse,0,Reanimated Corpse,Basic,Character,Undead,Zombie,0+1+0,Reanimate,---,,reanimated_corpse
+lurker,1,Lurker,Basic,Character,Undead,Zombie,1+1+0,---,---,,lurker
+patched_husk,1,Patched Husk,Basic,Character,Undead,Zombie,0+1+1,---,---,,patched_husk
+hungry_corpse,2,Hungry Corpse,Basic,Character,Undead,Zombie,1+1+1,Reanimate,Gain +1 to all stats when brought from the Graveyard to the Field,,hungry_corpse
+extra_arm,2,Extra Arm,Basic,Equipment,N/A,Zombie,2+0+0,---,---,,extra_arm
+haunt_the_living,3,Haunt the Living,Basic,Spell,N/A,Zombie,---,---,Target character gains Reanimate,,haunt_the_living
+rotten_finger,3,Rotten Finger,Basic,Spell,N/A,Zombie,---,---,Discard a card in your hand draw a card,,rotten_finger
+rotten_hand,5,Rotten Hand,Basic,Spell,N/A,Zombie,---,---,Discard all the cards in your hand draw 3 cards,,rotten_hand
+rise_from_the_dead,3,Rise from the Dead,Basic,Spell,N/A,Zombie,---,---,Return target Undead character from your graveyard to your hand. Pay 2 more to bring it to the Field instead,,rise_from_the_dead
+plaguemancer,8,Plaguemancer,Rare,Character,Undead,Zombie,2+2+1,Signal,Turn target character into a Zombie and gain control of it. That character gains Reanimate,,plaguemancer
+breathing_wall,2,Breathing Wall,Rare,Character,Undead,Zombie,0+5+0,Tower+Challenge,---,,breathing_wall
+sneaky_skinbag,5,Sneaky Skinbag,Rare,Character,Undead,Zombie,1+2+1,Cloak,During your End Phase create a Reanimated Corpse on your side of the field. Gain +1 health for each other Zombie on the field,,sneaky_skinbag
+midnight_madness,6,Midnight Madness,Rare,Area,N/A,Zombie,---,---,Undead characters gain +2 to all stats,,midnight_madness
+infection,5,Infection,Rare,Spell,N/A,Zombie,---,---,Turn target character into a Zombie and gain control of it,,infection
+shadow_stitched_soldier,5,Shadow-Stitched Soldier,Exotic,Character,Undead,Zombie,3+2+2,Reanimate+Evolve,After returning from the Graveyard to the Field Evolve,,shadow_stitched_soldier
+zombombadier,7,Zombombadier,Exotic,Character,Undead,Zombie,1+1+1,Reanimate+Evolve,Deal damage to all characters and players equal to this Zombombadier's stat line. After returning from the Graveyard to the Field Evolve,,zombombadier
+soul_suction,6,Soul Suction,Exotic,Spell,Undead,Zombie,---,Flash,Destroy target character gain HP based on that character's stat-line,,soul_suction
+they_just_keep_coming,15,They Just Keep Coming,Divine,Spell,N/A,Zombie,---,---,This costs 1 less for each Zombie on the field. Every Zombie gains Reanimate. If a Zombie already has Reanimate give them +3 health,,they_just_keep_coming
+deaths_grasp,6,Death's Grasp,Divine,Spell,N/A,Zombie,---,---,Destroy target character. Ignore skills and abilities,,deaths_grasp
+soul_shepard,5,Soul Shepard,Unknown,Character,Undead,Zombie,3+3+3,---,Each time a Zombie is sent to your graveyard gain the stats of that Zombie OR return the Zombie to your hand,,soul_shepard
+seasoned_monk,2,Seasoned Monk,Basic,Character,N/A,Fighter,1+1+2,Parry,---,,seasoned_monk
+white_belt_student,1,White Belt Student,Basic,Character,N/A,Fighter,0+1+0,Level Up+Transform,Level Up whenever an equipment enters the Field. After Level Up is triggered 3 times Transform into Black Belt Student. Keep stats from Level Up,,white_belt_student
+weapons_enthusiast,1,Weapons Enthusiast,Basic,Character,N/A,Fighter,1+1+1,---,Equip costs become 0 when equipping to Weapons Enthusiast,,weapons_enthusiast
+sensei,5,Sensei,Basic,Character,N/A,Fighter,2+2+2,---,While Sensei is on the field all equip costs become 0,,sensei
+sparring_gear,4,Sparring Gear,Basic,Equipment,N/A,Fighter,0+3+0,---,---,,sparring_gear
+zippy_shoes,4,Zippy Shoes,Basic,Equipment,N/A,Fighter,0+0+3,---,---,,zippy_shoes
+mc_knuckle_dusters,4,McKnuckle Dusters,Basic,Equipment,N/A,Fighter,3+0+0,---,---,,mc_knuckle_dusters
+bite_the_ear,1,Bite the Ear,Basic,Spell,N/A,Fighter,---,---,Target character loses 1 health,,bite_the_ear
+sweep_the_leg,2,Sweep the Leg,Basic,Spell,N/A,Fighter,---,---,Target character loses 1 speed,,sweep_the_leg
+black_belt_student,4,Black Belt Student,Rare,Character,N/A,Fighter,2+2+2,Parry+Transform,Transform into 5th Degree Master after surviving 3 combat phases,,black_belt_student
+fight_choreographer,6,Fight Choreographer,Rare,Character,N/A,Fighter,1+2+1,---,Each other Fighter character on the field gains +2 to all stats,,fight_choreographer
+nunchucks,2,Nunchucks,Rare,Equipment,N/A,Fighter,2+0+2,Flash,Can be equipped anytime as long as you have the mana,,nunchucks
+bo_staff,2,Bo Staff,Rare,Equipment,N/A,Fighter,2+2+0,Flash,Can be equipped anytime as long as you have the mana,,bo_staff
+dojo,4,Dojo,Rare,Area,N/A,Fighter,---,---,Each Fighter character gains Parry and +1 to all stats,,dojo
+fifth_degree_master,7,5th Degree Master,Exotic,Character,N/A,Fighter,3+3+2,Parry,,,fifth_degree_master
+master_rat,10,Master Rat,Exotic,Character,N/A,Fighter,5+5+5,Parry,Summon 4 1+1+1 turtles who each have Gain +1 to each stat for every other turtle on the field,,master_rat
+crane_kick,5,Crane Kick,Exotic,Spell,N/A,Fighter,---,---,Target character loses 7 health,,crane_kick
+shaolin_warrior,20,Shaolin Warrior,Divine,Character,N/A,Fighter,10+10+10,Challenge,Each character and equipment on the field makes this card cost 1 less,,shaolin_warrior
+kenshis_blade,7,Kenshi's Blade,Divine,Equipment,N/A,Fighter,8+0+2,---,Once per Battle Phase on your turn choose to deal 3 damage to target character,,kenshis_blade
+ip_man,6,IP Man,Unknown,Character,N/A,Fighter,4+6+3,Parry,Once per turn redirect the first instance of damage that would be caused to you to another source including players,,ip_man`;
+
+CSV.decks = `# DECKS
+# One row per deck. CardList format: CardID:Quantity|CardID:Quantity
+DeckID,Name,Faction,Description,IsPlayable,IsAI,CardList
+simple_starter,Simple Starter,Simple,An introductory deck of humble creatures and tools,true,false,"simple_farmer:1|simple_barkeep:1|simple_swordsman:1|simple_bowman:1|simple_wanderer:1|sword:1|bow:1|helm:1|slap:1|simple_wizard:1|simple_messenger:1|staff:1|herd:1|simplify:1|simpler_farmer:1|simple_defender:1|simpledom:1|sabre:1|simplicity:1|the_simplistic:1"
+monkey_starter,Monkey Starter,Monkey,An agile deck built around groups of monkeys,true,false,"fat_monkey:1|smart_monkey:1|baby_monkey:1|monkey_apprentice:1|chimp:1|tree_branch:1|banana:1|peel:1|jungle:1|orangutan:1|baboon:1|banana_tree:1|ape:1|ripen:1|primate:1|gorilla:1|arboreal_intelligence:1|call_of_the_jungle:1|primeval_forest:1|the_man_ape:1"
+zombie_starter,Zombie Starter,Zombie,An undead deck built around the graveyard,true,false,"reanimated_corpse:1|lurker:1|patched_husk:1|hungry_corpse:1|extra_arm:1|haunt_the_living:1|rotten_finger:1|rotten_hand:1|rise_from_the_dead:1|plaguemancer:1|breathing_wall:1|sneaky_skinbag:1|midnight_madness:1|infection:1|shadow_stitched_soldier:1|zombombadier:1|soul_suction:1|they_just_keep_coming:1|deaths_grasp:1|soul_shepard:1"
+fighter_starter,Fighter Starter,Fighter,A combat-focused deck of martial characters,true,false,"seasoned_monk:1|white_belt_student:1|weapons_enthusiast:1|sensei:1|sparring_gear:1|zippy_shoes:1|mc_knuckle_dusters:1|bite_the_ear:1|sweep_the_leg:1|black_belt_student:1|fight_choreographer:1|nunchucks:1|bo_staff:1|dojo:1|fifth_degree_master:1|master_rat:1|crane_kick:1|shaolin_warrior:1|kenshis_blade:1|ip_man:1"`;
+
+// ---------------------------------------------------------------------------
+// Loaders (port of the DATA.load* functions in main.lua)
+// ---------------------------------------------------------------------------
+
+// CSV parser that handles quoted fields, e.g. "field,with,comma"
+function parseCSVLine(line) {
+  const out = [];
+  let field = "", quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"' && line[i + 1] === '"') { field += '"'; i++; }
+    else if (c === '"') quoted = !quoted;
+    else if (c === "," && !quoted) { out.push(field.trim()); field = ""; }
+    else field += c;
+  }
+  out.push(field.trim());
+  return out;
+}
+
+// Rows of a CSV block, skipping # comments, blank lines and the header row.
+function csvRows(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim() && !l.startsWith("#"));
+  return lines.slice(1).map(parseCSVLine);
+}
+
+function rgb(r, g, b) {
+  const to = v => Math.round((parseFloat(v) || 0) * 255);
+  return `rgb(${to(r)}, ${to(g)}, ${to(b)})`;
+}
+
+const DATA = (() => {
+  const rules = {};
+  for (const [id, value, kind] of csvRows(CSV.game_rules)) rules[id] = kind === "number" ? Number(value) : value;
+
+  const phases = csvRows(CSV.phases)
+    .map(c => ({ id: c[0], name: c[1], order: Number(c[2]), instruction: c[3] || "" }))
+    .sort((a, b) => a.order - b.order);
+
+  const uiText = {};
+  for (const [id, text] of csvRows(CSV.ui_text)) uiText[id] = text || "";
+
+  const skills = {};
+  const skillOrder = [];
+  for (const c of csvRows(CSV.skills)) {
+    skills[c[1]] = { id: c[0], name: c[1], icon: c[2] || "•", desc: c[3] || "", order: Number(c[4]) || 9999 };
+    skillOrder.push(c[1]);
+  }
+  skillOrder.sort((a, b) => skills[a].order - skills[b].order);
+
+  const rarities = {};
+  const rarityOrder = [];
+  for (const c of csvRows(CSV.rarities)) {
+    rarities[c[1]] = { name: c[1], color: rgb(c[2], c[3], c[4]), attachCost: Number(c[5]) || 1, order: Number(c[6]) };
+    rarityOrder.push(c[1]);
+  }
+
+  const factions = {};
+  for (const c of csvRows(CSV.factions)) {
+    factions[c[0]] = { id: c[0], name: c[1], color: rgb(c[2], c[3], c[4]), symbol: c[5], desc: c[6], order: Number(c[7]) };
+  }
+
+  const statsOf = s => {
+    const m = (s || "").match(/(-?\d+)\+(-?\d+)\+(-?\d+)/);
+    return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0];
+  };
+  const skillsOf = s => (s || "").split("+").map(x => x.trim()).filter(x => x && x !== "---");
+
+  const cardsById = {}, cardsByName = {}, cardList = [];
+  for (const c of csvRows(CSV.cards)) {
+    if (c.length < 8 || !c[0] || !c[2]) continue;
+    const [attack, health, speed] = statsOf(c[7]);
+    const ability = c[9] && c[9] !== "---" ? c[9] : "";
+    const card = {
+      id: c[0], manaCost: Number(c[1]) || 0, name: c[2], rarity: c[3] || "Basic", type: c[4],
+      race: c[5], group: c[6], attack, health, speed, skills: skillsOf(c[8]),
+      ability, description: c[10] || "", artKey: c[11] || c[0],
+    };
+    cardsById[card.id] = card;
+    cardsByName[card.name] = card;
+    cardList.push(card);
+  }
+
+  const decks = {}, deckOrder = [];
+  for (const c of csvRows(CSV.decks)) {
+    const id = c[0];
+    if (!id) continue;
+    const deck = { id, name: c[1], faction: c[2], description: c[3], isPlayable: c[4] === "true", isAI: c[5] === "true", cards: [] };
+    for (const token of (c[6] || "").split("|").filter(Boolean)) {
+      const m = token.match(/^([^:]+):(\d+)$/);
+      if (!m || !cardsById[m[1]] || Number(m[2]) <= 0) throw new Error(`Invalid CardList entry in decks for ${id}: ${token}`);
+      deck.cards.push({ cardId: m[1], quantity: Number(m[2]) });
+    }
+    if (!deck.cards.length) throw new Error(`Deck ${id} has no cards`);
+    decks[id] = deck;
+    deckOrder.push(id);
+  }
+
+  return {
+    rules, phases, uiText, skills, skillOrder, rarities, rarityOrder, factions,
+    cardsById, cardsByName, cardList, decks, deckOrder,
+    text: (id, fallback) => uiText[id] ?? fallback ?? id,
+  };
+})();

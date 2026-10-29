@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shardfall</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- MAIN MENU -->
+  <section id="menu" class="screen">
+    <canvas id="storm" aria-hidden="true"></canvas>
+    <div class="menu-inner">
+      <header class="menu-title">
+        <h1>Shardfall</h1>
+        <p class="tagline">A trading card game for people who want to have fun, not spend money.</p>
+      </header>
+
+      <div class="menu-panel">
+        <h2 class="panel-label">Choose your deck</h2>
+        <div id="deck-list" class="deck-list"></div>
+
+        <h2 class="panel-label">Opponent</h2>
+        <div class="mode-toggle" role="radiogroup" aria-label="Opponent">
+          <button type="button" id="mode-ai" class="mode-btn" role="radio" aria-checked="true">
+            <strong>Computer</strong><span>Play against the AI</span>
+          </button>
+          <button type="button" id="mode-hotseat" class="mode-btn" role="radio" aria-checked="false">
+            <strong>Two players</strong><span>Take turns on one device</span>
+          </button>
+        </div>
+
+        <div class="menu-actions">
+          <button type="button" id="btn-start" class="btn btn-primary">Start game</button>
+          <button type="button" id="btn-almanac" class="btn">Almanac</button>
+          <button type="button" id="btn-rules" class="btn">How to play</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALMANAC -->
+  <section id="almanac" class="screen" hidden>
+    <div class="almanac-bar">
+      <button type="button" id="alm-back" class="btn btn-small">&larr; Back</button>
+      <h1>Almanac</h1>
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab" data-tab="cards" role="tab" aria-selected="true">Cards</button>
+        <button type="button" class="tab" data-tab="skills" role="tab" aria-selected="false">Skills</button>
+      </div>
+    </div>
+    <div class="almanac-body">
+      <div id="alm-filters" class="filters"></div>
+      <div id="alm-content"></div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen" hidden>
+    <div id="stage-wrap">
+      <div id="stage">
+        <div id="board"></div>
+        <div id="fx-layer"></div>
+        <div id="hand-layer"></div>
+        <div id="banner" hidden></div>
+        <div id="prompt" hidden></div>
+      </div>
+    </div>
+    <p class="rotate-hint">Turn your phone sideways for a bigger board.</p>
+  </section>
+
+  <!-- MODAL -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div id="modal-content"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
