@@ -396,15 +396,18 @@ function renderCoach() {
   const dim = !st.opp && !st.final;
 
   const progress = Math.round((TUT_STEPS.indexOf(st) / (TUT_STEPS.length - 1)) * 100);
+  // On phones the board's buttons are tiny, so the step's button is repeated here at full size.
+  const boardBtn = U.dock && !st.opp && (st.target?.() || []).find(x => x instanceof Element && ["phase", "face"].includes(x.dataset.act));
+  const doBtn = boardBtn && !boardBtn.disabled ? `<button type="button" class="btn btn-primary" data-coach="do" data-do="${boardBtn.dataset.act}">${esc(boardBtn.textContent.trim())}</button>` : "";
   let foot = "";
   if (st.final) {
     foot = `<button type="button" class="btn btn-primary" data-coach="play">Play a real game</button><button type="button" class="btn" data-coach="guide">How to play</button><button type="button" class="btn" data-coach="menu">Main menu</button>`;
   } else {
-    foot = `<span class="coach-progress" role="progressbar" aria-label="Tutorial progress" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><span style="width:${progress}%"></span></span><button type="button" class="coach-quit" data-coach="quit">Leave tutorial</button>${st.next ? `<button type="button" class="btn btn-primary" data-coach="next">Next</button>` : ""}`;
+    foot = `<span class="coach-progress" role="progressbar" aria-label="Tutorial progress" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><span style="width:${progress}%"></span></span><button type="button" class="coach-quit" data-coach="quit">Leave tutorial</button>${st.next ? `<button type="button" class="btn btn-primary" data-coach="next">Next</button>` : doBtn}`;
   }
   el.hidden = false;
   el.innerHTML = `<svg class="coach-svg" aria-hidden="true"></svg>
-    <div class="coach-box${st.wide ? " wide" : ""}${nudging ? " nudge" : ""}" role="dialog" aria-live="polite" aria-label="Tutorial">
+    <div class="coach-box${st.wide ? " wide" : ""}${U.dock ? " docked" : ""}${nudging ? " nudge" : ""}" role="dialog" aria-live="polite" aria-label="Tutorial">
       ${st.title ? `<h2>${st.title}</h2>` : ""}
       <div class="coach-text">${text}</div>
       ${nudging ? `<p class="coach-nudge">Let's stick to the highlighted step for now.</p>` : ""}
@@ -413,10 +416,21 @@ function renderCoach() {
 
   const box = el.querySelector(".coach-box");
   const vw = el.clientWidth, vh = el.clientHeight;
-  // Keep clear of the targets and of the board's own prompt bar.
-  const prompt = document.getElementById("prompt");
-  const avoid = prompt.hidden ? rects : [...rects, prompt.getBoundingClientRect()];
-  const pos = st.opp ? placeAside(box.offsetWidth, box.offsetHeight, vw, vh) : placeCoach(box.offsetWidth, box.offsetHeight, rects, avoid, vw, vh, st.wide || st.final || !rects.length);
+  let pos;
+  if (U.dock) {
+    // Phones: the coach has its own panel next to the board.
+    const wr = q("#stage-wrap").getBoundingClientRect();
+    pos = { x: wr.left + U.dock.x + 8, y: wr.top + U.dock.y + 8 };
+    box.style.width = U.dock.w - 16 + "px";
+    box.style.maxHeight = U.dock.h - 16 + "px";
+  } else {
+    // The visible height, not 100vh: phone browsers count the space behind their bars.
+    box.style.maxHeight = vh - 24 + "px";
+    // Keep clear of the targets and of the board's own prompt bar.
+    const prompt = document.getElementById("prompt");
+    const avoid = prompt.hidden ? rects : [...rects, prompt.getBoundingClientRect()];
+    pos = st.opp ? placeAside(box.offsetWidth, box.offsetHeight, vw, vh) : placeCoach(box.offsetWidth, box.offsetHeight, rects, avoid, vw, vh, st.wide || st.final || !rects.length);
+  }
   box.style.left = pos.x + "px"; box.style.top = pos.y + "px";
 
   // Dim everything except the targets, outline them, and point at the first one.
@@ -505,6 +519,7 @@ document.addEventListener("click", e => {
   if (!b) return;
   const what = b.dataset.coach;
   if (what === "next") tutNext();
+  else if (what === "do") document.querySelector(`#board [data-act="${b.dataset.do}"]`)?.click();
   else if (what === "quit") { endTutorial(); showScreen("menu"); }
   else if (what === "play") { endTutorial(); U.deckId = "simple_starter"; U.mode = "ai"; startGame(); }
   else if (what === "guide") { endTutorial(); showScreen("menu"); showGuide(); }
