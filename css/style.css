@@ -42,6 +42,16 @@ button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 #app { min-height: 100%; }
+.data-error {
+  position: relative; z-index: 300;
+  width: min(62ch, calc(100% - 32px)); box-sizing: border-box; margin: 40px auto;
+  padding: 22px;
+  background: var(--panel); border: 2px solid var(--danger); border-radius: 12px;
+}
+.data-error h2 { margin: 0 0 10px; font-family: var(--font-display); font-weight: 400; color: var(--brass); }
+.data-error p { margin: 0 0 10px; }
+.data-error .detail { color: var(--muted); font-size: 0.9rem; }
+.data-error code { color: var(--parchment); }
 .screen { min-height: 100%; }
 
 /* ------------------------------------------------------------------ buttons */

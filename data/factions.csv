@@ -1,0 +1,6 @@
+FactionID,Name,ColorR,ColorG,ColorB,SymbolKey,Description,DisplayOrder
+Simple,Simple,0.30,0.64,0.36,sprout,Nature and humble beginnings,10
+Monkey,Monkey,0.84,0.58,0.17,paw,Agility and mischief,20
+Zombie,Zombie,0.40,0.63,0.42,skull,Decay and resurrection,30
+Fighter,Fighter,0.78,0.28,0.24,swords,Combat and discipline,40
+Digital,Digital,0.18,0.68,0.86,chip,Glass cannons that level up,50

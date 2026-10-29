@@ -1,0 +1,14 @@
+SkillID,Name,IconKey,Description,DisplayOrder
+flash,Flash,✦,Can be played during the Battle phase,10
+cloak,Cloak,◉,Cannot be targeted by spells,20
+reanimate,Reanimate,↺,Returns to the battlefield once after dying,30
+rush,Rush,➜,Can attack on the turn it is played,40
+overwhelm,Overwhelm,⚔,Excess damage hits the opposing player,50
+parry,Parry,↯,Deals double damage when defending,60
+tower,Tower,▰,Cannot attack but blocks,70
+challenge,Challenge,!,Enemies must attack this character,80
+signal,Signal,⌁,Triggers an ability when entering the field,90
+rally,Rally,♜,+1 Attack and Speed while you control 3+ Rally characters of the same faction,100
+level_up,Level Up,↑,Grows stronger when its condition is met,110
+evolve,Evolve,✧,+3 to all stats once its condition is met,120
+transform,Transform,⇄,Changes into another card,130
