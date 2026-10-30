@@ -160,6 +160,8 @@ The design sheet left some Digital slots blank; these were filled in to fit the 
 - **The first player skips their first draw**, to offset the advantage of going first.
 - **Rally** gives +1 Attack and Speed (not health), as in the Lua version. Play-testing showed +1 to all stats made Monkey decks too strong.
 - **New:** a computer opponent, and a pass-the-device screen between turns in two-player mode.
+- **One support row:** areas and stored equipment share a single row behind your characters (up to 10 cards, set by `max_field_support` in `game_rules.csv`) instead of two separate rows of 5. The row names come from `zone_characters` and `zone_support` in `ui_text.csv`.
+- **Main menu:** purple and white crystal shards fall like meteors instead of the original rain and lightning.
 - **Newly working cards** (they had text but no effect in Lua): Area Denial, Call Back, Disable, Simplicity, Simple Messenger, Ripen, Arboreal Intelligence, Call of the Jungle, Rise from the Dead, They Just Keep Coming, Rotten Finger (now lets you pick the discard), Baboon, The Man Ape (defending bonus) and Tree Branch (cost reduction).
 - **Fix:** characters now die when their *displayed* health reaches 0, so area bonuses count toward survival.
 - **Not playable yet:** the counter spells (Nullify, Nope for One, Nope for All, Return to Sender, Try Again) need a reaction window the game doesn't have. Kenshi's Blade, IP Man, Soul Shepard and The Simplistic play as normal cards without their special ability, the same as in Lua.

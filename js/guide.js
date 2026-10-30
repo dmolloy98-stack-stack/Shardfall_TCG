@@ -18,7 +18,7 @@ function fillGuide(root, data) {
   if (rarities) {
     rarities.innerHTML = data.rarityOrder.map(id => {
       const r = data.rarities[id];
-      return `<li><span class="swatch" style="background:${r.color}"></span><b>${h(r.name)}</b> · attach from the equipment row for ${r.attachCost} mana</li>`;
+      return `<li><span class="swatch" style="background:${r.color}"></span><b>${h(r.name)}</b> · saved equipment costs ${r.attachCost} mana to attach</li>`;
     }).join("");
   }
   const decks = root.querySelector("[data-fill=decks]");

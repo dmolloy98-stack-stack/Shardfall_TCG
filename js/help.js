@@ -35,7 +35,7 @@ function hintText() {
   if (S.phase === PHASE.SETUP) {
     if (p.hand.some(c => canPlay(c, p))) return `Setup: cards glowing green in your hand fit your ${p.mana} mana. Drag one onto the table, or tap it to read it first.`;
     if (p.manaToken && p.hand.some(c => playCost(c, p) === p.mana + 1 && !UNIMPLEMENTED.has(c.name))) return "Tap the +1 beside your mana to use your one-time bonus mana and afford one more card.";
-    if (p.field.equips.some(e => canAttachFromField(e, p))) return "You can attach equipment from your equipment row: tap it, then tap a character. Or press “To battle →”.";
+    if (p.field.equips.some(e => canAttachFromField(e, p))) return `You can attach equipment saved in your ${SUPPORT_ROW()} row: tap it, then tap a character. Or press “To battle →”.`;
     return "Nothing else in your hand fits your mana this turn. Press “To battle →” to attack. Unspent mana doesn't carry over.";
   }
   if (S.phase === PHASE.BATTLE) {

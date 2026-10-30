@@ -5,7 +5,7 @@ const W = 1440, H = 1000, CARD_W = 95, CARD_H = 135;
 const L = {
   top:    { chars: 222, support: 78 },
   bottom: { chars: 442, support: 592 },
-  areasX: 270, equipsX: 830, deckX: 30, graveX: 140, slot: 105, charStep: 110,
+  supportX: 270, deckX: 30, graveX: 140, slot: 105, charStep: 110,
   handY: 770,
 };
 
@@ -209,25 +209,24 @@ function fieldHTML(p, side) {
   h += `<div class="pile deck" data-act="deck" data-player="${p.idx}" style="left:${L.deckX}px;top:${y.support}px;--fc:${fc}"><span>DECK<b>${p.deck.length}</b></span></div>`;
   h += `<div class="pile grave" data-act="grave" data-player="${p.idx}" style="left:${L.graveX}px;top:${y.support}px"><span>GRAVE<b>${p.grave.length}</b></span></div>`;
 
-  // areas and equipment rows
-  for (let i = 0; i < RULES.maxAreas; i++) {
-    const a = p.field.areas[i];
-    const x = L.areasX + i * L.slot;
-    if (!a) { h += `<div class="slot" style="left:${x}px;top:${y.support}px"></div>`; continue; }
-    const tgt = humanPending && pd.kind === "target" && pd.targetType === "area";
-    const usable = human && p === active() && canActivateArea(a, p);
-    h += `<div class="small-card${tgt ? " targetable" : ""}${usable ? " activatable" : ""}" data-act="area" data-uid="${a.uid}" style="left:${x}px;top:${y.support}px">${cardHTML(a)}</div>`;
-  }
-  for (let i = 0; i < RULES.maxEquips; i++) {
-    const e = p.field.equips[i];
-    const x = L.equipsX + i * L.slot;
-    if (!e) { h += `<div class="slot" data-zone="equips" style="left:${x}px;top:${y.support}px"></div>`; continue; }
-    const armed = U.armed?.uid === e.uid;
-    h += `<div class="small-card${armed ? " armed" : ""}" data-act="equip" data-uid="${e.uid}" data-player="${p.idx}" style="left:${x}px;top:${y.support}px">${cardHTML(e)}${side === "bottom" ? `<div class="attach-cost">Attach: ${equipCost(e, p, null, true)} mana</div>` : ""}</div>`;
+  // support row: areas and stored equipment together, in the order they were placed
+  const support = [...p.field.areas, ...p.field.equips].sort((a, b) => (a.placed ?? 0) - (b.placed ?? 0));
+  for (let i = 0; i < RULES.maxSupport; i++) {
+    const c = support[i];
+    const x = L.supportX + i * L.slot;
+    if (!c) { h += `<div class="slot" style="left:${x}px;top:${y.support}px"></div>`; continue; }
+    if (c.type === "Area") {
+      const tgt = humanPending && pd.kind === "target" && pd.targetType === "area";
+      const usable = human && p === active() && canActivateArea(c, p);
+      h += `<div class="small-card${tgt ? " targetable" : ""}${usable ? " activatable" : ""}" data-act="area" data-uid="${c.uid}" style="left:${x}px;top:${y.support}px">${cardHTML(c)}</div>`;
+    } else {
+      const armed = U.armed?.uid === c.uid;
+      h += `<div class="small-card${armed ? " armed" : ""}" data-act="equip" data-uid="${c.uid}" data-player="${p.idx}" style="left:${x}px;top:${y.support}px">${cardHTML(c)}${side === "bottom" ? `<div class="attach-cost">Attach: ${equipCost(c, p, null, true)} mana</div>` : ""}</div>`;
+    }
   }
   const labelY = side === "bottom" ? y.support - 20 : y.support + CARD_H + 2;
-  h += `<div class="zone-label" style="left:${L.areasX}px;top:${labelY}px">Areas</div>`;
-  h += `<div class="zone-label" style="left:${L.equipsX}px;top:${labelY}px">${side === "bottom" ? "Equipment · tap one, then a character" : "Equipment"}</div>`;
+  h += `<div class="zone-label" style="left:${L.supportX}px;top:${labelY}px">${esc(DATA.text("zone_support", "Support"))} · areas and equipment</div>`;
+  h += `<div class="zone-label" style="left:${L.deckX}px;top:${side === "bottom" ? y.chars + 60 : y.chars + 58}px">${esc(DATA.text("zone_characters", "Characters"))} →</div>`;
 
   // characters
   const forced = side === "top" ? forcedTarget(p) : null;
@@ -460,7 +459,7 @@ function handMove(e) {
     if (c.type === "Equipment") {
       drag.hint = document.createElement("div");
       drag.hint.className = "drop-hint";
-      Object.assign(drag.hint.style, { left: L.equipsX - 8 + "px", top: L.bottom.support - 8 + "px", width: RULES.maxEquips * L.slot + 6 + "px", height: CARD_H + 16 + "px" });
+      Object.assign(drag.hint.style, { left: L.supportX - 8 + "px", top: L.bottom.support - 8 + "px", width: RULES.maxSupport * L.slot + 6 + "px", height: CARD_H + 16 + "px" });
       $("#stage").appendChild(drag.hint);
     }
   }
@@ -484,7 +483,7 @@ function handUp(e) {
   const charEl = under?.closest('.field-card[data-side="bottom"]');
   const c = d.card;
   if (c.type === "Equipment") {
-    const inEquipRow = pt.x >= L.equipsX - 10 && pt.x <= L.equipsX + RULES.maxEquips * L.slot && pt.y >= L.bottom.support - 10 && pt.y <= L.bottom.support + CARD_H + 10;
+    const inEquipRow = pt.x >= L.supportX - 10 && pt.x <= L.supportX + RULES.maxSupport * L.slot && pt.y >= L.bottom.support - 10 && pt.y <= L.bottom.support + CARD_H + 10;
     if (charEl) act(() => playCard(c.uid, { target: { uid: Number(charEl.dataset.uid) } }));
     else if (inEquipRow) act(() => playCard(c.uid, { toField: true }));
     else if (pt.y < 740 && active().field.chars.length) { U.armed = { uid: c.uid, from: "hand" }; render(); }
@@ -532,7 +531,7 @@ function showDetail(c, ctx = {}) {
       const p = active();
       const btns = [];
       if (p.field.chars.length) btns.push(`<button type="button" class="btn btn-primary" data-m="arm" data-uid="${c.uid}">Equip to a character</button>`);
-      if (p.field.equips.length < RULES.maxEquips && p.mana >= playCost(c, p)) btns.push(`<button type="button" class="btn" data-m="tofield" data-uid="${c.uid}">Place in equipment row</button>`);
+      if (supportCount(p) < RULES.maxSupport && p.mana >= playCost(c, p)) btns.push(`<button type="button" class="btn" data-m="tofield" data-uid="${c.uid}">Save it in the ${esc(SUPPORT_ROW())} row</button>`);
       actions = `<div class="detail-actions">${btns.join("")}</div>`;
     } else actions = `<div class="detail-actions"><button type="button" class="btn btn-primary" data-m="play" data-uid="${c.uid}">Play for ${playCost(c)} mana</button></div>`;
   }
@@ -805,56 +804,124 @@ $("#alm-filters").addEventListener("click", e => { const t = e.target.closest("[
 $("#alm-content").addEventListener("click", e => { const t = e.target.closest("[data-card]"); if (t) showDetail(DATA.cardsById[t.dataset.card]); });
 
 // ---------------------------------------------------------------------------
-// Menu storm (port of the rain and lightning on the LÖVE start screen)
+// Menu background: crystal shards falling like meteors through a night sky.
+// Each shard spins and tumbles; nearer ones are bigger, faster and leave a trail.
 // ---------------------------------------------------------------------------
 const storm = (() => {
   const cv = $("#storm"), ctx = cv.getContext("2d");
-  let raf = 0, drops = [], flash = 0, bolt = null, nextBolt = 2, last = 0;
+  // Shard colors: [light core, deep edge, glow rgb]. Later each faction could get its own.
+  const PALETTE = [
+    ["#ffffff", "#b9a4ff", "190,170,255"],
+    ["#f1e8ff", "#7c3aed", "139,92,246"],
+    ["#e9ddff", "#9b6bff", "167,128,255"],
+    ["#ffffff", "#d8ccff", "225,215,255"],
+  ];
+  // Outline of a crystal shard (unit size): a long, uneven hexagon with a sharp tip.
+  const SHAPE = [[0, -1.7], [0.55, -0.55], [0.45, 0.85], [0, 1.25], [-0.5, 0.75], [-0.58, -0.6]];
+  const DIR = { x: -0.34, y: 0.94 };   // falling down and slightly to the left
+  let raf = 0, last = 0, w = 0, h = 0, shards = [], stars = [], nextStar = 3;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function shard(anywhere, big) {
+    const z = big ? 1 : Math.random() ** 1.6;                 // depth: most shards are far away
+    return {
+      x: Math.random() * (w + h * 0.4),
+      y: anywhere ? Math.random() * h : -40 - Math.random() * h * 0.4,
+      z, big,
+      size: big ? 30 : 5 + z * 19,
+      speed: big ? 760 : 70 + z * 330,
+      rot: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * (1 + z * 3),
+      flip: Math.random() * Math.PI * 2, flipSpeed: 1 + Math.random() * 3,
+      colors: PALETTE[Math.floor(Math.random() * PALETTE.length)],
+    };
+  }
   function size() {
-    cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio;
+    w = innerWidth; h = innerHeight;
+    cv.width = w * devicePixelRatio; cv.height = h * devicePixelRatio;
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-    drops = Array.from({ length: Math.floor(innerWidth / 6) }, () => ({ x: Math.random() * innerWidth, y: Math.random() * innerHeight, v: 600 + Math.random() * 500, l: 10 + Math.random() * 18 }));
+    const n = Math.min(55, Math.round((w * h) / 16000));
+    shards = Array.from({ length: n }, () => shard(true));
+    stars = Array.from({ length: Math.round((w * h) / 9000) }, () => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.2 + 0.2, t: Math.random() * 6 }));
   }
-  function makeBolt() {
-    const pts = [[innerWidth * (0.15 + Math.random() * 0.7), 0]];
-    while (pts[pts.length - 1][1] < innerHeight * 0.6) { const [x, y] = pts[pts.length - 1]; pts.push([x + (Math.random() - 0.5) * 70, y + 20 + Math.random() * 40]); }
-    return pts;
+
+  function sky(t) {
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, "#06030d"); g.addColorStop(0.55, "#120a20"); g.addColorStop(1, "#1a0c16");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    // a faint violet glow over the horizon where the shards land
+    const rg = ctx.createRadialGradient(w / 2, h * 1.1, 10, w / 2, h * 1.1, h * 0.8);
+    rg.addColorStop(0, "rgba(150,90,255,0.22)"); rg.addColorStop(1, "rgba(150,90,255,0)");
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h);
+    for (const s of stars) {
+      ctx.globalAlpha = 0.35 + 0.35 * Math.sin(t * 1.3 + s.t);
+      ctx.fillStyle = "#e8e0ff";
+      ctx.fillRect(s.x, s.y, s.r, s.r);
+    }
+    ctx.globalAlpha = 1;
   }
+
+  function drawShard(s) {
+    const [core, edge, glow] = s.colors;
+    const a = 0.35 + s.z * 0.65;                              // far shards are dimmer
+    ctx.globalCompositeOperation = "lighter";
+    if (s.z > 0.3) {
+      // the meteor trail, pointing back up the way it came
+      const len = s.size * 5 + s.speed * 0.22;
+      const tx = s.x - DIR.x * len, ty = s.y - DIR.y * len;
+      const tg = ctx.createLinearGradient(s.x, s.y, tx, ty);
+      tg.addColorStop(0, `rgba(${glow},${0.55 * a})`); tg.addColorStop(1, `rgba(${glow},0)`);
+      ctx.strokeStyle = tg; ctx.lineWidth = s.size * 0.7; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(tx, ty); ctx.stroke();
+    }
+    // soft glow around the crystal
+    const gr = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 2.6);
+    gr.addColorStop(0, `rgba(${glow},${0.35 * a})`); gr.addColorStop(1, `rgba(${glow},0)`);
+    ctx.fillStyle = gr; ctx.fillRect(s.x - s.size * 3, s.y - s.size * 3, s.size * 6, s.size * 6);
+    ctx.globalCompositeOperation = "source-over";
+
+    // the crystal itself, tumbling: squashing it sideways makes it look like it turns in 3D
+    ctx.save();
+    ctx.translate(s.x, s.y); ctx.rotate(s.rot);
+    const turn = Math.cos(s.flip);
+    ctx.scale(s.size * (0.25 + 0.75 * Math.abs(turn)), s.size);
+    ctx.globalAlpha = a;
+    const fg = ctx.createLinearGradient(-0.6, -1.7, 0.6, 1.3);
+    fg.addColorStop(0, turn > 0 ? core : edge); fg.addColorStop(0.5, "#ffffff"); fg.addColorStop(1, turn > 0 ? edge : core);
+    ctx.fillStyle = fg;
+    ctx.beginPath(); SHAPE.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py))); ctx.closePath(); ctx.fill();
+    // facets
+    ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 0.06;
+    ctx.beginPath(); ctx.moveTo(0, -1.7); ctx.lineTo(0.1 * turn, 0.2); ctx.lineTo(0, 1.25);
+    ctx.moveTo(0.55, -0.55); ctx.lineTo(0.1 * turn, 0.2); ctx.lineTo(-0.58, -0.6); ctx.stroke();
+    ctx.strokeStyle = `rgba(${glow},0.9)`; ctx.lineWidth = 0.08;
+    ctx.beginPath(); SHAPE.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py))); ctx.closePath(); ctx.stroke();
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
   function frame(t) {
     const dt = Math.min(0.05, (t - last) / 1000 || 0); last = t;
-    const w = innerWidth, h = innerHeight;
-    const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, "#0b0f1a"); g.addColorStop(0.6, "#1a1210"); g.addColorStop(1, "#140c08");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-    // distant tavern glow
-    const rg = ctx.createRadialGradient(w / 2, h * 1.05, 10, w / 2, h * 1.05, h * 0.7);
-    rg.addColorStop(0, "rgba(255,160,70,0.28)"); rg.addColorStop(1, "rgba(255,160,70,0)");
-    ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h);
+    sky(t / 1000);
     if (!reduce) {
-      nextBolt -= dt;
-      if (nextBolt <= 0) { bolt = makeBolt(); flash = 1; nextBolt = 3 + Math.random() * 5; }
-      if (flash > 0) {
-        ctx.fillStyle = `rgba(200,215,255,${flash * 0.22})`; ctx.fillRect(0, 0, w, h);
-        if (bolt) {
-          ctx.strokeStyle = `rgba(230,240,255,${flash})`; ctx.lineWidth = 2.5; ctx.beginPath();
-          bolt.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
-        }
-        flash -= dt * 2.2;
-      }
-      ctx.strokeStyle = "rgba(170,190,230,0.35)"; ctx.lineWidth = 1; ctx.beginPath();
-      for (const d of drops) {
-        d.y += d.v * dt; d.x -= d.v * dt * 0.12;
-        if (d.y > h) { d.y = -20; d.x = Math.random() * (w + 100); }
-        ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * 0.12, d.y + d.l);
-      }
-      ctx.stroke();
+      // now and then a big, bright shard streaks across
+      nextStar -= dt;
+      if (nextStar <= 0) { shards.push(shard(false, true)); nextStar = 4 + Math.random() * 5; }
     }
-    raf = requestAnimationFrame(frame);
+    shards.sort((a, b) => a.z - b.z);
+    for (const s of shards) {
+      if (!reduce) {
+        s.x += DIR.x * s.speed * dt; s.y += DIR.y * s.speed * dt;
+        s.rot += s.spin * dt; s.flip += s.flipSpeed * dt;
+      }
+      drawShard(s);
+    }
+    // shards that fall off the screen start again at the top; big ones just go
+    shards = shards.flatMap(s => (s.y > h + 80 || s.x < -120 ? (s.big ? [] : [shard(false)]) : [s]));
+    if (!reduce) raf = requestAnimationFrame(frame);
   }
-  addEventListener("resize", size);
+  addEventListener("resize", () => { if (raf || reduce) { size(); if (reduce) frame(performance.now()); } });
   return {
-    start() { if (!raf) { size(); last = performance.now(); raf = requestAnimationFrame(frame); } },
+    start() { if (!raf) { size(); last = performance.now(); if (reduce) frame(last); else raf = requestAnimationFrame(frame); } },
     stop() { cancelAnimationFrame(raf); raf = 0; },
   };
 })();
