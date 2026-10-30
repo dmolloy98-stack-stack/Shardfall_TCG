@@ -61,7 +61,7 @@ function renderHint() {
   const text = U.hints && U.screen === "game" ? hintText() : null;
   if (!text && !note) { box.hidden = true; return; }
   box.hidden = false;
-  if (note) box.innerHTML = `<p>Hints are off. You can turn them back on from ☰ Menu.</p>`;
+  if (note) box.innerHTML = `<p>Hints are off. You can turn them back on in Settings (☰ Menu).</p>`;
   else if (!U.hintOpen) box.innerHTML = `<button type="button" class="hint-chip" data-hint="show" aria-label="Show hint">💡 Hint</button>`;
   else box.innerHTML = `<div class="hint-head"><b>💡 Hint</b><button type="button" class="hint-x" data-hint="hide" aria-label="Hide this hint">✕</button></div>
     <p>${esc(text)}</p><button type="button" class="hint-off" data-hint="off">Turn off hints</button>`;

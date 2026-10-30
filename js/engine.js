@@ -578,6 +578,7 @@ function makePlayer(idx, deckId, isAI) {
   const def = DATA.decks[deckId];
   return {
     idx, name: isAI ? "Computer" : `Player ${idx + 1}`, isAI: !!isAI, deckId, faction: def.faction,
+    deckLabel: def.custom ? def.name : `${def.faction} deck`,
     mana: 0, manaMax: 0, turnsPlayed: 0, hasDrawn: false, ripen: false,
     deck: [], hand: [], grave: [],
     health: RULES.startingHealth, maxHealth: RULES.startingHealth,
