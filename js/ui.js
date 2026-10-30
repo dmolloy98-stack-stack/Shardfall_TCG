@@ -1083,6 +1083,7 @@ const storm = (() => {
 // Boot. Keeps an in-progress game across live updates of the hosted page.
 // ---------------------------------------------------------------------------
 window.claude?.hot?.snapshot?.(() => ({ S: U.tutorial ? null : S, screen: U.screen, deckId: U.deckId, mode: U.mode }));
+window.shardfallStarted = true;
 function boot(saved) {
   if (saved?.deckId) U.deckId = saved.deckId;
   if (saved?.mode) U.mode = saved.mode;
