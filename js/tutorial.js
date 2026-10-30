@@ -87,7 +87,7 @@ const TUT_STEPS = [
     target: () => [plateEl(0), plateEl(1)], next: true,
   },
   {
-    text: "You sit at the bottom of the table. Your opponent, the <b>Trainer</b>, sits at the top.<br><br>Real games start at 20 health each. The Trainer starts with only 3, so this lesson is quick.",
+    text: `You sit at the bottom of the table. Your opponent, the <b>Trainer</b>, sits at the top.<br><br>Real games start at ${RULES.startingHealth} health each. The Trainer starts with only 3, so this lesson is quick.`,
     target: () => [plateEl(1)], next: true,
   },
   {

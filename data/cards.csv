@@ -71,7 +71,7 @@ soul_suction,6,Soul Suction,Exotic,Spell,Undead,Zombie,---,Flash,Destroy target 
 they_just_keep_coming,15,They Just Keep Coming,Divine,Spell,N/A,Zombie,---,---,This costs 1 less for each Zombie on the field. Every Zombie gains Reanimate. If a Zombie already has Reanimate give them +3 health,,they_just_keep_coming
 deaths_grasp,6,Death's Grasp,Divine,Spell,N/A,Zombie,---,---,Destroy target character. Ignore skills and abilities,,deaths_grasp
 soul_shepard,5,Soul Shepard,Unknown,Character,Undead,Zombie,3+3+3,---,Each time a Zombie is sent to your graveyard gain the stats of that Zombie OR return the Zombie to your hand,,soul_shepard
-seasoned_monk,2,Seasoned Monk,Basic,Character,N/A,Fighter,1+1+2,Parry,---,,seasoned_monk
+seasoned_monk,2,Seasoned Monk,Basic,Character,N/A,Fighter,2+1+2,Parry,---,,seasoned_monk
 white_belt_student,1,White Belt Student,Basic,Character,N/A,Fighter,0+1+0,Level Up+Transform,Level Up whenever an equipment enters the Field. After Level Up is triggered 3 times Transform into Black Belt Student. Keep stats from Level Up,,white_belt_student
 weapons_enthusiast,1,Weapons Enthusiast,Basic,Character,N/A,Fighter,1+1+1,---,Equip costs become 0 when equipping to Weapons Enthusiast,,weapons_enthusiast
 sensei,5,Sensei,Basic,Character,N/A,Fighter,2+2+2,---,While Sensei is on the field all equip costs become 0,,sensei
@@ -80,7 +80,7 @@ zippy_shoes,4,Zippy Shoes,Basic,Equipment,N/A,Fighter,0+0+3,---,---,,zippy_shoes
 mc_knuckle_dusters,4,McKnuckle Dusters,Basic,Equipment,N/A,Fighter,3+0+0,---,---,,mc_knuckle_dusters
 bite_the_ear,1,Bite the Ear,Basic,Spell,N/A,Fighter,---,---,Target character loses 1 health,,bite_the_ear
 sweep_the_leg,2,Sweep the Leg,Basic,Spell,N/A,Fighter,---,---,Target character loses 1 speed,,sweep_the_leg
-black_belt_student,4,Black Belt Student,Rare,Character,N/A,Fighter,2+2+2,Parry+Transform,Transform into 5th Degree Master after surviving 3 combat phases,,black_belt_student
+black_belt_student,3,Black Belt Student,Rare,Character,N/A,Fighter,2+2+2,Parry+Transform,Transform into 5th Degree Master after surviving 3 combat phases,,black_belt_student
 fight_choreographer,6,Fight Choreographer,Rare,Character,N/A,Fighter,1+2+1,---,Each other Fighter character on the field gains +2 to all stats,,fight_choreographer
 nunchucks,2,Nunchucks,Rare,Equipment,N/A,Fighter,2+0+2,Flash,Can be equipped anytime as long as you have the mana,,nunchucks
 bo_staff,2,Bo Staff,Rare,Equipment,N/A,Fighter,2+2+0,Flash,Can be equipped anytime as long as you have the mana,,bo_staff
