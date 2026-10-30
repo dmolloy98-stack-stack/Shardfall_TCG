@@ -14,7 +14,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": 
 
 const U = {
   screen: "menu",
-  deckId: DATA.deckOrder[0],
+  deckId: DATA.decks[PREFS.get("deck")] ? PREFS.get("deck") : DATA.deckOrder[0],   // a starter or a saved custom deck
   mode: "ai",
   selected: null,        // uid of the attacker picked in Battle
   armed: null,           // { uid, from: "hand" | "field" } equipment waiting for a character
@@ -26,7 +26,7 @@ const U = {
   almanacTab: "cards", almanacFilter: "All", almanacReturn: "menu", guideReturn: "menu",
   scale: 1,
   tutorial: null,        // the running tutorial (js/tutorial.js), if any
-  skin: PREFS.get("skin", "battlefield"),   // board look: battlefield, altar or warmap
+  skin: PREFS.get("board", "altar"),   // board look: altar, battlefield or warmap (chosen in Settings)
   turnColor: null,       // player whose color the turn crystal shows (it changes when the falling shard lands)
   turnLandedAt: 0,
   hints: PREFS.get("hints", true),
@@ -259,17 +259,19 @@ const recent = (map, uid, ms) => map.has(uid) && performance.now() - map.get(uid
 // ---------------------------------------------------------------------------
 // Board rendering
 // ---------------------------------------------------------------------------
-// Health is a life crystal that cracks more as the player takes damage.
+// Health is a life crystal: green from 75% up, orange down to 35%, then red and cracked.
+const LIFE_TIERS = [{ min: 0.75, cls: "healthy" }, { min: 0.35, cls: "hurt" }, { min: 0, cls: "low" }];
 function plateHTML(p, side) {
   const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
-  const cracks = ratio > 0.8 ? 0 : ratio > 0.6 ? 1 : ratio > 0.4 ? 2 : ratio > 0.2 ? 3 : 4;
+  const tier = LIFE_TIERS.find(t => ratio >= t.min).cls;
+  const cracks = tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4;
   const pd = S.pending;
   const targetable = pd?.kind === "target" && pd.targetType === "charOrPlayer" && !S.players[pd.owner].isAI && humanTurn();
   const attackable = side === "top" && U.selected && !forcedTarget(p);
   const y = side === "top" ? 3 : 937;
-  return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${ratio <= 0.2 ? " danger" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
-    <div class="life">${crystalSVG("life-crystal", cracks)}<b>${Math.max(0, p.health)}</b></div>
-    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.faction)} deck · ${Math.max(0, p.health)} / ${p.maxHealth} health</em></div>
+  return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
+    <div class="life">${crystalSVG("life-crystal " + tier, cracks)}<b>${Math.max(0, p.health)}</b></div>
+    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em></div>
   </div>`;
 }
 
@@ -306,7 +308,7 @@ function fieldHTML(p, side) {
   h += `<div class="zone-label front-label" style="left:${L.deckX}px;top:${y.chars + 58}px">${esc(DATA.text("zone_frontline", "Frontline"))} ›</div>`;
 
   // characters
-  const forced = side === "top" ? forcedTarget(p) : null;
+  const guarded = side === "top" && guards(p).length > 0;
   p.field.chars.forEach((c, i) => {
     const cls = ["field-card"];
     if (side === "bottom" && human && canAttack(c)) cls.push("ready");
@@ -314,7 +316,7 @@ function fieldHTML(p, side) {
     if (U.selected === c.uid) cls.push("selected");
     if (humanPending && pd.kind === "target" && pd.targetType !== "area" && isValidTarget({ uid: c.uid })) cls.push("targetable");
     if (U.armed && side === "bottom" && human) cls.push("targetable");
-    if (U.selected && side === "top" && (!forced || forced === c)) cls.push("attackable");
+    if (U.selected && side === "top" && (!guarded || isGuard(c))) cls.push("attackable");
     if (recent(U.hits, c.uid, 450)) cls.push("hit");
     if (recent(U.lunges, c.uid, 400)) cls.push(side === "bottom" ? "lunge-up" : "lunge-down");
     const sp = U.spawn.get(c.uid);
@@ -324,14 +326,14 @@ function fieldHTML(p, side) {
   return h;
 }
 
-// Mana is a row of crystals: lit ones can be spent this turn. Past 10 the row stops growing
-// and the numbers carry on.
+// Mana is a row of 10 crystals for both players: lit ones can be spent this turn, dark ones
+// are spent, and faint outlines are crystals not earned yet. Past 10 the numbers carry on.
 const MANA_SHOWN = 10;
 function manaHTML(p, side) {
   const top = side === "bottom" ? 945 : 13;
-  const slots = Math.min(MANA_SHOWN, Math.max(p.manaMax, p.mana));
-  const lit = Math.min(slots, p.mana);
-  const crystals = Array.from({ length: slots }, (_, i) => crystalSVG(i < lit ? "mana-crystal lit" : "mana-crystal")).join("");
+  const earned = Math.min(MANA_SHOWN, Math.max(p.manaMax, p.mana));
+  const lit = Math.min(earned, p.mana);
+  const crystals = Array.from({ length: MANA_SHOWN }, (_, i) => crystalSVG(i < lit ? "mana-crystal lit" : i < earned ? "mana-crystal" : "mana-crystal locked")).join("");
   let token = "";
   if (p.manaToken) {
     const usable = humanTurn() && p === active() && !S.pending;
@@ -341,15 +343,16 @@ function manaHTML(p, side) {
 }
 
 // Board skins change only how the table looks, never the layout or the rules.
+// The Crystal Altar is the main board; the others can be picked in Settings.
 const SKINS = [
-  { id: "battlefield", name: "Shattered Battlefield", desc: "Floating islands over a shard rift, each side styled after its deck" },
   { id: "altar", name: "Crystal Altar", desc: "A glowing stone altar under the falling shards" },
+  { id: "battlefield", name: "Shattered Battlefield", desc: "Floating islands over a shard rift, each side styled after its deck" },
   { id: "warmap", name: "War Map", desc: "An inked battle map by candlelight" },
 ];
 function setSkin(id) {
   if (!SKINS.some(k => k.id === id)) return;
   U.skin = id;
-  PREFS.set("skin", id);
+  PREFS.set("board", id);
 }
 function skinButtons(attr) {
   return SKINS.map(k => `<button type="button" class="skin-tile" ${attr}="${k.id}" aria-pressed="${k.id === U.skin}"><span class="skin-preview skin-${k.id}"></span><strong>${esc(k.name)}</strong><span>${esc(k.desc)}</span></button>`).join("");
@@ -383,10 +386,10 @@ function render() {
   h += `<div class="turn-crystal${performance.now() - U.turnLandedAt < 700 ? " landed" : ""}" style="--pc:${turnColor}" title="Glows in the color of the player whose turn it is">${crystalSVG("big-crystal")}</div>`;
   h += `<div class="turn-info" style="top:372px"><b>Round ${S.round}</b><span style="color:${turnColor}">${esc(active().name)}'s turn</span></div>`;
   h += `<div class="phases">${DATA.phases.map((ph, i) => `<div class="phase-step${i === S.phase ? " on" : ""}">${esc(ph.name)}</div>`).join("")}</div>`;
-  const forced = forcedTarget(them);
+  const forced = guards(them);
   if (U.selected && human) {
-    h += forced
-      ? `<div class="instruction">${esc(forced.name)} has Challenge and must be attacked first</div>`
+    h += forced.length
+      ? `<div class="instruction">${forced.length === 1 ? `${esc(forced[0].name)} has ${guardSkill(forced[0])} and must be attacked first` : "Attack one of the Challenge or Tower characters first"}</div>`
       : `<button type="button" class="face-btn" data-act="face">⚔ Attack ${esc(them.name)} directly</button>`;
   } else if (!S.over) {
     const instr = active().isAI ? `${active().name === "Computer" ? "The computer" : active().name} is taking its turn…` : DATA.phases[S.phase]?.instruction || "";
@@ -400,7 +403,7 @@ function render() {
   h += `<div class="log">${S.log.slice(-6).map(m => `<div>${esc(m)}</div>`).join("")}</div>`;
 
   if (U.curtain) {
-    h += `<div class="curtain"><p>Pass the device to</p><h2>${esc(active().name)}</h2><p>${esc(active().faction)} deck · Round ${S.round}</p><button type="button" class="btn btn-primary" data-act="curtain">Start turn</button></div>`;
+    h += `<div class="curtain"><p>Pass the device to</p><h2>${esc(active().name)}</h2><p>${esc(active().deckLabel ?? active().faction + " deck")} · Round ${S.round}</p><button type="button" class="btn btn-primary" data-act="curtain">Start turn</button></div>`;
   } else if (U.ended && !U.tutorial) {
     const title = S.winner == null ? "A draw" : S.mode === "ai" ? (S.winner === 0 ? "Victory" : "Defeat") : `${S.players[S.winner].name} wins`;
     const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;
@@ -489,6 +492,7 @@ function scheduleAI() {
 }
 
 function startGame() {
+  if (deckProblem(U.deckId)) { showScreen("menu"); return; }
   endTutorial();
   clearTimeout(U.aiTimer);
   Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
@@ -697,6 +701,16 @@ function showChoose() {
   };
 }
 
+// Settings: beginner hints and the board skin. Opened from the main menu or the game menu.
+function showSettings() {
+  openModal(`<h2 id="modal-title">Settings</h2>
+    <div class="menu-list">
+      <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
+    </div>
+    <div class="menu-skins"><h3>Board</h3><div class="skin-list compact">${skinButtons("data-skin")}</div></div>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-set="done">${U.screen === "game" ? "Back to the game menu" : "Done"}</button></div>`);
+}
+
 function showGameMenu() {
   const canUndo = U.undo.length && humanTurn();
   if (U.tutorial) {
@@ -713,8 +727,7 @@ function showGameMenu() {
     <div class="menu-list">
       <button type="button" class="btn" data-m="resume">Resume</button>
       <button type="button" class="btn" data-m="restart">${esc(DATA.text("button_restart", "Restart"))}</button>
-      <button type="button" class="btn" data-m="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
-      <div class="menu-skins"><h3>Board</h3><div class="skin-list compact">${skinButtons("data-skin")}</div></div>
+      <button type="button" class="btn" data-m="settings">Settings</button>
       <button type="button" class="btn" data-m="almanac">${esc(DATA.text("button_almanac", "Almanac"))}</button>
       <button type="button" class="btn" data-m="rules">How to play</button>
       <button type="button" class="btn" data-m="mainmenu">${esc(DATA.text("button_main_menu", "Main menu"))}</button>
@@ -729,7 +742,14 @@ function showGameMenu() {
 $("#modal").addEventListener("click", e => {
   if (e.target.closest("[data-close]") && $("#modal").dataset.dismissable) { closeModal(); return; }
   const skin = e.target.closest("[data-skin]");
-  if (skin) { setSkin(skin.dataset.skin); render(); showGameMenu(); return; }
+  if (skin) { setSkin(skin.dataset.skin); render(); showSettings(); return; }
+  const set = e.target.closest("[data-set]");
+  if (set) {
+    if (set.dataset.set === "hints") { setHints(!U.hints); showSettings(); }
+    else if (U.screen === "game") showGameMenu();
+    else closeModal();
+    return;
+  }
   const b = e.target.closest("[data-m]");
   if (!b) return;
   const m = b.dataset.m, uid = Number(b.dataset.uid);
@@ -739,7 +759,7 @@ $("#modal").addEventListener("click", e => {
   else if (m === "arm") { U.armed = { uid, from: "hand" }; render(); }
   else if (m === "tofield") act(() => playCard(uid, { toField: true }));
   else if (m === "restart") U.tutorial ? startTutorial() : startGame();
-  else if (m === "hints") { setHints(!U.hints); showGameMenu(); }
+  else if (m === "settings") showSettings();
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
   else if (m === "rules") showGuide();
   else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); showScreen("menu"); }
@@ -830,10 +850,12 @@ function showScreen(name) {
   U.screen = name;
   // The game screen behaves like an app: no page scrolling, bouncing or zooming.
   document.documentElement.classList.toggle("in-game", name === "game");
-  for (const id of ["menu", "almanac", "guide", "game"]) $("#" + id).hidden = id !== name;
+  for (const id of ["menu", "almanac", "guide", "builder", "game"]) $("#" + id).hidden = id !== name;
   if (name === "menu") { renderMenu(); storm.start(); } else storm.stop();
   if (name === "almanac") renderAlmanac();
   if (name === "guide") loadGuide();
+  if (name === "builder") renderBuilder();
+  else $("#bld-walk").hidden = true;
   if (name === "game") { fitStage(); render(); scheduleAI(); }
   window.scrollTo(0, 0);
 }
@@ -868,22 +890,39 @@ window.visualViewport?.addEventListener("resize", onResize);
 // iPhone browsers allow pinch zoom even when the page asks not to; block it on the table.
 document.addEventListener("gesturestart", e => { if (U.screen === "game") e.preventDefault(); });
 
+// The deck choice: the starter decks, then decks the player built (js/decks.js), then
+// a tile to build a new one.
 function renderMenu() {
-  $("#deck-list").innerHTML = DATA.deckOrder.filter(id => DATA.decks[id].isPlayable).map(id => {
+  if (!DATA.decks[U.deckId]) U.deckId = DATA.deckOrder[0];
+  const tile = id => {
     const d = DATA.decks[id];
-    return `<button type="button" class="deck-tile" data-deck="${id}" aria-pressed="${id === U.deckId}" style="--fc:${DATA.factions[d.faction]?.color || "#888"}">${medal(d.faction)}<strong>${esc(d.name)}</strong><span>${esc(d.description)}</span></button>`;
-  }).join("");
-  $("#skin-list").innerHTML = skinButtons("data-menu-skin");
+    const edit = d.custom ? `<button type="button" class="deck-edit btn btn-small" data-edit="${id}" aria-label="Edit ${esc(d.name)}">Edit</button>` : "";
+    return `<div class="deck-slot"><button type="button" class="deck-tile${d.custom ? " custom" : ""}" data-deck="${id}" aria-pressed="${id === U.deckId}" style="--fc:${DATA.factions[d.faction]?.color || "#888"}">${medal(d.faction)}<strong>${esc(d.name)}</strong><span>${esc(d.description)}</span></button>${edit}</div>`;
+  };
+  const starters = DATA.deckOrder.filter(id => DATA.decks[id].isPlayable);
+  const mine = Object.keys(DATA.decks).filter(id => DATA.decks[id].custom);
+  $("#deck-list").innerHTML = [...starters, ...mine].map(tile).join("")
+    + `<div class="deck-slot"><button type="button" class="deck-tile create" data-create><span class="plus" aria-hidden="true">+</span><strong>Create your own</strong><span>Build a deck from any cards in the game</span></button></div>`;
+  const problem = deckProblem(U.deckId);
+  $("#deck-problem").hidden = !problem;
+  $("#deck-problem").textContent = problem || "";
+  $("#btn-start").disabled = !!problem;
   $("#mode-ai").setAttribute("aria-checked", U.mode === "ai");
   $("#mode-hotseat").setAttribute("aria-checked", U.mode === "hotseat");
 }
-$("#deck-list").addEventListener("click", e => { const t = e.target.closest("[data-deck]"); if (t) { U.deckId = t.dataset.deck; renderMenu(); } });
+$("#deck-list").addEventListener("click", e => {
+  const edit = e.target.closest("[data-edit]");
+  if (edit) { editDeck(edit.dataset.edit); return; }
+  if (e.target.closest("[data-create]")) { createDeck(); return; }
+  const t = e.target.closest("[data-deck]");
+  if (t) { U.deckId = t.dataset.deck; PREFS.set("deck", U.deckId); renderMenu(); }
+});
 $("#mode-ai").addEventListener("click", () => { U.mode = "ai"; renderMenu(); });
-$("#skin-list").addEventListener("click", e => { const t = e.target.closest("[data-menu-skin]"); if (t) { setSkin(t.dataset.menuSkin); renderMenu(); } });
 $("#mode-hotseat").addEventListener("click", () => { U.mode = "hotseat"; renderMenu(); });
 $("#btn-start").addEventListener("click", startGame);
 $("#btn-almanac").addEventListener("click", () => { U.almanacReturn = "menu"; showScreen("almanac"); });
 $("#btn-rules").addEventListener("click", () => showGuide());
+$("#btn-settings").addEventListener("click", showSettings);
 $("#btn-tutorial").addEventListener("click", startTutorial);
 $("#guide-back").addEventListener("click", () => showScreen(U.guideReturn === "game" && S ? "game" : "menu"));
 $("#guide-tutorial").addEventListener("click", startTutorial);

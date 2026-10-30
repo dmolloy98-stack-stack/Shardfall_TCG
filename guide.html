@@ -22,7 +22,7 @@
 <main id="guide-main" class="guide-body">
   <p class="guide-lead">Shardfall is a card game for two players. Each of you brings a deck of cards, takes turns playing them, and sends characters to fight. You don't need to know any other card game. Everything is explained below.</p>
   <div class="guide-callout">
-    <p><b>Learn by playing.</b> The <a href="index.html#tutorial">tutorial</a> walks you through a short game one step at a time and takes about five minutes. In normal games, beginner hints tell you what you can do next. You can turn them off from ☰ Menu.</p>
+    <p><b>Learn by playing.</b> The <a href="index.html#tutorial">tutorial</a> walks you through a short game one step at a time and takes about five minutes. In normal games, beginner hints tell you what you can do next. You can turn them off in Settings (on the main menu, or ☰ Menu during a game).</p>
   </div>
 
   <ol class="guide-toc">
@@ -51,7 +51,7 @@
     <img src="guide/board.jpg" width="1440" height="1000" alt="The game board with its parts numbered 1 to 13">
   </figure>
   <ul class="legend">
-    <li><span class="badge-num">1</span><span><b>Opponent's health.</b> The life crystal cracks as it takes damage. Bring it to 0 to win.</span></li>
+    <li><span class="badge-num">1</span><span><b>Opponent's health.</b> The life crystal is green when healthy, turns orange, then red and cracked as it takes damage. Bring it to 0 to win.</span></li>
     <li><span class="badge-num">2</span><span><b>Opponent's hand.</b> Cards face down, so you can see how many they hold.</span></li>
     <li><span class="badge-num">3</span><span><b>Opponent's characters.</b> These fight against you.</span></li>
     <li><span class="badge-num">4</span><span><b>Your characters.</b> These fight for you.</span></li>
@@ -62,7 +62,7 @@
     <li><span class="badge-num">9</span><span><b>Deck and graveyard.</b> Your deck is face down. Used and defeated cards go to the graveyard. Tap it to look inside.</span></li>
     <li><span class="badge-num">10</span><span><b>Backline.</b> Everything that isn't a character: areas, and equipment you're saving for later. Characters stand on the <b>frontline</b> (4).</span></li>
     <li><span class="badge-num">11</span><span><b>Your health.</b></span></li>
-    <li><span class="badge-num">12</span><span><b>Menu.</b> These rules, the Almanac of every card, beginner hints, the board's look, restart.</span></li>
+    <li><span class="badge-num">12</span><span><b>Menu.</b> These rules, the Almanac of every card, Settings (beginner hints and the board's look), restart.</span></li>
     <li><span class="badge-num">13</span><span><b>Turn crystal.</b> Glows in the color of the player whose turn it is. When the turn passes, a shard falls into it and it changes color.</span></li>
   </ul>
   <p>The list of recent moves on the right says what just happened, such as who attacked whom.</p>
@@ -155,7 +155,7 @@
     <li>Damage <b>stays</b>. A hurt character doesn't heal at the end of the turn.</li>
     <li>Attacking the player directly is safe: the player doesn't strike back.</li>
     <li>Each character attacks once per turn. Characters with <b>Tower</b> never attack. They only block.</li>
-    <li>If the other side has a character with <b>Challenge</b>, every attack must go to it until it's gone.</li>
+    <li>If the other side has a character with <b>Challenge</b> or <b>Tower</b>, every attack must go to it until it's gone, so you can't hit the player directly. If there are several, you pick which one.</li>
   </ul>
 
   <h2 id="together">7. How cards work together</h2>
@@ -173,7 +173,7 @@
   <div class="g-skills" data-fill="skills">
     <div class="g-skill"><span class="icon">➜</span><b>Rush</b><p>Can attack on the turn it is played</p></div>
     <div class="g-skill"><span class="icon">!</span><b>Challenge</b><p>Enemies must attack this character</p></div>
-    <div class="g-skill"><span class="icon">▰</span><b>Tower</b><p>Cannot attack but blocks</p></div>
+    <div class="g-skill"><span class="icon">▰</span><b>Tower</b><p>Cannot attack. Enemies must attack it first</p></div>
     <div class="g-skill"><span class="icon">⌁</span><b>Signal</b><p>Triggers an ability when entering the field</p></div>
   </div>
 
@@ -183,6 +183,7 @@
     <li>Simple, Monkey, Zombie, Fighter and Digital</li>
   </ul>
   <p>The <b>Almanac</b> on the main menu shows every card in the game.</p>
+  <p><b>Build your own deck.</b> Once you know the starters, pick <b>Create your own</b> on the main menu. Start empty or from a copy of a starter deck, tap cards to add them, and save. A deck needs at least <span data-rule="min_deck_size">35</span> cards, with at most <span data-rule="max_copies">4</span> copies of a card (<span data-rule="max_unknown_copies">2</span> for Unknown rarity). The builder shows a short walkthrough the first time, and again whenever you press <b>? How to build</b>. Saved decks stay on that device.</p>
 
   <h2 id="tips">10. Tips for your first games</h2>
   <ul>

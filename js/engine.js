@@ -578,6 +578,7 @@ function makePlayer(idx, deckId, isAI) {
   const def = DATA.decks[deckId];
   return {
     idx, name: isAI ? "Computer" : `Player ${idx + 1}`, isAI: !!isAI, deckId, faction: def.faction,
+    deckLabel: def.custom ? def.name : `${def.faction} deck`,
     mana: 0, manaMax: 0, turnsPlayed: 0, hasDrawn: false, ripen: false,
     deck: [], hand: [], grave: [],
     health: RULES.startingHealth, maxHealth: RULES.startingHealth,
@@ -868,8 +869,13 @@ function canAttack(c) {
   return S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active && !c.hasAttacked && !hasSkill(c, "Tower") && stats(c).a >= 0;
 }
 
-// Characters with Challenge must be attacked first.
-function forcedTarget(defender) { return defender.field.chars.find(c => hasSkill(c, "Challenge")) || null; }
+// Guards: characters with Challenge or Tower must be attacked before anything else on
+// their side, including the player. With more than one, the attacker picks which.
+const isGuard = c => hasSkill(c, "Challenge") || hasSkill(c, "Tower");
+function guards(defender) { return defender.field.chars.filter(isGuard); }
+function forcedTarget(defender) { return guards(defender)[0] || null; }
+// The skill that makes a character a guard, for messages.
+const guardSkill = c => (hasSkill(c, "Challenge") ? "Challenge" : "Tower");
 
 function attack(attackerUid, targetUid) {
   if (!allowed("attack", attackerUid, targetUid)) return false;
@@ -878,8 +884,8 @@ function attack(attackerUid, targetUid) {
   if (!a || !canAttack(a)) return false;
   const defender = opponent();
   let target = targetUid != null ? defender.field.chars.find(c => c.uid === targetUid) : null;
-  const forced = forcedTarget(defender);
-  if (forced) target = forced;
+  const g = guards(defender);
+  if (g.length && !g.includes(target)) target = g[0];
 
   a.hasAttacked = true;
   a.attackedThisTurn = true;

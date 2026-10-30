@@ -92,7 +92,8 @@ function aiAttackActions() {
   const defender = opponent();
   for (const a of active().field.chars) {
     if (!canAttack(a)) continue;
-    const targets = forcedTarget(defender) ? [forcedTarget(defender)] : [null, ...defender.field.chars];
+    const g = guards(defender);
+    const targets = g.length ? g : [null, ...defender.field.chars];
     for (const t of targets) {
       const score = simulate(() => { attack(a.uid, t ? t.uid : null); return evaluate(me); });
       out.push({ attacker: a.uid, target: t ? t.uid : null, gain: score - base });

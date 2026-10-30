@@ -17,9 +17,11 @@ New players have three kinds of help:
 
 - **Tutorial** (main menu, or `index.html#tutorial`): a five-minute scripted game against a gentle Trainer using Simple cards. A coach box explains one idea at a time, dims the rest of the screen and points at what to tap or drag: reading a card, mana, the four turn steps, playing characters, abilities, equipment, combat and Speed, spells, skills (Signal, Rush, Challenge, Tower) and combining cards.
 - **How to play guide** ([`guide.html`](guide.html)): an illustrated page with annotated screenshots of the table, a labelled card, turns, playing cards, battle and how cards work together, plus a skills glossary and beginner words. It's the same page the in-game "How to play" button opens, and it can be shared on its own: `https://dmolloy98-stack-stack.github.io/Shardfall_TCG/guide.html`.
-- **Beginner hints**: during a game, a small panel says what you can do right now. Hide it with ✕, turn it off with "Turn off hints", or switch it back on in ☰ Menu. The choice is remembered on that device.
+- **Beginner hints**: during a game, a small panel says what you can do right now. Hide it with ✕, turn it off with "Turn off hints", or switch it back on in Settings (main menu or ☰ Menu). The choice is remembered on that device.
 
 First-time visitors are offered the tutorial when the game opens.
+
+**Your own decks:** on the main menu, **Create your own** opens the deck builder. Start from an empty deck or a copy of a starter, tap cards to add them (filter by faction and type, tap **i** to read a card), and watch the deck panel: card count against the 35-card minimum, the mana curve, how many characters, spells, equipment and areas, and tips. Copy limits from `data/game_rules.csv` are enforced. A short walkthrough runs the first time and from **? How to build**. Decks are saved in the browser on that device, appear on the main menu with an Edit button, and can't be started until they reach the minimum size. The computer opponent always uses a starter deck.
 
 **On phones** the game works best held sideways, and it asks you to turn the phone if it's upright (with a "Play upright anyway" option). Because the board is scaled down a lot on a phone, the space beside it is used for large buttons (Menu, Draw card / To battle / To end / Pass turn, Attack directly, Cancel), and in the tutorial for the coach panel, which repeats each step's button at full size. Page scrolling, zooming and long-press menus are switched off on the game screen, and the board stays clear of the notch.
 
@@ -62,22 +64,23 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `js/data.js` | Loads and checks the CSV files, then starts the game |
 | `js/engine.js` | Game rules: turns, combat, skills, card effects |
 | `js/ai.js` | Computer opponent |
-| `js/ui.js` | Board rendering, input, menu, Almanac |
+| `js/ui.js` | Board rendering, input, menu, Settings, Almanac |
 | `js/tutorial.js` | The tutorial: scripted steps, coach box, spotlight and arrows |
 | `js/help.js` | Beginner hints, the first-visit welcome, the in-game guide screen |
+| `js/decks.js` | The deck builder, saved custom decks and its walkthrough |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
 | `tools/guide-shots.js` | Retakes the annotated guide pictures: `node tools/guide-shots.js` (needs Node.js and Playwright) |
 | `original-lua/main.lua` | The LÖVE2D source this was ported from |
 
 ## The starter decks
 
-Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and at most 2 of an Unknown card. They are meant as introductions to each faction; custom decks are where the real strategy lives. Over thousands of computer-vs-computer games, Monkey, Fighter and Digital each win about half their games, Simple about 58% and Zombie about 40%. With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
+Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and at most 2 of an Unknown card. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games (after the Tower rule and the balance changes listed under Changes from the Lua version), Monkey, Zombie and Digital win about half their games, Simple about 60% and Fighter about 45%. With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
 
 | Deck | Style | Cards costing 0–2 / 3–4 / 5+ | Characters |
 |---|---|---|---|
-| Simple | Go wide with humble characters and basic tools | 21 / 8 / 6 | 21 |
-| Monkey | Synergy: Rally monkeys power each other up | 20 / 3 / 12 | 25 |
-| Zombie | Big cost, high reward, slightly spell reliant | 13 / 4 / 18 | 22 |
+| Simple | Go wide with humble characters and basic tools | 21 / 6 / 8 | 21 |
+| Monkey | Synergy: Rally monkeys power each other up | 20 / 5 / 10 | 25 |
+| Zombie | Big cost, high reward, slightly spell reliant | 13 / 10 / 12 | 22 |
 | Fighter | Martial artists that grow with equipment | 22 / 5 / 8 | 21 |
 | Digital | Glass cannons that Level Up | 19 / 8 / 8 | 28 |
 
@@ -160,8 +163,10 @@ The design sheet left some Digital slots blank; these were filled in to fit the 
 - **The first player skips their first draw**, to offset the advantage of going first.
 - **Rally** gives +1 Attack and Speed (not health), as in the Lua version. Play-testing showed +1 to all stats made Monkey decks too strong.
 - **New:** a computer opponent, and a pass-the-device screen between turns in two-player mode.
+- **Tower blocks:** a Tower character must be attacked first, like Challenge. With several Challenge or Tower characters, the attacker picks which one.
+- **Balance changes** (tested in computer-vs-computer games): Zombie's Sneaky Skinbag and Shadow-Stitched Soldier cost 4 instead of 5, and Hungry Corpse is 2/1/1 instead of 1/1/1. Monkey's Ape costs 4 instead of 5, Gorilla 5 instead of 6, and Baby Monkey is 1/1/0 instead of 0/1/0. Simple's Staff is 2/1/0 instead of 3/1/0, and Herd costs 5 instead of 4.
 - **Frontline and backline:** characters stand on the frontline, with no limit on how many. Areas and stored equipment share the backline behind it (up to 10 cards, set by `max_field_backline` in `game_rules.csv`) instead of two separate rows of 5. The row names come from `zone_frontline` and `zone_backline` in `ui_text.csv`.
-- **Board skins:** choose how the table looks on the main menu or in ☰ Menu: Shattered Battlefield (floating islands over a shard rift, each side styled after its deck), Crystal Altar, or War Map. Mana is a row of crystals, health is a life crystal that cracks as you take damage, card backs carry a shard emblem, played cards sparkle, defeated characters shatter, and a shard falls into the turn crystal when the turn passes.
+- **Board skins:** the main board is the Crystal Altar. Settings (on the main menu or in ☰ Menu) also offers Shattered Battlefield (floating islands over a shard rift, each side styled after its deck) and War Map. Mana is a row of 10 crystals (lit, spent, or not earned yet), health is a life crystal that is green from 75% health, orange down to 35%, then red and cracked, card backs carry a shard emblem, played cards sparkle, defeated characters shatter, and a shard falls into the turn crystal when the turn passes.
 - **Main menu:** purple and white crystal shards fall like meteors instead of the original rain and lightning.
 - **Newly working cards** (they had text but no effect in Lua): Area Denial, Call Back, Disable, Simplicity, Simple Messenger, Ripen, Arboreal Intelligence, Call of the Jungle, Rise from the Dead, They Just Keep Coming, Rotten Finger (now lets you pick the discard), Baboon, The Man Ape (defending bonus) and Tree Branch (cost reduction).
 - **Fix:** characters now die when their *displayed* health reaches 0, so area bonuses count toward survival.

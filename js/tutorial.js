@@ -21,7 +21,7 @@ function startTutorial() {
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
   newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai" });
   const [me, tr] = S.players;
-  tr.name = "Trainer"; tr.faction = "Training";
+  tr.name = "Trainer"; tr.faction = "Training"; tr.deckLabel = "Training deck";
   tr.health = tr.maxHealth = TUT_TRAINER_HEALTH;
   const make = names => names.map(n => cardByName(n));
   // Hands are fixed, and decks are drawn from the end, so every lesson happens on cue.
@@ -83,7 +83,7 @@ const targetUid = t => (t && typeof t === "object" ? t.uid : t);
 const TUT_STEPS = [
   {
     title: "Welcome to Shardfall",
-    text: "This lesson teaches you the game by playing a short one, one step at a time.<br><br>Each player has <b>health</b>, shown in these life crystals. The crystal cracks as its owner takes damage. Bring the other player's health down to <b>0</b> to win.",
+    text: "This lesson teaches you the game by playing a short one, one step at a time.<br><br>Each player has <b>health</b>, shown in these life crystals. The crystal is green while its owner is healthy, turns orange as they take damage, then red and cracked when they are close to losing. Bring the other player's health down to <b>0</b> to win.",
     target: () => [plateEl(0), plateEl(1)], next: true,
   },
   {
@@ -279,7 +279,7 @@ const TUT_STEPS = [
   },
   {
     title: "Challenge and Tower",
-    text: "The Trainer played <b>Breathing Wall</b>, which has two skills:<ul><li><b>! Challenge</b>: while it is on the table, your attacks must go to it first.</li><li><b>▰ Tower</b>: it never attacks. It only blocks.</li></ul>With 5 Health, your characters can't break through it… on their own.",
+    text: "The Trainer played <b>Breathing Wall</b>, which has two skills:<ul><li><b>! Challenge</b>: while it is on the table, your attacks must go to it first.</li><li><b>▰ Tower</b>: it never attacks. It only blocks, and it also has to be attacked first.</li></ul>With 5 Health, your characters can't break through it… on their own.",
     target: () => [fieldEl("wall")], next: true,
   },
   {

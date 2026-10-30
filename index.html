@@ -13,7 +13,9 @@
 <body>
 <!-- Shared gradients for the crystal icons (mana, health, the turn crystal) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
-  <linearGradient id="g-life" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe0e8"/><stop offset="0.45" stop-color="#ff4f7b"/><stop offset="1" stop-color="#7d0f33"/></linearGradient>
+  <linearGradient id="g-life" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e3ffe8"/><stop offset="0.45" stop-color="#3fd26b"/><stop offset="1" stop-color="#0d5a2a"/></linearGradient>
+  <linearGradient id="g-life-hurt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0d6"/><stop offset="0.45" stop-color="#ff9a2e"/><stop offset="1" stop-color="#8a3d06"/></linearGradient>
+  <linearGradient id="g-life-low" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe0e0"/><stop offset="0.45" stop-color="#ff3b3b"/><stop offset="1" stop-color="#6e0a0a"/></linearGradient>
   <linearGradient id="g-mana" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.4" stop-color="#9cc2ff"/><stop offset="1" stop-color="#5a3fd8"/></linearGradient>
   <linearGradient id="g-shine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.85"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.12"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
 </defs></svg>
@@ -31,6 +33,7 @@
       <div class="menu-panel">
         <h2 class="panel-label">Choose your deck</h2>
         <div id="deck-list" class="deck-list"></div>
+        <p id="deck-problem" class="deck-problem" hidden></p>
 
         <h2 class="panel-label">Opponent</h2>
         <div class="mode-toggle" role="radiogroup" aria-label="Opponent">
@@ -42,14 +45,12 @@
           </button>
         </div>
 
-        <h2 class="panel-label">Board</h2>
-        <div id="skin-list" class="skin-list"></div>
-
         <div class="menu-actions">
           <button type="button" id="btn-start" class="btn btn-primary">Start game</button>
           <button type="button" id="btn-tutorial" class="btn">Tutorial</button>
           <button type="button" id="btn-rules" class="btn">How to play</button>
           <button type="button" id="btn-almanac" class="btn">Almanac</button>
+          <button type="button" id="btn-settings" class="btn">Settings</button>
         </div>
       </div>
     </div>
@@ -69,6 +70,27 @@
       <div id="alm-filters" class="filters"></div>
       <div id="alm-content"></div>
     </div>
+  </section>
+
+  <!-- DECK BUILDER (js/decks.js) -->
+  <section id="builder" class="screen" hidden>
+    <div class="almanac-bar builder-bar">
+      <button type="button" id="bld-back" class="btn btn-small">&larr; Back</button>
+      <input id="bld-name" class="bld-name" maxlength="28" autocomplete="off" aria-label="Deck name">
+      <div class="bld-bar-actions">
+        <button type="button" id="bld-help" class="btn btn-small">? How to build</button>
+        <button type="button" id="bld-save" class="btn btn-small btn-primary">Save deck</button>
+      </div>
+    </div>
+    <div class="builder-body">
+      <div class="bld-pool">
+        <div id="bld-filters" class="filters"></div>
+        <div id="bld-cards" class="card-grid bld-grid"></div>
+      </div>
+      <aside id="bld-deck" class="bld-deck" aria-label="Your deck"></aside>
+    </div>
+    <div id="bld-note" class="bld-note" role="status" hidden></div>
+    <div id="bld-walk" class="bld-walk" role="dialog" aria-label="How to build a deck" hidden></div>
   </section>
 
   <!-- HOW TO PLAY (the content comes from guide.html) -->
@@ -113,7 +135,7 @@
   </div>
 </div>
 
-<!-- data.js loads the CSV files in data/, then starts engine.js, ai.js and ui.js -->
+<!-- data.js loads the CSV files in data/, then starts the game scripts listed in GAME_SCRIPTS -->
 <script src="js/data.js"></script>
 </body>
 </html>

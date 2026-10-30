@@ -27,8 +27,9 @@ function hintText() {
   }
   if (U.armed) return "Tap one of your characters to give it this equipment. Its numbers are added to the character's stats.";
   if (U.selected) {
-    const forced = forcedTarget(opponent());
-    if (forced) return `${forced.name} has Challenge (!), so your attack has to go to it first.`;
+    const g = guards(opponent());
+    if (g.length === 1) return `${g[0].name} has ${guardSkill(g[0])} (${DATA.skills[guardSkill(g[0])].icon}), so your attack has to go to it first.`;
+    if (g.length) return "The other side has several Challenge or Tower characters. Your attack has to go to one of them first.";
     return "Tap an enemy glowing red to fight it, or attack the player directly. Higher ⚡ Speed strikes first; on a tie, the attacker does.";
   }
   if (S.phase === PHASE.DRAW) return "Your turn starts with the Draw step. Press “Draw card” to take the top card of your deck.";
@@ -61,7 +62,7 @@ function renderHint() {
   const text = U.hints && U.screen === "game" ? hintText() : null;
   if (!text && !note) { box.hidden = true; return; }
   box.hidden = false;
-  if (note) box.innerHTML = `<p>Hints are off. You can turn them back on from ☰ Menu.</p>`;
+  if (note) box.innerHTML = `<p>Hints are off. You can turn them back on in Settings (☰ Menu).</p>`;
   else if (!U.hintOpen) box.innerHTML = `<button type="button" class="hint-chip" data-hint="show" aria-label="Show hint">💡 Hint</button>`;
   else box.innerHTML = `<div class="hint-head"><b>💡 Hint</b><button type="button" class="hint-x" data-hint="hide" aria-label="Hide this hint">✕</button></div>
     <p>${esc(text)}</p><button type="button" class="hint-off" data-hint="off">Turn off hints</button>`;

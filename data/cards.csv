@@ -22,8 +22,8 @@ helm,1,Helm,Basic,Equipment,N/A,Simple,0+1+0,---,---,,helm
 slap,1,Slap,Basic,Spell,N/A,Simple,---,Signal,Target character loses 1 Health.,,slap
 simple_wizard,4,Simple Wizard,Rare,Character,N/A,Simple,3+1+2,Signal,Choose target player or character - deal 2 damage to the target,,simple_wizard
 simple_messenger,3,Simple Messenger,Rare,Character,N/A,Simple,1+2+1,Signal,Look at the top card of your opponent's deck - choose to place it on the top of your deck or discard it,,simple_messenger
-staff,2,Staff,Rare,Equipment,N/A,Simple,3+1+0,---,---,,staff
-herd,4,Herd,Rare,Spell,N/A,Simple,---,---,Add 3 Simple Farmers to the field under your control,,herd
+staff,2,Staff,Rare,Equipment,N/A,Simple,2+1+0,---,---,,staff
+herd,5,Herd,Rare,Spell,N/A,Simple,---,---,Add 3 Simple Farmers to the field under your control,,herd
 simplify,3,Simplify,Rare,Spell,N/A,Simple,---,---,Target character's stats become 1+1+1,,simplify
 simpler_farmer,5,Simpler Farmer,Exotic,Character,N/A,Simple,2+4+2,Signal,Simpler Farmer gets +1 Attack and Speed for each other Simple Farmer on the field,,simpler_farmer
 simple_defender,5,Simple Defender,Exotic,Character,N/A,Simple,1+6+0,Challenge+Tower,Add +2 health to this character during your End Phase,,simple_defender
@@ -33,7 +33,7 @@ simplicity,7,Simplicity,Divine,Spell,N/A,Simple,---,---,Reduce all target player
 the_simplistic,10,The Simplistic,Unknown,Character,N/A,Simple,5+5+3,Signal,"Simple cards gain immunity from targeted spells and +5 each stat for characters/equipment/spells.",,the_simplistic
 fat_monkey,1,Fat Monkey,Basic,Character,Animal,Monkey,1+3+0,Rally,---,,fat_monkey
 smart_monkey,1,Smart Monkey,Basic,Character,Animal,Monkey,1+1+2,Rally,---,,smart_monkey
-baby_monkey,0,Baby Monkey,Basic,Character,Animal,Monkey,0+1+0,Rally,---,,baby_monkey
+baby_monkey,0,Baby Monkey,Basic,Character,Animal,Monkey,1+1+0,Rally,---,,baby_monkey
 monkey_apprentice,2,Monkey Apprentice,Basic,Character,Animal,Monkey,2+1+1,Signal,Add a Banana from your deck to your hand. Shuffle your deck,,monkey_apprentice
 chimp,1,Chimp,Basic,Character,Animal,Monkey,1+2+1,Rally,---,,chimp
 tree_branch,3,Tree Branch,Basic,Equipment,N/A,Monkey,2+1+0,---,If there are 3 or more monkeys on the field this costs 1,,tree_branch
@@ -43,10 +43,10 @@ jungle,3,Jungle,Basic,Area,N/A,Monkey,---,---,All Monkey cards gain +1 speed,,ju
 orangutan,5,Orangutan,Rare,Character,Animal,Monkey,1+4+0,Signal+Rally,Gain +1 health for each other Monkey you control on the field,,orangutan
 baboon,5,Baboon,Rare,Character,Animal,Monkey,0+2+3,Rush+Overwhelm,Gain +1 attack for each character on the field,,baboon
 banana_tree,5,Banana Tree,Rare,Character,Animal,Monkey,0+5+0,Tower,During your end phase add a Banana to your hand,,banana_tree
-ape,5,Ape,Rare,Character,N/A,Monkey,3+3+0,Rally,---,,ape
+ape,4,Ape,Rare,Character,N/A,Monkey,3+3+0,Rally,---,,ape
 ripen,3,Ripen,Rare,Spell,N/A,Monkey,---,---,For the rest of the game Banana also adds +1 attack,,ripen
 primate,6,Primate,Exotic,Character,Animal,Monkey,2+2+2,Signal+Rally,Search your deck for 2 other Monkey cards that cost 2 or less and put them on the field,,primate
-gorilla,6,Gorilla,Exotic,Character,Animal,Monkey,3+4+1,Rally,Each time Gorilla survives damage gain +1 Attack and +1 Speed,,gorilla
+gorilla,5,Gorilla,Exotic,Character,Animal,Monkey,3+4+1,Rally,Each time Gorilla survives damage gain +1 Attack and +1 Speed,,gorilla
 arboreal_intelligence,8,Arboreal Intelligence,Exotic,Spell,N/A,Monkey,---,---,Give all Monkey character cards +5 to all stats,,arboreal_intelligence
 call_of_the_jungle,6,Call of the Jungle,Divine,Spell,N/A,Monkey,---,---,Select 3 or less Monkey cards from your Graveyard return them to your hand,,call_of_the_jungle
 primeval_forest,7,Primeval Forest,Divine,Area,N/A,Monkey,---,---,All Monkey character cards have +3 to all stats,,primeval_forest
@@ -54,7 +54,7 @@ the_man_ape,7,The Man Ape,Unknown,Character,Animal,Monkey,4+4+4,Challenge+Cloak,
 reanimated_corpse,0,Reanimated Corpse,Basic,Character,Undead,Zombie,0+1+0,Reanimate,---,,reanimated_corpse
 lurker,1,Lurker,Basic,Character,Undead,Zombie,1+1+0,---,---,,lurker
 patched_husk,1,Patched Husk,Basic,Character,Undead,Zombie,0+1+1,---,---,,patched_husk
-hungry_corpse,2,Hungry Corpse,Basic,Character,Undead,Zombie,1+1+1,Reanimate,Gain +1 to all stats when brought from the Graveyard to the Field,,hungry_corpse
+hungry_corpse,2,Hungry Corpse,Basic,Character,Undead,Zombie,2+1+1,Reanimate,Gain +1 to all stats when brought from the Graveyard to the Field,,hungry_corpse
 extra_arm,2,Extra Arm,Basic,Equipment,N/A,Zombie,2+0+0,---,---,,extra_arm
 haunt_the_living,3,Haunt the Living,Basic,Spell,N/A,Zombie,---,---,Target character gains Reanimate,,haunt_the_living
 rotten_finger,3,Rotten Finger,Basic,Spell,N/A,Zombie,---,---,Discard a card in your hand draw a card,,rotten_finger
@@ -62,10 +62,10 @@ rotten_hand,5,Rotten Hand,Basic,Spell,N/A,Zombie,---,---,Discard all the cards i
 rise_from_the_dead,3,Rise from the Dead,Basic,Spell,N/A,Zombie,---,---,Return target Undead character from your graveyard to your hand. Pay 2 more to bring it to the Field instead,,rise_from_the_dead
 plaguemancer,8,Plaguemancer,Rare,Character,Undead,Zombie,2+2+1,Signal,Turn target character into a Zombie and gain control of it. That character gains Reanimate,,plaguemancer
 breathing_wall,2,Breathing Wall,Rare,Character,Undead,Zombie,0+5+0,Tower+Challenge,---,,breathing_wall
-sneaky_skinbag,5,Sneaky Skinbag,Rare,Character,Undead,Zombie,1+2+1,Cloak,During your End Phase create a Reanimated Corpse on your side of the field. Gain +1 health for each other Zombie on the field,,sneaky_skinbag
+sneaky_skinbag,4,Sneaky Skinbag,Rare,Character,Undead,Zombie,1+2+1,Cloak,During your End Phase create a Reanimated Corpse on your side of the field. Gain +1 health for each other Zombie on the field,,sneaky_skinbag
 midnight_madness,6,Midnight Madness,Rare,Area,N/A,Zombie,---,---,Undead characters gain +2 to all stats,,midnight_madness
 infection,5,Infection,Rare,Spell,N/A,Zombie,---,---,Turn target character into a Zombie and gain control of it,,infection
-shadow_stitched_soldier,5,Shadow-Stitched Soldier,Exotic,Character,Undead,Zombie,3+2+2,Reanimate+Evolve,After returning from the Graveyard to the Field Evolve,,shadow_stitched_soldier
+shadow_stitched_soldier,4,Shadow-Stitched Soldier,Exotic,Character,Undead,Zombie,3+2+2,Reanimate+Evolve,After returning from the Graveyard to the Field Evolve,,shadow_stitched_soldier
 zombombadier,7,Zombombadier,Exotic,Character,Undead,Zombie,1+1+1,Reanimate+Evolve,Deal damage to all characters and players equal to this Zombombadier's stat line. After returning from the Graveyard to the Field Evolve,,zombombadier
 soul_suction,6,Soul Suction,Exotic,Spell,Undead,Zombie,---,Flash,Destroy target character gain HP based on that character's stat-line,,soul_suction
 they_just_keep_coming,15,They Just Keep Coming,Divine,Spell,N/A,Zombie,---,---,This costs 1 less for each Zombie on the field. Every Zombie gains Reanimate. If a Zombie already has Reanimate give them +3 health,,they_just_keep_coming
