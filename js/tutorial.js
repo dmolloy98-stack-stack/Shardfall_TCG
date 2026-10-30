@@ -17,7 +17,7 @@ const TUT_TRAINER_HEALTH = 3;
 function startTutorial() {
   endTutorial();
   clearTimeout(U.aiTimer);
-  Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [] });
+  Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
   newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai" });
   const [me, tr] = S.players;
@@ -83,7 +83,7 @@ const targetUid = t => (t && typeof t === "object" ? t.uid : t);
 const TUT_STEPS = [
   {
     title: "Welcome to Shardfall",
-    text: "This lesson teaches you the game by playing a short one, one step at a time.<br><br>Each player has <b>health</b>, shown on these bars. Bring the other player's health down to <b>0</b> to win.",
+    text: "This lesson teaches you the game by playing a short one, one step at a time.<br><br>Each player has <b>health</b>, shown in these life crystals. The crystal cracks as its owner takes damage. Bring the other player's health down to <b>0</b> to win.",
     target: () => [plateEl(0), plateEl(1)], next: true,
   },
   {
@@ -104,13 +104,13 @@ const TUT_STEPS = [
   },
   {
     title: "Mana",
-    text: "Playing a card costs <b>mana</b>: the number in the orange diamond in the card's corner.<br><br>You have <b>1</b> mana right now. Each turn your mana refills, and you get <b>1 more</b> than the turn before.",
+    text: "Playing a card costs <b>mana</b>: the number in the orange diamond in the card's corner.<br><br>Your mana is the row of crystals: lit ones can be spent. You have <b>1</b> right now. Each turn your crystals refill, and you get <b>1 more</b> than the turn before.",
     target: () => [q('.mana[data-player="0"]'), handEl("farmerA")], next: true,
   },
   {
     title: "The four steps of a turn",
-    text: "Every turn goes through four steps, in order:<ol><li><b>Draw</b>: take a card from your deck.</li><li><b>Setup</b>: play cards from your hand.</li><li><b>Battle</b>: your characters attack.</li><li><b>End</b>: pass the turn.</li></ol>The lit-up step is where you are. The player who goes first skips their first Draw, so you start in Setup.",
-    target: () => [q(".phases")], next: true,
+    text: "Every turn goes through four steps, in order:<ol><li><b>Draw</b>: take a card from your deck.</li><li><b>Setup</b>: play cards from your hand.</li><li><b>Battle</b>: your characters attack.</li><li><b>End</b>: pass the turn.</li></ol>The lit-up step is where you are, and the big crystal on the left glows in the color of whoever's turn it is: <b style=\"color:#4cc9f0\">blue</b> for you. The player who goes first skips their first Draw, so you start in Setup.",
+    target: () => [q(".phases"), q(".turn-crystal")], next: true,
   },
   {
     title: "Play a character",

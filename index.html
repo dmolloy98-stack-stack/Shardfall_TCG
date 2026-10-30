@@ -11,6 +11,12 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<!-- Shared gradients for the crystal icons (mana, health, the turn crystal) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="g-life" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe0e8"/><stop offset="0.45" stop-color="#ff4f7b"/><stop offset="1" stop-color="#7d0f33"/></linearGradient>
+  <linearGradient id="g-mana" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.4" stop-color="#9cc2ff"/><stop offset="1" stop-color="#5a3fd8"/></linearGradient>
+  <linearGradient id="g-shine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.85"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.12"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs></svg>
 <div id="app">
 
   <!-- MAIN MENU -->
@@ -35,6 +41,9 @@
             <strong>Two players</strong><span>Take turns on one device</span>
           </button>
         </div>
+
+        <h2 class="panel-label">Board</h2>
+        <div id="skin-list" class="skin-list"></div>
 
         <div class="menu-actions">
           <button type="button" id="btn-start" class="btn btn-primary">Start game</button>

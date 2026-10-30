@@ -138,10 +138,10 @@ function showDiagram(html) {
     { box: ".phases", n: 7 },
     { box: '[data-act="phase"]', n: 8 },
     { box: ['.pile.deck[data-player="0"]', '.pile.grave[data-player="0"]'], n: 9 },
-    { box: [270, 592, 520, 135], n: 10 },
-    { box: [830, 592, 520, 135], n: 11 },
-    { box: '.plate[data-player="0"]', n: 12 },
-    { box: '[data-act="menu"]', n: 13 },
+    { box: [270, 592, 1040, 135], n: 10 },
+    { box: '.plate[data-player="0"]', n: 11 },
+    { box: '[data-act="menu"]', n: 12 },
+    { box: ".turn-crystal", n: 13 },
   ]);
   await jpg("board.jpg");
 

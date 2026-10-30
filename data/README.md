@@ -87,9 +87,10 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | starting_player_health | Health each player starts with |
 | starting_hand_size | Cards in the opening hand |
 | mana_growth_per_turn | Maximum mana gained each turn |
-| max_field_characters / max_field_equipment / max_field_areas | Limits per side of the table |
+| max_field_backline | Most cards on one side's backline (areas and stored equipment together) |
+| max_field_characters | Optional. Leave it out for no limit on characters (the default) |
 | min_deck_size, max_copies, max_unknown_copies | Deck-building rules |
 
 ### phases.csv and ui_text.csv
 
-Phase names and the one-line instructions shown on the board, plus a few button labels. Change the wording freely; the order of phases is fixed by the game.
+Phase names and the one-line instructions shown on the board, plus a few button labels and the names of the two rows on each side of the table (`zone_frontline` and `zone_backline`). Change the wording freely; the order of phases is fixed by the game.
