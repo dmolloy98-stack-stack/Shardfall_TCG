@@ -454,10 +454,9 @@ const EFFECTS = {
   "Rise from the Dead": {
     now: ctx => {
       const cards = ctx.owner.grave.filter(c => c.race === "Undead" && c.type === "Character");
-      if (!cards.length) return;
-      const options = [{ id: "hand", label: "Return to hand" }];
-      if (ctx.owner.mana >= 2 && ctx.owner.field.chars.length < RULES.maxChars) options.push({ id: "field", label: "Bring to the field (+2 mana)" });
-      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rise from the Dead", prompt: "Pick an Undead character from your graveyard.", cards, pick: 1, options, resolve: "rise" };
+      if (!cards.length || ctx.owner.field.chars.length >= RULES.maxChars) return;
+      const options = [{ id: "field", label: "Bring it back to the field" }];
+      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rise from the Dead", prompt: "Pick an Undead character from your graveyard to bring back to the field.", cards, pick: 1, options, resolve: "rise" };
     },
   },
   "They Just Keep Coming": {
@@ -853,10 +852,8 @@ function resolveChoice(picks, option) {
     const c = picked[0];
     if (c) {
       removeFromGrave(c);
-      const n = fresh(c);
-      if (option === "field" && owner.mana >= 2 && owner.field.chars.length < RULES.maxChars) {
-        owner.mana -= 2; log(`${c.name} rises onto the field.`); putOnField(n, owner);
-      } else { owner.hand.push(n); emit("handAdd", { player: owner.idx }); log(`${c.name} returns to ${owner.name}'s hand.`); }
+      log(`${c.name} rises onto the field.`);
+      putOnField(fresh(c), owner);
     }
   }
   return true;

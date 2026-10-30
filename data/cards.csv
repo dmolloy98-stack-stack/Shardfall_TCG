@@ -59,7 +59,7 @@ extra_arm,2,Extra Arm,Basic,Equipment,N/A,Zombie,2+0+0,---,---,,extra_arm
 haunt_the_living,3,Haunt the Living,Basic,Spell,N/A,Zombie,---,---,Target character gains Reanimate,,haunt_the_living
 rotten_finger,3,Rotten Finger,Basic,Spell,N/A,Zombie,---,---,Discard a card in your hand draw a card,,rotten_finger
 rotten_hand,5,Rotten Hand,Basic,Spell,N/A,Zombie,---,---,Discard all the cards in your hand draw 3 cards,,rotten_hand
-rise_from_the_dead,3,Rise from the Dead,Basic,Spell,N/A,Zombie,---,---,Return target Undead character from your graveyard to your hand. Pay 2 more to bring it to the Field instead,,rise_from_the_dead
+rise_from_the_dead,4,Rise from the Dead,Basic,Spell,N/A,Zombie,---,---,Return target Undead character from your graveyard to the Field,,rise_from_the_dead
 plaguemancer,8,Plaguemancer,Rare,Character,Undead,Zombie,2+2+1,Signal,Turn target character into a Zombie and gain control of it. That character gains Reanimate,,plaguemancer
 breathing_wall,2,Breathing Wall,Rare,Character,Undead,Zombie,0+5+0,Tower+Challenge,---,,breathing_wall
 sneaky_skinbag,4,Sneaky Skinbag,Rare,Character,Undead,Zombie,1+2+1,Cloak,During your End Phase create a Reanimated Corpse on your side of the field. Gain +1 health for each other Zombie on the field,,sneaky_skinbag
