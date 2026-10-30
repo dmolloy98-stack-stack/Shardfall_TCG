@@ -308,7 +308,7 @@ function fieldHTML(p, side) {
   h += `<div class="zone-label front-label" style="left:${L.deckX}px;top:${y.chars + 58}px">${esc(DATA.text("zone_frontline", "Frontline"))} ›</div>`;
 
   // characters
-  const forced = side === "top" ? forcedTarget(p) : null;
+  const guarded = side === "top" && guards(p).length > 0;
   p.field.chars.forEach((c, i) => {
     const cls = ["field-card"];
     if (side === "bottom" && human && canAttack(c)) cls.push("ready");
@@ -316,7 +316,7 @@ function fieldHTML(p, side) {
     if (U.selected === c.uid) cls.push("selected");
     if (humanPending && pd.kind === "target" && pd.targetType !== "area" && isValidTarget({ uid: c.uid })) cls.push("targetable");
     if (U.armed && side === "bottom" && human) cls.push("targetable");
-    if (U.selected && side === "top" && (!forced || forced === c)) cls.push("attackable");
+    if (U.selected && side === "top" && (!guarded || isGuard(c))) cls.push("attackable");
     if (recent(U.hits, c.uid, 450)) cls.push("hit");
     if (recent(U.lunges, c.uid, 400)) cls.push(side === "bottom" ? "lunge-up" : "lunge-down");
     const sp = U.spawn.get(c.uid);
@@ -386,10 +386,10 @@ function render() {
   h += `<div class="turn-crystal${performance.now() - U.turnLandedAt < 700 ? " landed" : ""}" style="--pc:${turnColor}" title="Glows in the color of the player whose turn it is">${crystalSVG("big-crystal")}</div>`;
   h += `<div class="turn-info" style="top:372px"><b>Round ${S.round}</b><span style="color:${turnColor}">${esc(active().name)}'s turn</span></div>`;
   h += `<div class="phases">${DATA.phases.map((ph, i) => `<div class="phase-step${i === S.phase ? " on" : ""}">${esc(ph.name)}</div>`).join("")}</div>`;
-  const forced = forcedTarget(them);
+  const forced = guards(them);
   if (U.selected && human) {
-    h += forced
-      ? `<div class="instruction">${esc(forced.name)} has Challenge and must be attacked first</div>`
+    h += forced.length
+      ? `<div class="instruction">${forced.length === 1 ? `${esc(forced[0].name)} has ${guardSkill(forced[0])} and must be attacked first` : "Attack one of the Challenge or Tower characters first"}</div>`
       : `<button type="button" class="face-btn" data-act="face">⚔ Attack ${esc(them.name)} directly</button>`;
   } else if (!S.over) {
     const instr = active().isAI ? `${active().name === "Computer" ? "The computer" : active().name} is taking its turn…` : DATA.phases[S.phase]?.instruction || "";

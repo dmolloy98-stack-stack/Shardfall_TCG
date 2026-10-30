@@ -5,7 +5,7 @@ reanimate,Reanimate,↺,Returns to the battlefield once after dying,30
 rush,Rush,➜,Can attack on the turn it is played,40
 overwhelm,Overwhelm,⚔,Excess damage hits the opposing player,50
 parry,Parry,↯,Deals double damage when defending,60
-tower,Tower,▰,Cannot attack but blocks,70
+tower,Tower,▰,Cannot attack. Enemies must attack it first,70
 challenge,Challenge,!,Enemies must attack this character,80
 signal,Signal,⌁,Triggers an ability when entering the field,90
 rally,Rally,♜,+1 Attack and Speed while you control 3+ Rally characters of the same faction,100

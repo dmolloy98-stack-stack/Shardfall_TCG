@@ -279,7 +279,7 @@ const TUT_STEPS = [
   },
   {
     title: "Challenge and Tower",
-    text: "The Trainer played <b>Breathing Wall</b>, which has two skills:<ul><li><b>! Challenge</b>: while it is on the table, your attacks must go to it first.</li><li><b>▰ Tower</b>: it never attacks. It only blocks.</li></ul>With 5 Health, your characters can't break through it… on their own.",
+    text: "The Trainer played <b>Breathing Wall</b>, which has two skills:<ul><li><b>! Challenge</b>: while it is on the table, your attacks must go to it first.</li><li><b>▰ Tower</b>: it never attacks. It only blocks, and it also has to be attacked first.</li></ul>With 5 Health, your characters can't break through it… on their own.",
     target: () => [fieldEl("wall")], next: true,
   },
   {
