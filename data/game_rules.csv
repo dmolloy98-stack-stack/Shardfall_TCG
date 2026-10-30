@@ -1,5 +1,5 @@
 RuleID,Value,ValueType,Description
-starting_player_health,20,number,Initial health for each player
+starting_player_health,25,number,Initial health for each player
 starting_hand_size,6,number,Cards drawn at the beginning of a game
 mana_growth_per_turn,1,number,Mana maximum gained at the start of each turn
 max_field_backline,10,number,Most areas and stored equipment together on one side's backline

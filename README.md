@@ -27,7 +27,7 @@ First-time visitors are offered the tutorial when the game opens.
 
 The short version:
 
-- Each player starts with 20 health and 6 cards from a 35-card deck. Reduce the other player to 0 health to win. Drawing from an empty deck loses.
+- Each player starts with 25 health and 6 cards from a 35-card deck. Reduce the other player to 0 health to win. Drawing from an empty deck loses.
 - **Draw → Setup → Battle → End.** Your maximum mana grows by 1 each turn, with no cap. The player who goes first skips their first draw; the player who goes second gets a one-time **+1** mana token beside their mana, usable on any of their turns.
 - **Setup:** drag cards from your hand onto the table, or tap a card and press Play.
 - **Battle:** tap one of your characters, then an enemy character, or "Attack directly". The faster character strikes first.
