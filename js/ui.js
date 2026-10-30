@@ -28,6 +28,10 @@ const U = {
   tutorial: null,        // the running tutorial (js/tutorial.js), if any
   skin: PREFS.get("board", "altar"),   // board look: altar, battlefield or warmap (chosen in Settings)
   turnColor: null,       // player whose color the turn crystal shows (it changes when the falling shard lands)
+  lungeVec: new Map(),   // uid -> how far an attacker swoops toward its target
+  arriving: new Map(),   // uid -> until when a showcased card is still on its way to the table
+  busyUntil: 0,          // the computer waits for big animations to finish (js/fx.js)
+  stats: null, endBadges: [], dragAttackAt: 0, lungeAt: 0,
   turnLandedAt: 0,
   hints: PREFS.get("hints", true),
   hintOpen: true,
@@ -176,9 +180,23 @@ function sparkle(x, y, n = 14) {
 
 // A defeated character breaks into shards: copies of the card, each clipped to one
 // wedge, fly apart and fade. Runs before the board redraws, while the card is still there.
-function shatter(uid) {
+function shatter(uid, delay = 0) {
   const src = document.querySelector(`.field-card[data-uid="${uid}"]`);
   if (!src || REDUCED_MOTION) return;
+  if (delay) {
+    // the board redraws without the card straight away; hold a copy until the blow lands
+    const hold = document.createElement("div");
+    hold.className = "shard-hold";
+    hold.innerHTML = src.innerHTML;
+    hold.style.cssText = `left:${src.offsetLeft}px;top:${src.offsetTop}px`;
+    $("#fx-layer").appendChild(hold);
+    const card = { offsetLeft: src.offsetLeft, offsetTop: src.offsetTop, innerHTML: src.innerHTML };
+    setTimeout(() => { hold.remove(); shatterFrom(card); }, delay);
+    return;
+  }
+  shatterFrom(src);
+}
+function shatterFrom(src) {
   const x = src.offsetLeft, y = src.offsetTop, cx = CARD_W / 2, cy = CARD_H / 2;
   const ring = [[0, 0], [45, 0], [95, 0], [95, 50], [95, 95], [95, 135], [50, 135], [0, 135], [0, 85], [0, 40]];
   ring.forEach((p, k) => {
@@ -211,26 +229,49 @@ const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 onGameEvent((type, d) => {
   const now = performance.now();
-  if (type === "charDamage") {
+  // A blow lands when the attacker reaches its target, a moment after the lunge starts.
+  const delay = now - U.lungeAt < 80 && !REDUCED_MOTION ? 190 : 0;
+  if (type === "newGame") {
+    resetMatchStats();
+  } else if (type === "charDamage") {
     const p = charCenter(d.uid);
-    floatText(p.x + (Math.random() - 0.5) * 30, p.y, `-${d.amount}`, "#ff6a4d");
-    U.hits.set(d.uid, now);
-    if (d.amount >= 3) shake(false);
+    const f = findChar(d.uid);
+    const overkill = f ? -rawStats(f.c).h : 0;
+    if (f) countDamage(f.p.idx, d.amount);
+    later(delay, () => {
+      damageNumber(p.x + (Math.random() - 0.5) * 30, p.y, d.amount, overkill);
+      impactAt(p.x, p.y, d.amount);
+      U.hits.set(d.uid, performance.now());
+      flashCard(d.uid, "hit");
+      shakeBy(d.amount >= 3 ? 2 + d.amount * 1.4 : 0);
+      if (d.amount >= 8) callout("Massive hit!");
+    });
   } else if (type === "playerDamage") {
     const p = plateCenter(d.player);
-    floatText(p.x + (Math.random() - 0.5) * 120, p.y - 10, `-${d.amount}`, "#ff6a4d");
-    shake(d.amount >= 5);
+    countDamage(d.player, d.amount);
+    if (U.stats) U.stats.low[d.player] = Math.min(U.stats.low[d.player], S.players[d.player].health / S.players[d.player].maxHealth);
+    later(delay, () => {
+      damageNumber(p.x + (Math.random() - 0.5) * 120, p.y - 10, d.amount, 0);
+      crystalChips(d.player, 6 + Math.min(10, d.amount * 2));
+      shakeBy(3 + d.amount * 1.5);
+      if (d.amount >= 8) callout("Massive hit!");
+    });
   } else if (type === "playerHeal") {
     const p = plateCenter(d.player);
     floatText(p.x, p.y - 10, `+${d.amount}`, "#7be08f");
   } else if (type === "text") {
     const p = charCenter(d.uid);
     floatText(p.x, p.y - 40, d.text, d.color, true);
+    skillSpotlight(d.uid, d.text);
   } else if (type === "enter") {
-    U.spawn.set(d.uid, { cost: Math.min(7, Math.max(1, d.cost)), t: now });
-    if (d.cost >= 7) setTimeout(() => shake(true), 380);
+    U.spawn.set(d.uid, { cost: Math.min(7, Math.max(1, d.cost)), t: now, faction: findChar(d.uid)?.c.group });
   } else if (type === "lunge") {
+    // the attacker swoops most of the way to its target and springs back
+    const from = charCenter(d.uid);
+    const to = d.target != null ? charCenter(d.target) : plateCenter(d.player);
     U.lunges.set(d.uid, now);
+    U.lungeVec.set(d.uid, { dx: (to.x - from.x) * 0.72, dy: (to.y - from.y) * 0.72 });
+    U.lungeAt = now;
   } else if (type === "draw") {
     U.drawn.set(d.uid, now);
   } else if (type === "manaToken") {
@@ -241,6 +282,8 @@ onGameEvent((type, d) => {
     if (S.mode === "hotseat") U.curtain = true;
     else banner(active().isAI ? `${active().name}'s turn` : "Your turn");
   } else if (type === "play") {
+    if (U.stats) U.stats.played[d.player]++;
+    if (d.card.manaCost >= SHOWCASE_COST && !REDUCED_MOTION) { setTimeout(() => showcase(d.card, d.player), 0); return; }
     // after the board redraws, sparkle where the card landed
     setTimeout(() => {
       const el = document.querySelector(`#board [data-uid="${d.card.uid}"]`);
@@ -249,9 +292,9 @@ onGameEvent((type, d) => {
       sparkle(at.x, at.y, d.card.type === "Spell" ? 22 : 14);
     }, 0);
   } else if (type === "death") {
-    shatter(d.uid);
+    shatter(d.uid, delay);
   } else if (type === "gameOver") {
-    U.ended = true;
+    finale(d.winner);
   }
 });
 const recent = (map, uid, ms) => map.has(uid) && performance.now() - map.get(uid) < ms;
@@ -272,6 +315,7 @@ function plateHTML(p, side) {
   return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
     <div class="life">${crystalSVG("life-crystal " + tier, cracks)}<b>${Math.max(0, p.health)}</b></div>
     <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em></div>
+    ${attackable ? previewBadge(fightPreview(U.selected, null), true) : ""}
   </div>`;
 }
 
@@ -316,12 +360,20 @@ function fieldHTML(p, side) {
     if (U.selected === c.uid) cls.push("selected");
     if (humanPending && pd.kind === "target" && pd.targetType !== "area" && isValidTarget({ uid: c.uid })) cls.push("targetable");
     if (U.armed && side === "bottom" && human) cls.push("targetable");
-    if (U.selected && side === "top" && (!guarded || isGuard(c))) cls.push("attackable");
+    const attackable = U.selected && side === "top" && (!guarded || isGuard(c));
+    if (attackable) cls.push("attackable");
     if (recent(U.hits, c.uid, 450)) cls.push("hit");
-    if (recent(U.lunges, c.uid, 400)) cls.push(side === "bottom" ? "lunge-up" : "lunge-down");
+    let vars = `--d:${((c.uid * 0.37) % 3).toFixed(2)}s`;
+    if (recent(U.lunges, c.uid, 450)) {
+      const v = U.lungeVec.get(c.uid) || { dx: 0, dy: side === "bottom" ? -34 : 34 };
+      cls.push("lunge");
+      vars += `;--dx:${v.dx.toFixed(0)}px;--dy:${v.dy.toFixed(0)}px`;
+    }
     const sp = U.spawn.get(c.uid);
-    if (sp && performance.now() - sp.t < 1000) cls.push("spawn-" + sp.cost);
-    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px">${cardHTML(c, { field: true })}</div>`;
+    if (sp && performance.now() - sp.t < 1000) cls.push(spawnClass(sp));
+    if ((U.arriving.get(c.uid) ?? 0) > performance.now()) cls.push("arriving");
+    const preview = attackable && human ? previewBadge(fightPreview(U.selected, c.uid)) : "";
+    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${preview}</div>`;
   });
   return h;
 }
@@ -361,11 +413,12 @@ function skinButtons(attr) {
 function render() {
   if (!S) return;
   for (const k of SKINS) $("#stage").classList.toggle("skin-" + k.id, k.id === U.skin);
+  $("#stage").classList.toggle("tense", isTense());
   const me = S.players[viewIdx()], them = S.players[1 - viewIdx()];
   const human = humanTurn();
   // The scenery behind the table; each board skin styles these pieces its own way.
   let h = `<div class="scene"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="side top" data-faction="${esc(them.faction)}"></div><div class="side bottom" data-faction="${esc(me.faction)}"></div>
+    <div class="side top" data-faction="${esc(them.faction)}" style="${sideStyle(them)}"></div><div class="side bottom" data-faction="${esc(me.faction)}" style="${sideStyle(me)}"></div>
     <div class="rift"></div>`;
   for (const side of ["top", "bottom"]) {
     h += `<div class="lane back" style="left:${L.backX - 10}px;top:${L[side].backline - 8}px;width:${RULES.maxBackline * L.slot + 10}px;height:${CARD_H + 16}px"></div>`;
@@ -407,12 +460,13 @@ function render() {
   } else if (U.ended && !U.tutorial) {
     const title = S.winner == null ? "A draw" : S.mode === "ai" ? (S.winner === 0 ? "Victory" : "Defeat") : `${S.players[S.winner].name} wins`;
     const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;
-    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p><div class="detail-actions"><button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button></div></div>`;
+    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${endStatsHTML()}<div class="detail-actions"><button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button></div></div>`;
   }
   $("#board").innerHTML = h;
   renderHand(me);
   renderPrompt();
   renderOverlays();
+  drawAim();
 }
 
 // Tutorial coach and beginner hints sit above the board in screen space, so their
@@ -484,11 +538,13 @@ function afterAction() {
 function scheduleAI() {
   clearTimeout(U.aiTimer);
   if (!S || S.over || !active().isAI || U.screen !== "game" || U.tutorial) return;
+  const wait = Math.max(0, U.busyUntil - performance.now());
   U.aiTimer = setTimeout(() => {
+    if (U.busyUntil > performance.now()) { scheduleAI(); return; }
     const more = aiStep();
     render();
     if (more || active().isAI) scheduleAI();
-  }, S.phase === PHASE.DRAW ? 900 : 750);
+  }, (S.phase === PHASE.DRAW ? 900 : 750) + wait);
 }
 
 function startGame() {
@@ -553,8 +609,16 @@ function handDown(e) {
   const el = e.target.closest(".hand-card");
   if (!el || e.button === 2) return;
   const uid = Number(el.dataset.uid);
-  drag = { uid, el, start: stagePoint(e), moved: false, pointerId: e.pointerId };
+  drag = { uid, el, start: stagePoint(e), moved: false, pointerId: e.pointerId, tilt: 0 };
+  el.classList.add("held");   // the card lifts toward you as soon as you touch it
   el.setPointerCapture?.(e.pointerId);
+}
+// Where a card being dragged can go: the frontline for characters, the backline for
+// areas and equipment, anywhere on the table for spells.
+function dropZone(c) {
+  if (c.type === "Character") return { left: 720 - L.frontW / 2 - 12, top: L.bottom.chars - 8, width: L.frontW + 24, height: CARD_H + 16 };
+  if (c.type === "Spell") return { left: 24, top: 70, width: 1392, height: 650 };
+  return { left: L.backX - 8, top: L.bottom.backline - 8, width: RULES.maxBackline * L.slot + 6, height: CARD_H + 16 };
 }
 function handMove(e) {
   if (!drag || e.pointerId !== drag.pointerId) return;
@@ -569,23 +633,30 @@ function handMove(e) {
     drag.ghost.className = "ghost";
     drag.ghost.innerHTML = cardHTML(c, { costOverride: playCost(c) });
     $("#stage").appendChild(drag.ghost);
-    if (c.type === "Equipment") {
-      drag.hint = document.createElement("div");
-      drag.hint.className = "drop-hint";
-      Object.assign(drag.hint.style, { left: L.backX - 8 + "px", top: L.bottom.backline - 8 + "px", width: RULES.maxBackline * L.slot + 6 + "px", height: CARD_H + 16 + "px" });
-      $("#stage").appendChild(drag.hint);
-    }
+    drag.hint = document.createElement("div");
+    drag.hint.className = "drop-hint" + (c.type === "Spell" ? " spell" : "");
+    for (const [k, v] of Object.entries(dropZone(c))) drag.hint.style[k] = v + "px";
+    $("#stage").appendChild(drag.hint);
+    drag.last = pt;
   }
   if (drag.moved) {
     drag.ghost.style.left = pt.x - CARD_W / 2 + "px";
     drag.ghost.style.top = pt.y - CARD_H / 2 + "px";
+    // the card leans the way it is moving, and settles when it stops
+    drag.tilt = Math.max(-16, Math.min(16, drag.tilt * 0.6 + (pt.x - drag.last.x) * 0.5));
+    drag.last = pt;
+    drag.ghost.style.transform = `scale(1.12) rotate(${drag.tilt.toFixed(1)}deg)`;
+    // back over the hand, letting go puts the card back
+    const back = pt.y >= 740;
+    drag.ghost.classList.toggle("invalid", back);
+    drag.hint.classList.toggle("off", back);
   }
 }
 function handUp(e) {
   if (!drag || e.pointerId !== drag.pointerId) return;
   const d = drag; drag = null;
   d.ghost?.remove(); d.hint?.remove();
-  d.el.classList.remove("dragging");
+  d.el.classList.remove("dragging", "held");
   if (!d.moved) {
     const c = S.players[viewIdx()].hand.find(x => x.uid === d.uid);
     if (c) showDetail(c, { hand: true });
@@ -774,6 +845,7 @@ $("#modal").addEventListener("click", e => {
 $("#board").addEventListener("click", e => {
   const el = e.target.closest("[data-act]");
   if (!el || !S) return;
+  if (performance.now() - U.dragAttackAt < 400) return;   // the release of a drag-to-attack
   const a = el.dataset.act;
   const uid = Number(el.dataset.uid);
   const human = humanTurn();
@@ -823,7 +895,7 @@ const hand = $("#hand-layer");
 hand.addEventListener("pointerdown", handDown);
 hand.addEventListener("pointermove", handMove);
 hand.addEventListener("pointerup", handUp);
-hand.addEventListener("pointercancel", e => { if (drag) { drag.ghost?.remove(); drag.hint?.remove(); drag.el.classList.remove("dragging"); drag = null; } });
+hand.addEventListener("pointercancel", e => { if (drag) { drag.ghost?.remove(); drag.hint?.remove(); drag.el.classList.remove("dragging", "held"); drag = null; } });
 hand.addEventListener("contextmenu", e => {
   e.preventDefault();
   const el = e.target.closest(".hand-card");
@@ -894,6 +966,7 @@ function fitStage() {
     }
   }
   U.scale = Math.min(bw / W, bh / H);
+  $("#stage").classList.toggle("small", U.small);
   $("#stage").style.transform = `translate(${(bw - W * U.scale) / 2}px, ${(bh - H * U.scale) / 2}px) scale(${U.scale})`;
 }
 // Phones resize the page when the browser bars slide in and out, and on rotation.

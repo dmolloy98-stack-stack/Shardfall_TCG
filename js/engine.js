@@ -889,7 +889,7 @@ function attack(attackerUid, targetUid) {
 
   a.hasAttacked = true;
   a.attackedThisTurn = true;
-  emit("lunge", { uid: a.uid });
+  emit("lunge", { uid: a.uid, target: target ? target.uid : null, player: defender.idx });
   const as = stats(a);
   if (!target) {
     log(`${a.name} attacks ${defender.name} for ${as.a}.`);
