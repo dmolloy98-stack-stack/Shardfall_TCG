@@ -2,8 +2,7 @@ RuleID,Value,ValueType,Description
 starting_player_health,20,number,Initial health for each player
 starting_hand_size,6,number,Cards drawn at the beginning of a game
 mana_growth_per_turn,1,number,Mana maximum gained at the start of each turn
-max_field_characters,7,number,Maximum characters on one battlefield
-max_field_support,10,number,Maximum areas and stored equipment together in one side's support row
+max_field_backline,10,number,Most areas and stored equipment together on one side's backline
 min_deck_size,35,number,Smallest legal deck
 max_copies,4,number,Most copies of one card a deck may hold
 max_unknown_copies,2,number,Most copies of one Unknown-rarity card a deck may hold

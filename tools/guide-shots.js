@@ -141,6 +141,7 @@ function showDiagram(html) {
     { box: [270, 592, 1040, 135], n: 10 },
     { box: '.plate[data-player="0"]', n: 11 },
     { box: '[data-act="menu"]', n: 12 },
+    { box: ".turn-crystal", n: 13 },
   ]);
   await jpg("board.jpg");
 

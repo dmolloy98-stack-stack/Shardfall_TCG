@@ -9,12 +9,12 @@ const RULES = {
   startingHealth: DATA.rules.starting_player_health ?? 20,
   startingHand: DATA.rules.starting_hand_size ?? 6,
   manaGrowth: DATA.rules.mana_growth_per_turn ?? 1,
-  maxChars: DATA.rules.max_field_characters ?? 7,
-  // Areas and stored equipment share one row on each side of the table.
-  maxSupport: DATA.rules.max_field_support ?? 10,
+  maxChars: DATA.rules.max_field_characters ?? Infinity,   // no limit unless game_rules.csv sets one
+  // Characters stand on the frontline; areas and stored equipment share the backline.
+  maxBackline: DATA.rules.max_field_backline ?? 10,
 };
-const SUPPORT_ROW = () => DATA.text("zone_support", "Support");
-const supportCount = p => p.field.areas.length + p.field.equips.length;
+const BACKLINE = () => DATA.text("zone_backline", "Backline");
+const backlineCount = p => p.field.areas.length + p.field.equips.length;
 
 // Counter spells need a response window that the original game never had.
 // They stay in the decks but cannot be cast until that system exists.
@@ -695,12 +695,12 @@ function playBlocker(c, p) {
   if (c.type === "Equipment") {
     const cheapest = Math.min(cost, ...p.field.chars.map(t => equipCost(c, p, t, false)));
     if (p.mana < cheapest) return `Needs ${cost} mana`;
-    if (!p.field.chars.length && supportCount(p) >= RULES.maxSupport) return `The ${SUPPORT_ROW()} row is full`;
+    if (!p.field.chars.length && backlineCount(p) >= RULES.maxBackline) return `The ${BACKLINE()} is full`;
     return null;
   }
   if (p.mana < cost) return `Needs ${cost} mana`;
   if (c.type === "Character" && p.field.chars.length >= RULES.maxChars) return "Your battlefield is full";
-  if (c.type === "Area" && supportCount(p) >= RULES.maxSupport) return `The ${SUPPORT_ROW()} row is full`;
+  if (c.type === "Area" && backlineCount(p) >= RULES.maxBackline) return `The ${BACKLINE()} is full`;
   const fx = effectFor(c);
   if (c.type === "Spell" && fx && fx.target && !validTargets(fx, { card: c, owner: p, spell: true }).length) return "No valid targets";
   return null;
@@ -709,7 +709,7 @@ const canPlay = (c, p) => !playBlocker(c, p);
 
 // Play a card from the active player's hand.
 // opts.target: a battlefield character (for equipment)
-// opts.toField: place equipment in the support row, to attach later
+// opts.toField: place equipment on the backline, to attach later
 function playCard(uid, opts = {}) {
   if (!allowed("playCard", uid, opts)) return false;
   const p = active();
@@ -720,11 +720,11 @@ function playCard(uid, opts = {}) {
   if (c.type === "Equipment") {
     if (opts.toField) {
       const cost = playCost(c, p);
-      if (supportCount(p) >= RULES.maxSupport || p.mana < cost) return false;
+      if (backlineCount(p) >= RULES.maxBackline || p.mana < cost) return false;
       p.mana -= cost; p.hand.splice(index, 1); p.field.equips.push(c);
-      c.placed = S.round * 100 + supportCount(p);   // keeps the row in the order cards were placed
+      c.placed = S.round * 100 + backlineCount(p);   // keeps the row in the order cards were placed
       emit("play", { card: c, player: p.idx });
-      log(`${p.name} places ${c.name} in the ${SUPPORT_ROW()} row.`);
+      log(`${p.name} places ${c.name} on the ${BACKLINE()}.`);
       equipmentEntered(p);
       return true;
     }
@@ -750,7 +750,7 @@ function playCard(uid, opts = {}) {
     putOnField(c, p);
   } else if (c.type === "Area") {
     p.field.areas.push(c);
-    c.placed = S.round * 100 + supportCount(p);
+    c.placed = S.round * 100 + backlineCount(p);
     log(`${p.name} plays the area ${c.name}.`);
     if (c.name === "Whirlpool") {
       for (const x of allChars().slice()) { dealDamageToCharacter(x, 1); if (allChars().includes(x)) x.speed -= 1; }
@@ -774,7 +774,7 @@ function attach(e, target) {
   emit("text", { uid: target.uid, text: "EQUIP", color: "#7fd6ff" });
 }
 
-// Equip a card stored in the support row onto one of your characters.
+// Equip a card stored on the backline onto one of your characters.
 function attachFieldEquipment(equipUid, targetUid) {
   if (!allowed("attachFieldEquipment", equipUid, targetUid)) return false;
   const p = active();

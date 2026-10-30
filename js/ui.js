@@ -3,9 +3,9 @@
 
 const W = 1440, H = 1000, CARD_W = 95, CARD_H = 135;
 const L = {
-  top:    { chars: 222, support: 78 },
-  bottom: { chars: 442, support: 592 },
-  supportX: 270, deckX: 30, graveX: 140, slot: 105, charStep: 110,
+  top:    { chars: 222, backline: 78 },
+  bottom: { chars: 442, backline: 592 },
+  backX: 270, deckX: 30, graveX: 140, slot: 105, charStep: 110, frontW: 1140,
   handY: 770,
 };
 
@@ -26,6 +26,9 @@ const U = {
   almanacTab: "cards", almanacFilter: "All", almanacReturn: "menu", guideReturn: "menu",
   scale: 1,
   tutorial: null,        // the running tutorial (js/tutorial.js), if any
+  skin: PREFS.get("skin", "battlefield"),   // board look: battlefield, altar or warmap
+  turnColor: null,       // player whose color the turn crystal shows (it changes when the falling shard lands)
+  turnLandedAt: 0,
   hints: PREFS.get("hints", true),
   hintOpen: true,
   hintNoteUntil: 0,
@@ -100,7 +103,9 @@ function cardHTML(c, opts = {}) {
 const viewIdx = () => (S.mode === "ai" ? 0 : S.active);
 const sideOf = idx => (idx === viewIdx() ? "bottom" : "top");
 const humanTurn = () => S && !S.over && !active().isAI && !U.curtain;
-function charX(i, n) { return 720 - (n * L.charStep - 15) / 2 + i * L.charStep; }
+// Characters are spaced out evenly and squeeze together when there are many (there is no limit).
+function charStep(n) { return Math.min(L.charStep, (L.frontW - CARD_W) / Math.max(1, n - 1)); }
+function charX(i, n) { const step = charStep(n); return 720 - ((n - 1) * step + CARD_W) / 2 + i * step; }
 function handPos(i, n) {
   const spacing = Math.min(105, 800 / Math.max(1, n));
   const x = W / 2 - CARD_W / 2 - ((n - 1) * spacing) / 2 + i * spacing;
@@ -117,7 +122,18 @@ function charCenter(uid) {
   if (el) return { x: el.offsetLeft + CARD_W / 2, y: el.offsetTop + CARD_H / 2 };
   return { x: W / 2, y: H / 2 };
 }
-function plateCenter(idx) { return sideOf(idx) === "top" ? { x: 720, y: 50 } : { x: 720, y: 958 }; }
+function plateCenter(idx) { return sideOf(idx) === "top" ? { x: 570, y: 40 } : { x: 570, y: 960 }; }
+
+// Each player has a color; the turn crystal glows in the color of whoever's turn it is.
+const PLAYER_COLORS = ["#4cc9f0", "#ff5d8f"];
+
+// A crystal shard drawn in SVG, used for mana, health and the turn crystal.
+const CRYSTAL = "M20 1 L36 14 L32 38 L20 47 L8 38 L4 14 Z";
+const CRYSTAL_FACETS = "M4 14 L20 20 L36 14 M20 20 L20 47 M8 38 L20 20 L32 38";
+const CRACKS = ["M20 2 L17 10 L21 15 L18 19", "M35 15 L28 19 L30 25 L26 28", "M6 22 L13 26 L10 33 L15 37", "M22 30 L27 35 L23 41 L26 46"];
+function crystalSVG(cls, cracks = 0) {
+  return `<svg class="${cls}" viewBox="0 0 40 48" aria-hidden="true"><path class="c-body" d="${CRYSTAL}"/><path class="c-shine" d="${CRYSTAL}"/><path class="c-facet" d="${CRYSTAL_FACETS}"/>${CRACKS.slice(0, cracks).map(d => `<path class="c-crack" d="${d}"/>`).join("")}</svg>`;
+}
 
 // ---------------------------------------------------------------------------
 // Effects
@@ -143,6 +159,55 @@ function banner(text) {
   clearTimeout(banner.t);
   banner.t = setTimeout(() => { b.hidden = true; }, 1500);
 }
+
+// A burst of little star sparkles at a point on the board.
+function sparkle(x, y, n = 14) {
+  if (REDUCED_MOTION) return;
+  const colors = ["#ffffff", "#d9c8ff", "#a78bfa", "#ffd27a"];
+  for (let k = 0; k < n; k++) {
+    const el = document.createElement("div");
+    const a = (k / n) * Math.PI * 2 + Math.random() * 0.5, r = 50 + Math.random() * 60;
+    el.className = "spark";
+    el.style.cssText = `left:${x}px;top:${y}px;--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r}px;--c:${colors[k % colors.length]};--s:${0.6 + Math.random() * 0.9}`;
+    $("#fx-layer").appendChild(el);
+    setTimeout(() => el.remove(), 900);
+  }
+}
+
+// A defeated character breaks into shards: copies of the card, each clipped to one
+// wedge, fly apart and fade. Runs before the board redraws, while the card is still there.
+function shatter(uid) {
+  const src = document.querySelector(`.field-card[data-uid="${uid}"]`);
+  if (!src || REDUCED_MOTION) return;
+  const x = src.offsetLeft, y = src.offsetTop, cx = CARD_W / 2, cy = CARD_H / 2;
+  const ring = [[0, 0], [45, 0], [95, 0], [95, 50], [95, 95], [95, 135], [50, 135], [0, 135], [0, 85], [0, 40]];
+  ring.forEach((p, k) => {
+    const q = ring[(k + 1) % ring.length];
+    const mx = (p[0] + q[0]) / 2 - cx, my = (p[1] + q[1]) / 2 - cy;
+    const piece = document.createElement("div");
+    piece.className = "shard-piece";
+    piece.innerHTML = src.innerHTML;
+    piece.style.cssText = `left:${x}px;top:${y}px;clip-path:polygon(${cx}px ${cy}px, ${p[0]}px ${p[1]}px, ${q[0]}px ${q[1]}px);--dx:${mx * 1.6 + (Math.random() - 0.5) * 30}px;--dy:${my * 1.4 + 30 + Math.random() * 40}px;--r:${(Math.random() - 0.5) * 120}deg`;
+    $("#fx-layer").appendChild(piece);
+    setTimeout(() => piece.remove(), 950);
+  });
+  sparkle(x + cx, y + cy, 10);
+}
+
+// The turn handover: a shard falls into the turn crystal, which then takes on the
+// color of the player whose turn it is now.
+function turnHandover(player) {
+  U.turnColor = 1 - player;
+  const land = () => { U.turnColor = null; U.turnLandedAt = performance.now(); if (U.screen === "game") render(); };
+  if (REDUCED_MOTION) { land(); return; }
+  const el = document.createElement("div");
+  el.className = "falling-shard";
+  el.style.setProperty("--pc", PLAYER_COLORS[player]);
+  el.innerHTML = crystalSVG("fall-crystal");
+  $("#fx-layer").appendChild(el);
+  setTimeout(() => { el.remove(); land(); sparkle(70, 400, 12); }, 650);
+}
+const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 onGameEvent((type, d) => {
   const now = performance.now();
@@ -172,8 +237,19 @@ onGameEvent((type, d) => {
     floatText(sideOf(d.player) === "bottom" ? 223 : 1203, sideOf(d.player) === "bottom" ? 470 : 250, "+1 MANA", "#ffd27a", true);
   } else if (type === "turn") {
     U.selected = null; U.armed = null;
+    turnHandover(d.player);
     if (S.mode === "hotseat") U.curtain = true;
     else banner(active().isAI ? `${active().name}'s turn` : "Your turn");
+  } else if (type === "play") {
+    // after the board redraws, sparkle where the card landed
+    setTimeout(() => {
+      const el = document.querySelector(`#board [data-uid="${d.card.uid}"]`);
+      const side = sideOf(d.player);
+      const at = el ? { x: el.offsetLeft + el.offsetWidth / 2, y: el.offsetTop + CARD_H / 2 } : { x: 720, y: L[side].chars + CARD_H / 2 };
+      sparkle(at.x, at.y, d.card.type === "Spell" ? 22 : 14);
+    }, 0);
+  } else if (type === "death") {
+    shatter(d.uid);
   } else if (type === "gameOver") {
     U.ended = true;
   }
@@ -183,16 +259,17 @@ const recent = (map, uid, ms) => map.has(uid) && performance.now() - map.get(uid
 // ---------------------------------------------------------------------------
 // Board rendering
 // ---------------------------------------------------------------------------
+// Health is a life crystal that cracks more as the player takes damage.
 function plateHTML(p, side) {
   const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
-  const hc = ratio > 0.55 ? "var(--heal)" : ratio > 0.25 ? "#f0a23a" : "var(--danger)";
+  const cracks = ratio > 0.8 ? 0 : ratio > 0.6 ? 1 : ratio > 0.4 ? 2 : ratio > 0.2 ? 3 : 4;
   const pd = S.pending;
   const targetable = pd?.kind === "target" && pd.targetType === "charOrPlayer" && !S.players[pd.owner].isAI && humanTurn();
   const attackable = side === "top" && U.selected && !forcedTarget(p);
-  const y = side === "top" ? 8 : 940;
-  return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px">
-    <div class="who"><span>${esc(p.name)}</span><em>${esc(p.faction)} deck</em></div>
-    <div class="health${p.health < 10 && p.health > 0 ? " cracked" : ""}"><div class="fill" style="width:${ratio * 100}%;--hc:${hc}"></div><div class="num">${p.health} / ${p.maxHealth}</div></div>
+  const y = side === "top" ? 3 : 937;
+  return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${ratio <= 0.2 ? " danger" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
+    <div class="life">${crystalSVG("life-crystal", cracks)}<b>${Math.max(0, p.health)}</b></div>
+    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.faction)} deck · ${Math.max(0, p.health)} / ${p.maxHealth} health</em></div>
   </div>`;
 }
 
@@ -206,27 +283,27 @@ function fieldHTML(p, side) {
 
   // deck and graveyard
   const fc = DATA.factions[p.faction]?.color || "#888";
-  h += `<div class="pile deck" data-act="deck" data-player="${p.idx}" style="left:${L.deckX}px;top:${y.support}px;--fc:${fc}"><span>DECK<b>${p.deck.length}</b></span></div>`;
-  h += `<div class="pile grave" data-act="grave" data-player="${p.idx}" style="left:${L.graveX}px;top:${y.support}px"><span>GRAVE<b>${p.grave.length}</b></span></div>`;
+  h += `<div class="pile deck" data-act="deck" data-player="${p.idx}" style="left:${L.deckX}px;top:${y.backline}px;--fc:${fc}"><span>DECK<b>${p.deck.length}</b></span></div>`;
+  h += `<div class="pile grave" data-act="grave" data-player="${p.idx}" style="left:${L.graveX}px;top:${y.backline}px"><span>GRAVE<b>${p.grave.length}</b></span></div>`;
 
   // support row: areas and stored equipment together, in the order they were placed
   const support = [...p.field.areas, ...p.field.equips].sort((a, b) => (a.placed ?? 0) - (b.placed ?? 0));
-  for (let i = 0; i < RULES.maxSupport; i++) {
+  for (let i = 0; i < RULES.maxBackline; i++) {
     const c = support[i];
-    const x = L.supportX + i * L.slot;
-    if (!c) { h += `<div class="slot" style="left:${x}px;top:${y.support}px"></div>`; continue; }
+    const x = L.backX + i * L.slot;
+    if (!c) { h += `<div class="slot" style="left:${x}px;top:${y.backline}px"></div>`; continue; }
     if (c.type === "Area") {
       const tgt = humanPending && pd.kind === "target" && pd.targetType === "area";
       const usable = human && p === active() && canActivateArea(c, p);
-      h += `<div class="small-card${tgt ? " targetable" : ""}${usable ? " activatable" : ""}" data-act="area" data-uid="${c.uid}" style="left:${x}px;top:${y.support}px">${cardHTML(c)}</div>`;
+      h += `<div class="small-card${tgt ? " targetable" : ""}${usable ? " activatable" : ""}" data-act="area" data-uid="${c.uid}" style="left:${x}px;top:${y.backline}px">${cardHTML(c)}</div>`;
     } else {
       const armed = U.armed?.uid === c.uid;
-      h += `<div class="small-card${armed ? " armed" : ""}" data-act="equip" data-uid="${c.uid}" data-player="${p.idx}" style="left:${x}px;top:${y.support}px">${cardHTML(c)}${side === "bottom" ? `<div class="attach-cost">Attach: ${equipCost(c, p, null, true)} mana</div>` : ""}</div>`;
+      h += `<div class="small-card${armed ? " armed" : ""}" data-act="equip" data-uid="${c.uid}" data-player="${p.idx}" style="left:${x}px;top:${y.backline}px">${cardHTML(c)}${side === "bottom" ? `<div class="attach-cost">Attach: ${equipCost(c, p, null, true)} mana</div>` : ""}</div>`;
     }
   }
-  const labelY = side === "bottom" ? y.support - 20 : y.support + CARD_H + 2;
-  h += `<div class="zone-label" style="left:${L.supportX}px;top:${labelY}px">${esc(DATA.text("zone_support", "Support"))} · areas and equipment</div>`;
-  h += `<div class="zone-label" style="left:${L.deckX}px;top:${side === "bottom" ? y.chars + 60 : y.chars + 58}px">${esc(DATA.text("zone_characters", "Characters"))} →</div>`;
+  const labelY = side === "bottom" ? y.backline - 20 : y.backline + CARD_H + 2;
+  h += `<div class="zone-label" style="left:${L.backX}px;top:${labelY}px">${esc(BACKLINE())} · areas and equipment</div>`;
+  h += `<div class="zone-label front-label" style="left:${L.deckX}px;top:${y.chars + 58}px">${esc(DATA.text("zone_frontline", "Frontline"))} ›</div>`;
 
   // characters
   const forced = side === "top" ? forcedTarget(p) : null;
@@ -247,21 +324,51 @@ function fieldHTML(p, side) {
   return h;
 }
 
+// Mana is a row of crystals: lit ones can be spent this turn. Past 10 the row stops growing
+// and the numbers carry on.
+const MANA_SHOWN = 10;
 function manaHTML(p, side) {
-  const pos = side === "bottom" ? "left:200px;top:470px" : "left:1180px;top:250px";
+  const top = side === "bottom" ? 945 : 13;
+  const slots = Math.min(MANA_SHOWN, Math.max(p.manaMax, p.mana));
+  const lit = Math.min(slots, p.mana);
+  const crystals = Array.from({ length: slots }, (_, i) => crystalSVG(i < lit ? "mana-crystal lit" : "mana-crystal")).join("");
   let token = "";
   if (p.manaToken) {
     const usable = humanTurn() && p === active() && !S.pending;
     token = `<button type="button" class="mana-token" data-act="token" ${usable ? "" : "disabled"} title="One-time bonus for going second: tap to gain +1 mana this turn" aria-label="Use bonus mana token, plus 1 mana this turn">+1</button>`;
   }
-  return `<div class="mana" data-player="${p.idx}" style="${pos}"><div class="gem">${p.mana}</div>${token}MANA ${p.mana}/${p.manaMax}</div>`;
+  return `<div class="mana" data-player="${p.idx}" style="left:140px;top:${top}px" aria-label="${p.mana} of ${p.manaMax} mana"><div class="mana-row">${crystals}</div><div class="mana-num"><span><b>${p.mana}</b> / ${p.manaMax}</span><small>MANA</small></div>${token}</div>`;
+}
+
+// Board skins change only how the table looks, never the layout or the rules.
+const SKINS = [
+  { id: "battlefield", name: "Shattered Battlefield", desc: "Floating islands over a shard rift, each side styled after its deck" },
+  { id: "altar", name: "Crystal Altar", desc: "A glowing stone altar under the falling shards" },
+  { id: "warmap", name: "War Map", desc: "An inked battle map by candlelight" },
+];
+function setSkin(id) {
+  if (!SKINS.some(k => k.id === id)) return;
+  U.skin = id;
+  PREFS.set("skin", id);
+}
+function skinButtons(attr) {
+  return SKINS.map(k => `<button type="button" class="skin-tile" ${attr}="${k.id}" aria-pressed="${k.id === U.skin}"><span class="skin-preview skin-${k.id}"></span><strong>${esc(k.name)}</strong><span>${esc(k.desc)}</span></button>`).join("");
 }
 
 function render() {
   if (!S) return;
+  for (const k of SKINS) $("#stage").classList.toggle("skin-" + k.id, k.id === U.skin);
   const me = S.players[viewIdx()], them = S.players[1 - viewIdx()];
   const human = humanTurn();
-  let h = `<div class="bar top"></div><div class="bar bottom"></div>`;
+  // The scenery behind the table; each board skin styles these pieces its own way.
+  let h = `<div class="scene"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="side top" data-faction="${esc(them.faction)}"></div><div class="side bottom" data-faction="${esc(me.faction)}"></div>
+    <div class="rift"></div>`;
+  for (const side of ["top", "bottom"]) {
+    h += `<div class="lane back" style="left:${L.backX - 10}px;top:${L[side].backline - 8}px;width:${RULES.maxBackline * L.slot + 10}px;height:${CARD_H + 16}px"></div>`;
+    h += `<div class="lane front" style="left:${720 - L.frontW / 2 - 12}px;top:${L[side].chars - 8}px;width:${L.frontW + 24}px;height:${CARD_H + 16}px"></div>`;
+  }
+  h += `<div class="bar top"></div><div class="bar bottom"></div>`;
   h += `<button type="button" class="btn stage-btn" data-act="menu" style="left:16px;top:11px;width:110px;height:44px" aria-label="Game menu">☰ Menu</button>`;
   h += plateHTML(them, "top") + plateHTML(me, "bottom");
 
@@ -272,7 +379,9 @@ function render() {
   h += manaHTML(them, "top") + manaHTML(me, "bottom");
 
   // middle band
-  h += `<div class="turn-info" style="top:372px"><b>Round ${S.round}</b>${esc(active().name)}'s turn</div>`;
+  const turnColor = PLAYER_COLORS[U.turnColor ?? S.active];
+  h += `<div class="turn-crystal${performance.now() - U.turnLandedAt < 700 ? " landed" : ""}" style="--pc:${turnColor}" title="Glows in the color of the player whose turn it is">${crystalSVG("big-crystal")}</div>`;
+  h += `<div class="turn-info" style="top:372px"><b>Round ${S.round}</b><span style="color:${turnColor}">${esc(active().name)}'s turn</span></div>`;
   h += `<div class="phases">${DATA.phases.map((ph, i) => `<div class="phase-step${i === S.phase ? " on" : ""}">${esc(ph.name)}</div>`).join("")}</div>`;
   const forced = forcedTarget(them);
   if (U.selected && human) {
@@ -382,7 +491,7 @@ function scheduleAI() {
 function startGame() {
   endTutorial();
   clearTimeout(U.aiTimer);
-  Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [] });
+  Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
   newGame({ deckId: U.deckId, mode: U.mode });
   showScreen("game");
@@ -459,7 +568,7 @@ function handMove(e) {
     if (c.type === "Equipment") {
       drag.hint = document.createElement("div");
       drag.hint.className = "drop-hint";
-      Object.assign(drag.hint.style, { left: L.supportX - 8 + "px", top: L.bottom.support - 8 + "px", width: RULES.maxSupport * L.slot + 6 + "px", height: CARD_H + 16 + "px" });
+      Object.assign(drag.hint.style, { left: L.backX - 8 + "px", top: L.bottom.backline - 8 + "px", width: RULES.maxBackline * L.slot + 6 + "px", height: CARD_H + 16 + "px" });
       $("#stage").appendChild(drag.hint);
     }
   }
@@ -483,7 +592,7 @@ function handUp(e) {
   const charEl = under?.closest('.field-card[data-side="bottom"]');
   const c = d.card;
   if (c.type === "Equipment") {
-    const inEquipRow = pt.x >= L.supportX - 10 && pt.x <= L.supportX + RULES.maxSupport * L.slot && pt.y >= L.bottom.support - 10 && pt.y <= L.bottom.support + CARD_H + 10;
+    const inEquipRow = pt.x >= L.backX - 10 && pt.x <= L.backX + RULES.maxBackline * L.slot && pt.y >= L.bottom.backline - 10 && pt.y <= L.bottom.backline + CARD_H + 10;
     if (charEl) act(() => playCard(c.uid, { target: { uid: Number(charEl.dataset.uid) } }));
     else if (inEquipRow) act(() => playCard(c.uid, { toField: true }));
     else if (pt.y < 740 && active().field.chars.length) { U.armed = { uid: c.uid, from: "hand" }; render(); }
@@ -531,7 +640,7 @@ function showDetail(c, ctx = {}) {
       const p = active();
       const btns = [];
       if (p.field.chars.length) btns.push(`<button type="button" class="btn btn-primary" data-m="arm" data-uid="${c.uid}">Equip to a character</button>`);
-      if (supportCount(p) < RULES.maxSupport && p.mana >= playCost(c, p)) btns.push(`<button type="button" class="btn" data-m="tofield" data-uid="${c.uid}">Save it in the ${esc(SUPPORT_ROW())} row</button>`);
+      if (backlineCount(p) < RULES.maxBackline && p.mana >= playCost(c, p)) btns.push(`<button type="button" class="btn" data-m="tofield" data-uid="${c.uid}">Save it on the ${esc(BACKLINE())}</button>`);
       actions = `<div class="detail-actions">${btns.join("")}</div>`;
     } else actions = `<div class="detail-actions"><button type="button" class="btn btn-primary" data-m="play" data-uid="${c.uid}">Play for ${playCost(c)} mana</button></div>`;
   }
@@ -605,6 +714,7 @@ function showGameMenu() {
       <button type="button" class="btn" data-m="resume">Resume</button>
       <button type="button" class="btn" data-m="restart">${esc(DATA.text("button_restart", "Restart"))}</button>
       <button type="button" class="btn" data-m="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
+      <div class="menu-skins"><h3>Board</h3><div class="skin-list compact">${skinButtons("data-skin")}</div></div>
       <button type="button" class="btn" data-m="almanac">${esc(DATA.text("button_almanac", "Almanac"))}</button>
       <button type="button" class="btn" data-m="rules">How to play</button>
       <button type="button" class="btn" data-m="mainmenu">${esc(DATA.text("button_main_menu", "Main menu"))}</button>
@@ -618,6 +728,8 @@ function showGameMenu() {
 
 $("#modal").addEventListener("click", e => {
   if (e.target.closest("[data-close]") && $("#modal").dataset.dismissable) { closeModal(); return; }
+  const skin = e.target.closest("[data-skin]");
+  if (skin) { setSkin(skin.dataset.skin); render(); showGameMenu(); return; }
   const b = e.target.closest("[data-m]");
   if (!b) return;
   const m = b.dataset.m, uid = Number(b.dataset.uid);
@@ -761,11 +873,13 @@ function renderMenu() {
     const d = DATA.decks[id];
     return `<button type="button" class="deck-tile" data-deck="${id}" aria-pressed="${id === U.deckId}" style="--fc:${DATA.factions[d.faction]?.color || "#888"}">${medal(d.faction)}<strong>${esc(d.name)}</strong><span>${esc(d.description)}</span></button>`;
   }).join("");
+  $("#skin-list").innerHTML = skinButtons("data-menu-skin");
   $("#mode-ai").setAttribute("aria-checked", U.mode === "ai");
   $("#mode-hotseat").setAttribute("aria-checked", U.mode === "hotseat");
 }
 $("#deck-list").addEventListener("click", e => { const t = e.target.closest("[data-deck]"); if (t) { U.deckId = t.dataset.deck; renderMenu(); } });
 $("#mode-ai").addEventListener("click", () => { U.mode = "ai"; renderMenu(); });
+$("#skin-list").addEventListener("click", e => { const t = e.target.closest("[data-menu-skin]"); if (t) { setSkin(t.dataset.menuSkin); renderMenu(); } });
 $("#mode-hotseat").addEventListener("click", () => { U.mode = "hotseat"; renderMenu(); });
 $("#btn-start").addEventListener("click", startGame);
 $("#btn-almanac").addEventListener("click", () => { U.almanacReturn = "menu"; showScreen("almanac"); });

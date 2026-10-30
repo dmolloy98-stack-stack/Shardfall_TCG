@@ -48,21 +48,22 @@
   <h2 id="table">2. The table</h2>
   <p>Your side is the bottom half of the screen and your opponent's is the top. Both halves are laid out the same way.</p>
   <figure>
-    <img src="guide/board.jpg" width="1440" height="1000" alt="The game board with its parts numbered 1 to 12">
+    <img src="guide/board.jpg" width="1440" height="1000" alt="The game board with its parts numbered 1 to 13">
   </figure>
   <ul class="legend">
-    <li><span class="badge-num">1</span><span><b>Opponent's health.</b> Bring it to 0 to win.</span></li>
+    <li><span class="badge-num">1</span><span><b>Opponent's health.</b> The life crystal cracks as it takes damage. Bring it to 0 to win.</span></li>
     <li><span class="badge-num">2</span><span><b>Opponent's hand.</b> Cards face down, so you can see how many they hold.</span></li>
     <li><span class="badge-num">3</span><span><b>Opponent's characters.</b> These fight against you.</span></li>
     <li><span class="badge-num">4</span><span><b>Your characters.</b> These fight for you.</span></li>
     <li><span class="badge-num">5</span><span><b>Your hand.</b> Only you can see these. Cards glowing green are ones you can play right now.</span></li>
-    <li><span class="badge-num">6</span><span><b>Your mana.</b> How much you can spend this turn, and your maximum.</span></li>
+    <li><span class="badge-num">6</span><span><b>Your mana.</b> One crystal per point of mana. Lit crystals can be spent this turn.</span></li>
     <li><span class="badge-num">7</span><span><b>Turn steps.</b> The lit-up step shows where you are in your turn.</span></li>
     <li><span class="badge-num">8</span><span><b>Next-step button.</b> Moves your turn forward: Draw card, To battle, To end, Pass turn.</span></li>
     <li><span class="badge-num">9</span><span><b>Deck and graveyard.</b> Your deck is face down. Used and defeated cards go to the graveyard. Tap it to look inside.</span></li>
-    <li><span class="badge-num">10</span><span><b>Support row.</b> Everything that isn't a character: areas, and equipment you're saving for later.</span></li>
+    <li><span class="badge-num">10</span><span><b>Backline.</b> Everything that isn't a character: areas, and equipment you're saving for later. Characters stand on the <b>frontline</b> (4).</span></li>
     <li><span class="badge-num">11</span><span><b>Your health.</b></span></li>
-    <li><span class="badge-num">12</span><span><b>Menu.</b> These rules, the Almanac of every card, beginner hints, restart.</span></li>
+    <li><span class="badge-num">12</span><span><b>Menu.</b> These rules, the Almanac of every card, beginner hints, the board's look, restart.</span></li>
+    <li><span class="badge-num">13</span><span><b>Turn crystal.</b> Glows in the color of the player whose turn it is. When the turn passes, a shard falls into it and it changes color.</span></li>
   </ul>
   <p>The list of recent moves on the right says what just happened, such as who attacked whom.</p>
 
@@ -83,7 +84,7 @@
     <div><b>Character</b>Stays on the table and fights. Most of your cards are characters.</div>
     <div><b>Spell</b>Does something once, like dealing damage, then goes to the graveyard.</div>
     <div><b>Equipment</b>Attaches to one of your characters and adds its numbers to that character's stats.</div>
-    <div><b>Area</b>Goes in your support row and keeps affecting the game, for example giving your characters +1 Speed.</div>
+    <div><b>Area</b>Goes on your backline and keeps affecting the game, for example giving your characters +1 Speed.</div>
   </div>
 
   <h3>Rarity</h3>
@@ -102,6 +103,7 @@
   </div>
   <h3>Mana</h3>
   <ul>
+    <li>Your mana shows as a <b>row of crystals</b> beside your health. Lit crystals can be spent this turn.</li>
     <li>Mana is what you spend to play cards. At the start of every turn your mana <b>refills</b>, and your maximum grows by <b><span data-rule="mana_growth_per_turn">1</span></b>. So you have 1 mana on your first turn, 2 on your second, and so on.</li>
     <li>Mana you don't spend is lost at the end of the turn, so try to use it.</li>
     <li>Going first is an advantage, so the first player <b>skips their first Draw</b>, and the second player gets a one-time <b>+1</b> token next to their mana. Tap it on any of your turns for 1 extra mana that turn.</li>
@@ -117,8 +119,8 @@
     <li>A new character <b>can't attack on the turn it's played</b>, unless it has the <b>Rush</b> skill.</li>
     <li>If a card needs a <b>target</b> (for example “deal 2 damage to a character”), the cards you can choose glow blue. Tap one.</li>
     <li>Some abilities happen right away when a card is played. Cards with the <b>Signal</b> skill use their ability as they enter the table.</li>
-    <li>Your side of the table has two rows: <b>characters</b> go in the front row, and everything else (areas and saved equipment) goes in the <b>support row</b> behind it. Spells don't stay on the table.</li>
-    <li>Each side can hold up to <span data-rule="max_field_characters">7</span> characters and <span data-rule="max_field_support">10</span> cards in the support row.</li>
+    <li>Your side of the table has two rows: <b>characters</b> go on the <b>frontline</b>, and everything else (areas and saved equipment) goes on the <b>backline</b> behind it. Spells don't stay on the table.</li>
+    <li>There's no limit on characters. The backline holds up to <span data-rule="max_field_backline">10</span> cards.</li>
   </ul>
   <h3>Equipment</h3>
   <figure class="fit">
@@ -126,7 +128,7 @@
   </figure>
   <ul>
     <li>Drag equipment onto one of your characters to attach it. Its numbers are added to the character's stats.</li>
-    <li>Or drop it in your <b>support row</b> to save it. Attaching it later costs mana depending on its rarity: tap it, then tap a character.</li>
+    <li>Or drop it on your <b>backline</b> to save it. Attaching it later costs mana depending on its rarity: tap it, then tap a character.</li>
     <li>If the character is knocked out, its equipment is lost with it.</li>
   </ul>
 
@@ -197,7 +199,8 @@
     <dt>Hand</dt><dd>The cards you hold. Only you can see them.</dd>
     <dt>Deck</dt><dd>Your face-down pile. You draw from it.</dd>
     <dt>Table</dt><dd>Where played characters, areas and equipment sit. Also called the field or battlefield.</dd>
-    <dt>Support row</dt><dd>The row behind your characters, for areas and saved equipment.</dd>
+    <dt>Frontline</dt><dd>The row where your characters stand and fight.</dd>
+    <dt>Backline</dt><dd>The row behind your frontline, for areas and saved equipment.</dd>
     <dt>Graveyard</dt><dd>Where used spells and knocked-out cards go.</dd>
     <dt>Stats</dt><dd>A character's Attack, Health and Speed.</dd>
     <dt>Ability</dt><dd>The text on a card describing what it does.</dd>
