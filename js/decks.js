@@ -7,6 +7,7 @@ const DECK_RULES = {
   min: DATA.rules.min_deck_size ?? 35,
   copies: DATA.rules.max_copies ?? 4,
   unknownCopies: DATA.rules.max_unknown_copies ?? 2,
+  champions: DATA.rules.max_unknown_kinds ?? 1,   // different Unknown cards: a deck's champion
 };
 const copyLimit = card => (card.rarity === "Unknown" ? DECK_RULES.unknownCopies : DECK_RULES.copies);
 // Cards that can go in a deck: every card the game knows how to play.
@@ -43,9 +44,10 @@ function registerCustomDecks() {
   for (const id of Object.keys(DATA.decks)) if (DATA.decks[id].custom) delete DATA.decks[id];
   for (const d of savedDecks()) {
     const size = deckSize(d.cards);
+    const champions = Object.keys(d.cards).filter(k => DATA.cardsById[k].rarity === "Unknown").length;
     DATA.decks[d.id] = {
       id: d.id, name: d.name, faction: mainFaction(d.cards), custom: true, isPlayable: true, isAI: false,
-      size, ready: size >= DECK_RULES.min,
+      size, champions, ready: size >= DECK_RULES.min && champions <= DECK_RULES.champions,
       description: size >= DECK_RULES.min ? `Your deck · ${size} cards` : `Unfinished · ${size} of ${DECK_RULES.min} cards`,
       cards: Object.entries(d.cards).map(([cardId, quantity]) => ({ cardId, quantity })),
     };
@@ -57,6 +59,7 @@ registerCustomDecks();
 function deckProblem(deckId) {
   const d = DATA.decks[deckId];
   if (!d) return "Choose a deck.";
+  if (d.custom && d.champions > DECK_RULES.champions) return `${d.name} has ${d.champions} champions (Unknown cards); a deck can have only one. Tap Edit to fix it.`;
   if (d.custom && !d.ready) return `${d.name} needs ${DECK_RULES.min - d.size} more card${DECK_RULES.min - d.size === 1 ? "" : "s"} before you can play it. Tap Edit to finish it.`;
   return null;
 }
@@ -138,6 +141,8 @@ function renderDeckPanel() {
   const types = Object.fromEntries(TYPES.map(t => [t, 0]));
   for (const e of entries) types[e.card.type] = (types[e.card.type] || 0) + e.n;
   const tips = [];
+  const champs = entries.filter(e => e.card.rarity === "Unknown");
+  if (champs.length > DECK_RULES.champions) tips.push(`A deck has only one champion (Unknown card), but this one has ${champs.map(e => e.card.name).join(" and ")}. Take one out to play it.`);
   if (size && types.Character < 15) tips.push(`Most decks want at least 15 characters; this one has ${types.Character}. Characters are what attack and defend.`);
   if (size >= 10 && curve[1] + curve[2] + curve[3] < size * 0.4) tips.push("Add more cheap cards (1 to 3 mana) so you have something to play in your first turns.");
   const faction = mainFaction(B.cards);
@@ -176,6 +181,12 @@ function renderDeckPanel() {
 function addCard(id) {
   const c = DATA.cardsById[id];
   const n = B.cards[id] || 0;
+  // One champion per deck: only so many different Unknown cards.
+  const champs = Object.keys(B.cards).filter(k => k !== id && DATA.cardsById[k].rarity === "Unknown");
+  if (c.rarity === "Unknown" && !n && champs.length >= DECK_RULES.champions) {
+    flashNote(`A deck has one champion (Unknown card). Take out ${champs.map(k => DATA.cardsById[k].name).join(" and ")} first.`);
+    return;
+  }
   if (n >= copyLimit(c)) {
     flashNote(`You can have at most ${copyLimit(c)} copies of ${c.name}${c.rarity === "Unknown" ? " (Unknown rarity)" : ""}.`);
     return;
@@ -274,7 +285,7 @@ byId("bld-name").addEventListener("input", e => { B.name = e.target.value; });
 const WALK = [
   { at: "#bld-cards", title: "Pick your cards", text: "Every card in the game is here. Tap a card to add a copy to your deck. Tap the <b>i</b> on a card to read it first." },
   { at: "#bld-filters", title: "Filter", text: "Show one faction or one type of card. You can mix factions, but cards from the same faction are made to work together. Rally, for example, needs three characters of one faction." },
-  { at: ".bld-head", sheet: true, title: "Your deck", text: `A deck needs at least <b>${DECK_RULES.min} cards</b>. You can have up to ${DECK_RULES.copies} copies of a card (${DECK_RULES.unknownCopies} for Unknown rarity). Tap <b>−</b> in the list to take one out.` },
+  { at: ".bld-head", sheet: true, title: "Your deck", text: `A deck needs at least <b>${DECK_RULES.min} cards</b>. You can have up to ${DECK_RULES.copies} copies of a card. Unknown cards are champions: one per deck, up to ${DECK_RULES.unknownCopies} copies. Tap <b>−</b> in the list to take one out.` },
   { at: ".bld-curve", sheet: true, title: "Mana curve", text: "How many cards cost each amount. Keep plenty of cheap cards (1 to 3 mana) so you have something to play in your first turns, and only a few big, expensive ones." },
   { at: ".bld-types", sheet: true, title: "Card types", text: "Characters do the fighting, so most decks want at least 15. Spells, equipment and areas back them up." },
   { at: ".builder-bar", title: "Name it and save", text: "Give your deck a name at the top and press <b>Save deck</b>. It appears on the main menu next to the starter decks, ready to play." },

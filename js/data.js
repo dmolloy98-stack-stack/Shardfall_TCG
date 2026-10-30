@@ -5,7 +5,7 @@
 // and then starts the game scripts.
 
 const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks"];
-const GAME_SCRIPTS = ["js/engine.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/ui.js"];
+const GAME_SCRIPTS = ["js/engine.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/intro.js", "js/ui.js"];
 let DATA = null;
 
 // Parsing (port of the DATA.load* functions in main.lua)
@@ -107,6 +107,8 @@ function buildData(CSV) {
       const limit = cardsById[e.cardId].rarity === "Unknown" ? rules.max_unknown_copies : rules.max_copies;
       if (limit && e.quantity > limit) console.warn(`Deck ${id} has ${e.quantity} copies of ${e.cardId}; the limit is ${limit}`);
     }
+    const champions = deck.cards.filter(e => cardsById[e.cardId].rarity === "Unknown").length;
+    if (rules.max_unknown_kinds != null && champions > rules.max_unknown_kinds) console.warn(`Deck ${id} has ${champions} different Unknown cards; the limit is ${rules.max_unknown_kinds}`);
     decks[id] = deck;
     deckOrder.push(id);
   }
