@@ -863,7 +863,20 @@ function showScreen(name) {
 // On phones the board is shrunk a lot, so the space around it is put to use: the
 // tutorial coach gets its own panel beside the board (or under it, held upright),
 // and normal games get large buttons at the side (see renderControls).
+// The table covers the part of the page actually on screen (the visual viewport). Phone
+// browsers can show less than the whole page: when it was zoomed in on the menu, or for a
+// moment after rotating. Sizing to the whole page then pushed half the board off screen.
+function fitGameToScreen() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  Object.assign($("#game").style, {
+    top: vv.offsetTop + "px", left: vv.offsetLeft + "px", right: "auto", bottom: "auto",
+    width: vv.width + "px", height: vv.height + "px", minHeight: "0",
+  });
+}
+
 function fitStage() {
+  fitGameToScreen();
   const wrap = $("#stage-wrap");
   const w = wrap.clientWidth, h = wrap.clientHeight;
   U.small = Math.min(w / W, h / H) < 0.62;
@@ -887,6 +900,9 @@ function fitStage() {
 function onResize() { if (U.screen === "game") { fitStage(); renderOverlays(); } }
 window.addEventListener("resize", onResize);
 window.visualViewport?.addEventListener("resize", onResize);
+window.visualViewport?.addEventListener("scroll", onResize);
+// Some phones report the new size a moment after they finish rotating.
+window.addEventListener("orientationchange", () => { onResize(); setTimeout(onResize, 300); setTimeout(onResize, 800); });
 // iPhone browsers allow pinch zoom even when the page asks not to; block it on the table.
 document.addEventListener("gesturestart", e => { if (U.screen === "game") e.preventDefault(); });
 
