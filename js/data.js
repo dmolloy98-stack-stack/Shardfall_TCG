@@ -133,20 +133,53 @@ async function loadData() {
   return DATA;
 }
 
+// The game scripts are fetched with "no-cache" so the browser checks each one with the
+// server (a quick "not changed" answer when it hasn't). Without this, a phone could keep
+// old copies of some files after an update and mix them with new ones, which stops the
+// game from starting.
 async function loadGame() {
+  let code;
   try {
-    await loadData();
+    [code] = await Promise.all([
+      Promise.all(GAME_SCRIPTS.map(async src => {
+        const res = await fetch(src, { cache: "no-cache" });
+        if (!res.ok) throw new Error(`${src} could not be loaded (${res.status})`);
+        return `${await res.text()}\n//# sourceURL=${new URL(src, location.href)}`;
+      })),
+      loadData(),
+    ]);
   } catch (err) {
     showDataError(err);
     return;
   }
-  for (const src of GAME_SCRIPTS) {
-    await new Promise((resolve, reject) => {
-      const el = document.createElement("script");
-      el.src = src; el.onload = resolve; el.onerror = () => reject(new Error(`${src} failed to load`));
-      document.body.appendChild(el);
-    });
+  // Each script runs as soon as it is added, in order. ui.js sets shardfallStarted
+  // once everything is in place.
+  for (const text of code) {
+    const el = document.createElement("script");
+    el.textContent = text;
+    document.body.appendChild(el);
   }
+  if (!window.shardfallStarted) recoverFromBadLoad();
+}
+
+// If the game didn't start, the page itself was probably an old copy. Reload once, which
+// makes the browser check the page with the server; if that doesn't help, say so.
+function recoverFromBadLoad() {
+  let last = 0;
+  try { last = Number(sessionStorage.getItem("shardfall.reloadedAt")) || 0; } catch { /* no storage */ }
+  if (Date.now() - last > 60000) {
+    try { sessionStorage.setItem("shardfall.reloadedAt", String(Date.now())); } catch { /* no storage */ }
+    location.reload();
+    return;
+  }
+  const box = document.createElement("div");
+  box.className = "data-error";
+  box.innerHTML = `<h2>The game didn't finish loading</h2>
+    <p>This can happen for a few minutes after the game is updated, while your browser still has some old files.</p>
+    <p><button type="button" class="btn btn-primary">Try again</button></p>`;
+  box.querySelector("button").addEventListener("click", () => location.reload());
+  document.getElementById("app").hidden = true;
+  document.body.prepend(box);
 }
 
 function showDataError(err) {
