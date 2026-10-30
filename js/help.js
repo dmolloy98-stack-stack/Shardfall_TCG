@@ -30,7 +30,7 @@ function hintText() {
     const g = guards(opponent());
     if (g.length === 1) return `${g[0].name} has ${guardSkill(g[0])} (${DATA.skills[guardSkill(g[0])].icon}), so your attack has to go to it first.`;
     if (g.length) return "The other side has several Challenge or Tower characters. Your attack has to go to one of them first.";
-    return "Tap an enemy glowing red to fight it, or attack the player directly. Higher ⚡ Speed strikes first; on a tie, the attacker does.";
+    return "Tap an enemy glowing red to fight it (or drag onto it), or attack the player directly. The badge above each enemy shows how the fight ends; ⚡ means your character strikes first.";
   }
   if (S.phase === PHASE.DRAW) return "Your turn starts with the Draw step. Press “Draw card” to take the top card of your deck.";
   if (S.phase === PHASE.SETUP) {

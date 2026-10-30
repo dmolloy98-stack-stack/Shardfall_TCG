@@ -5,7 +5,7 @@
 // and then starts the game scripts.
 
 const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks"];
-const GAME_SCRIPTS = ["js/engine.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/ui.js"];
+const GAME_SCRIPTS = ["js/engine.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/ui.js"];
 let DATA = null;
 
 // Parsing (port of the DATA.load* functions in main.lua)

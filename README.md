@@ -68,6 +68,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `js/tutorial.js` | The tutorial: scripted steps, coach box, spotlight and arrows |
 | `js/help.js` | Beginner hints, the first-visit welcome, the in-game guide screen |
 | `js/decks.js` | The deck builder, saved custom decks and its walkthrough |
+| `js/fx.js` | Game feel: aiming line and fight previews, impacts, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
 | `tools/guide-shots.js` | Retakes the annotated guide pictures: `node tools/guide-shots.js` (needs Node.js and Playwright) |
 | `original-lua/main.lua` | The LÖVE2D source this was ported from |
@@ -168,6 +169,13 @@ The design sheet left some Digital slots blank; these were filled in to fit the 
 - **Frontline and backline:** characters stand on the frontline, with no limit on how many. Areas and stored equipment share the backline behind it (up to 10 cards, set by `max_field_backline` in `game_rules.csv`) instead of two separate rows of 5. The row names come from `zone_frontline` and `zone_backline` in `ui_text.csv`.
 - **Board skins:** the main board is the Crystal Altar. Settings (on the main menu or in ☰ Menu) also offers Shattered Battlefield (floating islands over a shard rift, each side styled after its deck) and War Map. Mana is a row of 10 crystals (lit, spent, or not earned yet), health is a life crystal that is green from 75% health, orange down to 35%, then red and cracked, card backs carry a shard emblem, played cards sparkle, defeated characters shatter, and a shard falls into the turn crystal when the turn passes.
 - **Main menu:** purple and white crystal shards fall like meteors instead of the original rain and lightning.
+- **Game feel:**
+  - **Aiming:** choosing an attacker draws an aiming line to your finger or mouse, and you can drag straight onto a target. Each enemy you could attack shows how the fight would end (Defeats it, Both fall, Yours falls, or the damage dealt; ⚡ means you strike first).
+  - **Impacts:** attackers swoop into their target, and hits land with a flash, a ring, and a screen shake sized to the damage. Damage numbers get bigger with the hit and say OVERKILL. Chips fly off a player's life crystal when it's hit.
+  - **Big moments:** cards costing 6 or more are shown large in the middle before they land with a shockwave. A skill's icon pops when it takes effect (Level Up, Evolve, Transform, Reanimate, Rally). Each faction enters the table its own way.
+  - **A living board:** cards breathe, playable cards shimmer, and each side of the Crystal Altar glows in its deck's color, brighter as its mana grows. When someone drops into red health, the edges pulse and the shards fall faster.
+  - **The finale:** slow motion on the winning blow and a shattering crystal. The end screen shows cards played, damage dealt, the biggest hit, and badges like Flawless, Comeback, First win with a deck and Massive hit.
+  - All of this respects the device's "reduce motion" setting.
 - **Newly working cards** (they had text but no effect in Lua): Area Denial, Call Back, Disable, Simplicity, Simple Messenger, Ripen, Arboreal Intelligence, Call of the Jungle, Rise from the Dead, They Just Keep Coming, Rotten Finger (now lets you pick the discard), Baboon, The Man Ape (defending bonus) and Tree Branch (cost reduction).
 - **Fix:** characters now die when their *displayed* health reaches 0, so area bonuses count toward survival.
 - **Not playable yet:** the counter spells (Nullify, Nope for One, Nope for All, Return to Sender, Try Again) need a reaction window the game doesn't have. Kenshi's Blade, IP Man, Soul Shepard and The Simplistic play as normal cards without their special ability, the same as in Lua.
