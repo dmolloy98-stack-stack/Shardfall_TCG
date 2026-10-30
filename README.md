@@ -74,13 +74,13 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 
 ## The starter decks
 
-Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and at most 2 of an Unknown card. They are meant as introductions to each faction; custom decks are where the real strategy lives. Over thousands of computer-vs-computer games, Monkey, Fighter and Digital each win about half their games, Simple about 58% and Zombie about 40%. With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
+Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and at most 2 of an Unknown card. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games (after the Tower rule and the balance changes listed under Changes from the Lua version), Monkey, Zombie and Digital win about half their games, Simple about 60% and Fighter about 45%. With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
 
 | Deck | Style | Cards costing 0–2 / 3–4 / 5+ | Characters |
 |---|---|---|---|
-| Simple | Go wide with humble characters and basic tools | 21 / 8 / 6 | 21 |
-| Monkey | Synergy: Rally monkeys power each other up | 20 / 3 / 12 | 25 |
-| Zombie | Big cost, high reward, slightly spell reliant | 13 / 4 / 18 | 22 |
+| Simple | Go wide with humble characters and basic tools | 21 / 6 / 8 | 21 |
+| Monkey | Synergy: Rally monkeys power each other up | 20 / 5 / 10 | 25 |
+| Zombie | Big cost, high reward, slightly spell reliant | 13 / 10 / 12 | 22 |
 | Fighter | Martial artists that grow with equipment | 22 / 5 / 8 | 21 |
 | Digital | Glass cannons that Level Up | 19 / 8 / 8 | 28 |
 
@@ -163,6 +163,8 @@ The design sheet left some Digital slots blank; these were filled in to fit the 
 - **The first player skips their first draw**, to offset the advantage of going first.
 - **Rally** gives +1 Attack and Speed (not health), as in the Lua version. Play-testing showed +1 to all stats made Monkey decks too strong.
 - **New:** a computer opponent, and a pass-the-device screen between turns in two-player mode.
+- **Tower blocks:** a Tower character must be attacked first, like Challenge. With several Challenge or Tower characters, the attacker picks which one.
+- **Balance changes** (tested in computer-vs-computer games): Zombie's Sneaky Skinbag and Shadow-Stitched Soldier cost 4 instead of 5, and Hungry Corpse is 2/1/1 instead of 1/1/1. Monkey's Ape costs 4 instead of 5, Gorilla 5 instead of 6, and Baby Monkey is 1/1/0 instead of 0/1/0. Simple's Staff is 2/1/0 instead of 3/1/0, and Herd costs 5 instead of 4.
 - **Frontline and backline:** characters stand on the frontline, with no limit on how many. Areas and stored equipment share the backline behind it (up to 10 cards, set by `max_field_backline` in `game_rules.csv`) instead of two separate rows of 5. The row names come from `zone_frontline` and `zone_backline` in `ui_text.csv`.
 - **Board skins:** the main board is the Crystal Altar. Settings (on the main menu or in ☰ Menu) also offers Shattered Battlefield (floating islands over a shard rift, each side styled after its deck) and War Map. Mana is a row of 10 crystals (lit, spent, or not earned yet), health is a life crystal that is green from 75% health, orange down to 35%, then red and cracked, card backs carry a shard emblem, played cards sparkle, defeated characters shatter, and a shard falls into the turn crystal when the turn passes.
 - **Main menu:** purple and white crystal shards fall like meteors instead of the original rain and lightning.
