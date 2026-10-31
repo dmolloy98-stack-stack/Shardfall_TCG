@@ -6,3 +6,4 @@ max_field_backline,10,number,Most areas and stored equipment together on one sid
 min_deck_size,35,number,Smallest legal deck
 max_copies,4,number,Most copies of one card a deck may hold
 max_unknown_copies,2,number,Most copies of one Unknown-rarity card a deck may hold
+max_unknown_kinds,1,number,"Most different Unknown-rarity cards (champions) a deck may hold"

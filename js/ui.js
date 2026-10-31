@@ -777,6 +777,7 @@ function showSettings() {
   openModal(`<h2 id="modal-title">Settings</h2>
     <div class="menu-list">
       <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
+      ${U.screen === "menu" ? `<button type="button" class="btn" data-set="intro">Watch the intro</button>` : ""}
     </div>
     <div class="menu-skins"><h3>Board</h3><div class="skin-list compact">${skinButtons("data-skin")}</div></div>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-set="done">${U.screen === "game" ? "Back to the game menu" : "Done"}</button></div>`);
@@ -817,6 +818,7 @@ $("#modal").addEventListener("click", e => {
   const set = e.target.closest("[data-set]");
   if (set) {
     if (set.dataset.set === "hints") { setHints(!U.hints); showSettings(); }
+    else if (set.dataset.set === "intro") { closeModal(); playIntro(); }
     else if (U.screen === "game") showGameMenu();
     else closeModal();
     return;
@@ -1180,6 +1182,9 @@ function boot(saved) {
   showScreen("menu");
   if (location.hash === "#tutorial") startTutorial();
   else if (location.hash === "#how-to-play") showGuide();
-  else if (!PREFS.get("welcomed", false)) showWelcome();
+  // the cold open plays every time (js/intro.js), except from a #menu link; new players
+  // are then offered the tutorial
+  else if (location.hash === "#menu") { if (!PREFS.get("welcomed", false)) showWelcome(); }
+  else playIntro(() => { if (!PREFS.get("welcomed", false)) showWelcome(); });
 }
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});

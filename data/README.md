@@ -89,7 +89,7 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | mana_growth_per_turn | Maximum mana gained each turn |
 | max_field_backline | Most cards on one side's backline (areas and stored equipment together) |
 | max_field_characters | Optional. Leave it out for no limit on characters (the default) |
-| min_deck_size, max_copies, max_unknown_copies | Deck-building rules |
+| min_deck_size, max_copies, max_unknown_copies, max_unknown_kinds | Deck-building rules (max_unknown_kinds: how many different Unknown cards, the champions, a deck may hold) |
 
 ### phases.csv and ui_text.csv
 

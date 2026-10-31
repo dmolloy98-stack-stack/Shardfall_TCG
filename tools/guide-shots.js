@@ -116,7 +116,7 @@ function showDiagram(html) {
 
 (async () => {
   const server = await serve();
-  const url = `http://localhost:${server.address().port}/index.html`;
+  const url = `http://localhost:${server.address().port}/index.html#menu`;
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch();
   let page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });

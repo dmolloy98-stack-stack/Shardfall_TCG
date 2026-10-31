@@ -19,7 +19,7 @@ New players have three kinds of help:
 - **How to play guide** ([`guide.html`](guide.html)): an illustrated page with annotated screenshots of the table, a labelled card, turns, playing cards, battle and how cards work together, plus a skills glossary and beginner words. It's the same page the in-game "How to play" button opens, and it can be shared on its own: `https://dmolloy98-stack-stack.github.io/Shardfall_TCG/guide.html`.
 - **Beginner hints**: during a game, a small panel says what you can do right now. Hide it with ✕, turn it off with "Turn off hints", or switch it back on in Settings (main menu or ☰ Menu). The choice is remembered on that device.
 
-First-time visitors are offered the tutorial when the game opens.
+**The intro:** every time the game opens, a 20-second cold open of stained-glass panels tells how the Shardfall began (tap to go on, **Skip** to leave). First-time visitors are then offered the tutorial. Watch it again from Settings, or skip it with a link ending in `#menu`. The story, tone, champions and hidden clues are collected in [`docs/world.md`](docs/world.md).
 
 **Your own decks:** on the main menu, **Create your own** opens the deck builder. Start from an empty deck or a copy of a starter, tap cards to add them (filter by faction and type, tap **i** to read a card), and watch the deck panel: card count against the 35-card minimum, the mana curve, how many characters, spells, equipment and areas, and tips. Copy limits from `data/game_rules.csv` are enforced. A short walkthrough runs the first time and from **? How to build**. Decks are saved in the browser on that device, appear on the main menu with an Edit button, and can't be started until they reach the minimum size. The computer opponent always uses a starter deck.
 
@@ -68,6 +68,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `js/tutorial.js` | The tutorial: scripted steps, coach box, spotlight and arrows |
 | `js/help.js` | Beginner hints, the first-visit welcome, the in-game guide screen |
 | `js/decks.js` | The deck builder, saved custom decks and its walkthrough |
+| `js/intro.js` | The stained-glass cold open before the main menu |
+| `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
 | `js/fx.js` | Game feel: aiming line and fight previews, impacts, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
 | `tools/guide-shots.js` | Retakes the annotated guide pictures: `node tools/guide-shots.js` (needs Node.js and Playwright) |
@@ -75,7 +77,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 
 ## The starter decks
 
-Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and at most 2 of an Unknown card. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games (after the Tower rule and the balance changes listed under Changes from the Lua version), with 25 starting health, Simple, Monkey, Fighter and Digital win 45–50% of their games and Zombie about 59%. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
+Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and one champion (an Unknown card) with at most 2 copies. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games (after the Tower rule and the balance changes listed under Changes from the Lua version), with 25 starting health, Simple, Monkey, Fighter and Digital win 45–50% of their games and Zombie about 59%. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
 
 | Deck | Style | Cards costing 0–2 / 3–4 / 5+ | Characters |
 |---|---|---|---|
