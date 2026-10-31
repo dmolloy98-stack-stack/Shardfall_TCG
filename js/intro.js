@@ -84,7 +84,23 @@ function glassMotif(kind) {
 // Playing it
 // ---------------------------------------------------------------------------
 const INTRO = { i: -1, timer: 0, done: null };
-const introEl = document.getElementById("intro");
+const introEl = document.getElementById("intro") || buildIntroEl();
+
+// Browsers can keep an older index.html for a while after an update, while the scripts
+// load fresh. That older page has no #intro, so build it here rather than fail silently.
+function buildIntroEl() {
+  const el = document.createElement("div");
+  el.id = "intro";
+  el.className = "intro";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", "The story of the Shardfall");
+  el.hidden = true;
+  el.innerHTML = `<div class="intro-stage" aria-live="polite"></div>
+    <button type="button" class="intro-skip btn btn-small">Skip</button>
+    <div class="intro-dots" aria-hidden="true"></div>`;
+  document.body.appendChild(el);
+  return el;
+}
 
 function playIntro(done) {
   INTRO.done = done || null;
