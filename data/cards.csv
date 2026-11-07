@@ -73,7 +73,7 @@ deaths_grasp,6,Death's Grasp,Divine,Spell,N/A,Zombie,---,---,Destroy target char
 soul_shepard,5,Soul Shepard,Unknown,Character,Undead,Zombie,3+3+3,---,"Each time another Zombie is sent to your graveyard, choose: gain its stats as they read, or return it to your hand",,soul_shepard
 seasoned_monk,2,Seasoned Monk,Basic,Character,N/A,Fighter,2+1+2,Parry,---,,seasoned_monk
 white_belt_student,1,White Belt Student,Basic,Character,N/A,Fighter,0+1+0,Level Up+Transform,Level Up whenever an equipment enters the Field. After Level Up is triggered 3 times Transform into Black Belt Student. Keep stats from Level Up,,white_belt_student
-weapons_enthusiast,1,Weapons Enthusiast,Basic,Character,N/A,Fighter,1+1+1,---,Equip costs become 0 when equipping to Weapons Enthusiast,,weapons_enthusiast
+weapons_enthusiast,1,Weapons Enthusiast,Basic,Character,N/A,Fighter,1+1+1,---,Equip costs become 1 when equipping to Weapons Enthusiast,,weapons_enthusiast
 sensei,5,Sensei,Basic,Character,N/A,Fighter,2+2+2,---,While Sensei is on the field all equip costs become 0,,sensei
 sparring_gear,4,Sparring Gear,Basic,Equipment,N/A,Fighter,0+3+0,---,---,,sparring_gear
 zippy_shoes,4,Zippy Shoes,Basic,Equipment,N/A,Fighter,0+0+3,---,---,,zippy_shoes
@@ -98,17 +98,17 @@ gaming_headset,1,Gaming Headset,Basic,Equipment,N/A,Digital,1+0+1,---,---,,gamin
 speedrunner,2,Speedrunner,Basic,Character,N/A,Digital,2+1+2,Rush,---,,speedrunner
 beta_tester,2,Beta Tester,Basic,Character,N/A,Digital,1+2+1,Level Up,Levels Up during your End Phase,,beta_tester
 upgrade,2,Upgrade,Basic,Spell,N/A,Digital,---,---,Trigger target character's Level Up,,upgrade
-digital_girlfriend,3,Digital Girlfriend,Basic,Character,N/A,Digital,2+1+0,Signal,Trigger target character's Level Up,,digital_girlfriend
+digital_girlfriend,2,Digital Girlfriend,Basic,Character,N/A,Digital,2+1+0,Signal,Trigger target character's Level Up,,digital_girlfriend
 catfish,3,Catfish,Basic,Spell,N/A,Digital,---,Flash,Target character loses -1 to all stats,,catfish
 secure_the_data,3,Secure the Data,Basic,Spell,N/A,Digital,---,Flash,Target character gains Cloak until the start of your next turn,,secure_the_data
-pro_gamer,3,Pro Gamer,Rare,Character,N/A,Digital,3+1+1,Level Up,Levels Up each time it destroys a character in battle and survives,,pro_gamer
+pro_gamer,3,Pro Gamer,Rare,Character,N/A,Digital,3+1+1,Level Up,Levels Up each time it attacks,,pro_gamer
 pesky_programmer,4,Pesky Programmer,Rare,Character,N/A,Digital,2+1+2,Level Up,When this character Levels Up it gains +2 Attack and +2 Speed but +0 Health,,pesky_programmer
 hacker,4,Hacker,Rare,Character,N/A,Digital,3+1+3,Cloak,---,,hacker
 gymfluencer,5,Gymfluencer,Rare,Character,N/A,Digital,1+2+2,Signal,Trigger target character's Level Up twice,,gymfluencer
 api_key,5,API Key,Rare,Equipment,N/A,Digital,1+1+0,---,This character gains Level Up. The character holding this Levels Up during your End Phase,,api_key
 overclocker,5,Overclocker,Exotic,Character,N/A,Digital,7+1+0,Level Up,---,,overclocker
-data_collector,6,Data Collector,Exotic,Character,N/A,Digital,2+2+2,Level Up+Challenge,When your other characters Level Up the Level Up stats go to Data Collector instead,,data_collector
+data_collector,6,Data Collector,Exotic,Character,N/A,Digital,2+2+2,Level Up+Challenge,When your other characters Level Up Data Collector gains +1 Health,,data_collector
 server_farm,6,Server Farm,Exotic,Character,N/A,Digital,1+6+1,Tower,Your characters Level Up during your End Phase,,server_farm
 data_transfer,6,Data Transfer,Divine,Area,N/A,Digital,---,---,Once during each of your Setup phases you may remove a Level from one of your characters to gain 2 HP. During your End Phase your strongest Level Up character Levels Up,,data_transfer
-digital_drainage,12,Digital Drainage,Divine,Spell,N/A,Digital,---,---,Your Level Up characters Level Up 3 times. Each opposing character loses Attack equal to the number of Levels of your highest-Attack Level Up character,,digital_drainage
-boss_level,7,Boss Level,Unknown,Character,N/A,Digital,6+2+2,Level Up,This character has no limit to Level Up,,boss_level
+digital_drainage,9,Digital Drainage,Divine,Spell,N/A,Digital,---,---,Your Level Up characters Level Up 3 times. Each opposing character loses Attack equal to the number of Levels of your highest-Attack Level Up character,,digital_drainage
+boss_level,7,Boss Level,Unknown,Character,N/A,Digital,6+4+2,Level Up,This character has no limit to Level Up,,boss_level

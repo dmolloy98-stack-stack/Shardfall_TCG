@@ -187,26 +187,35 @@ function transformCharacter(c, newName) {
   log(`${t.name} appears through Transform.`);
 }
 
-// Level Up: +1 to all stats, up to 3 times, then the skill is used up.
-// Boss Level has no limit, Pesky Programmer grows +2 Attack and +2 Speed instead,
-// and a Data Collector takes the stats when another of your characters levels up.
+// Level Up: +1 to all stats, up to 3 times, then the skill is used up. Each Level Up also
+// heals the character fully. Boss Level has no limit, Pesky Programmer grows +2 Attack and
+// +2 Speed instead, and a Data Collector gains +1 Health when another of your characters levels up.
 const levelCap = c => (named(c, "Boss Level") ? Infinity : 3);
 function levelUp(c, times = 1) {
   for (let k = 0; k < times; k++) {
     if (!hasSkill(c, "Level Up") || (c.levelUpCount || 0) >= levelCap(c)) return;
     c.levelUpCount = (c.levelUpCount || 0) + 1;
-    const collector = ownerOf(c).field.chars.find(x => x !== c && named(x, "Data Collector"));
     const gains = named(c, "Pesky Programmer") ? [2, 0, 2] : [1, 1, 1];
-    const into = collector || c;
-    into.attack += gains[0]; into.currentHealth += gains[1]; into.speed += gains[2];
-    into.keptLevels = (into.keptLevels || 0) + 1;   // levels whose stats this character holds
-    emit("text", { uid: c.uid, text: collector ? "DATA SENT" : "LEVEL UP", color: "#ffd25e" });
-    if (collector) emit("text", { uid: collector.uid, text: "+DATA", color: "#6fe3ff" });
+    c.attack += gains[0]; c.currentHealth += gains[1]; c.speed += gains[2];
+    c.levelHealth = (c.levelHealth || 0) + gains[1];
+    c.keptLevels = (c.keptLevels || 0) + 1;   // levels whose stats this character holds
+    healFully(c);
+    emit("text", { uid: c.uid, text: "LEVEL UP", color: "#ffd25e" });
+    for (const dc of ownerOf(c).field.chars.filter(x => x !== c && named(x, "Data Collector"))) {
+      dc.currentHealth++; dc.baseHealth++;
+      emit("text", { uid: dc.uid, text: "+1 HP", color: "#6fe3ff" });
+    }
     if (c.levelUpCount >= levelCap(c)) {
       removeSkill(c, "Level Up");
       if (named(c, "White Belt Student")) transformCharacter(c, "Black Belt Student");
     }
   }
+}
+
+// Heal all damage: health goes back to the card's health plus equipment and Level Up gains.
+function healFully(c) {
+  const full = (c.baseHealth ?? c.health) + equipBonuses(c).h + (c.levelHealth || 0);
+  if (c.currentHealth < full) c.currentHealth = full;
 }
 
 // Undo one Level Up (Data Transfer). The skill comes back if it was used up.
@@ -215,7 +224,7 @@ function levelDown(c) {
   c.keptLevels--;
   if (c.levelUpCount > 0) c.levelUpCount--;
   if (named(c, "Pesky Programmer")) { c.attack -= 2; c.speed -= 2; }
-  else { c.attack--; c.currentHealth--; c.speed--; }
+  else { c.attack--; c.currentHealth--; c.speed--; c.levelHealth = Math.max(0, (c.levelHealth || 0) - 1); }
   if (!hasSkill(c, "Level Up")) c.skills.push("Level Up");
   emit("text", { uid: c.uid, text: "LEVEL DOWN", color: "#c9c9c9" });
   checkDeath(c);
@@ -343,7 +352,7 @@ function putOnField(c, p) {
 function initBattlefieldCharacter(c, p) {
   c.baseAttack = c.attack; c.baseHealth = c.health; c.baseSpeed = c.speed;
   c.currentHealth = c.health; c.equipped = []; c.hasAttacked = !hasSkill(c, "Rush");
-  c.owner = p.idx; c.levelUpCount = 0; c.combatSurvived = 0; c.reanimated = false;
+  c.owner = p.idx; c.levelUpCount = 0; c.levelHealth = 0; c.keptLevels = 0; c.combatSurvived = 0; c.reanimated = false;
   emit("enter", { uid: c.uid, cost: c.manaCost || 0 });
 
   if (named(c, "Zombombadier")) {
@@ -727,7 +736,7 @@ function newGame({ deckId, opponentDeckId, mode }) {
 // ---------------------------------------------------------------------------
 function equipCost(c, owner, target, fromField) {
   if (owner && owner.field.chars.some(x => named(x, "Sensei"))) return 0;
-  if (target && named(target, "Weapons Enthusiast")) return 0;
+  if (target && named(target, "Weapons Enthusiast")) return Math.min(1, fromField ? DATA.rarities[c.rarity]?.attachCost ?? 1 : playCost(c, owner));
   if (fromField) return DATA.rarities[c.rarity]?.attachCost ?? 1;
   return playCost(c, owner);
 }
@@ -974,6 +983,7 @@ function attack(attackerUid, targetUid) {
   a.hasAttacked = true;
   a.attackedThisTurn = true;
   emit("lunge", { uid: a.uid, target: target ? target.uid : null, player: defender.idx });
+  if (named(a, "Pro Gamer")) levelUp(a);   // levels up each time it attacks
   const as = stats(a);
   if (!target) {
     log(`${a.name} attacks ${defender.name} for ${as.a}.`);
@@ -1001,7 +1011,6 @@ function attack(attackerUid, targetUid) {
     if (alive(a)) hitTarget();
   }
   recordCombatSurvival(a); recordCombatSurvival(target);
-  if (alive(a) && !alive(target) && named(a, "Pro Gamer")) levelUp(a);   // levels up after a knockout
   return true;
 }
 

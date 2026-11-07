@@ -77,7 +77,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 
 ## The starter decks
 
-Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and one champion (an Unknown card) with at most 2 copies. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games with 25 starting health and the finished champions, Simple, Monkey and Fighter win 46–56% of their games, Zombie about 60% and Digital about 40%. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
+Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and one champion (an Unknown card) with at most 2 copies. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games with 25 starting health and the finished champions, Simple, Monkey, Fighter and Digital win 43–53% of their games and Zombie about 60%. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
 
 | Deck | Style | Cards costing 0–2 / 3–4 / 5+ | Characters |
 |---|---|---|---|
@@ -136,7 +136,7 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 
 **Key cards**
 - **White Belt Student** levels up each time equipment enters the field. After three level-ups it becomes a **Black Belt Student**, which becomes a **5th Degree Master** after surviving three combats.
-- **Weapons Enthusiast** equips for free, and **Sensei** makes all your equipment free while it's on the table.
+- **Weapons Enthusiast** equips anything for 1 mana, and **Sensei** makes all your equipment free while it's on the table.
 - **Nunchucks** and **Bo Staff** (4 copies each, 2 mana): efficient weapons with Flash, so you can equip them in the middle of Battle.
 - **Seasoned Monk** and **Black Belt Student** have **Parry** and hit back twice as hard when defending. **Dojo** gives every Fighter Parry and +1 to all stats.
 - **Fight Choreographer** gives every other Fighter +2 to all stats. **Master Rat** brings four Turtles that power each other up.
@@ -147,14 +147,14 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 
 ### Digital: glass cannons that Level Up
 
-**How it plays:** fragile, hard-hitting characters that grow with **Level Up** (+1 to all stats, up to 3 times). Get cheap characters out, level them quickly, and win before their low health catches up with them.
+**How it plays:** fragile, hard-hitting characters that grow with **Level Up** (+1 to all stats, up to 3 times, and each Level Up heals the character fully). Get cheap characters out, level them quickly, and win before their low health catches up with them.
 
 **Key cards**
 - **Glitch** (Level Up and Rush) and **Speedrunner** (Rush) attack the turn they arrive.
-- Level Up triggers: **Spam Bot**, **Digital Girlfriend**, **Upgrade**, **Gymfluencer** (twice), **API Key** and **Server Farm** (every End Phase), **Beta Tester** (levels itself every End Phase), **Pro Gamer** (after winning a fight) and the **Data Transfer** area.
+- Level Up triggers: **Spam Bot**, **Digital Girlfriend**, **Upgrade**, **Gymfluencer** (twice), **API Key** and **Server Farm** (every End Phase), **Beta Tester** (levels itself every End Phase), **Pro Gamer** (each time it attacks) and the **Data Transfer** area.
 - **Pesky Programmer** gains +2 Attack and +2 Speed per level. **Overclocker** is a 7/1/0 that can level up too.
-- **Data Collector** takes the Level Up stats of your other characters and becomes a huge Challenge wall.
-- Finishers: **Boss Level** has no limit on Level Up, and **Digital Drainage** levels up your whole team three times and weakens every enemy.
+- **Data Collector** gains +1 Health each time another of your characters levels up, growing into a Challenge wall.
+- Finishers: **Boss Level** (7 mana, 6/4/2) has no limit on Level Up, and **Digital Drainage** (9 mana) levels up your whole team three times and weakens every enemy.
 
 **Strengths and weaknesses:** explosive if your characters survive long enough to level, but nearly all of them have 1 health. Area damage and fast removal hit Digital hardest.
 
