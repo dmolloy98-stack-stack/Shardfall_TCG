@@ -98,7 +98,7 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 - **Herd** puts three Farmers on the table at once, often enough to call the Simpler Farmer by itself.
 - **Simple Wizard** and **Slap** pick off small enemies. **Simplify** turns any big threat into a 1/1/1.
 - **Simple Defender** (Challenge and Tower) forces enemies to attack it and grows +2 health every turn.
-- Finishers: **Simplicity** shrinks the whole enemy side by 2 in every stat and heals you. **The Simplistic** (10 mana, 5/5/3) gives every Simple card on the table +5 to each stat, makes Simple spells deal or give 5 more, and stops curse spells from targeting Simple cards.
+- Finishers: **Simplicity** shrinks the whole enemy side by 2 in every stat and heals you. **The Simplistic** (8 mana, 5/5/3) gives every Simple card on the table +3 to each stat, makes Simple spells deal or give 3 more, and stops curse spells from targeting Simple cards.
 
 **Strengths and weaknesses:** steady and forgiving, with an answer for most situations, but each card is modest on its own. Area damage like Flame Surge can wipe out a board of 1-health characters.
 

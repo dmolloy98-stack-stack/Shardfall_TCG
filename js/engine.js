@@ -95,11 +95,11 @@ function settle() {
   if (!S.pending && S.passAfterChoice && !S.over) { S.passAfterChoice = false; finishTurn(); }
 }
 
-// The Simplistic: while it is on the field (either side), every Simple card gains +5 to each
-// stat (characters, and equipment on a character), Simple spells deal or give 5 more, and
+// The Simplistic: while it is on the field (either side), every Simple card gains +3 to each
+// stat (characters, and equipment on a character), Simple spells deal or give 3 more, and
 // curse spells can't target Simple cards. Buff spells still can.
 const simplisticOut = () => S.players.some(p => p.field.chars.some(x => named(x, "The Simplistic")));
-const SIMPLISTIC_BONUS = 5;
+const SIMPLISTIC_BONUS = 3;
 const spellBoost = ctx => (ctx.spell && ctx.card.group === "Simple" && simplisticOut() ? SIMPLISTIC_BONUS : 0);
 const isBuff = fx => fx.intent === "help";
 const shieldedFromCurses = c => c.group === "Simple" && simplisticOut();
