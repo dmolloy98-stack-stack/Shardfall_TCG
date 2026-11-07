@@ -107,6 +107,8 @@ function cardHTML(c, opts = {}) {
 const viewIdx = () => (S.mode === "ai" ? 0 : S.active);
 const sideOf = idx => (idx === viewIdx() ? "bottom" : "top");
 const humanTurn = () => S && !S.over && !active().isAI && !U.curtain;
+// A target choice a person has to make, which can come up on the other player's turn (IP Man).
+const humanTarget = () => S && !S.over && !U.curtain && S.pending?.kind === "target" && !S.players[S.pending.owner].isAI;
 // Characters are spaced out evenly and squeeze together when there are many (there is no limit).
 function charStep(n) { return Math.min(L.charStep, (L.frontW - CARD_W) / Math.max(1, n - 1)); }
 function charX(i, n) { const step = charStep(n); return 720 - ((n - 1) * step + CARD_W) / 2 + i * step; }
@@ -309,7 +311,7 @@ function plateHTML(p, side) {
   const tier = LIFE_TIERS.find(t => ratio >= t.min).cls;
   const cracks = tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4;
   const pd = S.pending;
-  const targetable = pd?.kind === "target" && pd.targetType === "charOrPlayer" && !S.players[pd.owner].isAI && humanTurn();
+  const targetable = humanTarget() && pd.targetType === "charOrPlayer" && isValidTarget({ isPlayer: true, idx: p.idx });
   const attackable = side === "top" && U.selected && !forcedTarget(p);
   const y = side === "top" ? 3 : 937;
   return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
@@ -324,7 +326,7 @@ function fieldHTML(p, side) {
   const n = p.field.chars.length;
   const pd = S.pending;
   const human = humanTurn();
-  const humanPending = pd && !S.players[pd.owner].isAI && human;
+  const humanPending = humanTarget();
   let h = "";
 
   // deck and graveyard
@@ -373,7 +375,8 @@ function fieldHTML(p, side) {
     if (sp && performance.now() - sp.t < 1000) cls.push(spawnClass(sp));
     if ((U.arriving.get(c.uid) ?? 0) > performance.now()) cls.push("arriving");
     const preview = attackable && human ? previewBadge(fightPreview(U.selected, c.uid)) : "";
-    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${preview}</div>`;
+    const blade = side === "bottom" && human && canUseBlade(c) ? `<button type="button" class="blade-btn" data-act="blade" data-uid="${c.uid}" title="Kenshi's Blade: deal 3 damage to an enemy character, once per Battle">⚔ Strike 3</button>` : "";
+    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${preview}${blade}</div>`;
   });
   return h;
 }
@@ -500,8 +503,11 @@ function renderPrompt() {
   let msg = null, cancel = true;
   if (U.curtain || U.ended) msg = null;
   else if (pd?.kind === "target" && !S.players[pd.owner].isAI) {
-    const what = pd.source.name === "Data Transfer" ? "one of your characters to lose a Level (you gain 2 HP)" : pd.targetType === "area" ? "an area" : pd.targetType === "charOrPlayer" ? "a character or player" : "a character";
-    msg = `${pd.source.name}: choose ${what}`;
+    const what = pd.source.name === "Data Transfer" ? "one of your characters to lose a Level (you gain 2 HP)"
+      : pd.source.name === "IP Man" ? `an enemy character or player to take the ${pd.amount} damage instead`
+      : pd.source.name === "Kenshi's Blade" ? "an enemy character to take 3 damage"
+      : pd.targetType === "area" ? "an area" : pd.targetType === "charOrPlayer" ? "a character or player" : "a character";
+    msg = `${pd.source.name}${pd.source.name === "IP Man" ? ` (${S.players[pd.owner].name})` : ""}: choose ${what}`;
     cancel = !pd.required;
   } else if (U.armed) {
     const c = findCardAnywhere(U.armed.uid);
@@ -537,7 +543,8 @@ function afterAction() {
 }
 function scheduleAI() {
   clearTimeout(U.aiTimer);
-  if (!S || S.over || !active().isAI || U.screen !== "game" || U.tutorial) return;
+  const aiChoice = S?.pending && S.players[S.pending.owner].isAI;
+  if (!S || S.over || !(active().isAI || aiChoice) || U.screen !== "game" || U.tutorial) return;
   const wait = Math.max(0, U.busyUntil - performance.now());
   U.aiTimer = setTimeout(() => {
     if (U.busyUntil > performance.now()) { scheduleAI(); return; }
@@ -574,7 +581,7 @@ function clickChar(uid, side) {
   const pd = S.pending;
   const found = findChar(uid);
   if (!found) return;
-  if (human && pd?.kind === "target" && !S.players[pd.owner].isAI) {
+  if (humanTarget()) {
     if (isValidTarget({ uid })) act(() => chooseTarget({ uid }));
     return;
   }
@@ -721,10 +728,12 @@ function showDetail(c, ctx = {}) {
   }
   if (UNIMPLEMENTED.has(c.name)) extra += `<p class="reason">Counter spells are not playable yet: they need a reaction window the game does not have.</p>`;
   const ability = c.ability || c.description;
+  const spellFx = c.type === "Spell" && EFFECTS[c.name]?.target ? EFFECTS[c.name] : null;
+  const spellKind = spellFx ? (spellFx.intent === "help" ? " · Buff spell" : " · Curse spell") : "";
   openModal(`<div class="detail">
     ${cardHTML(c, ctx.field && findChar(c.uid) ? { field: true } : {})}
     <div class="detail-text">
-      <div><h2 id="modal-title">${esc(c.name)}</h2><p class="sub">${esc(c.type)} · ${esc(c.rarity)} · ${esc(c.group === "N/A" ? "Neutral" : c.group)}${c.race && c.race !== "N/A" ? " · " + esc(c.race) : ""} · ${c.manaCost} mana</p></div>
+      <div><h2 id="modal-title">${esc(c.name)}</h2><p class="sub">${esc(c.type)} · ${esc(c.rarity)} · ${esc(c.group === "N/A" ? "Neutral" : c.group)}${c.race && c.race !== "N/A" ? " · " + esc(c.race) : ""} · ${c.manaCost} mana${spellKind}</p></div>
       ${ability ? `<p class="ability">${esc(ability)}</p>` : ""}
       ${skillRows(c)}
       ${extra}
@@ -747,7 +756,7 @@ function showChoose() {
   const max = pd.pick || 1;
   const draw = () => {
     const options = pd.options || [{ id: "ok", label: "Confirm" }];
-    const needPick = pd.resolve !== "messenger";
+    const needPick = pd.resolve !== "messenger" && pd.resolve !== "shepard";
     $("#modal-content").innerHTML = `<h2 id="modal-title">${esc(pd.title)}</h2><p class="sub">${esc(pd.prompt)}</p>
       <div class="modal-cards">${pd.cards.map(c => `<button type="button" class="${picked.has(c.uid) ? "picked" : ""}" data-pick="${c.uid}">${cardHTML(c)}</button>`).join("")}</div>
       <div class="detail-actions" style="margin-top:16px">${options.map(o => `<button type="button" class="btn${o === options[0] ? " btn-primary" : ""}" data-opt="${o.id}" ${needPick && !picked.size && pd.required ? "disabled" : ""}>${esc(o.label)}</button>`).join("")}
@@ -858,6 +867,7 @@ $("#board").addEventListener("click", e => {
   if (a === "phase") return onPhaseButton();
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; act(endTurn); } return; }
   if (a === "face") { if (U.selected) { const s = U.selected; U.selected = null; act(() => attack(s, null)); } return; }
+  if (a === "blade") { if (human) { U.selected = null; act(() => useBlade(uid)); } return; }
   if (a === "char") return clickChar(uid, el.dataset.side);
   if (a === "token") { if (human) act(useManaToken); return; }
   if (a === "grave") return showGrave(S.players[Number(el.dataset.player)]);
@@ -865,14 +875,14 @@ $("#board").addEventListener("click", e => {
   if (a === "plate") {
     const idx = Number(el.dataset.player);
     const pd = S.pending;
-    if (human && pd?.kind === "target" && isValidTarget({ isPlayer: true, idx })) act(() => chooseTarget({ isPlayer: true, idx }));
+    if (humanTarget() && isValidTarget({ isPlayer: true, idx })) act(() => chooseTarget({ isPlayer: true, idx }));
     else if (human && U.selected && idx !== S.active) { const s = U.selected; U.selected = null; act(() => attack(s, null)); }
     return;
   }
   if (a === "area") {
     const pd = S.pending;
     const found = findArea(uid);
-    if (human && pd?.kind === "target" && pd.targetType === "area") act(() => chooseTarget({ uid }));
+    if (humanTarget() && pd.targetType === "area") act(() => chooseTarget({ uid }));
     else if (human && found.p === active() && canActivateArea(found.c)) act(() => activateArea(uid));
     else showDetail(found.c);
     return;

@@ -36,6 +36,21 @@ function aiPickTarget() {
 function aiResolveChoice() {
   const pd = S.pending;
   const me = pd.owner;
+  // Soul Shepard and The Man Ape: try each answer on a copy of the game and take the best.
+  if (pd.resolve === "shepard") {
+    const score = o => simulate(() => { resolveChoice([], o); return evaluate(me); });
+    resolveChoice([], score("absorb") >= score("hand") ? "absorb" : "hand");
+    return;
+  }
+  if (pd.resolve === "apeSacrifice") {
+    let best = null, bestScore = simulate(() => { resolveChoice([], null); return evaluate(me); });
+    for (const c of pd.cards) {
+      const sc = simulate(() => { resolveChoice([c.uid], "sacrifice"); return evaluate(me); });
+      if (sc > bestScore + 0.5) { bestScore = sc; best = c.uid; }
+    }
+    resolveChoice(best ? [best] : [], best ? "sacrifice" : null);
+    return;
+  }
   if (pd.resolve === "messenger") {
     const top = pd.cards[0];
     resolveChoice([], top && top.manaCost >= 3 ? "take" : "discard");
@@ -99,12 +114,24 @@ function aiAttackActions() {
       out.push({ attacker: a.uid, target: t ? t.uid : null, gain: score - base });
     }
   }
+  // Kenshi's Blade: a free 3 damage once per Battle Phase.
+  for (const a of active().field.chars) {
+    if (!canUseBlade(a)) continue;
+    for (const t of validTargets(EFFECTS["Kenshi's Blade"], { card: bladeOf(a), owner: active(), spell: false })) {
+      const score = simulate(() => { useBlade(a.uid); chooseTarget({ uid: t.uid }); return evaluate(me); });
+      out.push({ blade: a.uid, target: t.uid, gain: score - base });
+    }
+  }
   return out.filter(x => x.gain > 0).sort((x, y) => y.gain - x.gain);
 }
 
 // Perform one AI action. Returns false when the AI has nothing more to do this turn.
+// A choice can belong to the player whose turn it isn't (Soul Shepard, IP Man). The
+// computer answers its own choices at any time, and waits while a person answers theirs.
 function aiStep() {
-  if (S.over || !active().isAI) return false;
+  if (S.over) return false;
+  if (S.pending && !S.players[S.pending.owner].isAI) return active().isAI;
+  if (!S.pending && !active().isAI) return false;
   if (S.pending?.kind === "target") {
     const t = aiPickTarget();
     if (t) chooseTarget(t.isPlayer ? t : { uid: t.uid }); else cancelPending();
@@ -125,6 +152,7 @@ function aiStep() {
   }
   if (S.phase === PHASE.BATTLE) {
     const [best] = aiAttackActions();
+    if (best?.blade) { useBlade(best.blade); chooseTarget({ uid: best.target }); return true; }
     if (best) { attack(best.attacker, best.target); return true; }
     advancePhase(); return true;
   }

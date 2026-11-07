@@ -84,6 +84,26 @@ function takeFromDeck(p, pred) {
   return i >= 0 ? p.deck.splice(i, 1)[0] : null;
 }
 
+// A choice for a player. If another one is already waiting, this one waits its turn.
+function ask(pd) {
+  if (S.pending) S.queue.push(pd);
+  else S.pending = pd;
+}
+// After a choice is made: show the next waiting one, or finish a turn that was paused for it.
+function settle() {
+  if (!S.pending && S.queue.length) S.pending = S.queue.shift();
+  if (!S.pending && S.passAfterChoice && !S.over) { S.passAfterChoice = false; finishTurn(); }
+}
+
+// The Simplistic: while it is on the field (either side), every Simple card gains +5 to each
+// stat (characters, and equipment on a character), Simple spells deal or give 5 more, and
+// curse spells can't target Simple cards. Buff spells still can.
+const simplisticOut = () => S.players.some(p => p.field.chars.some(x => named(x, "The Simplistic")));
+const SIMPLISTIC_BONUS = 5;
+const spellBoost = ctx => (ctx.spell && ctx.card.group === "Simple" && simplisticOut() ? SIMPLISTIC_BONUS : 0);
+const isBuff = fx => fx.intent === "help";
+const shieldedFromCurses = c => c.group === "Simple" && simplisticOut();
+
 // ---------------------------------------------------------------------------
 // Stats
 // ---------------------------------------------------------------------------
@@ -120,11 +140,14 @@ function rawStats(c) {
   if (c.name === "Turtle") buff += p.field.chars.filter(x => x.name === "Turtle" && x !== c).length;
   let extraA = 0;
   if (named(c, "Baboon")) extraA += countChars(x => x !== c);   // +1 attack per other character on the field
+  if (c.group === "Simple" && simplisticOut()) buff += SIMPLISTIC_BONUS;
+  // Simple equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
+  const simpleGear = simplisticOut() ? SIMPLISTIC_BONUS * (c.equipped || []).filter(x => x.group === "Simple").length : 0;
   const rally = c.rallyBonus || 0;
   return {
-    a: c.attack + e.a + ar.a + buff + rally + extraA,
-    h: c.currentHealth + ar.h + buff,
-    s: c.speed + e.s + ar.s + buff + rally,
+    a: c.attack + e.a + ar.a + buff + rally + extraA + simpleGear,
+    h: c.currentHealth + ar.h + buff + simpleGear,
+    s: c.speed + e.s + ar.s + buff + rally + simpleGear,
     parry: hasSkill(c, "Parry") || ar.parry,
   };
 }
@@ -204,6 +227,8 @@ function levelDown(c) {
 // ---------------------------------------------------------------------------
 function dealDamageToPlayer(p, amount) {
   if (amount <= 0 || S.over) return;
+  const ip = p.field.chars.find(x => named(x, "IP Man") && x.redirectRound !== S.round);
+  if (ip) { redirectDamage(ip, amount); return; }
   p.health = Math.max(0, p.health - amount);
   emit("playerDamage", { player: p.idx, amount });
   checkHealthWin();
@@ -216,12 +241,22 @@ function healPlayer(p, amount) {
 }
 
 function sendToGraveyard(p, c) {
+  const shepard = c.group === "Zombie" && p.field.chars.find(x => x !== c && named(x, "Soul Shepard"));
+  const gain = shepard && p.field.chars.includes(c) ? statsAsRead(c) : null;
   const i = p.field.chars.indexOf(c);
   if (i >= 0) p.field.chars.splice(i, 1);
   p.grave.push(c);
   updateRally(p);
   emit("death", { uid: c.uid });
   log(`${c.name} was destroyed.`);
+  if (gain) {
+    ask({
+      kind: "choose", source: shepard, owner: p.idx, title: "Soul Shepard",
+      prompt: `${c.name} fell. Absorb its stats into Soul Shepard, or return it to your hand?`,
+      cards: [c], options: [{ id: "absorb", label: `Absorb +${gain.a} / +${gain.h} / +${gain.s}` }, { id: "hand", label: "Return it to my hand" }],
+      required: true, resolve: "shepard", deadUid: c.uid, shepardUid: shepard.uid, gain,
+    });
+  }
   sweepDeaths();   // losing a Rally partner or a synergy source can drop others to 0 health
 }
 
@@ -243,6 +278,7 @@ function checkDeath(c) {
 
 function dealDamageToCharacter(c, amount) {
   if (!c || amount <= 0) return;
+  if (named(c, "IP Man") && c.redirectRound !== S.round && ownerOf(c).field.chars.includes(c)) { redirectDamage(c, amount); return; }
   c.currentHealth -= amount;
   emit("charDamage", { uid: c.uid, amount });
   if (rawStats(c).h <= 0) checkDeath(c);
@@ -252,9 +288,24 @@ function dealDamageToCharacter(c, amount) {
   }
 }
 
+// IP Man: once per turn, the first damage that would hit IP Man or his player goes to an
+// enemy character or the enemy player instead. His player picks which.
+function redirectDamage(ip, amount) {
+  ip.redirectRound = S.round;
+  emit("text", { uid: ip.uid, text: "REDIRECT", color: "#ffd27a" });
+  log(`${ip.name} redirects ${amount} damage.`);
+  ask({ kind: "target", source: ip, owner: ip.owner, spell: false, targetType: "charOrPlayer", intent: "harm", required: true, amount });
+}
+
 // After areas or synergy sources change, characters whose health dropped to 0 die.
 function sweepDeaths() {
   for (const c of allChars().slice()) checkDeath(c);
+}
+
+// A character's stats as its card reads on the table, buffs included and damage ignored.
+function statsAsRead(c) {
+  const r = rawStats(c);
+  return { a: Math.max(0, r.a), h: Math.max(0, r.h - c.currentHealth + (c.baseHealth ?? c.health)), s: Math.max(0, r.s) };
 }
 
 function destroyCharacter(c) {   // Death's Grasp: ignores Reanimate
@@ -344,7 +395,7 @@ const loseHealth = n => (ctx, t) => dealDamageToCharacter(t, n);
 const EFFECTS = {
   // Simple
   "Simple Barkeep": { target: "char", intent: "help", apply: (ctx, t) => { t.currentHealth += 1; } },
-  "Slap": { target: "char", intent: "harm", apply: loseHealth(1) },
+  "Slap": { target: "char", intent: "harm", apply: (ctx, t) => dealDamageToCharacter(t, 1 + spellBoost(ctx)) },
   "Simple Wizard": { target: "charOrPlayer", intent: "harm", apply: (ctx, t) => t.isPlayer ? dealDamageToPlayer(S.players[t.idx], 2) : dealDamageToCharacter(t, 2) },
   "Simplify": { target: "char", intent: "harm", apply: (ctx, t) => { t.attack = 1; t.currentHealth = 1; t.speed = 1; } },
   "Simple Messenger": {
@@ -352,12 +403,12 @@ const EFFECTS = {
       const foe = foeOf(ctx.owner);
       const top = foe.deck[foe.deck.length - 1];
       if (!top) return;
-      S.pending = {
+      ask({
         kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: `Top of ${foe.name}'s deck`,
         prompt: "Put this card on top of your deck, or discard it.",
         cards: [top], options: [{ id: "take", label: "Put on my deck" }, { id: "discard", label: "Discard it" }],
         resolve: "messenger",
-      };
+      });
     },
   },
   "Herd": {
@@ -369,9 +420,10 @@ const EFFECTS = {
     now: ctx => {
       const foe = foeOf(ctx.owner);
       const hit = foe.field.chars.slice();
-      for (const c of hit) { c.attack -= 2; c.speed -= 2; c.currentHealth -= 2; }
-      healPlayer(ctx.owner, 2 * hit.length);
-      for (const c of hit) { emit("charDamage", { uid: c.uid, amount: 2 }); checkDeath(c); }
+      const n = 2 + spellBoost(ctx);
+      for (const c of hit) { c.attack -= n; c.speed -= n; c.currentHealth -= n; }
+      healPlayer(ctx.owner, n * hit.length);
+      for (const c of hit) { emit("charDamage", { uid: c.uid, amount: n }); checkDeath(c); }
     },
   },
   "Orangutan": { now: ctx => { ctx.card.currentHealth += ctx.owner.field.chars.filter(x => x.group === "Monkey" && x !== ctx.card).length; } },
@@ -421,7 +473,7 @@ const EFFECTS = {
     now: ctx => {
       const cards = ctx.owner.grave.filter(c => c.group === "Monkey" && !c.token);
       if (!cards.length) return;
-      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call of the Jungle", prompt: "Pick up to 3 Monkey cards to return to your hand.", cards, pick: 3, resolve: "toHand" };
+      ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call of the Jungle", prompt: "Pick up to 3 Monkey cards to return to your hand.", cards, pick: 3, resolve: "toHand" });
     },
   },
 
@@ -448,7 +500,7 @@ const EFFECTS = {
   "Rotten Finger": {
     now: ctx => {
       if (!ctx.owner.hand.length) return;
-      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rotten Finger", prompt: "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" };
+      ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rotten Finger", prompt: "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" });
     },
   },
   "Rise from the Dead": {
@@ -456,7 +508,7 @@ const EFFECTS = {
       const cards = ctx.owner.grave.filter(c => c.race === "Undead" && c.type === "Character");
       if (!cards.length || ctx.owner.field.chars.length >= RULES.maxChars) return;
       const options = [{ id: "field", label: "Bring it back to the field" }];
-      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rise from the Dead", prompt: "Pick an Undead character from your graveyard to bring back to the field.", cards, pick: 1, options, resolve: "rise" };
+      ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rise from the Dead", prompt: "Pick an Undead character from your graveyard to bring back to the field.", cards, pick: 1, options, resolve: "rise" });
     },
   },
   "They Just Keep Coming": {
@@ -469,6 +521,11 @@ const EFFECTS = {
   },
 
   // Fighter
+  "Kenshi's Blade": { target: "char", intent: "harm", filter: (c, ctx) => c.owner !== ctx.owner.idx, apply: loseHealth(3) },
+  "IP Man": {
+    target: "charOrPlayer", intent: "harm", filter: (c, ctx) => c.owner !== ctx.owner.idx, players: (idx, ctx) => idx !== ctx.owner.idx,
+    apply: (ctx, t) => (t.isPlayer ? dealDamageToPlayer(S.players[t.idx], ctx.amount) : dealDamageToCharacter(t, ctx.amount)),
+  },
   "Sweep the Leg": { target: "char", intent: "harm", apply: (ctx, t) => { t.speed = Math.max(0, t.speed - 1); } },
   "Bite the Ear": { target: "char", intent: "harm", apply: loseHealth(1) },
   "Crane Kick": { target: "char", intent: "harm", apply: loseHealth(7) },
@@ -508,13 +565,13 @@ const EFFECTS = {
   "Area Denial": { target: "area", intent: "harm", apply: (ctx, t) => { const f = findArea(t.uid); if (f) { f.p.field.areas.splice(f.i, 1); f.p.grave.push(t); log(`${t.name} was destroyed.`); sweepDeaths(); } } },
   "Disable": {
     target: "char", intent: "harm",
-    apply: (ctx, t) => { t.skills = []; t.disabled = true; t.ability = ""; updateRally(ownerOf(t)); emit("text", { uid: t.uid, text: "DISABLED", color: "#c9c9c9" }); },
+    apply: (ctx, t) => { t.skills = []; t.disabled = true; t.ability = ""; updateRally(ownerOf(t)); emit("text", { uid: t.uid, text: "DISABLED", color: "#c9c9c9" }); sweepDeaths(); },
   },
   "Call Back": {
     now: ctx => {
       const cards = S.players.flatMap(p => p.grave).filter(c => c.type === "Character" && !c.token);
       if (!cards.length) return;
-      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call Back", prompt: "Pick a character from either graveyard to add to your hand.", cards, pick: 1, resolve: "toHand" };
+      ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call Back", prompt: "Pick a character from either graveyard to add to your hand.", cards, pick: 1, resolve: "toHand" });
     },
   },
 };
@@ -550,15 +607,17 @@ function triggerSignal(c, owner) {
   if (!fx) return;
   const ctx = { card: c, owner, spell: false };
   if (fx.target) {
-    if (validTargets(fx, ctx).length) S.pending = { kind: "target", source: c, owner: owner.idx, spell: false, targetType: fx.target, intent: fx.intent };
+    if (validTargets(fx, ctx).length) ask({ kind: "target", source: c, owner: owner.idx, spell: false, targetType: fx.target, intent: fx.intent });
   } else if (fx.now) fx.now(ctx);
 }
 
 // Valid targets for a targeted effect. Spells cannot target Cloak characters.
+// Curse spells (anything but a buff) can't target Simple cards while The Simplistic is out.
 function validTargets(fx, ctx) {
-  if (fx.target === "area") return S.players.flatMap(p => p.field.areas);
-  const chars = allChars().filter(c => !(ctx.spell && hasSkill(c, "Cloak")) && !(c === ctx.card && fx.intent !== "help") && (!fx.filter || fx.filter(c, ctx)));
-  if (fx.target === "charOrPlayer") return [...chars, ...S.players.map(p => ({ isPlayer: true, idx: p.idx }))];
+  const cursed = c => ctx.spell && !isBuff(fx) && shieldedFromCurses(c);
+  if (fx.target === "area") return S.players.flatMap(p => p.field.areas).filter(a => !cursed(a));
+  const chars = allChars().filter(c => !(ctx.spell && hasSkill(c, "Cloak")) && !cursed(c) && !(c === ctx.card && fx.intent !== "help") && (!fx.filter || fx.filter(c, ctx)));
+  if (fx.target === "charOrPlayer") return [...chars, ...S.players.filter(p => !fx.players || fx.players(p.idx, ctx)).map(p => ({ isPlayer: true, idx: p.idx }))];
   return chars;
 }
 
@@ -641,7 +700,7 @@ function activateArea(uid) {
 }
 
 function newGame({ deckId, opponentDeckId, mode }) {
-  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, mode, nextUid: 1, log: [] };
+  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], mode, nextUid: 1, log: [] };
   let opp = opponentDeckId;
   if (!opp) {
     const others = DATA.deckOrder.filter(id => id !== deckId);
@@ -812,7 +871,8 @@ function chooseTarget(target) {
   if (!t) return false;
   S.pending = null;
   log(`${pd.source.name} targets ${t.isPlayer ? S.players[t.idx].name : t.name}.`);
-  fx.apply({ card: pd.source, owner, spell: pd.spell }, t);
+  fx.apply({ card: pd.source, owner, spell: pd.spell, amount: pd.amount }, t);
+  settle();
   return true;
 }
 
@@ -820,7 +880,9 @@ function cancelPending() {
   if (!allowed("cancelPending")) return false;
   if (!S.pending || S.pending.required) return false;
   if (S.pending.source?.type === "Area") S.pending.source.usedRound = null;   // cancelling Data Transfer keeps its use
+  if (S.pending.source?.name === "Kenshi's Blade") S.pending.source.bladeRound = null;
   S.pending = null;
+  settle();
   return true;
 }
 
@@ -855,7 +917,32 @@ function resolveChoice(picks, option) {
       log(`${c.name} rises onto the field.`);
       putOnField(fresh(c), owner);
     }
+  } else if (pd.resolve === "shepard") {
+    const dead = owner.grave.find(x => x.uid === pd.deadUid);
+    const shep = findChar(pd.shepardUid)?.c;
+    if (option === "hand" && dead) {
+      removeFromGrave(dead); owner.hand.push(fresh(dead)); emit("handAdd", { player: owner.idx });
+      log(`Soul Shepard returns ${dead.name} to ${owner.name}'s hand.`);
+    } else if (option === "absorb" && shep) {
+      const g = pd.gain;
+      shep.attack += g.a; shep.currentHealth += g.h; shep.speed += g.s;
+      shep.baseAttack += g.a; shep.baseHealth += g.h; shep.baseSpeed += g.s;
+      emit("text", { uid: shep.uid, text: `+${g.a}/+${g.h}/+${g.s}`, color: "#8dff8d" });
+      log(`Soul Shepard absorbs ${dead?.name || "the fallen Zombie"}.`);
+    }
+  } else if (pd.resolve === "apeSacrifice") {
+    const ape = findChar(pd.apeUid)?.c;
+    const monkey = picked[0] && findChar(picked[0].uid)?.c;
+    if (ape && monkey && monkey !== ape) {
+      log(`${owner.name} sacrifices ${monkey.name} to ${ape.name}.`);
+      destroyCharacter(monkey);
+      ape.attack++; ape.speed++; ape.health++;
+      ape.baseAttack++; ape.baseHealth++; ape.baseSpeed++;
+      ape.currentHealth = ape.baseHealth + equipBonuses(ape).h;   // fully healed
+      emit("text", { uid: ape.uid, text: "+1 ALL", color: "#ffd25e" });
+    }
   }
+  settle();
   return true;
 }
 
@@ -925,6 +1012,40 @@ function recordCombatSurvival(c) {
   }
 }
 
+// Kenshi's Blade: once per Battle Phase on your turn, the character holding it deals 3
+// damage to an enemy character of your choice.
+const bladeOf = c => (c.equipped || []).find(e => named(e, "Kenshi's Blade") && e.bladeRound !== S.round);
+function canUseBlade(c) {
+  const blade = bladeOf(c);
+  return !!blade && S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active
+    && validTargets(EFFECTS["Kenshi's Blade"], { card: blade, owner: ownerOf(c), spell: false }).length > 0;
+}
+function useBlade(uid) {
+  if (!allowed("useBlade", uid)) return false;
+  const f = findChar(uid);
+  if (!f || !canUseBlade(f.c)) return false;
+  const blade = bladeOf(f.c);
+  blade.bladeRound = S.round;
+  log(`${f.c.name} strikes with ${blade.name}.`);
+  S.pending = { kind: "target", source: blade, owner: f.p.idx, spell: false, targetType: "char", intent: "harm" };
+  return true;
+}
+
+// The Man Ape: after each of your Battle phases you may sacrifice another Monkey you control
+// to give it +1 to all stats for good and heal it fully.
+function afterBattle(p) {
+  for (const ape of p.field.chars.filter(c => named(c, "The Man Ape") && c.apeRound !== S.round)) {
+    ape.apeRound = S.round;
+    const monkeys = p.field.chars.filter(c => c !== ape && c.group === "Monkey");
+    if (!monkeys.length) continue;
+    ask({
+      kind: "choose", source: ape, owner: p.idx, title: "The Man Ape",
+      prompt: "Sacrifice a Monkey to give The Man Ape +1 to all stats and heal it fully?",
+      cards: monkeys, pick: 1, options: [{ id: "sacrifice", label: "Sacrifice it" }], resolve: "apeSacrifice", apeUid: ape.uid,
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Phases
 // ---------------------------------------------------------------------------
@@ -943,8 +1064,10 @@ function doDraw() {
 function advancePhase() {
   if (!allowed("advancePhase")) return false;
   if (S.over || S.pending || S.phase === PHASE.DRAW) return false;
+  const leavingBattle = S.phase === PHASE.BATTLE;
   if (S.phase < PHASE.END) S.phase++;
   emit("phase", {});
+  if (leavingBattle) afterBattle(active());
   return true;
 }
 
@@ -977,13 +1100,23 @@ function endPhaseEffects(p) {
 function endTurn() {
   if (!allowed("endTurn")) return false;
   if (S.over) return false;
-  if (S.pending && S.pending.kind === "target") S.pending = null;
+  if (S.pending && S.pending.kind === "target" && !S.pending.required) S.pending = null;
   if (S.pending) return false;
+  // Passing straight from Battle still ends the Battle phase first, which can ask The Man Ape's question.
+  if (S.phase === PHASE.BATTLE) {
+    S.phase = PHASE.END;
+    afterBattle(active());
+    if (S.pending) { S.passAfterChoice = true; return true; }
+  }
+  finishTurn();
+  return true;
+}
+
+function finishTurn() {
   endPhaseEffects(active());
   S.active = 1 - S.active;
   S.phase = PHASE.DRAW;
   S.round++;
   startTurn(active());
   emit("turn", { player: S.active });
-  return true;
 }

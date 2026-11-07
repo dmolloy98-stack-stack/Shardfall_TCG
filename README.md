@@ -77,7 +77,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 
 ## The starter decks
 
-Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and one champion (an Unknown card) with at most 2 copies. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games (after the Tower rule and the balance changes listed under Changes from the Lua version), with 25 starting health, Simple, Monkey, Fighter and Digital win 45–50% of their games and Zombie about 59%. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
+Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and one champion (an Unknown card) with at most 2 copies. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games with 25 starting health and the finished champions, Simple, Monkey and Fighter win 46–56% of their games, Zombie about 60% and Digital about 40%. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
 
 | Deck | Style | Cards costing 0–2 / 3–4 / 5+ | Characters |
 |---|---|---|---|
@@ -98,7 +98,7 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 - **Herd** puts three Farmers on the table at once, often enough to call the Simpler Farmer by itself.
 - **Simple Wizard** and **Slap** pick off small enemies. **Simplify** turns any big threat into a 1/1/1.
 - **Simple Defender** (Challenge and Tower) forces enemies to attack it and grows +2 health every turn.
-- Finishers: **Simplicity** shrinks the whole enemy side by 2 in every stat and heals you, and **The Simplistic** is a 10-mana 5/5/3.
+- Finishers: **Simplicity** shrinks the whole enemy side by 2 in every stat and heals you. **The Simplistic** (10 mana, 5/5/3) gives every Simple card on the table +5 to each stat, makes Simple spells deal or give 5 more, and stops curse spells from targeting Simple cards.
 
 **Strengths and weaknesses:** steady and forgiving, with an answer for most situations, but each card is modest on its own. Area damage like Flame Surge can wipe out a board of 1-health characters.
 
@@ -111,7 +111,7 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 - **Monkey Apprentice** fetches a **Banana** (+1 health to a character), and each Banana fetches a **Peel** (1 damage, or 2 with three monkeys out).
 - **Primate** puts two cheap monkeys from your deck straight onto the table. **Orangutan** gains health for every other monkey you control.
 - **Jungle** (+1 Speed) and **Tree Branch** (costs 1 with three monkeys out) reward a full table.
-- Finishers: **Arboreal Intelligence** gives every monkey +5 to all stats, **Gorilla** grows every time it survives damage, and **The Man Ape** defends with +10 to all stats. **Call of the Jungle** returns up to three Monkey cards from your graveyard to your hand.
+- Finishers: **Arboreal Intelligence** gives every monkey +5 to all stats, **Gorilla** grows every time it survives damage, and **The Man Ape** defends with +10 to all stats and, after each of your Battle phases, can sacrifice another Monkey to grow +1 to all stats and heal fully. **Call of the Jungle** returns up to three Monkey cards from your graveyard to your hand.
 
 **Strengths and weaknesses:** overwhelming when the swarm lands. Most monkeys are small, though, so losing a few characters can switch Rally off for the whole team, and area damage hurts.
 
@@ -125,6 +125,7 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 - **Sneaky Skinbag** makes a new Reanimated Corpse every turn. **Shadow-Stitched Soldier** comes back with +3 to all stats.
 - **Midnight Madness** gives every Undead character +2 to all stats.
 - Spells: **Flame Surge** clears small swarms (your walls survive it), **Infection** steals an enemy character, **Death's Grasp** destroys anything, and **Rise from the Dead** returns a fallen Zombie.
+- **Soul Shepard** feeds on the fallen: each time another of your Zombies goes to the graveyard, it absorbs that Zombie's stats or returns it to your hand.
 - Finishers: **Plaguemancer** steals an enemy and gives it Reanimate. **Zombombadier** deals damage to every character and player when it arrives, and Evolves (+3 to all stats) when it reanimates.
 
 **Strengths and weaknesses:** very hard to grind down late in the game, but slow to start. A fast deck can do a lot of damage before the big cards come online.
@@ -140,6 +141,7 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 - **Seasoned Monk** and **Black Belt Student** have **Parry** and hit back twice as hard when defending. **Dojo** gives every Fighter Parry and +1 to all stats.
 - **Fight Choreographer** gives every other Fighter +2 to all stats. **Master Rat** brings four Turtles that power each other up.
 - Removal: **Bite the Ear** and **Crane Kick** (7 damage).
+- **IP Man** turns the first hit each turn (on you or on him) back onto an enemy character or player. **Kenshi's Blade** lets the character holding it strike an enemy for 3 once per Battle Phase.
 
 **Strengths and weaknesses:** strong in fights and punishing to attack into because of Parry. Removing a well-equipped character costs it a lot of investment, though.
 
@@ -180,5 +182,6 @@ The design sheet left some Digital slots blank; these were filled in to fit the 
   - All of this respects the device's "reduce motion" setting.
 - **Newly working cards** (they had text but no effect in Lua): Area Denial, Call Back, Disable, Simplicity, Simple Messenger, Ripen, Arboreal Intelligence, Call of the Jungle, Rise from the Dead, They Just Keep Coming, Rotten Finger (now lets you pick the discard), Baboon, The Man Ape (defending bonus) and Tree Branch (cost reduction).
 - **Fix:** characters now die when their *displayed* health reaches 0, so area bonuses count toward survival.
-- **Not playable yet:** the counter spells (Nullify, Nope for One, Nope for All, Return to Sender, Try Again) need a reaction window the game doesn't have. Kenshi's Blade, IP Man, Soul Shepard and The Simplistic play as normal cards without their special ability, the same as in Lua.
+- **Champions finished:** The Simplistic, The Man Ape's sacrifice, Soul Shepard, IP Man and Kenshi's Blade now do what their cards say (they had no effect in Lua). Spells are either **buff spells** (they help) or **curse spells** (they hurt or steal); a spell's details say which.
+- **Not playable yet:** the counter spells (Nullify, Nope for One, Nope for All, Return to Sender, Try Again) need a reaction window the game doesn't have.
 - The Undo and mana/draw testing tools are in the in-game menu under "Testing tools".
