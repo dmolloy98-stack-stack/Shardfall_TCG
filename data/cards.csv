@@ -75,9 +75,9 @@ seasoned_monk,2,Seasoned Monk,Basic,Character,N/A,Fighter,2+1+2,Parry,---,,seaso
 white_belt_student,1,White Belt Student,Basic,Character,N/A,Fighter,0+1+0,Level Up+Transform,Level Up whenever an equipment enters the Field. After Level Up is triggered 3 times Transform into Black Belt Student. Keep stats from Level Up,,white_belt_student
 weapons_enthusiast,1,Weapons Enthusiast,Basic,Character,N/A,Fighter,1+1+1,---,Equip costs become 1 when equipping to Weapons Enthusiast,,weapons_enthusiast
 sensei,5,Sensei,Basic,Character,N/A,Fighter,2+2+2,---,While Sensei is on the field all equip costs become 0,,sensei
-sparring_gear,4,Sparring Gear,Basic,Equipment,N/A,Fighter,0+3+0,---,---,,sparring_gear
-zippy_shoes,4,Zippy Shoes,Basic,Equipment,N/A,Fighter,0+0+3,---,---,,zippy_shoes
-mc_knuckle_dusters,4,McKnuckle Dusters,Basic,Equipment,N/A,Fighter,3+0+0,---,---,,mc_knuckle_dusters
+sparring_gear,3,Sparring Gear,Basic,Equipment,N/A,Fighter,0+3+0,---,---,,sparring_gear
+zippy_shoes,3,Zippy Shoes,Basic,Equipment,N/A,Fighter,0+0+3,---,---,,zippy_shoes
+mc_knuckle_dusters,3,McKnuckle Dusters,Basic,Equipment,N/A,Fighter,3+0+0,---,---,,mc_knuckle_dusters
 bite_the_ear,1,Bite the Ear,Basic,Spell,N/A,Fighter,---,---,Target character loses 1 health,,bite_the_ear
 sweep_the_leg,2,Sweep the Leg,Basic,Spell,N/A,Fighter,---,---,Target character loses 1 speed,,sweep_the_leg
 black_belt_student,3,Black Belt Student,Rare,Character,N/A,Fighter,2+2+2,Parry+Transform,Transform into 5th Degree Master after surviving 3 combat phases,,black_belt_student
