@@ -283,7 +283,6 @@ button { font: inherit; color: inherit; }
 }
 .card .stats .a { color: var(--atk); }
 .card .stats .h { color: var(--hp); }
-.card .stats .s { color: var(--spd); }
 .card .stats .low { color: var(--danger); }
 .card .stats .up { text-decoration: underline; text-underline-offset: 0.15em; }
 .card .equip-count {
@@ -550,7 +549,7 @@ button, .btn { touch-action: manipulation; }
 .detail-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .reason { color: #f1a78f; font-weight: 700; }
 .statline { display: flex; gap: 16px; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
-.statline .a { color: #ff8a6b; } .statline .h { color: #7be08f; } .statline .s { color: #f2c55c; }
+.statline .a { color: #ff8a6b; } .statline .h { color: #7be08f; }
 .modal-cards { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
 .modal-cards .card { font-size: 11px; cursor: pointer; }
 .modal-cards .picked .card { box-shadow: 0 0 0 4px var(--target), 0 0 18px var(--target); }

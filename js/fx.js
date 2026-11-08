@@ -18,7 +18,9 @@ function fightPreview(aUid, tUid) {
   const a = findChar(aUid)?.c;
   if (!a) return null;
   const t = tUid != null ? findChar(tUid)?.c : null;
-  const first = !t || stats(a).s >= stats(t).s + (named(t, "The Man Ape") ? 10 : 0);
+  // Swift strikes first; otherwise both characters hit at the same time.
+  const first = !t || (isSwift(a) && !isSwift(t));
+  const theirs = !!t && isSwift(t) && !isSwift(a);
   return simulate(() => {
     const foe = S.players[1 - S.active];
     const hp0 = foe.health;
@@ -32,7 +34,7 @@ function fightPreview(aUid, tUid) {
     const alive = uid => !!findChar(uid);
     const tAlive = t && alive(tUid);
     return {
-      first, aDies: !alive(aUid), tDies: !!t && !tAlive,
+      first, theirs, aDies: !alive(aUid), tDies: !!t && !tAlive,
       dmg: t ? th0 - (tAlive ? Math.max(0, rawStats(findChar(tUid).c).h) : 0) : hp0 - foe.health,
     };
   });
@@ -41,7 +43,8 @@ function previewBadge(pv, face) {
   if (!pv) return "";
   if (face) return `<div class="fight-badge face">−${pv.dmg}${pv.aDies ? " · yours falls" : ""}</div>`;
   const [cls, text] = pv.tDies && !pv.aDies ? ["win", "Defeats it"] : pv.tDies ? ["trade", "Both fall"] : pv.aDies ? ["lose", "Yours falls"] : ["even", `−${pv.dmg} ♥`];
-  return `<div class="fight-badge ${cls}" title="${pv.first ? "Your character strikes first" : "This enemy strikes first"}">${pv.first ? "⚡" : ""}${text}</div>`;
+  const title = pv.first ? "Swift: your character strikes first" : pv.theirs ? "Swift: this enemy strikes first" : "Both strike at the same time";
+  return `<div class="fight-badge ${cls}" title="${title}">${pv.first ? "» " : ""}${text}</div>`;
 }
 
 // ---------------------------------------------------------------------------

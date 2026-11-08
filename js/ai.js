@@ -5,7 +5,7 @@
 function charValue(c) {
   if (!c) return 0;
   const st = stats(c);
-  return st.a * 1.4 + st.h + st.s * 0.6 + (c.manaCost || 0) * 0.8 + (c.skills || []).length;
+  return st.a * 1.4 + st.h + (isSwift(c) ? 1.5 : 0) + (c.manaCost || 0) * 0.8 + (c.skills || []).length;
 }
 
 function boardValue(p) {

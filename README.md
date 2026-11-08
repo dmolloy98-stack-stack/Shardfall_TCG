@@ -15,7 +15,7 @@ The game loads its cards from the `data/` folder, so it needs to be opened from 
 
 New players have three kinds of help:
 
-- **Tutorial** (main menu, or `index.html#tutorial`): a five-minute scripted game against a gentle Trainer using Simple cards. A coach box explains one idea at a time, dims the rest of the screen and points at what to tap or drag: reading a card, mana, the four turn steps, playing characters, abilities, equipment, combat and Speed, spells, skills (Signal, Rush, Challenge, Tower) and combining cards.
+- **Tutorial** (main menu, or `index.html#tutorial`): a five-minute scripted game against a gentle Trainer using Simple cards. A coach box explains one idea at a time, dims the rest of the screen and points at what to tap or drag: reading a card, mana, the four turn steps, playing characters, abilities, equipment, combat, spells, skills (Signal, Rush, Challenge, Tower, Swift) and combining cards.
 - **How to play guide** ([`guide.html`](guide.html)): an illustrated page with annotated screenshots of the table, a labelled card, turns, playing cards, battle and how cards work together, plus a skills glossary and beginner words. It's the same page the in-game "How to play" button opens, and it can be shared on its own: `https://dmolloy98-stack-stack.github.io/Shardfall_TCG/guide.html`.
 - **Beginner hints**: during a game, a small panel says what you can do right now. Hide it with ✕, turn it off with "Turn off hints", or switch it back on in Settings (main menu or ☰ Menu). The choice is remembered on that device.
 
@@ -32,7 +32,7 @@ The short version:
 - Each player starts with 25 health and 6 cards from a 35-card deck. Reduce the other player to 0 health to win. Drawing from an empty deck loses.
 - **Draw → Setup → Battle → End.** Your maximum mana grows by 1 each turn, with no cap. The player who goes first skips their first draw; the player who goes second gets a one-time **+1** mana token beside their mana, usable on any of their turns.
 - **Setup:** drag cards from your hand onto the table, or tap a card and press Play.
-- **Battle:** tap one of your characters, then an enemy character, or "Attack directly". The faster character strikes first.
+- **Battle:** tap one of your characters, then an enemy character, or "Attack directly". Both characters hit at the same time, unless one has **Swift** (»): it strikes first.
 - Tap or right-click any card to read it. Escape or right-click cancels a choice.
 
 The guide has the full rules.
@@ -80,7 +80,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 
 ## The starter decks
 
-Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and one champion (an Unknown card) with at most 2 copies. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games with 25 starting health and the finished champions, Simple, Monkey, Fighter and Digital win 43–53% of their games and Zombie about 60%. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
+Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and one champion (an Unknown card) with at most 2 copies. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games with 25 starting health and the finished champions, all five starters win 46–53% of their games. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
 
 | Deck | Style | Cards costing 0–2 / 3–4 / 5+ | Characters |
 |---|---|---|---|
@@ -99,21 +99,21 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 **Key cards**
 - **Simple Farmer** (4 copies): when played, it pulls another Simple Farmer from your deck into your hand. With three Farmers on the table, **Simpler Farmer** jumps onto the field from your deck, and it gets stronger for each Farmer beside it.
 - **Herd** puts three Farmers on the table at once, often enough to call the Simpler Farmer by itself.
-- **Simple Wizard** and **Slap** pick off small enemies. **Simplify** turns any big threat into a 1/1/1.
+- **Simple Wizard** and **Slap** pick off small enemies. **Simplify** turns any big threat into a 1/1.
 - **Simple Defender** (Challenge and Tower) forces enemies to attack it and grows +2 health every turn.
-- Finishers: **Simplicity** shrinks the whole enemy side by 2 in every stat and heals you. **The Simplistic** (8 mana, 5/5/3) gives every Simple card on the table +3 to each stat, makes Simple spells deal or give 3 more, and stops curse spells from targeting Simple cards.
+- Finishers: **Simplicity** shrinks the whole enemy side by 2 in every stat and heals you. **The Simplistic** (8 mana, 5/5) gives every Simple card on the table +3 to each stat, makes Simple spells deal or give 3 more, and stops curse spells from targeting Simple cards.
 
 **Strengths and weaknesses:** steady and forgiving, with an answer for most situations, but each card is modest on its own. Area damage like Flame Surge can wipe out a board of 1-health characters.
 
 ### Monkey: reliant on synergy
 
-**How it plays:** flood the table with cheap monkeys. Once you control three or more Rally characters of the same faction, each one gets **+1 Attack and +1 Speed**, so the swarm hits hard and strikes first. The deck has 20 Rally characters so Rally switches on in most games.
+**How it plays:** flood the table with cheap monkeys. Once you control three or more Rally characters of the same faction, each one gets **+1 Attack**, so the swarm hits hard. The deck has 20 Rally characters so Rally switches on in most games.
 
 **Key cards**
 - **Baby Monkey, Fat Monkey, Smart Monkey and Chimp** (3 copies each, 0–1 mana): the Rally swarm.
 - **Monkey Apprentice** fetches a **Banana** (+1 health to a character), and each Banana fetches a **Peel** (1 damage, or 2 with three monkeys out).
 - **Primate** puts two cheap monkeys from your deck straight onto the table. **Orangutan** gains health for every other monkey you control.
-- **Jungle** (+1 Speed) and **Tree Branch** (costs 1 with three monkeys out) reward a full table.
+- **Jungle** (+1 Attack) and **Tree Branch** (costs 1 with three monkeys out) reward a full table.
 - Finishers: **Arboreal Intelligence** gives every monkey +5 to all stats, **Gorilla** grows every time it survives damage, and **The Man Ape** defends with +10 to all stats and, after each of your Battle phases, can sacrifice another Monkey to grow +1 to all stats and heal fully. **Call of the Jungle** returns up to three Monkey cards from your graveyard to your hand.
 
 **Strengths and weaknesses:** overwhelming when the swarm lands. Most monkeys are small, though, so losing a few characters can switch Rally off for the whole team, and area damage hurts.
@@ -123,7 +123,7 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 **How it plays:** survive the early turns behind walls and corpses that come back from the dead, then take over with expensive payoff cards. Zombie is the slowest starter. It wins long games.
 
 **Key cards**
-- **Breathing Wall** (0/5/0 with Challenge and Tower): enemies must attack it first, which shields the rest of your table.
+- **Breathing Wall** (0/5 with Challenge and Tower): enemies must attack it first, which shields the rest of your table.
 - **Hungry Corpse** and **Reanimated Corpse** have **Reanimate**: they come back once after dying. Hungry Corpse returns stronger.
 - **Sneaky Skinbag** makes a new Reanimated Corpse every turn. **Shadow-Stitched Soldier** comes back with +3 to all stats.
 - **Midnight Madness** gives every Undead character +2 to all stats.
@@ -153,15 +153,15 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 **How it plays:** fragile, hard-hitting characters that grow with **Level Up** (+1 to all stats, up to 3 times, and each Level Up heals the character fully). Get cheap characters out, level them quickly, and win before their low health catches up with them.
 
 **Key cards**
-- **Glitch** (Level Up and Rush) and **Speedrunner** (Rush) attack the turn they arrive.
+- **Glitch** (Level Up, Rush and Swift) and **Speedrunner** (Rush and Swift) attack the turn they arrive and strike first.
 - Level Up triggers: **Spam Bot**, **Digital Girlfriend**, **Upgrade**, **Gymfluencer** (twice), **API Key** and **Server Farm** (every End Phase), **Beta Tester** (levels itself every End Phase), **Pro Gamer** (each time it attacks) and the **Data Transfer** area.
-- **Pesky Programmer** gains +2 Attack and +2 Speed per level. **Overclocker** is a 7/1/0 that can level up too.
+- **Pesky Programmer** gains +2 Attack per level. **Overclocker** is a 7/1 that can level up too.
 - **Data Collector** gains +1 Health each time another of your characters levels up, growing into a Challenge wall.
-- Finishers: **Boss Level** (7 mana, 6/4/2) has no limit on Level Up, and **Digital Drainage** (9 mana) levels up your whole team three times and weakens every enemy.
+- Finishers: **Boss Level** (7 mana, 6/4) has no limit on Level Up, and **Digital Drainage** (9 mana) levels up your whole team three times and weakens every enemy.
 
 **Strengths and weaknesses:** explosive if your characters survive long enough to level, but nearly all of them have 1 health. Area damage and fast removal hit Digital hardest.
 
-The design sheet left some Digital slots blank; these were filled in to fit the deck's style: Noob, Glitch, Spam Bot, Gaming Headset, Speedrunner, Beta Tester, Pro Gamer, Hacker, the name and cost of Overclocker (7+1+0), and the name Server Farm (1+6+1 Tower). Rarities were assigned to all Digital cards. Three cards were interpreted where the sheet's wording left a choice:
+The design sheet left some Digital slots blank; these were filled in to fit the deck's style: Noob, Glitch, Spam Bot, Gaming Headset, Speedrunner, Beta Tester, Pro Gamer, Hacker, the name and cost of Overclocker (7+1), and the name Server Farm (1+6 Tower). Rarities were assigned to all Digital cards. Three cards were interpreted where the sheet's wording left a choice:
 - **Secure the Data** grants Cloak until the start of your next turn, since spells cannot be cast on the other player's turn yet.
 - **Digital Drainage** lowers each opposing character's Attack by the number of Levels on your highest-Attack Level Up character.
 - **Data Transfer** levels up your strongest Level Up character at the end of your turn. Its once-per-turn "remove a Level for 2 HP" is used by tapping the area during Setup.
@@ -169,10 +169,11 @@ The design sheet left some Digital slots blank; these were filled in to fit the 
 ## Changes from the Lua version
 
 - **The first player skips their first draw**, to offset the advantage of going first.
-- **Rally** gives +1 Attack and Speed (not health), as in the Lua version. Play-testing showed +1 to all stats made Monkey decks too strong.
+- **No Speed stat.** Cards have Attack and Health only. Fights are simultaneous, and the **Swift** skill (») strikes first and takes no damage back if its blow is lethal. Swift is on Speedrunner, Hacker, Glitch, Smart Monkey, Seasoned Monk and Simple Bowman, and Zippy Shoes (now +2 Health) and the Bow give it. Jungle gives Monkeys +1 Attack, Sweep the Leg removes Swift and 1 Attack, and Zombombadier is 1/2 so its blast still deals 3. In 4,800 computer games, every starter won 46–53% and games got slightly shorter.
+- **Rally** gives +1 Attack (not health). Play-testing showed +1 to all stats made Monkey decks too strong.
 - **New:** a computer opponent, and a pass-the-device screen between turns in two-player mode.
 - **Tower blocks:** a Tower character must be attacked first, like Challenge. With several Challenge or Tower characters, the attacker picks which one.
-- **Balance changes** (tested in computer-vs-computer games): Zombie's Sneaky Skinbag and Shadow-Stitched Soldier cost 4 instead of 5, and Hungry Corpse is 2/1/1 instead of 1/1/1. Monkey's Ape costs 4 instead of 5, Gorilla 5 instead of 6, and Baby Monkey is 1/1/0 instead of 0/1/0. Simple's Staff is 2/1/0 instead of 3/1/0, and Herd costs 5 instead of 4. Fighter's Seasoned Monk is 2/1/2 instead of 1/1/2, and Black Belt Student costs 3 instead of 4.
+- **Balance changes** (tested in computer-vs-computer games): Zombie's Sneaky Skinbag and Shadow-Stitched Soldier cost 4 instead of 5, and Hungry Corpse is 2/1 instead of 1/1. Monkey's Ape costs 4 instead of 5, Gorilla 5 instead of 6, and Baby Monkey is 1/1 instead of 0/1. Simple's Staff is 2/1 instead of 3/1, and Herd costs 5 instead of 4. Fighter's Seasoned Monk is 2/1 instead of 1/1, and Black Belt Student costs 3 instead of 4.
 - **Frontline and backline:** characters stand on the frontline, with no limit on how many. Areas and stored equipment share the backline behind it (up to 10 cards, set by `max_field_backline` in `game_rules.csv`) instead of two separate rows of 5. The row names come from `zone_frontline` and `zone_backline` in `ui_text.csv`.
 - **Board skins:** the main board is the Crystal Altar. Settings (on the main menu or in ☰ Menu) also offers Shattered Battlefield (floating islands over a shard rift, each side styled after its deck) and War Map. Mana is a row of 10 crystals (lit, spent, or not earned yet), health is a life crystal that is green from 75% health, orange down to 35%, then red and cracked, card backs carry a shard emblem, played cards sparkle, defeated characters shatter, and a shard falls into the turn crystal when the turn passes.
 - **Main menu:** purple and white crystal shards fall like meteors instead of the original rain and lightning.

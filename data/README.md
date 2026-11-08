@@ -13,7 +13,7 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 
 - **IDs are permanent.** `CardID`, `DeckID`, `SkillID` and `FactionID` link the files together. You can rename what players see (`Name`) any time, but don't change an ID once a deck uses it.
 - **Commas inside a value** need the whole value in double quotes: `"When played, search your deck"`. Spreadsheet apps do this for you.
-- **Stats** are written `Attack+Health+Speed`, for example `2+1+1`. Use `---` for cards without stats.
+- **Stats** are written `Attack+Health`, for example `2+1`. Use `---` for cards without stats.
 - **Skills** are joined with `+`, for example `Signal+Rally`. Use `---` for none. Skill names must match the `Name` column in `skills.csv`.
 - **Ability text** describes what a card does. Changing the numbers on a card (cost, stats, skills) works straight away. A brand-new *ability* also needs game code, so ask for that when you add one.
 - **Changes are saved per file.** If you edit in a spreadsheet, export only the sheet you changed.
@@ -31,7 +31,7 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 | Type | `Character`, `Spell`, `Equipment` or `Area` |
 | Race | `Animal`, `Undead`, `Goblin`, or `N/A` |
 | Faction | A FactionID from factions.csv, or `N/A` for neutral cards |
-| Stats | `Attack+Health+Speed`, or `---` |
+| Stats | `Attack+Health`, or `---` |
 | Skills | Skill names joined with `+`, or `---` |
 | Ability | The card's rules text |
 | Description | Optional flavor text |

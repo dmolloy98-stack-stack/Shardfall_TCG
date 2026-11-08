@@ -69,19 +69,20 @@ function buildData(CSV) {
   }
 
   const statsOf = s => {
-    const m = (s || "").match(/(-?\d+)\+(-?\d+)\+(-?\d+)/);
-    return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0];
+    // Attack+Health. An older third number (Speed, now removed) is ignored.
+    const m = (s || "").match(/(-?\d+)\+(-?\d+)/);
+    return m ? [Number(m[1]), Number(m[2])] : [0, 0];
   };
   const skillsOf = s => (s || "").split("+").map(x => x.trim()).filter(x => x && x !== "---");
 
   const cardsById = {}, cardsByName = {}, cardList = [];
   for (const c of csvRows(CSV.cards)) {
     if (c.length < 8 || !c[0] || !c[2]) continue;
-    const [attack, health, speed] = statsOf(c[7]);
+    const [attack, health] = statsOf(c[7]);
     const ability = c[9] && c[9] !== "---" ? c[9] : "";
     const card = {
       id: c[0], manaCost: Number(c[1]) || 0, name: c[2], rarity: c[3] || "Basic", type: c[4],
-      race: c[5], group: c[6], attack, health, speed, skills: skillsOf(c[8]),
+      race: c[5], group: c[6], attack, health, skills: skillsOf(c[8]),
       ability, description: c[10] || "", artKey: c[11] || c[0],
     };
     cardsById[card.id] = card;

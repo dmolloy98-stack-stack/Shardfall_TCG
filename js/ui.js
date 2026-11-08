@@ -83,9 +83,9 @@ function cardHTML(c, opts = {}) {
     if (opts.field) {
       const st = stats(c), raw = rawStats(c);
       const hpLow = c.currentHealth < (c.baseHealth ?? c.health);
-      statsHTML = `<div class="stats"><span class="a${st.a > c.attack ? " up" : ""}">⚔${st.a}</span><span class="h${hpLow ? " low" : ""}${st.h > c.currentHealth ? " up" : ""}">♥${Math.max(0, raw.h)}</span><span class="s${st.s > c.speed ? " up" : ""}">⚡${st.s}</span></div>`;
+      statsHTML = `<div class="stats"><span class="a${st.a > c.attack ? " up" : ""}">⚔${st.a}</span><span class="h${hpLow ? " low" : ""}${st.h > c.currentHealth ? " up" : ""}">♥${Math.max(0, raw.h)}</span></div>`;
     } else {
-      statsHTML = `<div class="stats"><span class="a">⚔${c.attack}</span><span class="h">♥${c.health}</span><span class="s">⚡${c.speed}</span></div>`;
+      statsHTML = `<div class="stats"><span class="a">⚔${c.attack}</span><span class="h">♥${c.health}</span></div>`;
     }
   }
   const cost = opts.costOverride ?? c.manaCost;
@@ -758,8 +758,8 @@ function showDetail(c, ctx = {}) {
   let actions = "", extra = "";
   if (ctx.field && c.owner != null && findChar(c.uid)) {
     const st = stats(c), raw = rawStats(c);
-    extra += `<div class="statline"><span class="a">⚔ ${st.a}</span><span class="h">♥ ${Math.max(0, raw.h)}</span><span class="s">⚡ ${st.s}</span></div>`;
-    if (c.equipped?.length) extra += `<p><b>Equipped:</b> ${c.equipped.map(e => `${esc(e.name)} (+${e.attack}/+${e.health}/+${e.speed})`).join(", ")}</p>`;
+    extra += `<div class="statline"><span class="a">⚔ ${st.a}</span><span class="h">♥ ${Math.max(0, raw.h)}</span></div>`;
+    if (c.equipped?.length) extra += `<p><b>Equipped:</b> ${c.equipped.map(e => `${esc(e.name)} (+${e.attack}/+${e.health})`).join(", ")}</p>`;
     if (st.parry && !hasSkill(c, "Parry")) extra += `<p>Has Parry from an area.</p>`;
     if (c.disabled) extra += `<p class="reason">Disabled: this character has no abilities.</p>`;
   }

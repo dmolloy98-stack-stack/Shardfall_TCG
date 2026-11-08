@@ -109,25 +109,25 @@ const shieldedFromCurses = c => c.group === "Simple" && simplisticOut();
 // ---------------------------------------------------------------------------
 function equipBonuses(c) {
   let a = 0, h = 0, s = 0;
-  for (const e of c.equipped || []) { a += e.attack; h += e.health; s += e.speed; }
-  return { a, h, s };
+  for (const e of c.equipped || []) { a += e.attack; h += e.health; }
+  return { a, h };
 }
 
 // Area bonuses read from the area's ability text, exactly like getAreaEffectTotals in Lua.
 function areaBonuses(p, c) {
-  let a = 0, h = 0, s = 0, parry = false;
+  let a = 0, h = 0, parry = false;
   for (const area of p.field.areas) {
     const text = (area.ability + " " + area.name).toLowerCase();
     if (area.group === c.group || text.includes("all characters")) {
       const m = text.match(/([+-]\d+)\s+to all stats/) || text.match(/([+-]\d+)\s+in all stats/);
       const n = m ? Number(m[1]) : 0;
-      a += n; h += n; s += n;
-      const sp = text.match(/([+-]\d+)\s+speed/);
-      if (sp) s += Number(sp[1]);
+      a += n; h += n;
+      const at = text.match(/([+-]\d+)\s+attack/);
+      if (at) a += Number(at[1]);
       if (text.includes("parry")) parry = true;
     }
   }
-  return { a, h, s, parry };
+  return { a, h, parry };
 }
 
 // Effective stats including equipment, areas, synergies and Rally. Health can be
@@ -147,13 +147,12 @@ function rawStats(c) {
   return {
     a: c.attack + e.a + ar.a + buff + rally + extraA + simpleGear,
     h: c.currentHealth + ar.h + buff + simpleGear,
-    s: c.speed + e.s + ar.s + buff + rally + simpleGear,
     parry: hasSkill(c, "Parry") || ar.parry,
   };
 }
 function stats(c) {
   const r = rawStats(c);
-  return { a: Math.max(0, r.a), h: Math.max(0, r.h), s: Math.max(0, r.s), parry: r.parry };
+  return { a: Math.max(0, r.a), h: Math.max(0, r.h), parry: r.parry };
 }
 
 function updateRally(p) {
@@ -167,7 +166,7 @@ function updateRally(p) {
 // ---------------------------------------------------------------------------
 function triggerEvolve(c) {
   if (hasSkill(c, "Evolve") && !c.hasEvolved) {
-    c.attack += 3; c.currentHealth += 3; c.speed += 3; c.hasEvolved = true; removeSkill(c, "Evolve");
+    c.attack += 3; c.currentHealth += 3; c.hasEvolved = true; removeSkill(c, "Evolve");
     emit("text", { uid: c.uid, text: "EVOLVE!", color: "#b98cff" });
   }
 }
@@ -182,21 +181,21 @@ function transformCharacter(c, newName) {
   n.levelUpCount = c.levelUpCount || 0;
   n.combatSurvived = 0;
   Object.assign(c, n);
-  c.baseAttack = c.attack; c.baseHealth = c.health; c.baseSpeed = c.speed;
+  c.baseAttack = c.attack; c.baseHealth = c.health;
   emit("text", { uid: c.uid, text: "TRANSFORM!", color: "#6fe3ff" });
   log(`${t.name} appears through Transform.`);
 }
 
 // Level Up: +1 to all stats, up to 3 times, then the skill is used up. Each Level Up also
-// heals the character fully. Boss Level has no limit, Pesky Programmer grows +2 Attack and
-// +2 Speed instead, and a Data Collector gains +1 Health when another of your characters levels up.
+// heals the character fully. Boss Level has no limit, Pesky Programmer grows +2 Attack
+// instead, and a Data Collector gains +1 Health when another of your characters levels up.
 const levelCap = c => (named(c, "Boss Level") ? Infinity : 3);
 function levelUp(c, times = 1) {
   for (let k = 0; k < times; k++) {
     if (!hasSkill(c, "Level Up") || (c.levelUpCount || 0) >= levelCap(c)) return;
     c.levelUpCount = (c.levelUpCount || 0) + 1;
-    const gains = named(c, "Pesky Programmer") ? [2, 0, 2] : [1, 1, 1];
-    c.attack += gains[0]; c.currentHealth += gains[1]; c.speed += gains[2];
+    const gains = named(c, "Pesky Programmer") ? [2, 0] : [1, 1];
+    c.attack += gains[0]; c.currentHealth += gains[1];
     c.levelHealth = (c.levelHealth || 0) + gains[1];
     c.keptLevels = (c.keptLevels || 0) + 1;   // levels whose stats this character holds
     healFully(c);
@@ -223,8 +222,8 @@ function levelDown(c) {
   if (!(c.keptLevels > 0)) return false;
   c.keptLevels--;
   if (c.levelUpCount > 0) c.levelUpCount--;
-  if (named(c, "Pesky Programmer")) { c.attack -= 2; c.speed -= 2; }
-  else { c.attack--; c.currentHealth--; c.speed--; c.levelHealth = Math.max(0, (c.levelHealth || 0) - 1); }
+  if (named(c, "Pesky Programmer")) c.attack -= 2;
+  else { c.attack--; c.currentHealth--; c.levelHealth = Math.max(0, (c.levelHealth || 0) - 1); }
   if (!hasSkill(c, "Level Up")) c.skills.push("Level Up");
   emit("text", { uid: c.uid, text: "LEVEL DOWN", color: "#c9c9c9" });
   checkDeath(c);
@@ -262,7 +261,7 @@ function sendToGraveyard(p, c) {
     ask({
       kind: "choose", source: shepard, owner: p.idx, title: "Soul Shepard",
       prompt: `${c.name} fell. Absorb its stats into Soul Shepard, or return it to your hand?`,
-      cards: [c], options: [{ id: "absorb", label: `Absorb +${gain.a} / +${gain.h} / +${gain.s}` }, { id: "hand", label: "Return it to my hand" }],
+      cards: [c], options: [{ id: "absorb", label: `Absorb +${gain.a} / +${gain.h}` }, { id: "hand", label: "Return it to my hand" }],
       required: true, resolve: "shepard", deadUid: c.uid, shepardUid: shepard.uid, gain,
     });
   }
@@ -276,8 +275,8 @@ function checkDeath(c) {
   if (!p.field.chars.includes(c)) return;
   if (hasSkill(c, "Reanimate") && !c.reanimated) {
     c.reanimated = true; removeSkill(c, "Reanimate");
-    c.currentHealth = c.baseHealth; c.attack = c.baseAttack; c.speed = c.baseSpeed;
-    if (named(c, "Hungry Corpse")) { c.attack++; c.currentHealth++; c.speed++; }
+    c.currentHealth = c.baseHealth; c.attack = c.baseAttack;
+    if (named(c, "Hungry Corpse")) { c.attack++; c.currentHealth++; }
     triggerEvolve(c); // "After returning from the Graveyard to the Field, Evolve"
     emit("text", { uid: c.uid, text: "REANIMATE", color: "#8dff8d" });
     log(`${c.name} reanimates.`);
@@ -292,8 +291,8 @@ function dealDamageToCharacter(c, amount) {
   emit("charDamage", { uid: c.uid, amount });
   if (rawStats(c).h <= 0) checkDeath(c);
   else if (named(c, "Gorilla")) {
-    c.attack++; c.speed++;
-    emit("text", { uid: c.uid, text: "+1 ATK/SPD", color: "#ffe066" });
+    c.attack++;
+    emit("text", { uid: c.uid, text: "+1 ATK", color: "#ffe066" });
   }
 }
 
@@ -314,7 +313,7 @@ function sweepDeaths() {
 // A character's stats as its card reads on the table, buffs included and damage ignored.
 function statsAsRead(c) {
   const r = rawStats(c);
-  return { a: Math.max(0, r.a), h: Math.max(0, r.h - c.currentHealth + (c.baseHealth ?? c.health)), s: Math.max(0, r.s) };
+  return { a: Math.max(0, r.a), h: Math.max(0, r.h - c.currentHealth + (c.baseHealth ?? c.health)) };
 }
 
 function destroyCharacter(c) {   // Death's Grasp: ignores Reanimate
@@ -350,13 +349,13 @@ function putOnField(c, p) {
 }
 
 function initBattlefieldCharacter(c, p) {
-  c.baseAttack = c.attack; c.baseHealth = c.health; c.baseSpeed = c.speed;
+  c.baseAttack = c.attack; c.baseHealth = c.health;
   c.currentHealth = c.health; c.equipped = []; c.hasAttacked = !hasSkill(c, "Rush");
   c.owner = p.idx; c.levelUpCount = 0; c.levelHealth = 0; c.keptLevels = 0; c.combatSurvived = 0; c.reanimated = false;
   emit("enter", { uid: c.uid, cost: c.manaCost || 0 });
 
   if (named(c, "Zombombadier")) {
-    const d = c.attack + c.health + c.speed;
+    const d = c.attack + c.health;
     for (const q of S.players) {
       for (const x of q.field.chars.filter(x => x !== c)) dealDamageToCharacter(x, d);
       dealDamageToPlayer(q, d);
@@ -367,7 +366,7 @@ function initBattlefieldCharacter(c, p) {
       if (p.field.chars.length >= RULES.maxChars) break;
       const turtle = {
         uid: S.nextUid++, id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", race: "Animal", group: "Fighter",
-        manaCost: 0, attack: 1, health: 1, speed: 1, skills: [], ability: "Gain +1 to each stat for every other Turtle on the field",
+        manaCost: 0, attack: 1, health: 1, skills: [], ability: "Gain +1 to each stat for every other Turtle on the field",
         description: "", artKey: "turtle", token: true,
       };
       putOnField(turtle, p);
@@ -406,7 +405,7 @@ const EFFECTS = {
   "Simple Barkeep": { target: "char", intent: "help", apply: (ctx, t) => { t.currentHealth += 1; } },
   "Slap": { target: "char", intent: "harm", apply: (ctx, t) => dealDamageToCharacter(t, 1 + spellBoost(ctx)) },
   "Simple Wizard": { target: "charOrPlayer", intent: "harm", apply: (ctx, t) => t.isPlayer ? dealDamageToPlayer(S.players[t.idx], 2) : dealDamageToCharacter(t, 2) },
-  "Simplify": { target: "char", intent: "harm", apply: (ctx, t) => { t.attack = 1; t.currentHealth = 1; t.speed = 1; } },
+  "Simplify": { target: "char", intent: "harm", apply: (ctx, t) => { t.attack = 1; t.currentHealth = 1; } },
   "Simple Messenger": {
     now: ctx => {
       const foe = foeOf(ctx.owner);
@@ -430,13 +429,13 @@ const EFFECTS = {
       const foe = foeOf(ctx.owner);
       const hit = foe.field.chars.slice();
       const n = 2 + spellBoost(ctx);
-      for (const c of hit) { c.attack -= n; c.speed -= n; c.currentHealth -= n; }
+      for (const c of hit) { c.attack -= n; c.currentHealth -= n; }
       healPlayer(ctx.owner, n * hit.length);
       for (const c of hit) { emit("charDamage", { uid: c.uid, amount: n }); checkDeath(c); }
     },
   },
   "Orangutan": { now: ctx => { ctx.card.currentHealth += ctx.owner.field.chars.filter(x => x.group === "Monkey" && x !== ctx.card).length; } },
-  "Simpler Farmer": { now: ctx => { const n = ctx.owner.field.chars.filter(x => x.name === "Simple Farmer").length; ctx.card.attack += n; ctx.card.speed += n; } },
+  "Simpler Farmer": { now: ctx => { const n = ctx.owner.field.chars.filter(x => x.name === "Simple Farmer").length; ctx.card.attack += n; } },
   "Mana Horder": {
     now: ctx => {
       const foe = foeOf(ctx.owner);
@@ -476,7 +475,7 @@ const EFFECTS = {
     },
   },
   "Arboreal Intelligence": {
-    now: ctx => { for (const c of ctx.owner.field.chars) if (c.group === "Monkey") { c.attack += 5; c.currentHealth += 5; c.speed += 5; } },
+    now: ctx => { for (const c of ctx.owner.field.chars) if (c.group === "Monkey") { c.attack += 5; c.currentHealth += 5; } },
   },
   "Call of the Jungle": {
     now: ctx => {
@@ -494,7 +493,7 @@ const EFFECTS = {
     target: "char", intent: "harm",
     apply: (ctx, t) => {
       const st = stats(t);
-      healPlayer(ctx.owner, st.a + st.h + st.s);
+      healPlayer(ctx.owner, st.a + st.h);
       dealDamageToCharacter(t, 99999);
     },
   },
@@ -535,7 +534,7 @@ const EFFECTS = {
     target: "charOrPlayer", intent: "harm", filter: (c, ctx) => c.owner !== ctx.owner.idx, players: (idx, ctx) => idx !== ctx.owner.idx,
     apply: (ctx, t) => (t.isPlayer ? dealDamageToPlayer(S.players[t.idx], ctx.amount) : dealDamageToCharacter(t, ctx.amount)),
   },
-  "Sweep the Leg": { target: "char", intent: "harm", apply: (ctx, t) => { t.speed = Math.max(0, t.speed - 1); } },
+  "Sweep the Leg": { target: "char", intent: "harm", apply: (ctx, t) => { removeSkill(t, "Swift"); t.attack = Math.max(0, t.attack - 1); } },
   "Bite the Ear": { target: "char", intent: "harm", apply: loseHealth(1) },
   "Crane Kick": { target: "char", intent: "harm", apply: loseHealth(7) },
 
@@ -546,7 +545,7 @@ const EFFECTS = {
   "Gymfluencer": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t, 2) },
   "Catfish": {
     target: "char", intent: "harm",
-    apply: (ctx, t) => { t.attack -= 1; t.speed -= 1; t.currentHealth -= 1; emit("charDamage", { uid: t.uid, amount: 1 }); checkDeath(t); },
+    apply: (ctx, t) => { t.attack -= 1; t.currentHealth -= 1; emit("charDamage", { uid: t.uid, amount: 1 }); checkDeath(t); },
   },
   "Secure the Data": {
     target: "char", intent: "help",
@@ -821,7 +820,7 @@ function playCard(uid, opts = {}) {
     c.placed = S.round * 100 + backlineCount(p);
     log(`${p.name} plays the area ${c.name}.`);
     if (c.name === "Whirlpool") {
-      for (const x of allChars().slice()) { dealDamageToCharacter(x, 1); if (allChars().includes(x)) x.speed -= 1; }
+      for (const x of allChars().slice()) dealDamageToCharacter(x, 1);
     }
     sweepDeaths();
   } else {
@@ -934,9 +933,9 @@ function resolveChoice(picks, option) {
       log(`Soul Shepard returns ${dead.name} to ${owner.name}'s hand.`);
     } else if (option === "absorb" && shep) {
       const g = pd.gain;
-      shep.attack += g.a; shep.currentHealth += g.h; shep.speed += g.s;
-      shep.baseAttack += g.a; shep.baseHealth += g.h; shep.baseSpeed += g.s;
-      emit("text", { uid: shep.uid, text: `+${g.a}/+${g.h}/+${g.s}`, color: "#8dff8d" });
+      shep.attack += g.a; shep.currentHealth += g.h;
+      shep.baseAttack += g.a; shep.baseHealth += g.h;
+      emit("text", { uid: shep.uid, text: `+${g.a}/+${g.h}`, color: "#8dff8d" });
       log(`Soul Shepard absorbs ${dead?.name || "the fallen Zombie"}.`);
     }
   } else if (pd.resolve === "apeSacrifice") {
@@ -945,8 +944,8 @@ function resolveChoice(picks, option) {
     if (ape && monkey && monkey !== ape) {
       log(`${owner.name} sacrifices ${monkey.name} to ${ape.name}.`);
       destroyCharacter(monkey);
-      ape.attack++; ape.speed++; ape.health++;
-      ape.baseAttack++; ape.baseHealth++; ape.baseSpeed++;
+      ape.attack++; ape.health++;
+      ape.baseAttack++; ape.baseHealth++;
       ape.currentHealth = ape.baseHealth + equipBonuses(ape).h;   // fully healed
       emit("text", { uid: ape.uid, text: "+1 ALL", color: "#ffd25e" });
     }
@@ -992,8 +991,8 @@ function attack(attackerUid, targetUid) {
   }
   log(`${a.name} attacks ${target.name}.`);
   const ts = stats(target);
-  let ta = ts.a, tspd = ts.s, shield = 0;
-  if (named(target, "The Man Ape")) { ta += 10; tspd += 10; shield = 10; }   // when defending gain +10 to all stats
+  let ta = ts.a, shield = 0;
+  if (named(target, "The Man Ape")) { ta += 10; shield = 10; }   // when defending gain +10 to all stats
   if (ts.parry) ta *= 2;                                                      // Parry: double damage when defending
 
   const hitTarget = () => {
@@ -1003,16 +1002,25 @@ function attack(attackerUid, targetUid) {
   };
   const alive = c => ownerOf(c).field.chars.includes(c);
 
-  if (as.s >= tspd) {
+  // Both strike at the same time, unless exactly one of them has Swift: that one strikes
+  // first, and takes no damage back if its blow knocks the other out.
+  const aSwift = isSwift(a), tSwift = isSwift(target);
+  if (aSwift && !tSwift) {
     hitTarget();
     if (alive(target) && alive(a)) dealDamageToCharacter(a, ta);
-  } else {
+  } else if (tSwift && !aSwift) {
     dealDamageToCharacter(a, ta);
     if (alive(a)) hitTarget();
+  } else {
+    hitTarget();
+    if (alive(a)) dealDamageToCharacter(a, ta);
   }
   recordCombatSurvival(a); recordCombatSurvival(target);
   return true;
 }
+
+// Swift: the skill, or wearing Zippy Shoes or a Bow.
+const isSwift = c => hasSkill(c, "Swift") || (c.equipped || []).some(e => named(e, "Zippy Shoes") || named(e, "Bow"));
 
 function recordCombatSurvival(c) {
   if (c && ownerOf(c).field.chars.includes(c) && named(c, "Black Belt Student")) {
