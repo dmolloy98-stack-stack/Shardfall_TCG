@@ -76,7 +76,7 @@ function renderHint() {
   box.classList.toggle("narrow", gutter >= 120 && gutter < 200);
   box.style.maxHeight = wr.height - 16 + "px";
   if (gutter >= 120) {
-    const w = Math.min(gutter - 12, 300);
+    const w = Math.min(gutter - 12, U.small ? 220 : 300);
     Object.assign(box.style, { left: wr.left + (gutter - w) / 2 + "px", width: w + "px", top: "", bottom: "" });
     box.style.top = Math.max(wr.top + 8, sr.top + sr.height * 0.5 - box.offsetHeight / 2) + "px";
   } else {
@@ -95,7 +95,7 @@ function renderControls() {
   const sr = document.getElementById("stage").getBoundingClientRect();
   const wr = document.getElementById("stage-wrap").getBoundingClientRect();
   const gutter = wr.right - sr.right;
-  if (U.screen !== "game" || !S || !U.small || U.tutorial || gutter < 96) { bar.hidden = true; return; }
+  if (U.screen !== "game" || !S || !U.small || U.tutorial || gutter < 88) { bar.hidden = true; return; }
   const board = document.getElementById("board");
   const btn = (act, cls = "") => {
     const b = board.querySelector(`[data-act="${act}"]`);
@@ -103,6 +103,9 @@ function renderControls() {
     return `<button type="button" class="btn ${cls}" data-press="${act}" ${b.disabled ? "disabled" : ""}>${esc(b.textContent.trim())}</button>`;
   };
   let h = btn("menu", "btn-small");
+  // Full screen hides the browser's bars, which gives the board noticeably more room.
+  // Phones that can't do it (iPhone browsers) don't get the button.
+  if (document.fullscreenEnabled && !document.fullscreenElement) h += `<button type="button" class="btn btn-small" data-press="fullscreen">⛶ Full screen</button>`;
   if (U.curtain) h += btn("curtain", "btn-primary");
   else if (U.ended) h += btn("camp-next", "btn-primary") + btn("again", U.campaign ? "" : "btn-primary") + btn("camp-map") + btn("tomenu");
   else {
@@ -113,15 +116,25 @@ function renderControls() {
   }
   bar.hidden = false;
   bar.innerHTML = h;
-  const w = Math.min(gutter - 16, 190);
-  Object.assign(bar.style, { left: sr.right + (gutter - w) / 2 + "px", width: w + "px", top: wr.top + 8 + "px", height: wr.height - 16 + "px" });
+  // A slim column against the screen edge, so the buttons stay out of the board's way.
+  const w = Math.max(80, Math.min(gutter - 12, 118));
+  Object.assign(bar.style, { left: wr.right - w - Math.min(8, (gutter - w) / 2) + "px", width: w + "px", top: wr.top + 6 + "px", height: wr.height - 12 + "px" });
 }
 document.getElementById("controls").addEventListener("click", e => {
   const b = e.target.closest("[data-press]");
   if (!b) return;
   if (b.dataset.press === "cancel") cancelSomething();
+  else if (b.dataset.press === "fullscreen") goFullscreen();
   else document.querySelector(`#board [data-act="${b.dataset.press}"]`)?.click();
 });
+
+function goFullscreen() {
+  document.documentElement.requestFullscreen?.({ navigationUI: "hide" })
+    .then(() => screen.orientation?.lock?.("landscape").catch(() => {}))   // Android keeps it sideways
+    .catch(() => {})
+    .finally(() => setTimeout(onResize, 200));
+}
+document.addEventListener("fullscreenchange", () => setTimeout(onResize, 100));
 
 // Held upright, a phone shows the board very small. Suggest turning it sideways,
 // but let people carry on if their screen won't rotate.

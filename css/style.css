@@ -521,11 +521,12 @@ button, .btn { touch-action: manipulation; }
 /* Phone controls beside the board */
 .controls {
   position: absolute; z-index: 110;
-  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
 }
-.controls .btn { width: 100%; min-height: 48px; padding: 0.3em 0.5em; font-size: 1rem; line-height: 1.15; }
-.controls .btn-small { min-height: 40px; font-size: 0.9rem; }
+.controls .btn { width: 100%; min-height: 42px; padding: 0.25em 0.35em; font-size: 0.82rem; line-height: 1.1; letter-spacing: 0.02em; }
+.controls .btn-small { min-height: 34px; font-size: 0.74rem; }
 .controls [data-press="menu"] { position: absolute; top: 0; }
+.controls [data-press="fullscreen"] { position: absolute; top: 42px; }
 .controls .danger { border-color: var(--danger); background: linear-gradient(#8a2a17, #4d140a); }
 
 /* ------------------------------------------------------------------- modal */
