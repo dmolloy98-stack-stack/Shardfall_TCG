@@ -30,6 +30,8 @@ New players have three kinds of help:
 The short version:
 
 - Each player starts with 25 health and 6 cards from a 35-card deck. Reduce the other player to 0 health to win. Drawing from an empty deck loses.
+- A hand holds at most 8 cards. A card drawn or returned to a full hand goes to the graveyard instead.
+- A spell that needs a target is only paid for once you pick the target, so cancelling leaves it in your hand.
 - **Draw → Setup → Battle → End.** Your maximum mana grows by 1 each turn, with no cap. The player who goes first skips their first draw; the player who goes second gets a one-time **+1** mana token beside their mana, usable on any of their turns.
 - **Setup:** drag cards from your hand onto the table, or tap a card and press Play.
 - **Battle:** tap one of your characters, then an enemy character, or "Attack directly". Both characters hit at the same time, unless one has **Swift** (»): it strikes first.
@@ -43,14 +45,14 @@ All cards, decks, skills and balance numbers are CSV files in the [`data/`](data
 
 | File | What's in it |
 |---|---|
-| [`data/cards.csv`](data/cards.csv) | Every card: cost, stats, skills, rarity, ability text |
+| [`data/cards.csv`](data/cards.csv) | Every card: cost, stats, skills, rarity, ability text, and the Effect that makes it work |
 | [`data/decks.csv`](data/decks.csv) | The starter decks and their card lists |
 | [`data/skills.csv`](data/skills.csv) | Skill keywords and their descriptions |
 | [`data/game_rules.csv`](data/game_rules.csv) | Starting health, hand size, mana growth, field limits, deck-building rules |
 | [`data/rarities.csv`](data/rarities.csv), [`data/factions.csv`](data/factions.csv) | Colors, symbols, equipment attach costs |
 | [`data/phases.csv`](data/phases.csv), [`data/ui_text.csv`](data/ui_text.csv) | Phase names, on-screen instructions, button labels |
 
-GitHub displays each file as a table. Edit it with the pencil icon, or open it in Excel or Google Sheets, then save it as CSV and upload it back. [`data/README.md`](data/README.md) explains every column. In the game, the **Almanac** (on the main menu) shows every card as it currently reads in these files.
+GitHub displays each file as a table. Edit it with the pencil icon, or open it in Excel or Google Sheets, then save it as CSV and upload it back. [`data/README.md`](data/README.md) explains every column, and how to write a card's **Effect** from a set of building blocks (damage, buff, levelUp, fetch, summon and so on), so most new cards need no code. In the game, the **Almanac** (on the main menu) shows every card as it currently reads in these files.
 
 Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the faction symbol on that card.
 
@@ -64,7 +66,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `css/style.css` | All styling and animations |
 | `data/*.csv` | Cards, decks, skills and rules (see above) |
 | `js/data.js` | Loads and checks the CSV files, then starts the game |
-| `js/engine.js` | Game rules: turns, combat, skills, card effects |
+| `js/engine.js` | Game rules: turns, combat, skills. Shuffles come from a seed per match (shown in the game log), so a game can be replayed exactly |
+| `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
 | `js/ai.js` | Computer opponent |
 | `js/ui.js` | Board rendering, input, menu, Settings, Almanac |
 | `js/tutorial.js` | The tutorial: scripted steps, coach box, spotlight and arrows |
@@ -73,7 +76,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `js/intro.js` | The stained-glass cold open before the main menu |
 | `js/campaign.js` | The campaign: one match against each faction's champion, with its story text and saved progress |
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
-| `js/fx.js` | Game feel: aiming line and fight previews, impacts, big entrances, skill spotlights, the final blow and end-screen stats |
+| `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
 | `tools/guide-shots.js` | Retakes the annotated guide pictures: `node tools/guide-shots.js` (needs Node.js and Playwright) |
 | `original-lua/main.lua` | The LÖVE2D source this was ported from |

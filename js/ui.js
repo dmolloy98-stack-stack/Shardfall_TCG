@@ -28,6 +28,7 @@ const U = {
   tutorial: null,        // the running tutorial (js/tutorial.js), if any
   skin: PREFS.get("board", "altar"),   // board look: altar, battlefield or warmap (chosen in Settings)
   turnColor: null,       // player whose color the turn crystal shows (it changes when the falling shard lands)
+  manaSeen: [], manaSpent: [],   // last mana shown per player, and crystals just spent
   lungeVec: new Map(),   // uid -> how far an attacker swoops toward its target
   arriving: new Map(),   // uid -> until when a showcased card is still on its way to the table
   busyUntil: 0,          // the computer waits for big animations to finish (js/fx.js)
@@ -160,12 +161,6 @@ function floatText(x, y, text, color, small) {
   $("#fx-layer").appendChild(el);
   setTimeout(() => el.remove(), 1250);
 }
-function shake(big) {
-  const st = $("#stage");
-  st.classList.remove("shake", "shake-big");
-  void st.offsetWidth;
-  st.classList.add(big ? "shake-big" : "shake");
-}
 function banner(text) {
   const b = $("#banner");
   b.hidden = false; b.textContent = text;
@@ -271,6 +266,7 @@ function turnHandover(player) {
   setTimeout(() => { el.remove(); land(); sparkle(70, 400, 12); }, 650);
 }
 const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SWIFT_GAP = 230;   // ms between a Swift blow and the reply
 
 onGameEvent((type, d) => {
   const now = performance.now();
@@ -278,36 +274,49 @@ onGameEvent((type, d) => {
   const delay = now - U.lungeAt < 80 && !REDUCED_MOTION ? 190 : 0;
   if (type === "newGame") {
     resetMatchStats();
+  } else if (type === "clash") {
+    // A fight is about to resolve. With Swift, the first blow lands, then the reply a beat later.
+    U.clash = { at: now, swift: d.swift, n: 0, uids: [d.attacker, d.target] };
   } else if (type === "charDamage") {
     const p = charCenter(d.uid);
     const f = findChar(d.uid);
     const overkill = f ? -rawStats(f.c).h : 0;
     if (f) countDamage(f.p.idx, d.amount);
-    later(delay, () => {
+    const clash = U.clash && now - U.clash.at < 30 ? U.clash : null;
+    const wait = delay + (clash?.swift != null && !REDUCED_MOTION ? clash.n++ * SWIFT_GAP : 0);
+    const tier = feelTier(d.amount);
+    later(wait, () => {
       damageNumber(p.x + (Math.random() - 0.5) * 30, p.y, d.amount, overkill);
       impactAt(p.x, p.y, d.amount);
       U.hits.set(d.uid, performance.now());
       flashCard(d.uid, "hit");
-      shakeBy(d.amount >= 3 ? 2 + d.amount * 1.4 : 0);
-      if (d.amount >= 8) callout("Massive hit!");
+      hitStop(clash ? clash.uids : [d.uid], tier.stop);
+      addTrauma(tier.trauma);
+      if (tier.callout) callout(tier.callout);
     });
   } else if (type === "playerDamage") {
     const p = plateCenter(d.player);
     countDamage(d.player, d.amount);
     if (U.stats) U.stats.low[d.player] = Math.min(U.stats.low[d.player], S.players[d.player].health / S.players[d.player].maxHealth);
+    const tier = feelTier(d.amount);
     later(delay, () => {
       damageNumber(p.x + (Math.random() - 0.5) * 120, p.y - 10, d.amount, 0);
       crystalChips(d.player, 6 + Math.min(10, d.amount * 2));
-      shakeBy(3 + d.amount * 1.5);
-      if (d.amount >= 8) callout("Massive hit!");
+      addTrauma(tier.trauma + 0.12);   // a hit to a player is felt a little more than one to a card
+      if (tier.callout) callout(tier.callout);
     });
+  } else if (type === "burn") {
+    // a full hand: the card goes to the graveyard instead
+    const p = plateCenter(d.player);
+    floatText(p.x, p.y + (sideOf(d.player) === "top" ? 70 : -70), `Hand full: ${d.card.name} burns`, "#ff9a6b", true);
   } else if (type === "playerHeal") {
     const p = plateCenter(d.player);
     floatText(p.x, p.y - 10, `+${d.amount}`, "#7be08f");
   } else if (type === "text") {
     const p = charCenter(d.uid);
-    floatText(p.x, p.y - 40, d.text, d.color, true);
-    skillSpotlight(d.uid, d.text);
+    // "» NO REPLY" (Swift won the fight untouched) shows once the blow has landed
+    const wait = d.text.startsWith("»") ? delay + SWIFT_GAP : 0;
+    later(wait, () => { floatText(p.x, p.y - 40, d.text, d.color, true); skillSpotlight(d.uid, d.text); });
   } else if (type === "enter") {
     U.spawn.set(d.uid, { cost: Math.min(7, Math.max(1, d.cost)), t: now, faction: findChar(d.uid)?.c.group });
   } else if (type === "lunge") {
@@ -431,7 +440,12 @@ function manaHTML(p, side) {
   const top = side === "bottom" ? 945 : 13;
   const earned = Math.min(MANA_SHOWN, Math.max(p.manaMax, p.mana));
   const lit = Math.min(earned, p.mana);
-  const crystals = Array.from({ length: MANA_SHOWN }, (_, i) => crystalSVG(i < lit ? "mana-crystal lit" : i < earned ? "mana-crystal" : "mana-crystal locked")).join("");
+  // crystals just spent flare and go dark, so you see what a play cost
+  const prev = U.manaSeen[p.idx];
+  if (prev && p.mana < prev.mana && prev.round === S.round) U.manaSpent[p.idx] = { from: Math.min(MANA_SHOWN, prev.mana), to: lit, at: performance.now() };
+  U.manaSeen[p.idx] = { mana: p.mana, round: S.round };
+  const spent = U.manaSpent[p.idx] && performance.now() - U.manaSpent[p.idx].at < 500 ? U.manaSpent[p.idx] : null;
+  const crystals = Array.from({ length: MANA_SHOWN }, (_, i) => crystalSVG(i < lit ? "mana-crystal lit" : i < earned ? "mana-crystal" + (spent && i >= spent.to && i < spent.from ? " spend" : "") : "mana-crystal locked")).join("");
   let token = "";
   if (p.manaToken) {
     const usable = humanTurn() && p === active() && !S.pending;
@@ -536,6 +550,7 @@ function renderHand(p) {
     const cls = ["hand-card"];
     if (human && canPlay(c, p)) cls.push("playable");
     if (recent(U.drawn, c.uid, 600)) cls.push("drawn");
+    if (S.pending?.cast && S.pending.source === c) cls.push("casting");   // a spell waiting for its target
     const costShown = playCost(c, p);
     return `<div class="${cls.join(" ")}" data-uid="${c.uid}" style="left:${pos.x}px;top:${pos.y}px;transform:rotate(${pos.rot}rad);z-index:${i + 1}">${cardHTML(c, { costOverride: costShown })}</div>`;
   }).join("");
@@ -680,6 +695,7 @@ function handMove(e) {
   const pt = stagePoint(e);
   if (!drag.moved && Math.hypot(pt.x - drag.start.x, pt.y - drag.start.y) > 8) {
     const c = active().hand.find(x => x.uid === drag.uid);
+    if (humanTurn() && c && !drag.nudged && /^Needs \d+ mana/.test(playBlocker(c) || "")) { drag.nudged = true; nudgeMana(active().idx); }
     if (!humanTurn() || !c || !canPlay(c)) return;
     drag.moved = true;
     drag.card = c;

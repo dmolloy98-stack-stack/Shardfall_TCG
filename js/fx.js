@@ -130,14 +130,59 @@ addEventListener("pointercancel", () => { dragAtk = null; });
 // ---------------------------------------------------------------------------
 // Impacts
 // ---------------------------------------------------------------------------
-// Screen shake that grows with the hit.
-function shakeBy(px) {
-  if (REDUCED_MOTION || px <= 0) return;
+// How strongly each kind of moment is felt. Every hit picks a tier, so the whole game
+// stays in proportion: a scratch barely moves the table, a huge blow stops it for a moment.
+//   trauma: screen shake added (0 to 1)    stop: hit-stop in ms    ring: impact ring size
+const FEEL = {
+  small:  { trauma: 0.18, stop: 35,  ring: 0.8 },
+  medium: { trauma: 0.42, stop: 70,  ring: 1.1 },
+  large:  { trauma: 0.75, stop: 120, ring: 1.6, callout: "Massive hit!" },
+};
+const feelTier = amount => (amount >= 8 ? FEEL.large : amount >= 4 ? FEEL.medium : FEEL.small);
+
+// Screen shake from "trauma": hits add to it, it fades on its own, and the shake is
+// trauma squared, so small knocks barely move the table and big ones punch. Two hits close
+// together add up instead of the second cutting the first short.
+const SHAKE = { trauma: 0, t: 0, last: 0, raf: 0, max: 18, decay: 1.7 };
+function addTrauma(amount) {
+  if (REDUCED_MOTION || amount <= 0) return;
+  SHAKE.trauma = Math.min(1, SHAKE.trauma + amount);
+  if (!SHAKE.raf) { SHAKE.last = performance.now(); SHAKE.raf = requestAnimationFrame(shakeFrame); }
+}
+function shakeFrame(now) {
   const st = document.getElementById("stage");
-  st.style.setProperty("--amp", Math.min(16, px) + "px");
-  st.classList.remove("shake", "shake-big", "shake-n");
-  void st.offsetWidth;
-  st.classList.add("shake-n");
+  const dt = Math.min(0.05, (now - SHAKE.last) / 1000);
+  SHAKE.last = now;
+  SHAKE.trauma = Math.max(0, SHAKE.trauma - SHAKE.decay * dt);
+  if (SHAKE.trauma <= 0) { st.style.translate = ""; SHAKE.raf = 0; return; }
+  SHAKE.t += dt * 32;
+  const k = SHAKE.trauma * SHAKE.trauma, t = SHAKE.t;
+  // smooth wobble from a few sine waves, not random jumps, so it shakes instead of buzzing
+  const x = SHAKE.max * k * (0.6 * Math.sin(t * 1.7) + 0.4 * Math.sin(t * 3.9 + 1));
+  const y = SHAKE.max * 0.6 * k * (0.6 * Math.sin(t * 2.3 + 2) + 0.4 * Math.sin(t * 4.7));
+  st.style.translate = `${x.toFixed(2)}px ${y.toFixed(2)}px`;
+  SHAKE.raf = requestAnimationFrame(shakeFrame);
+}
+// Older callers give a size in pixels; 18px is a full shake.
+const shakeBy = px => addTrauma(Math.sqrt(Math.max(0, px) / SHAKE.max));
+
+// Hit-stop: the cards in a clash freeze for a moment when the blow lands, which sells the
+// impact. Only those cards stop (their CSS animations pause), never the game or the input.
+const HITSTOP = new Map();   // card uid -> id of the freeze that will release it
+let hitStopId = 0;
+function hitStop(uids, ms) {
+  if (REDUCED_MOTION || !ms) return;
+  const id = ++hitStopId;
+  for (const uid of uids) {
+    if (uid == null) continue;
+    const el = document.querySelector(`.field-card[data-uid="${uid}"]`);
+    if (!el) continue;
+    const anims = el.getAnimations ? el.getAnimations({ subtree: true }) : [];
+    anims.forEach(a => a.pause());
+    HITSTOP.set(uid, id);
+    // only the newest freeze on a card lets it go, so two quick hits don't cut each other short
+    setTimeout(() => { if (HITSTOP.get(uid) === id) { HITSTOP.delete(uid); anims.forEach(a => { if (a.playState === "paused") a.play(); }); } }, ms);
+  }
 }
 // A damage number that pops and wobbles; bigger hits are bigger and golden.
 function damageNumber(x, y, amount, overkill) {
@@ -154,7 +199,7 @@ function impactAt(x, y, amount) {
   if (REDUCED_MOTION) return;
   const ring = document.createElement("div");
   ring.className = "impact-ring";
-  ring.style.cssText = `left:${x}px;top:${y}px;--s:${0.7 + Math.min(amount, 8) * 0.12}`;
+  ring.style.cssText = `left:${x}px;top:${y}px;--s:${feelTier(amount).ring}`;
   fxLayer().appendChild(ring);
   setTimeout(() => ring.remove(), 500);
 }
@@ -177,6 +222,12 @@ function crystalChips(idx, n, spread = 1) {
   }
   const plate = document.querySelector(`.plate[data-player="${idx}"]`);
   if (plate) { plate.classList.remove("struck"); void plate.offsetWidth; plate.classList.add("struck"); }
+}
+// You tried to play a card you can't afford: the mana row shakes and flashes red.
+function nudgeMana(idx) {
+  const el = document.querySelector(`.mana[data-player="${idx}"]`);
+  if (!el) return;
+  el.classList.remove("broke"); void el.offsetWidth; el.classList.add("broke");
 }
 // Restart a CSS animation class on a card that is on the board right now.
 function flashCard(uid, cls) {
@@ -247,7 +298,7 @@ function shockwave(x, y) {
 }
 
 // Skill spotlight: the skill's icon pops above the card when it takes effect.
-const SKILL_TEXT = { "LEVEL UP": "Level Up", "EVOLVE!": "Evolve", "TRANSFORM!": "Transform", "REANIMATE": "Reanimate", "+1 ATK/SPD": "Rally" };
+const SKILL_TEXT = { "LEVEL UP": "Level Up", "EVOLVE!": "Evolve", "TRANSFORM!": "Transform", "REANIMATE": "Reanimate", "» NO REPLY": "Swift" };
 function skillSpotlight(uid, text) {
   const skill = SKILL_TEXT[text];
   if (!skill || REDUCED_MOTION) return;

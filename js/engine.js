@@ -12,6 +12,8 @@ const RULES = {
   maxChars: DATA.rules.max_field_characters ?? Infinity,   // no limit unless game_rules.csv sets one
   // Characters stand on the frontline; areas and stored equipment share the backline.
   maxBackline: DATA.rules.max_field_backline ?? 10,
+  // A card that would go to a full hand goes to the graveyard instead.
+  maxHand: DATA.rules.max_hand_size ?? 8,
 };
 const BACKLINE = () => DATA.text("zone_backline", "Backline");
 const backlineCount = p => p.field.areas.length + p.field.equips.length;
@@ -75,8 +77,18 @@ function findArea(uid) {
 }
 function allChars() { return S.players.flatMap(p => p.field.chars); }
 function countChars(pred) { return allChars().filter(pred).length; }
+// The game's own random numbers. They come from the match seed (S.seed), and the generator's
+// state lives in S.rng, so the same seed and the same moves always replay the same game.
+// AI look-ahead runs on a copy of S, so it never changes the real game's draws.
+function rand() {
+  let t = (S.rng = (S.rng + 0x6d2b79f5) >>> 0);
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const newSeed = () => (Math.random() * 4294967296) >>> 0;
 function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
   return arr;
 }
 function takeFromDeck(p, pred) {
@@ -136,17 +148,15 @@ function rawStats(c) {
   const p = ownerOf(c);
   const e = equipBonuses(c), ar = areaBonuses(p, c);
   let buff = 0;
-  if (c.group === "Fighter") buff += 2 * p.field.chars.filter(x => named(x, "Fight Choreographer") && x !== c).length;
-  if (c.name === "Turtle") buff += p.field.chars.filter(x => x.name === "Turtle" && x !== c).length;
-  let extraA = 0;
-  if (named(c, "Baboon")) extraA += countChars(x => x !== c);   // +1 attack per other character on the field
+  const aura = auraBonus(c, p);   // "aura:" effects from cards on this side (js/effects.js)
+  const extraA = aura.a, extraH = aura.h;
   if (c.group === "Simple" && simplisticOut()) buff += SIMPLISTIC_BONUS;
   // Simple equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
   const simpleGear = simplisticOut() ? SIMPLISTIC_BONUS * (c.equipped || []).filter(x => x.group === "Simple").length : 0;
   const rally = c.rallyBonus || 0;
   return {
     a: c.attack + e.a + ar.a + buff + rally + extraA + simpleGear,
-    h: c.currentHealth + ar.h + buff + simpleGear,
+    h: c.currentHealth + ar.h + buff + extraH + simpleGear,
     parry: hasSkill(c, "Parry") || ar.parry,
   };
 }
@@ -200,13 +210,11 @@ function levelUp(c, times = 1) {
     c.keptLevels = (c.keptLevels || 0) + 1;   // levels whose stats this character holds
     healFully(c);
     emit("text", { uid: c.uid, text: "LEVEL UP", color: "#ffd25e" });
-    for (const dc of ownerOf(c).field.chars.filter(x => x !== c && named(x, "Data Collector"))) {
-      dc.currentHealth++; dc.baseHealth++;
-      emit("text", { uid: dc.uid, text: "+1 HP", color: "#6fe3ff" });
-    }
+    const owner = ownerOf(c);
+    for (const x of owner.field.chars.slice()) if (x !== c) runHook(x, "allyLevelUp", { owner });
     if (c.levelUpCount >= levelCap(c)) {
       removeSkill(c, "Level Up");
-      if (named(c, "White Belt Student")) transformCharacter(c, "Black Belt Student");
+      runHook(c, "maxLevel", { owner });
     }
   }
 }
@@ -276,7 +284,7 @@ function checkDeath(c) {
   if (hasSkill(c, "Reanimate") && !c.reanimated) {
     c.reanimated = true; removeSkill(c, "Reanimate");
     c.currentHealth = c.baseHealth; c.attack = c.baseAttack;
-    if (named(c, "Hungry Corpse")) { c.attack++; c.currentHealth++; }
+    runHook(c, "reanimate", { owner: p });
     triggerEvolve(c); // "After returning from the Graveyard to the Field, Evolve"
     emit("text", { uid: c.uid, text: "REANIMATE", color: "#8dff8d" });
     log(`${c.name} reanimates.`);
@@ -290,10 +298,7 @@ function dealDamageToCharacter(c, amount) {
   c.currentHealth -= amount;
   emit("charDamage", { uid: c.uid, amount });
   if (rawStats(c).h <= 0) checkDeath(c);
-  else if (named(c, "Gorilla")) {
-    c.attack++;
-    emit("text", { uid: c.uid, text: "+1 ATK", color: "#ffe066" });
-  }
+  else runHook(c, "hurt", { owner: ownerOf(c) });
 }
 
 // IP Man: once per turn, the first damage that would hit IP Man or his player goes to an
@@ -354,236 +359,26 @@ function initBattlefieldCharacter(c, p) {
   c.owner = p.idx; c.levelUpCount = 0; c.levelHealth = 0; c.keptLevels = 0; c.combatSurvived = 0; c.reanimated = false;
   emit("enter", { uid: c.uid, cost: c.manaCost || 0 });
 
-  if (named(c, "Zombombadier")) {
-    const d = c.attack + c.health;
-    for (const q of S.players) {
-      for (const x of q.field.chars.filter(x => x !== c)) dealDamageToCharacter(x, d);
-      dealDamageToPlayer(q, d);
-    }
-  }
-  if (named(c, "Master Rat")) {
-    for (let k = 0; k < 4; k++) {
-      if (p.field.chars.length >= RULES.maxChars) break;
-      const turtle = {
-        uid: S.nextUid++, id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", race: "Animal", group: "Fighter",
-        manaCost: 0, attack: 1, health: 1, skills: [], ability: "Gain +1 to each stat for every other Turtle on the field",
-        description: "", artKey: "turtle", token: true,
-      };
-      putOnField(turtle, p);
-    }
-  } else if (named(c, "Simple Farmer")) {
-    const extra = takeFromDeck(p, x => x.name === "Simple Farmer");
-    if (extra) { p.hand.push(extra); emit("handAdd", { player: p.idx }); }
-    const farmers = p.field.chars.filter(x => x.name === "Simple Farmer").length;
-    if (farmers >= 3 && p.field.chars.length < RULES.maxChars) {
-      const big = takeFromDeck(p, x => x.name === "Simpler Farmer");
-      if (big) { putOnField(big, p); log("Three farmers call the Simpler Farmer to the field."); }
-    }
-  }
+  runHook(c, "enter", { owner: p });
   updateRally(p);
   triggerSignal(c, p);
 }
 
 // Equipment entering the field levels up White Belt Students.
 function equipmentEntered(p) {
-  for (const x of p.field.chars) if (named(x, "White Belt Student")) levelUp(x);
+  for (const x of p.field.chars.slice()) runHook(x, "gearEnters", { owner: p });
 }
 
 // ---------------------------------------------------------------------------
 // Card effects
-// Each entry may define:
+// What each card does is written in data/cards.csv (the Effect column) and turned into
+// EFFECTS and hooks by js/effects.js. An EFFECTS entry may define:
 //   target: "char" | "charOrPlayer" | "area"  (the player then picks a target)
-//   intent: "harm" | "help"                   (used by the computer player)
+//   intent: "harm" | "help" | "steal"         (used by the computer player)
 //   apply(ctx, target)                        (run once a target is chosen)
 //   now(ctx)                                  (run immediately, no target)
 // ctx = { card, owner, spell }
 // ---------------------------------------------------------------------------
-const loseHealth = n => (ctx, t) => dealDamageToCharacter(t, n);
-
-const EFFECTS = {
-  // Simple
-  "Simple Barkeep": { target: "char", intent: "help", apply: (ctx, t) => { t.currentHealth += 1; } },
-  "Slap": { target: "char", intent: "harm", apply: (ctx, t) => dealDamageToCharacter(t, 1 + spellBoost(ctx)) },
-  "Simple Wizard": { target: "charOrPlayer", intent: "harm", apply: (ctx, t) => t.isPlayer ? dealDamageToPlayer(S.players[t.idx], 2) : dealDamageToCharacter(t, 2) },
-  "Simplify": { target: "char", intent: "harm", apply: (ctx, t) => { t.attack = 1; t.currentHealth = 1; } },
-  "Simple Messenger": {
-    now: ctx => {
-      const foe = foeOf(ctx.owner);
-      const top = foe.deck[foe.deck.length - 1];
-      if (!top) return;
-      ask({
-        kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: `Top of ${foe.name}'s deck`,
-        prompt: "Put this card on top of your deck, or discard it.",
-        cards: [top], options: [{ id: "take", label: "Put on my deck" }, { id: "discard", label: "Discard it" }],
-        resolve: "messenger",
-      });
-    },
-  },
-  "Herd": {
-    now: ctx => {
-      for (let k = 0; k < 3; k++) { const f = cardByName("Simple Farmer"); if (!f || !putOnField(f, ctx.owner)) break; }
-    },
-  },
-  "Simplicity": {
-    now: ctx => {
-      const foe = foeOf(ctx.owner);
-      const hit = foe.field.chars.slice();
-      const n = 2 + spellBoost(ctx);
-      for (const c of hit) { c.attack -= n; c.currentHealth -= n; }
-      healPlayer(ctx.owner, n * hit.length);
-      for (const c of hit) { emit("charDamage", { uid: c.uid, amount: n }); checkDeath(c); }
-    },
-  },
-  "Orangutan": { now: ctx => { ctx.card.currentHealth += ctx.owner.field.chars.filter(x => x.group === "Monkey" && x !== ctx.card).length; } },
-  "Simpler Farmer": { now: ctx => { const n = ctx.owner.field.chars.filter(x => x.name === "Simple Farmer").length; ctx.card.attack += n; } },
-  "Mana Horder": {
-    now: ctx => {
-      const foe = foeOf(ctx.owner);
-      ctx.owner.manaMax++; ctx.owner.mana++;
-      foe.manaMax = Math.max(0, foe.manaMax - 1); foe.mana = Math.min(foe.mana, foe.manaMax);
-    },
-  },
-
-  // Monkey
-  "Monkey Apprentice": {
-    now: ctx => {
-      const b = takeFromDeck(ctx.owner, x => x.name === "Banana");
-      if (b) { ctx.owner.hand.push(b); emit("handAdd", { player: ctx.owner.idx }); }
-      shuffle(ctx.owner.deck);
-    },
-  },
-  "Banana": {
-    target: "char", intent: "help",
-    apply: (ctx, t) => {
-      t.currentHealth += 1;
-      if (ctx.owner.ripen) t.attack += 1;
-      const peel = takeFromDeck(ctx.owner, x => x.name === "Peel");
-      if (peel) { ctx.owner.hand.push(peel); emit("handAdd", { player: ctx.owner.idx }); }
-      shuffle(ctx.owner.deck);
-    },
-  },
-  "Peel": { target: "char", intent: "harm", apply: (ctx, t) => dealDamageToCharacter(t, ctx.owner.field.chars.filter(x => x.group === "Monkey").length >= 3 ? 2 : 1) },
-  "Ripen": { now: ctx => { ctx.owner.ripen = true; } },
-  "Primate": {
-    now: ctx => {
-      const picks = ctx.owner.deck.filter(n => n.group === "Monkey" && n.type === "Character" && n.name !== "Primate" && n.manaCost <= 2).slice(-2);
-      for (const n of picks) {
-        if (ctx.owner.field.chars.length >= RULES.maxChars) break;
-        ctx.owner.deck.splice(ctx.owner.deck.indexOf(n), 1);
-        putOnField(n, ctx.owner);
-      }
-    },
-  },
-  "Arboreal Intelligence": {
-    now: ctx => { for (const c of ctx.owner.field.chars) if (c.group === "Monkey") { c.attack += 5; c.currentHealth += 5; } },
-  },
-  "Call of the Jungle": {
-    now: ctx => {
-      const cards = ctx.owner.grave.filter(c => c.group === "Monkey" && !c.token);
-      if (!cards.length) return;
-      ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call of the Jungle", prompt: "Pick up to 3 Monkey cards to return to your hand.", cards, pick: 3, resolve: "toHand" });
-    },
-  },
-
-  // Zombie
-  "Haunt the Living": { target: "char", intent: "help", apply: (ctx, t) => { if (!hasSkill(t, "Reanimate")) { t.skills.push("Reanimate"); t.reanimated = false; } } },
-  "Plaguemancer": { target: "char", intent: "steal", apply: (ctx, t) => convertToZombie(ctx, t, true) },
-  "Infection": { target: "char", intent: "steal", apply: (ctx, t) => convertToZombie(ctx, t, false) },
-  "Soul Suction": {
-    target: "char", intent: "harm",
-    apply: (ctx, t) => {
-      const st = stats(t);
-      healPlayer(ctx.owner, st.a + st.h);
-      dealDamageToCharacter(t, 99999);
-    },
-  },
-  "Death's Grasp": { target: "char", intent: "harm", apply: (ctx, t) => destroyCharacter(t) },
-  "Rotten Hand": {
-    now: ctx => {
-      const p = ctx.owner;
-      while (p.hand.length) p.grave.push(p.hand.pop());
-      for (let k = 0; k < 3; k++) drawCard(p);
-    },
-  },
-  "Rotten Finger": {
-    now: ctx => {
-      if (!ctx.owner.hand.length) return;
-      ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rotten Finger", prompt: "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" });
-    },
-  },
-  "Rise from the Dead": {
-    now: ctx => {
-      const cards = ctx.owner.grave.filter(c => c.race === "Undead" && c.type === "Character");
-      if (!cards.length || ctx.owner.field.chars.length >= RULES.maxChars) return;
-      const options = [{ id: "field", label: "Bring it back to the field" }];
-      ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rise from the Dead", prompt: "Pick an Undead character from your graveyard to bring back to the field.", cards, pick: 1, options, resolve: "rise" });
-    },
-  },
-  "They Just Keep Coming": {
-    now: () => {
-      for (const c of allChars()) if (c.group === "Zombie") {
-        if (hasSkill(c, "Reanimate")) c.currentHealth += 3;
-        else { c.skills.push("Reanimate"); c.reanimated = false; }
-      }
-    },
-  },
-
-  // Fighter
-  "Kenshi's Blade": { target: "char", intent: "harm", filter: (c, ctx) => c.owner !== ctx.owner.idx, apply: loseHealth(3) },
-  "IP Man": {
-    target: "charOrPlayer", intent: "harm", filter: (c, ctx) => c.owner !== ctx.owner.idx, players: (idx, ctx) => idx !== ctx.owner.idx,
-    apply: (ctx, t) => (t.isPlayer ? dealDamageToPlayer(S.players[t.idx], ctx.amount) : dealDamageToCharacter(t, ctx.amount)),
-  },
-  "Sweep the Leg": { target: "char", intent: "harm", apply: (ctx, t) => { removeSkill(t, "Swift"); t.attack = Math.max(0, t.attack - 1); } },
-  "Bite the Ear": { target: "char", intent: "harm", apply: loseHealth(1) },
-  "Crane Kick": { target: "char", intent: "harm", apply: loseHealth(7) },
-
-  // Digital
-  "Digital Girlfriend": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t) },
-  "Spam Bot": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t) },
-  "Upgrade": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t) },
-  "Gymfluencer": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t, 2) },
-  "Catfish": {
-    target: "char", intent: "harm",
-    apply: (ctx, t) => { t.attack -= 1; t.currentHealth -= 1; emit("charDamage", { uid: t.uid, amount: 1 }); checkDeath(t); },
-  },
-  "Secure the Data": {
-    target: "char", intent: "help",
-    apply: (ctx, t) => { if (!hasSkill(t, "Cloak")) { t.skills.push("Cloak"); t.tempCloak = true; } emit("text", { uid: t.uid, text: "SECURED", color: "#6fe3ff" }); },
-  },
-  "Data Transfer": {   // activated from the field during your Setup phase, once per turn
-    target: "char", intent: "help", filter: (c, ctx) => c.owner === ctx.owner.idx && c.keptLevels > 0,
-    apply: (ctx, t) => { if (levelDown(t)) healPlayer(ctx.owner, 2); },
-  },
-  "Digital Drainage": {
-    now: ctx => {
-      const levelers = ctx.owner.field.chars.filter(c => hasSkill(c, "Level Up"));
-      for (const c of levelers) levelUp(c, 3);
-      const alive = levelers.filter(c => ctx.owner.field.chars.includes(c));
-      if (!alive.length) return;
-      const top = alive.reduce((a, b) => (stats(b).a > stats(a).a ? b : a));
-      const drain = top.levelUpCount || 0;
-      for (const c of foeOf(ctx.owner).field.chars) { c.attack -= drain; emit("text", { uid: c.uid, text: `-${drain} ATK`, color: "#ff8a6b" }); }
-    },
-  },
-
-  // Neutral
-  "Flame Surge": { now: () => damageEverything(1) },
-  "Fire Storm": { now: () => damageEverything(3) },
-  "Area Denial": { target: "area", intent: "harm", apply: (ctx, t) => { const f = findArea(t.uid); if (f) { f.p.field.areas.splice(f.i, 1); f.p.grave.push(t); log(`${t.name} was destroyed.`); sweepDeaths(); } } },
-  "Disable": {
-    target: "char", intent: "harm",
-    apply: (ctx, t) => { t.skills = []; t.disabled = true; t.ability = ""; updateRally(ownerOf(t)); emit("text", { uid: t.uid, text: "DISABLED", color: "#c9c9c9" }); sweepDeaths(); },
-  },
-  "Call Back": {
-    now: ctx => {
-      const cards = S.players.flatMap(p => p.grave).filter(c => c.type === "Character" && !c.token);
-      if (!cards.length) return;
-      ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call Back", prompt: "Pick a character from either graveyard to add to your hand.", cards, pick: 1, resolve: "toHand" });
-    },
-  },
-};
-
 function damageEverything(n) {
   for (const q of S.players) {
     for (const x of q.field.chars.slice()) dealDamageToCharacter(x, n);
@@ -661,9 +456,22 @@ function buildDeck(deckId) {
 function drawCard(p) {
   if (!p.deck.length) { deckOut(p); return null; }
   const c = p.deck.pop();
-  p.hand.push(c);
-  emit("draw", { player: p.idx, uid: c.uid });
+  if (addToHand(p, c, false)) emit("draw", { player: p.idx, uid: c.uid });
   return c;
+}
+
+// Every card that goes to a hand comes through here. A hand holds at most RULES.maxHand
+// cards; one more goes to the graveyard instead (it "burns").
+function addToHand(p, c, announce = true) {
+  if (p.hand.length >= RULES.maxHand) {
+    p.grave.push(c);
+    emit("burn", { player: p.idx, card: c });
+    log(`${p.name}'s hand is full, so ${c.name} goes to the graveyard.`);
+    return false;
+  }
+  p.hand.push(c);
+  if (announce) emit("handAdd", { player: p.idx });
+  return true;
 }
 
 function startTurn(p) {
@@ -674,7 +482,8 @@ function startTurn(p) {
   for (const c of p.field.chars) {
     c.hasAttacked = false;
     c.attackedThisTurn = false;
-    if (c.tempCloak) { removeSkill(c, "Cloak"); c.tempCloak = false; }   // Secure the Data lasts until your next turn
+    for (const sk of c.tempSkills || []) removeSkill(c, sk);   // e.g. Secure the Data lasts until your next turn
+    c.tempSkills = [];
   }
 }
 
@@ -707,12 +516,13 @@ function activateArea(uid) {
   return true;
 }
 
-function newGame({ deckId, opponentDeckId, mode }) {
-  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], mode, nextUid: 1, log: [] };
+function newGame({ deckId, opponentDeckId, mode, seed }) {
+  seed = (seed ?? newSeed()) >>> 0;
+  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], mode, nextUid: 1, log: [], seed, rng: seed };
   let opp = opponentDeckId;
   if (!opp) {
     const others = DATA.deckOrder.filter(id => id !== deckId);
-    opp = others.length ? others[Math.floor(Math.random() * others.length)] : deckId;
+    opp = others.length ? others[Math.floor(rand() * others.length)] : deckId;
   }
   S.players = [makePlayer(0, deckId, false), makePlayer(1, opp, mode === "ai")];
   for (const p of S.players) {
@@ -725,7 +535,7 @@ function newGame({ deckId, opponentDeckId, mode }) {
   S.players[0].hasDrawn = true;
   S.phase = PHASE.SETUP;
   S.players[1].manaToken = true;
-  log(`${S.players[0].name} (${S.players[0].faction}) vs ${S.players[1].name} (${S.players[1].faction})`);
+  log(`${S.players[0].name} (${S.players[0].faction}) vs ${S.players[1].name} (${S.players[1].faction}) · match seed ${seed}`);
   emit("newGame", {});
   return S;
 }
@@ -742,10 +552,7 @@ function equipCost(c, owner, target, fromField) {
 
 function playCost(c, p) {
   p = p || active();
-  if (c.name === "Shaolin Warrior") return Math.max(0, c.manaCost - S.players.reduce((n, q) => n + q.field.chars.length + q.field.equips.length, 0));
-  if (c.name === "Tree Branch" && p.field.chars.filter(x => x.group === "Monkey").length >= 3) return 1;
-  if (c.name === "They Just Keep Coming") return Math.max(0, c.manaCost - countChars(x => x.group === "Zombie"));
-  return c.manaCost;
+  return costFromEffect(c, p);   // "cost:" effects (js/effects.js)
 }
 
 // Returns null when the card can be played, otherwise a short reason.
@@ -808,6 +615,14 @@ function playCard(uid, opts = {}) {
     return true;
   }
 
+  // A spell that needs a target is only paid for once the target is picked, so cancelling
+  // the choice leaves the card in hand and the mana unspent.
+  const fx = effectFor(c);
+  if (c.type === "Spell" && fx?.target) {
+    S.pending = { kind: "target", source: c, owner: p.idx, spell: true, targetType: fx.target, intent: fx.intent, cast: { cost: playCost(c, p) } };
+    return true;
+  }
+
   p.mana -= playCost(c, p);
   p.hand.splice(index, 1);
   emit("play", { card: c, player: p.idx });
@@ -819,17 +634,12 @@ function playCard(uid, opts = {}) {
     p.field.areas.push(c);
     c.placed = S.round * 100 + backlineCount(p);
     log(`${p.name} plays the area ${c.name}.`);
-    if (c.name === "Whirlpool") {
-      for (const x of allChars().slice()) dealDamageToCharacter(x, 1);
-    }
+    if (fx?.now) fx.now({ card: c, owner: p, spell: false });   // e.g. Whirlpool
     sweepDeaths();
   } else {
     p.grave.push(c);
     log(`${p.name} casts ${c.name}.`);
-    const fx = effectFor(c);
-    const ctx = { card: c, owner: p, spell: true };
-    if (fx?.target) S.pending = { kind: "target", source: c, owner: p.idx, spell: true, targetType: fx.target, intent: fx.intent };
-    else if (fx?.now) fx.now(ctx);
+    if (fx?.now) fx.now({ card: c, owner: p, spell: true });
   }
   return true;
 }
@@ -878,6 +688,15 @@ function chooseTarget(target) {
   const t = target.isPlayer ? target : (pd.targetType === "area" ? findArea(target.uid)?.c : findChar(target.uid)?.c);
   if (!t) return false;
   S.pending = null;
+  if (pd.cast) {   // a spell waiting in hand for its target: pay for it and cast it now
+    const i = owner.hand.indexOf(pd.source);
+    if (i < 0) return false;
+    owner.mana -= pd.cast.cost;
+    owner.hand.splice(i, 1);
+    owner.grave.push(pd.source);
+    emit("play", { card: pd.source, player: owner.idx });
+    log(`${owner.name} casts ${pd.source.name}.`);
+  }
   log(`${pd.source.name} targets ${t.isPlayer ? S.players[t.idx].name : t.name}.`);
   fx.apply({ card: pd.source, owner, spell: pd.spell, amount: pd.amount }, t);
   settle();
@@ -913,7 +732,7 @@ function resolveChoice(picks, option) {
       else { foe.grave.push(top); log(`${top.name} is discarded from ${foe.name}'s deck.`); }
     }
   } else if (pd.resolve === "toHand") {
-    for (const c of picked) { removeFromGrave(c); owner.hand.push(fresh(c)); emit("handAdd", { player: owner.idx }); log(`${c.name} returns to ${owner.name}'s hand.`); }
+    for (const c of picked) { removeFromGrave(c); if (addToHand(owner, fresh(c))) log(`${c.name} returns to ${owner.name}'s hand.`); }
   } else if (pd.resolve === "discardDraw") {
     const c = picked[0];
     if (c) { owner.hand.splice(owner.hand.findIndex(x => x.uid === c.uid), 1); owner.grave.push(c); }
@@ -929,8 +748,8 @@ function resolveChoice(picks, option) {
     const dead = owner.grave.find(x => x.uid === pd.deadUid);
     const shep = findChar(pd.shepardUid)?.c;
     if (option === "hand" && dead) {
-      removeFromGrave(dead); owner.hand.push(fresh(dead)); emit("handAdd", { player: owner.idx });
-      log(`Soul Shepard returns ${dead.name} to ${owner.name}'s hand.`);
+      removeFromGrave(dead);
+      if (addToHand(owner, fresh(dead))) log(`Soul Shepard returns ${dead.name} to ${owner.name}'s hand.`);
     } else if (option === "absorb" && shep) {
       const g = pd.gain;
       shep.attack += g.a; shep.currentHealth += g.h;
@@ -982,7 +801,7 @@ function attack(attackerUid, targetUid) {
   a.hasAttacked = true;
   a.attackedThisTurn = true;
   emit("lunge", { uid: a.uid, target: target ? target.uid : null, player: defender.idx });
-  if (named(a, "Pro Gamer")) levelUp(a);   // levels up each time it attacks
+  runHook(a, "attack", { owner: p });
   const as = stats(a);
   if (!target) {
     log(`${a.name} attacks ${defender.name} for ${as.a}.`);
@@ -1005,6 +824,8 @@ function attack(attackerUid, targetUid) {
   // Both strike at the same time, unless exactly one of them has Swift: that one strikes
   // first, and takes no damage back if its blow knocks the other out.
   const aSwift = isSwift(a), tSwift = isSwift(target);
+  const first = aSwift && !tSwift ? a : tSwift && !aSwift ? target : null;
+  emit("clash", { attacker: a.uid, target: target.uid, swift: first ? first.uid : null });
   if (aSwift && !tSwift) {
     hitTarget();
     if (alive(target) && alive(a)) dealDamageToCharacter(a, ta);
@@ -1015,12 +836,13 @@ function attack(attackerUid, targetUid) {
     hitTarget();
     if (alive(a)) dealDamageToCharacter(a, ta);
   }
+  if (first && alive(first) && !alive(first === a ? target : a)) emit("text", { uid: first.uid, text: "» NO REPLY", color: "#9fe7ff" });
   recordCombatSurvival(a); recordCombatSurvival(target);
   return true;
 }
 
-// Swift: the skill, or wearing Zippy Shoes or a Bow.
-const isSwift = c => hasSkill(c, "Swift") || (c.equipped || []).some(e => named(e, "Zippy Shoes") || named(e, "Bow"));
+// Swift: the skill, or wearing equipment that grants it (Zippy Shoes, Bow).
+const isSwift = c => hasSkill(c, "Swift") || grantsSkill(c, "Swift");
 
 function recordCombatSurvival(c) {
   if (c && ownerOf(c).field.chars.includes(c) && named(c, "Black Belt Student")) {
@@ -1088,30 +910,14 @@ function advancePhase() {
   return true;
 }
 
-// End-of-turn abilities (port of endPhase in Lua)
+// End-of-turn abilities: each "endTurn:" effect on this player's characters, the equipment
+// they hold, and their areas.
 function endPhaseEffects(p) {
-  // Digital: Server Farm, API Key, Beta Tester and Data Transfer level characters up at the end of your turn
-  const farms = p.field.chars.filter(c => named(c, "Server Farm")).length;
   for (const c of p.field.chars.slice()) {
-    if (farms) levelUp(c, farms);
-    const keys = (c.equipped || []).filter(e => e.name === "API Key").length;
-    if (keys) levelUp(c, keys);
-    if (named(c, "Beta Tester")) levelUp(c);
+    runHook(c, "endTurn", { owner: p });
+    for (const e of (c.equipped || []).slice()) runHook(e, "endTurn", { owner: p, holder: c });
   }
-  for (const a of p.field.areas) {
-    if (a.name !== "Data Transfer" || a.disabled) continue;
-    const levelers = p.field.chars.filter(c => hasSkill(c, "Level Up"));
-    if (levelers.length) levelUp(levelers.reduce((x, y) => (stats(y).a > stats(x).a ? y : x)));
-  }
-  for (const c of p.field.chars.slice()) {
-    if (named(c, "Simple Defender")) c.currentHealth += 2;
-    if (named(c, "Banana Tree")) { const b = takeFromDeck(p, x => x.name === "Banana"); if (b) { p.hand.push(b); emit("handAdd", { player: p.idx }); } }
-    if (named(c, "Sneaky Skinbag")) {
-      c.currentHealth += p.field.chars.filter(x => x.group === "Zombie" && x !== c).length;
-      const corpse = cardByName("Reanimated Corpse");
-      if (corpse && p.field.chars.length < RULES.maxChars) putOnField(corpse, p);
-    }
-  }
+  for (const a of p.field.areas.slice()) runHook(a, "endTurn", { owner: p });
 }
 
 function endTurn() {

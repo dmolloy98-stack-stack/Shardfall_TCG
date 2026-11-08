@@ -15,7 +15,7 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 - **Commas inside a value** need the whole value in double quotes: `"When played, search your deck"`. Spreadsheet apps do this for you.
 - **Stats** are written `Attack+Health`, for example `2+1`. Use `---` for cards without stats.
 - **Skills** are joined with `+`, for example `Signal+Rally`. Use `---` for none. Skill names must match the `Name` column in `skills.csv`.
-- **Ability text** describes what a card does. Changing the numbers on a card (cost, stats, skills) works straight away. A brand-new *ability* also needs game code, so ask for that when you add one.
+- **Ability text** is what players read. The **Effect** column is what the game actually does (see "Writing effects" below). Keep the two saying the same thing. Changing numbers in either works straight away; most new abilities can be built from the effect actions without any code.
 - **Changes are saved per file.** If you edit in a spreadsheet, export only the sheet you changed.
 
 ## The files
@@ -36,6 +36,88 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 | Ability | The card's rules text |
 | Description | Optional flavor text |
 | ArtKey | Picture name: the game shows `assets/cards/<ArtKey>.png` if that file exists |
+| Effect | What the card does, written with the actions below. Leave empty for a card with no ability |
+
+### Writing effects (the Effect column)
+
+An effect is one or more **clauses** separated by `;`. A clause starts with **when** it happens, then a colon, then one or more **actions** separated by commas:
+
+```
+play: target character harm, damage target 1+boost
+endTurn: buff self 0 2
+cost: set 1 if #allies.Monkey>=3
+```
+
+If a value has a comma in it (any effect with two actions), the whole Effect cell needs double quotes. Spreadsheet apps add them for you. If an effect has a mistake, the game shows an error naming the card instead of starting.
+
+**When**
+
+| When | Happens |
+|---|---|
+| `play` | A spell is cast, a Signal character enters, an area is played, or an ability is used (IP Man, Kenshi's Blade, Data Transfer) |
+| `enter` | The character enters the field |
+| `endTurn` | At the end of its owner's turn. On equipment: at the end of the holder's owner's turn |
+| `attack` | The character attacks |
+| `hurt` | The character takes damage and survives |
+| `reanimate` | The character comes back through Reanimate |
+| `allyLevelUp` | Another of its owner's characters levels up |
+| `gearEnters` | Equipment enters its owner's field |
+| `maxLevel` | The character reaches its last level |
+| `cost` | Changes the card's mana cost: `reduce <number>` or `set <number>` |
+| `aura` | A lasting bonus while it's on the field: `aura: buff <who> <attack> <health>` |
+| `grants` | Equipment only: the holder has these skills, for example `grants: Swift` |
+
+**Picking a target.** In a `play` clause, start with `target <kind> <intent>`, then use `target` as the "who" in the actions:
+
+- kind: `character`, `characterOrPlayer` or `area`. Narrow it with dots: `character.enemy`, `character.mine`, `character.leveler` (has Level Up), `character.mine.levels` (has kept levels).
+- intent: `harm`, `help` or `steal`. This tells the computer player how to use it.
+
+**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). Narrow a group with dots: a faction (`allies.Monkey`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `strongest`.
+
+**Numbers** can be whole numbers or these words, joined with `+` or `-`:
+
+| Word | Means |
+|---|---|
+| `#allies.Monkey` | How many there are |
+| `#allies.Monkey>=3` | 1 if there are at least 3, otherwise 0 |
+| `boost` | +3 on Simple spells while The Simplistic is out |
+| `ripen` | 1 after Ripen was cast |
+| `amount` | The damage being redirected (IP Man) |
+
+Any action can end with `if <number>`: it only happens when the number is more than 0, for example `if #allies.simple_farmer>=3`.
+
+**Actions**
+
+| Action | Does |
+|---|---|
+| `damage <who> <n>` | Deals n damage to characters or players |
+| `damageAll <n>` | n damage to every character and both players |
+| `buff <who> <attack> <health>` | Adds to attack and health (use negative numbers to lower them) |
+| `shrink <who> <n>` | Loses n attack and n health |
+| `setStats <who> <attack> <health>` | Stats become exactly these |
+| `loseAttack <who> <n>` | Loses n attack (not below 0) |
+| `grow <who> <n>` | Gains n health for good (raises its full health too) |
+| `levelUp <who> <n>` | Levels up n times |
+| `destroy <who>` | Destroys the character, ignoring Reanimate |
+| `destroyArea <who>` | Destroys an area |
+| `grant <who> <Skill> [temp]` | Gives a skill; `temp` = until its owner's next turn |
+| `removeSkill <who> <Skill>` | Takes a skill away |
+| `disable <who>` | Removes all skills and abilities |
+| `convert <who> [reanimate]` | Turns it into a Zombie under your control |
+| `transform <who> <CardID>` | Becomes another card |
+| `heal <me/foe> <n>` | The player gains n health |
+| `maxMana <me/foe> <n>` | Changes maximum mana (negative to take it away) |
+| `draw <me/foe> <n>` | Draws n cards |
+| `discardHand <me/foe>` | Discards the whole hand |
+| `fetch <CardID>` | Takes that card from your deck into your hand |
+| `shuffle` | Shuffles your deck |
+| `summon <CardID> <n>` | Puts n new copies onto your field |
+| `summonFromDeck <CardID>` | Moves that card from your deck onto your field |
+| `flag ripen` | Remembers that Ripen was cast |
+| `say <who> "TEXT" <color>` | Shows a word over the card, like `"+1 ATK" #ffe066` |
+| `script <name>` | Runs a one-off ability written in `js/effects.js` |
+
+**Cards whose rules stay in code.** A few cards change how the game itself works, so their Effect is empty or a `script`: The Simplistic, IP Man (his redirect), The Man Ape, Soul Shepard, Boss Level, Pesky Programmer, Sensei, Weapons Enthusiast, Kenshi's Blade (the once-per-battle use), Black Belt Student, API Key (the Level Up it gives). Ask for code when a new card needs a rule like these.
 
 ### decks.csv: the starter decks shown on the menu
 
@@ -86,6 +168,7 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 |---|---|
 | starting_player_health | Health each player starts with |
 | starting_hand_size | Cards in the opening hand |
+| max_hand_size | Most cards a hand can hold; a card drawn or returned to a full hand goes to the graveyard |
 | mana_growth_per_turn | Maximum mana gained each turn |
 | max_field_backline | Most cards on one side's backline (areas and stored equipment together) |
 | max_field_characters | Optional. Leave it out for no limit on characters (the default) |

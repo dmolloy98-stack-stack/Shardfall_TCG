@@ -5,7 +5,7 @@
 // and then starts the game scripts.
 
 const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks"];
-const GAME_SCRIPTS = ["js/engine.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/intro.js", "js/ui.js", "js/campaign.js"];
+const GAME_SCRIPTS = ["js/engine.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/intro.js", "js/ui.js", "js/campaign.js"];
 let DATA = null;
 
 // Parsing (port of the DATA.load* functions in main.lua)
@@ -84,6 +84,7 @@ function buildData(CSV) {
       id: c[0], manaCost: Number(c[1]) || 0, name: c[2], rarity: c[3] || "Basic", type: c[4],
       race: c[5], group: c[6], attack, health, skills: skillsOf(c[8]),
       ability, description: c[10] || "", artKey: c[11] || c[0],
+      effect: (c[12] || "").trim(),   // what the card does, read by js/effects.js
     };
     cardsById[card.id] = card;
     cardsByName[card.name] = card;
