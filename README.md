@@ -21,6 +21,8 @@ New players have three kinds of help:
 
 **The intro:** every time the game opens, a 20-second cold open of stained-glass panels tells how the Shardfall began (tap to go on, **Skip** to leave). First-time visitors are then offered the tutorial. Watch it again from Settings, or skip it with a link ending in `#menu`. The story, tone, champions and hidden clues are collected in [`docs/world.md`](docs/world.md).
 
+**Campaign** (main menu): five matches in a row against the computer, one for each faction's champion: The Simplistic, The Man Ape, IP Man, Boss Level and finally Soul Shepard. Each champion plays its faction's starter deck and starts with its champion card in hand. A short story card comes before each match and after each win. Beating a champion unlocks the next one; progress is saved in the browser on that device, and **Start over** locks them again. You play the deck chosen on the main menu.
+
 **Your own decks:** on the main menu, **Create your own** opens the deck builder. Start from an empty deck or a copy of a starter, tap cards to add them (filter by faction and type, tap **i** to read a card), and watch the deck panel: card count against the 35-card minimum, the mana curve, how many characters, spells, equipment and areas, and tips. Copy limits from `data/game_rules.csv` are enforced. A short walkthrough runs the first time and from **? How to build**. Decks are saved in the browser on that device, appear on the main menu with an Edit button, and can't be started until they reach the minimum size. The computer opponent always uses a starter deck.
 
 **On phones** the game works best held sideways, and it asks you to turn the phone if it's upright (with a "Play upright anyway" option). Because the board is scaled down a lot on a phone, the space beside it is used for large buttons (Menu, Draw card / To battle / To end / Pass turn, Attack directly, Cancel), and in the tutorial for the coach panel, which repeats each step's button at full size. Page scrolling, zooming and long-press menus are switched off on the game screen, and the board stays clear of the notch.
@@ -69,6 +71,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `js/help.js` | Beginner hints, the first-visit welcome, the in-game guide screen |
 | `js/decks.js` | The deck builder, saved custom decks and its walkthrough |
 | `js/intro.js` | The stained-glass cold open before the main menu |
+| `js/campaign.js` | The campaign: one match against each faction's champion, with its story text and saved progress |
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
 | `js/fx.js` | Game feel: aiming line and fight previews, impacts, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
@@ -138,7 +141,7 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 - **White Belt Student** levels up each time equipment enters the field. After three level-ups it becomes a **Black Belt Student**, which becomes a **5th Degree Master** after surviving three combats.
 - **Weapons Enthusiast** equips anything for 1 mana, and **Sensei** makes all your equipment free while it's on the table.
 - **Nunchucks** and **Bo Staff** (4 copies each, 2 mana): efficient weapons with Flash, so you can equip them in the middle of Battle.
-- **Seasoned Monk** and **Black Belt Student** have **Parry** and hit back twice as hard when defending. **Dojo** gives every Fighter Parry and +1 to all stats.
+- **Seasoned Monk** and **Black Belt Student** have **Parry** and hit back twice as hard when defending. **Dojo** gives every Fighter Parry and +2 to all stats.
 - **Fight Choreographer** gives every other Fighter +2 to all stats. **Master Rat** brings four Turtles that power each other up.
 - Removal: **Bite the Ear** and **Crane Kick** (7 damage).
 - **IP Man** turns the first hit each turn (on you or on him) back onto an enemy character or player. **Kenshi's Blade** lets the character holding it strike an enemy for 3 once per Battle Phase.
@@ -176,6 +179,8 @@ The design sheet left some Digital slots blank; these were filled in to fit the 
 - **Game feel:**
   - **Aiming:** choosing an attacker draws an aiming line to your finger or mouse, and you can drag straight onto a target. Each enemy you could attack shows how the fight would end (Defeats it, Both fall, Yours falls, or the damage dealt; ⚡ means you strike first).
   - **Impacts:** attackers swoop into their target, and hits land with a flash, a ring, and a screen shake sized to the damage. Damage numbers get bigger with the hit and say OVERKILL. Chips fly off a player's life crystal when it's hit.
+  - **Level Up on the table:** characters that can level show stars for their levels (★★☆), Boss Level shows its level number, and the card glows brighter with each level.
+  - **Faction deaths:** Zombies sink back into the ground, Digital cards break into pixels and glitch out, Monkeys tumble off the table, Fighters are cut in two by a clean strike, and everything else shatters like crystal.
   - **Big moments:** cards costing 6 or more are shown large in the middle before they land with a shockwave. A skill's icon pops when it takes effect (Level Up, Evolve, Transform, Reanimate, Rally). Each faction enters the table its own way.
   - **A living board:** cards breathe, playable cards shimmer, and each side of the Crystal Altar glows in its deck's color, brighter as its mana grows. When someone drops into red health, the edges pulse and the shards fall faster.
   - **The finale:** slow motion on the winning blow and a shattering crystal. The end screen shows cards played, damage dealt, the biggest hit, and badges like Flawless, Comeback, First win with a deck and Massive hit.

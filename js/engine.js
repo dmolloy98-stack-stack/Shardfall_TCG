@@ -256,7 +256,7 @@ function sendToGraveyard(p, c) {
   if (i >= 0) p.field.chars.splice(i, 1);
   p.grave.push(c);
   updateRally(p);
-  emit("death", { uid: c.uid });
+  emit("death", { uid: c.uid, group: c.group });
   log(`${c.name} was destroyed.`);
   if (gain) {
     ask({

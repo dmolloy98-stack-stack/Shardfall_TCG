@@ -84,7 +84,7 @@ black_belt_student,3,Black Belt Student,Rare,Character,N/A,Fighter,2+2+2,Parry+T
 fight_choreographer,6,Fight Choreographer,Rare,Character,N/A,Fighter,1+2+1,---,Each other Fighter character on the field gains +2 to all stats,,fight_choreographer
 nunchucks,2,Nunchucks,Rare,Equipment,N/A,Fighter,2+0+2,Flash,Can be equipped anytime as long as you have the mana,,nunchucks
 bo_staff,2,Bo Staff,Rare,Equipment,N/A,Fighter,2+2+0,Flash,Can be equipped anytime as long as you have the mana,,bo_staff
-dojo,4,Dojo,Rare,Area,N/A,Fighter,---,---,Each Fighter character gains Parry and +1 to all stats,,dojo
+dojo,4,Dojo,Rare,Area,N/A,Fighter,---,---,Each Fighter character gains Parry and +2 to all stats,,dojo
 fifth_degree_master,7,5th Degree Master,Exotic,Character,N/A,Fighter,3+3+2,Parry,,,fifth_degree_master
 master_rat,10,Master Rat,Exotic,Character,N/A,Fighter,5+5+5,Parry,Summon 4 1+1+1 turtles who each have Gain +1 to each stat for every other turtle on the field,,master_rat
 crane_kick,5,Crane Kick,Exotic,Spell,N/A,Fighter,---,---,Target character loses 7 health,,crane_kick

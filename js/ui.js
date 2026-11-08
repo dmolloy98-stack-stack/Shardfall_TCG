@@ -89,7 +89,14 @@ function cardHTML(c, opts = {}) {
     }
   }
   const cost = opts.costOverride ?? c.manaCost;
-  return `<div class="card" style="--edge:${edge};--fc:${fc}">
+  // Level Up progress on the table: stars for levels gained, and a glow that grows with them.
+  const lv = opts.field && c.type === "Character" ? c.levelUpCount || 0 : 0;
+  const levels = opts.field && c.type === "Character" && (lv > 0 || hasSkill(c, "Level Up"));
+  const cap = levels ? levelCap(c) : 0;
+  const pips = !levels ? "" : cap === Infinity
+    ? `<div class="level-pips" title="Level ${lv}">Lv ${lv}</div>`
+    : `<div class="level-pips" title="Level ${lv} of ${cap}">${"★".repeat(Math.min(lv, cap))}${"☆".repeat(Math.max(0, cap - lv))}</div>`;
+  return `<div class="card${lv ? " lv" + Math.min(lv, 3) : ""}" style="--edge:${edge};--fc:${fc}">
     ${medal(c.group)}
     ${opts.field ? "" : `<div class="cost">${cost}</div>`}
     <div class="name">${esc(c.name)}</div>
@@ -97,6 +104,7 @@ function cardHTML(c, opts = {}) {
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
     <div class="skills">${skills}</div>
     ${opts.field && c.equipped?.length ? `<div class="equip-count" title="Equipped">●${c.equipped.length}</div>` : ""}
+    ${pips}
     ${statsHTML}
   </div>`;
 }
@@ -182,7 +190,7 @@ function sparkle(x, y, n = 14) {
 
 // A defeated character breaks into shards: copies of the card, each clipped to one
 // wedge, fly apart and fade. Runs before the board redraws, while the card is still there.
-function shatter(uid, delay = 0) {
+function shatter(uid, delay = 0, group = null) {
   const src = document.querySelector(`.field-card[data-uid="${uid}"]`);
   if (!src || REDUCED_MOTION) return;
   if (delay) {
@@ -193,12 +201,47 @@ function shatter(uid, delay = 0) {
     hold.style.cssText = `left:${src.offsetLeft}px;top:${src.offsetTop}px`;
     $("#fx-layer").appendChild(hold);
     const card = { offsetLeft: src.offsetLeft, offsetTop: src.offsetTop, innerHTML: src.innerHTML };
-    setTimeout(() => { hold.remove(); shatterFrom(card); }, delay);
+    setTimeout(() => { hold.remove(); shatterFrom(card, group); }, delay);
     return;
   }
-  shatterFrom(src);
+  shatterFrom(src, group);
 }
-function shatterFrom(src) {
+// Each faction leaves the table its own way. Other cards shatter like crystal.
+const DEATHS = { Zombie: sinkAway, Digital: pixelAway, Monkey: tumbleAway, Fighter: slashAway };
+function deathPiece(src, cls, style = "", ms = 1000) {
+  const piece = document.createElement("div");
+  piece.className = cls;
+  piece.innerHTML = src.innerHTML;
+  piece.style.cssText = `left:${src.offsetLeft}px;top:${src.offsetTop}px;${style}`;
+  $("#fx-layer").appendChild(piece);
+  setTimeout(() => piece.remove(), ms);
+  return piece;
+}
+function sinkAway(src) {   // Zombie: sinks back into the ground
+  deathPiece(src, "death-sink", "", 1100);
+}
+function pixelAway(src) {  // Digital: breaks up into pixels and glitches out
+  const cols = 5, rows = 7, w = CARD_W / cols, h = CARD_H / rows;
+  for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
+    const l = k * w, t = r * h;
+    deathPiece(src, "death-pixel", `clip-path:inset(${t}px ${CARD_W - l - w}px ${CARD_H - t - h}px ${l}px);--dx:${(Math.random() - 0.5) * 70}px;--dy:${(Math.random() - 0.3) * 60}px;animation-delay:${(Math.random() * 0.35).toFixed(2)}s`, 1200);
+  }
+}
+function tumbleAway(src) { // Monkey: knocked off the table, tumbling
+  const dir = Math.random() < 0.5 ? -1 : 1;
+  deathPiece(src, "death-tumble", `--dx:${dir * 140}px;--r:${dir * 540}deg`, 1000);
+}
+function slashAway(src) {  // Fighter: cut in two by a clean strike
+  deathPiece(src, "death-slash", `clip-path:polygon(0 0, 100% 0, 100% 35%, 0 70%);--dx:-18px;--dy:-26px;--r:-8deg`, 1000);
+  deathPiece(src, "death-slash", `clip-path:polygon(0 70%, 100% 35%, 100% 100%, 0 100%);--dx:18px;--dy:34px;--r:8deg`, 1000);
+  const line = document.createElement("div");
+  line.className = "death-slash-line";
+  line.style.cssText = `left:${src.offsetLeft - 10}px;top:${src.offsetTop + CARD_H * 0.525}px`;
+  $("#fx-layer").appendChild(line);
+  setTimeout(() => line.remove(), 500);
+}
+function shatterFrom(src, group) {
+  if (DEATHS[group]) { DEATHS[group](src); sparkle(src.offsetLeft + CARD_W / 2, src.offsetTop + CARD_H / 2, 6); return; }
   const x = src.offsetLeft, y = src.offsetTop, cx = CARD_W / 2, cy = CARD_H / 2;
   const ring = [[0, 0], [45, 0], [95, 0], [95, 50], [95, 95], [95, 135], [50, 135], [0, 135], [0, 85], [0, 40]];
   ring.forEach((p, k) => {
@@ -294,7 +337,7 @@ onGameEvent((type, d) => {
       sparkle(at.x, at.y, d.card.type === "Spell" ? 22 : 14);
     }, 0);
   } else if (type === "death") {
-    shatter(d.uid, delay);
+    shatter(d.uid, delay, d.group);
   } else if (type === "gameOver") {
     finale(d.winner);
   }
@@ -463,7 +506,9 @@ function render() {
   } else if (U.ended && !U.tutorial) {
     const title = S.winner == null ? "A draw" : S.mode === "ai" ? (S.winner === 0 ? "Victory" : "Defeat") : `${S.players[S.winner].name} wins`;
     const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;
-    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${endStatsHTML()}<div class="detail-actions"><button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button></div></div>`;
+    const camp = U.campaign ? campaignEndHTML(S.winner === 0) : null;
+    const actions = camp ? camp.actions : `<button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button>`;
+    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
   }
   $("#board").innerHTML = h;
   renderHand(me);
@@ -554,15 +599,18 @@ function scheduleAI() {
   }, (S.phase === PHASE.DRAW ? 900 : 750) + wait);
 }
 
-function startGame() {
+// opts.opponentDeckId and opts.setup(S) are used by the campaign (js/campaign.js).
+function startGame(opts = {}) {
   if (deckProblem(U.deckId)) { showScreen("menu"); return; }
   endTutorial();
   clearTimeout(U.aiTimer);
   Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
-  newGame({ deckId: U.deckId, mode: U.mode });
+  U.campaign = opts.campaign ?? null;
+  newGame({ deckId: U.deckId, opponentDeckId: opts.opponentDeckId, mode: U.campaign ? "ai" : U.mode });
+  opts.setup?.(S);
   showScreen("game");
-  if (U.mode === "hotseat") U.curtain = true; else banner("Your turn");
+  if (S.mode === "hotseat") U.curtain = true; else banner("Your turn");
   render();
 }
 
@@ -840,7 +888,7 @@ $("#modal").addEventListener("click", e => {
   if (m === "play") act(() => playCard(uid));
   else if (m === "arm") { U.armed = { uid, from: "hand" }; render(); }
   else if (m === "tofield") act(() => playCard(uid, { toField: true }));
-  else if (m === "restart") U.tutorial ? startTutorial() : startGame();
+  else if (m === "restart") U.tutorial ? startTutorial() : U.campaign ? playCampaignMatch(U.campaign.stage) : startGame();
   else if (m === "settings") showSettings();
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
   else if (m === "rules") showGuide();
@@ -862,7 +910,9 @@ $("#board").addEventListener("click", e => {
   const human = humanTurn();
   if (a === "menu") return showGameMenu();
   if (a === "curtain") { U.curtain = false; render(); const b = $("#board"); b.classList.remove("rotate-in"); void b.offsetWidth; b.classList.add("rotate-in"); banner(`${active().name}'s turn`); return; }
-  if (a === "again") return startGame();
+  if (a === "again") return U.campaign ? playCampaignMatch(U.campaign.stage) : startGame();
+  if (a === "camp-next") return campaignNext();
+  if (a === "camp-map") return showCampaign();
   if (a === "tomenu") { endTutorial(); return showScreen("menu"); }
   if (a === "phase") return onPhaseButton();
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; act(endTurn); } return; }
@@ -1020,7 +1070,7 @@ $("#deck-list").addEventListener("click", e => {
 });
 $("#mode-ai").addEventListener("click", () => { U.mode = "ai"; renderMenu(); });
 $("#mode-hotseat").addEventListener("click", () => { U.mode = "hotseat"; renderMenu(); });
-$("#btn-start").addEventListener("click", startGame);
+$("#btn-start").addEventListener("click", () => startGame());
 $("#btn-almanac").addEventListener("click", () => { U.almanacReturn = "menu"; showScreen("almanac"); });
 $("#btn-rules").addEventListener("click", () => showGuide());
 $("#btn-settings").addEventListener("click", showSettings);

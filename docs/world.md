@@ -69,6 +69,7 @@ Each faction comes from a different world.
 | Where | Clue | What it hints at |
 |---|---|---|
 | Intro, first window ("each one was whole") | One green glass pane in the second ring is already cracked, before the worlds collide | Something was broken before the collision. Green is the Zombie color, which points suspicion their way |
+| Campaign, after beating Soul Shepard | The souls Soul Shepard gathered come from every world, not only its own, and the shards keep falling | The Zombies are victims too, and beating every champion does not end the Shardfall |
 
 ## The intro (cold open)
 
@@ -78,6 +79,14 @@ Each faction comes from a different world.
 - Watch it again: Settings → Watch the intro. To open the game without it, use a link
   ending in `#menu`.
 - The text lives in `js/intro.js` (`INTRO_PANELS`). It is a placeholder to be rewritten.
+
+## The campaign
+
+- Five matches, one per champion, in this order: The Simplistic, The Man Ape, IP Man,
+  Boss Level, Soul Shepard. Zombie comes last because the other champions blame it.
+- Each match has a short story card before it and a line after a win, in `js/campaign.js`
+  (`CAMPAIGN`). They are placeholders until the champions' personalities are decided, and
+  they keep the narration at a distance (no "you").
 
 ## Open questions
 

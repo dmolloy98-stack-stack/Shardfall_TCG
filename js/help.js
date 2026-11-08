@@ -104,7 +104,7 @@ function renderControls() {
   };
   let h = btn("menu", "btn-small");
   if (U.curtain) h += btn("curtain", "btn-primary");
-  else if (U.ended) h += btn("again", "btn-primary") + btn("tomenu");
+  else if (U.ended) h += btn("camp-next", "btn-primary") + btn("again", U.campaign ? "" : "btn-primary") + btn("camp-map") + btn("tomenu");
   else {
     h += btn("face", "danger");
     if (U.armed || U.selected || (S.pending?.kind === "target" && !S.pending.required && !S.players[S.pending.owner].isAI)) h += `<button type="button" class="btn" data-press="cancel">Cancel</button>`;
