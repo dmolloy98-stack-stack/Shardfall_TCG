@@ -16,6 +16,7 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 - **Stats** are written `Attack+Health`, for example `2+1`. Use `---` for cards without stats.
 - **Skills** are joined with `+`, for example `Signal+Rally`. Use `---` for none. Skill names must match the `Name` column in `skills.csv`.
 - **Ability text** is what players read. The **Effect** column is what the game actually does (see "Writing effects" below). Keep the two saying the same thing. Changing numbers in either works straight away; most new abilities can be built from the effect actions without any code.
+- **Card and deck builder.** New cards and decks can also be designed in the Google Sheet "Shardfall – card and deck builder" and added by Claude; see CLAUDE.md.
 - **Changes are saved per file.** If you edit in a spreadsheet, export only the sheet you changed.
 
 ## The files

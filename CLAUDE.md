@@ -22,3 +22,21 @@ can't be reached), in the same session:
 Tell the owner when a backup step could not be done and why. Binary files (images) and
 the git history file can't be uploaded through the Drive connector; say so rather than
 skipping them silently.
+
+## Card and deck builder sheet
+
+The owner designs cards and decks in the Google Sheet "Shardfall – card and deck builder"
+(id `1RzePfEgUN4QJsLTDGnhU7xaTa0_snq2lVswEUy5JNX0`, in the "Shardfall _ CardGame" folder).
+Its tabs mirror the data files: Cards → `data/cards.csv` (Attack and Health become
+`Attack+Health` in Stats; ArtKey is the CardID), Decks plus Deck cards → `data/decks.csv`
+(one row per card becomes the `CardID:copies|…` CardList), Factions → `data/factions.csv`
+(Color is hex; convert to 0–1 RGB), Skills → `data/skills.csv`.
+
+When asked to add the sheet's rows to the game:
+1. Read only rows whose Status is `Ready`. A Ready row with an existing ID replaces that row.
+2. If Effect is empty but Ability describes something, write the Effect (or a `script` in
+   `js/effects.js`). Read Notes for Claude. New skills and factions need code.
+3. Load the game data and effects to check every card, run balance simulations, and run the
+   browser tests, as for any other change.
+4. After committing, set those rows' Status to `In game`. If cards change in code later,
+   update the sheet to match: the game files are the master copy.
