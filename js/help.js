@@ -75,7 +75,15 @@ function renderHint() {
   const gutter = sr.left - wr.left;
   box.classList.toggle("narrow", gutter >= 120 && gutter < 200);
   box.style.maxHeight = wr.height - 16 + "px";
-  if (gutter >= 120) {
+  if (U.phone) {
+    // between the two players' health panels at the left
+    const opp = document.querySelector("#sideinfo .si-player.opp"), me = document.querySelector("#sideinfo .si-player.me");
+    const w = Math.min(gutter - 12, 220);
+    const top = opp ? opp.getBoundingClientRect().bottom + 8 : wr.top + 8;
+    const bottom = me ? me.getBoundingClientRect().top - 8 : wr.bottom - 8;
+    box.classList.add("narrow");
+    Object.assign(box.style, { left: wr.left + (gutter - w) / 2 + "px", width: w + "px", top: top + "px", bottom: "", maxHeight: Math.max(40, bottom - top) + "px" });
+  } else if (gutter >= 120) {
     const w = Math.min(gutter - 12, U.small ? 220 : 300);
     Object.assign(box.style, { left: wr.left + (gutter - w) / 2 + "px", width: w + "px", top: "", bottom: "" });
     box.style.top = Math.max(wr.top + 8, sr.top + sr.height * 0.5 - box.offsetHeight / 2) + "px";
@@ -135,6 +143,41 @@ function goFullscreen() {
     .finally(() => setTimeout(onResize, 200));
 }
 document.addEventListener("fullscreenchange", () => setTimeout(onResize, 100));
+
+// On a phone held sideways the table's top and bottom strips are cut off (fitStage), so
+// each player's health, mana and hand size are shown at the left of the table instead.
+// Tapping a player's panel taps their health crystal on the table (to target them).
+function renderSideInfo() {
+  const box = document.getElementById("sideinfo");
+  if (U.screen !== "game" || !S || !U.phone) { box.hidden = true; return; }
+  const sr = document.getElementById("stage").getBoundingClientRect();
+  const wr = document.getElementById("stage-wrap").getBoundingClientRect();
+  const gutter = sr.left - wr.left;
+  const board = document.getElementById("board");
+  const panel = (p, cls) => {
+    const plate = board.querySelector(`.plate[data-player="${p.idx}"]`);
+    const state = ["targetable", "attackable", "danger"].filter(k => plate?.classList.contains(k)).join(" ");
+    const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
+    const tier = LIFE_TIERS.find(t => ratio >= t.min).cls;
+    const token = cls === "me" ? board.querySelector('[data-act="token"]') : null;
+    const tokenBtn = token ? `<button type="button" class="mana-token si-token" data-si="token" ${token.disabled ? "disabled" : ""} title="${esc(token.title)}">+1</button>` : "";
+    return `<div class="si-player ${cls} ${state}" data-player="${p.idx}" style="--pc:${PLAYER_COLORS[p.idx]}" role="button" tabindex="0" aria-label="${esc(p.name)}: ${p.health} health, ${p.mana} of ${p.manaMax} mana, ${p.hand.length} cards in hand">
+      <div class="si-life">${crystalSVG("life-crystal " + tier, tier === "low" ? 2 : 0)}<b>${Math.max(0, p.health)}</b></div>
+      <div class="si-text"><span class="si-name">${esc(p.name)}</span>
+        <span class="si-mana">${crystalSVG("mana-crystal lit")}<b>${p.mana}</b>/${p.manaMax}${tokenBtn}</span>
+        <span class="si-hand">Hand ${p.hand.length} · Deck ${p.deck.length}</span></div>
+    </div>`;
+  };
+  box.innerHTML = panel(S.players[1 - viewIdx()], "opp") + panel(S.players[viewIdx()], "me");
+  box.hidden = false;
+  const w = Math.max(96, Math.min(gutter - 10, 200));
+  Object.assign(box.style, { left: wr.left + Math.max(4, (gutter - w) / 2) + "px", width: w + "px", top: wr.top + 6 + "px", height: wr.height - 12 + "px" });
+}
+document.getElementById("sideinfo").addEventListener("click", e => {
+  if (e.target.closest('[data-si="token"]')) { document.querySelector('#board [data-act="token"]')?.click(); return; }
+  const p = e.target.closest(".si-player");
+  if (p) document.querySelector(`#board .plate[data-player="${p.dataset.player}"]`)?.click();
+});
 
 // Held upright, a phone shows the board very small. Suggest turning it sideways,
 // but let people carry on if their screen won't rotate.

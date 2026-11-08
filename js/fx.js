@@ -204,7 +204,7 @@ function impactAt(x, y, amount) {
   setTimeout(() => ring.remove(), 500);
 }
 // Bits of the life crystal fly off when a player is hit.
-const LIFE_CRYSTAL = idx => (sideOf(idx) === "top" ? { x: 554, y: 33 } : { x: 554, y: 967 });
+const LIFE_CRYSTAL = idx => (U.phone ? plateCenter(idx) : sideOf(idx) === "top" ? { x: 554, y: 33 } : { x: 554, y: 967 });
 const TIER_COLORS = { healthy: ["#e3ffe8", "#3fd26b"], hurt: ["#fff0d6", "#ff9a2e"], low: ["#ffe0e0", "#ff3b3b"] };
 function crystalChips(idx, n, spread = 1) {
   if (REDUCED_MOTION) return;
@@ -220,14 +220,15 @@ function crystalChips(idx, n, spread = 1) {
     fxLayer().appendChild(el);
     setTimeout(() => el.remove(), 900);
   }
-  const plate = document.querySelector(`.plate[data-player="${idx}"]`);
-  if (plate) { plate.classList.remove("struck"); void plate.offsetWidth; plate.classList.add("struck"); }
+  for (const plate of document.querySelectorAll(`.plate[data-player="${idx}"], .si-player[data-player="${idx}"]`)) {
+    plate.classList.remove("struck"); void plate.offsetWidth; plate.classList.add("struck");
+  }
 }
 // You tried to play a card you can't afford: the mana row shakes and flashes red.
 function nudgeMana(idx) {
-  const el = document.querySelector(`.mana[data-player="${idx}"]`);
-  if (!el) return;
-  el.classList.remove("broke"); void el.offsetWidth; el.classList.add("broke");
+  for (const el of document.querySelectorAll(`.mana[data-player="${idx}"], .si-player[data-player="${idx}"] .si-mana`)) {
+    el.classList.remove("broke"); void el.offsetWidth; el.classList.add("broke");
+  }
 }
 // Restart a CSS animation class on a card that is on the board right now.
 function flashCard(uid, cls) {

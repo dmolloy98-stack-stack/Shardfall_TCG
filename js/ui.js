@@ -228,7 +228,14 @@ function charCenter(uid) {
   if (el) return { x: el.offsetLeft + CARD_W / 2, y: el.offsetTop + CARD_H / 2 };
   return { x: W / 2, y: H / 2 };
 }
-function plateCenter(idx) { return sideOf(idx) === "top" ? { x: 570, y: 40 } : { x: 570, y: 960 }; }
+// The part of the table a phone held sideways shows: everything but the top and bottom strips.
+const PHONE_CROP = { top: 66, h: 868 };
+function plateCenter(idx) {
+  // On a phone the players' health sits beside the table, so effects aimed at a player
+  // land at the table's left edge, next to it.
+  if (U.phone) return sideOf(idx) === "top" ? { x: 90, y: PHONE_CROP.top + 50 } : { x: 90, y: PHONE_CROP.top + PHONE_CROP.h - 50 };
+  return sideOf(idx) === "top" ? { x: 570, y: 40 } : { x: 570, y: 960 };
+}
 
 // Each player has a color; the turn crystal glows in the color of whoever's turn it is.
 const PLAYER_COLORS = ["#4cc9f0", "#ff5d8f"];
@@ -627,6 +634,7 @@ function render() {
 function renderOverlays() {
   tutUpdate();
   renderCoach();
+  renderSideInfo();   // before the hint, which sits between its panels on a phone
   renderHint();
   renderControls();
   renderRotate();
@@ -1135,8 +1143,18 @@ function fitStage() {
     }
   }
   U.scale = Math.min(bw / W, bh / H);
+  // Phone held sideways: the strips along the top and bottom of the table (health, mana,
+  // Menu, Pass turn) are cut off, so the rest of the table can be drawn bigger. Health and
+  // mana move into the space at the left (renderSideInfo) and the buttons to the right.
+  let cropTop = 0, cropH = H;
+  U.phone = false;
+  if (U.small && !U.tutorial && w > h) {
+    const s = Math.min(w / W, h / PHONE_CROP.h);
+    if ((w - W * s) / 2 >= 100) { U.phone = true; U.scale = s; cropTop = PHONE_CROP.top; cropH = PHONE_CROP.h; }
+  }
   $("#stage").classList.toggle("small", U.small);
-  $("#stage").style.transform = `translate(${(bw - W * U.scale) / 2}px, ${(bh - H * U.scale) / 2}px) scale(${U.scale})`;
+  $("#stage-wrap").classList.toggle("phone", U.phone);
+  $("#stage").style.transform = `translate(${(bw - W * U.scale) / 2}px, ${(bh - cropH * U.scale) / 2 - cropTop * U.scale}px) scale(${U.scale})`;
 }
 // Phones resize the page when the browser bars slide in and out, and on rotation.
 function onResize() { if (U.screen === "game") { fitStage(); renderOverlays(); } }
