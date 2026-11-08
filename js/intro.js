@@ -5,7 +5,7 @@
 const INTRO_PANELS = [
   { text: "Once, there were many worlds, and each one was whole.", motif: "whole", glass: ["#2f5fbf", "#5b3fc4", "#1f8a7e", "#d9a441"] },
   { text: "Then the worlds collided. Everything shattered, and the pieces began to fall.", title: "The Shardfall", motif: "broken", glass: ["#7a2bd1", "#b8326a", "#3d1fa8", "#e08a3a"] },
-  { text: "Every shard holds a power. Five factions scramble to gather them, because more shards mean survival.", motif: "factions", glass: ["#2a4f9e", "#8a3fb8", "#c9893a", "#2f8f5b"] },
+  { text: "Every shard holds a power. Rival factions scramble to gather them, because more shards mean survival.", motif: "factions", glass: ["#2a4f9e", "#8a3fb8", "#c9893a", "#2f8f5b"] },
   { text: "No one knows what broke the worlds. The others blame the restless dead.", motif: "mystery", glass: ["#1d3b2a", "#3c1f52", "#24502f", "#552a6e"] },
   { text: "Where Shardkeepers meet, the shards are called into battle. Master them, and the worlds may be made whole again.", motif: "keeper", glass: ["#c08a2e", "#6a3fd0", "#b0452e", "#3a7bd5"] },
 ];

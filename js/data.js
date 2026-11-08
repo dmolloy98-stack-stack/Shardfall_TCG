@@ -59,7 +59,7 @@ function buildData(CSV) {
   const rarities = {};
   const rarityOrder = [];
   for (const c of csvRows(CSV.rarities)) {
-    rarities[c[1]] = { name: c[1], color: rgb(c[2], c[3], c[4]), attachCost: Number(c[5]) || 1, order: Number(c[6]) };
+    rarities[c[1]] = { name: c[1], color: rgb(c[2], c[3], c[4]), attachCost: Number(c[5]) || 1, order: Number(c[6]), frame: c[7] || "chip" };
     rarityOrder.push(c[1]);
   }
 

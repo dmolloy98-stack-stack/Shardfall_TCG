@@ -72,6 +72,95 @@ function artFor(key) {
 }
 
 // ---------------------------------------------------------------------------
+// Rarity frames: the rarer the card, the more of a whole shard it is. Each rarity's
+// Frame (rarities.csv) picks a shape: chip, cut, faceted, crystal or shard. The paper is
+// clipped to the outline and an SVG layer draws the edge, with crystals that reach past
+// the card for crystal and shard. Card units: the card is 95 x 135, 10 units to 1em.
+// ---------------------------------------------------------------------------
+const FW = 95, FH = 135, FRAME_TIER = { chip: 1, cut: 2, faceted: 3, crystal: 4, shard: 5 };
+const FRAMES = {};
+function frameOutline(kind) {
+  if (kind === "cut") { const c = 7; return [[c,0],[FW-c,0],[FW,c],[FW,FH-c],[FW-c,FH],[c,FH],[0,FH-c],[0,c]]; }
+  if (kind === "faceted") return [[10,0],[FW-5,0],[FW,5],[FW,84],[FW-3.5,88],[FW,92],[FW,FH-10],[FW-10,FH],[5,FH],[0,FH-5],[0,64],[3.5,60],[0,56],[0,10]];
+  if (kind === "crystal") { const c = 9; return [[c,0],[FW-c,0],[FW,c],[FW,FH-c],[FW-c,FH],[c,FH],[0,FH-c],[0,c]]; }
+  if (kind === "shard") {
+    let seed = 7; const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647; // same edge every time
+    const pts = [];
+    const side = (x0, y0, x1, y1, nx, ny) => {
+      const n = Math.round(Math.hypot(x1 - x0, y1 - y0) / 7);
+      for (let i = 0; i < n; i++) { const t = i / n, d = (i % 2 ? 2.6 : 0.3) * (0.5 + rand()); pts.push([x0 + (x1 - x0) * t + nx * d, y0 + (y1 - y0) * t + ny * d]); }
+    };
+    side(4, 0, FW - 3, 0, 0, 1); side(FW, 2, FW, FH - 5, -1, 0); side(FW - 3, FH, 6, FH, 0, -1); side(0, FH - 4, 0, 4, 1, 0);
+    return pts;
+  }
+  return null; // chip: a plain rounded card
+}
+const fPts = pts => pts.map(p => p.map(v => v.toFixed(2)).join(",")).join(" ");
+function fInset(pts, d) {
+  const kx = (FW / 2 - d) / (FW / 2), ky = (FH / 2 - d) / (FH / 2);
+  return pts.map(([x, y]) => [FW / 2 + (x - FW / 2) * kx, FH / 2 + (y - FH / 2) * ky]);
+}
+function fShade(rgb, t) { // t > 0 lightens, t < 0 darkens
+  const c = rgb.match(/\d+/g).map(Number);
+  return `rgb(${c.map(v => Math.round(t > 0 ? v + (255 - v) * t : v * (1 + t))).join(",")})`;
+}
+// A cut-gem edge: one strip per side, lit from the top left.
+function fBevel(pts, d, edge) {
+  const inn = fInset(pts, d);
+  let s = "";
+  pts.forEach((p, i) => {
+    const j = (i + 1) % pts.length, nx = pts[j][1] - p[1], ny = p[0] - pts[j][0], L = Math.hypot(nx, ny) || 1;
+    s += `<polygon points="${fPts([p, pts[j], inn[j], inn[i]])}" fill="${fShade(edge, (-(nx / L) * 0.6 - (ny / L) * 0.8) * 0.55)}"/>`;
+  });
+  return s + `<polygon points="${fPts(pts)}" fill="none" stroke="${fShade(edge, -0.55)}" stroke-width=".7" stroke-linejoin="round"/>`
+    + `<polygon points="${fPts(inn)}" fill="none" stroke="${fShade(edge, 0.6)}" stroke-width=".35" opacity=".8"/>`;
+}
+// One crystal: base at (x, y), pointing at angle deg, length l, half-width w.
+function fSpike(x, y, deg, l, w, edge) {
+  const a = deg * Math.PI / 180, cx = Math.cos(a), sy = Math.sin(a);
+  const T = [x + cx * l, y + sy * l], Lp = [x - sy * w, y + cx * w], R = [x + sy * w, y - cx * w], B = [x - cx * w * 1.4, y - sy * w * 1.4];
+  return `<polygon points="${fPts([B, Lp, T])}" fill="${fShade(edge, 0.45)}"/><polygon points="${fPts([B, R, T])}" fill="${fShade(edge, -0.3)}"/>`
+    + `<polygon points="${fPts([Lp, T, R])}" fill="none" stroke="${fShade(edge, -0.6)}" stroke-width=".5" stroke-linejoin="round"/>`;
+}
+function fSpikes(kind, edge) {
+  let s = "";
+  if (kind === "crystal") {
+    [[4.5, 4.5, 225], [FW - 4.5, 4.5, 315], [FW - 4.5, FH - 4.5, 45], [4.5, FH - 4.5, 135]].forEach(([x, y, d]) => {
+      s += fSpike(x, y, d - 24, 8.5, 2, edge) + fSpike(x, y, d + 24, 8.5, 2, edge) + fSpike(x, y, d, 13.5, 2.8, edge);
+    });
+    s += fSpike(FW / 2, 1, -90, 8.5, 3, edge) + fSpike(FW / 2, FH - 1, 90, 8.5, 3, edge);
+  }
+  if (kind === "shard") {
+    [[14,0,-100,7],[30,0,-80,4],[52,0,-95,9.5],[78,0,-70,5.5],[FW,10,-35,8.5],[FW,40,5,5],[FW,70,-10,9],[FW,108,20,5.5],
+     [FW-4,FH,60,9],[60,FH,95,5],[34,FH,85,8.5],[3,FH-2,140,9.5],[0,96,175,5.5],[0,62,190,9],[0,28,170,4.5],[2,3,225,8]]
+      .forEach(([x, y, d, l]) => { s += fSpike(x, y, d, l, 1.5 + l * 0.13, edge); });
+  }
+  return s;
+}
+// The small gem between the stats: one facet line per tier, so rarity reads without color.
+function fGem(tier, edge) {
+  let s = `<svg class="rarity-gem" viewBox="0 0 20 20" aria-hidden="true"><polygon points="2,7 6,2 14,2 18,7 10,18" fill="${fShade(edge, -0.15)}" stroke="${fShade(edge, -0.65)}" stroke-width="1"/>`;
+  for (let i = 1; i < tier; i++) { const x = 2 + 16 * i / tier; s += `<line x1="${x.toFixed(1)}" y1="${x < 6 || x > 14 ? 7 : 2}" x2="10" y2="18" stroke="${fShade(edge, 0.55)}" stroke-width=".8"/>`; }
+  return s + `<line x1="2" y1="7" x2="18" y2="7" stroke="${fShade(edge, 0.55)}" stroke-width=".8"/></svg>`;
+}
+function cardFrame(rarity) {
+  if (FRAMES[rarity]) return FRAMES[rarity];
+  const r = DATA.rarities[rarity], edge = r?.color || "rgb(143,151,163)";
+  const kind = FRAME_TIER[r?.frame] ? r.frame : "chip", pts = frameOutline(kind);
+  let svg = `<svg class="frame" viewBox="-10 -10 115 155" aria-hidden="true">`;
+  if (kind === "chip") svg += `<rect x=".9" y=".9" width="${FW - 1.8}" height="${FH - 1.8}" rx="7.2" fill="none" stroke="${edge}" stroke-width="1.8"/>`;
+  else if (kind === "cut") svg += `<polygon points="${fPts(fInset(pts, 1))}" fill="none" stroke="${edge}" stroke-width="2"/><polygon points="${fPts(fInset(pts, 3.6))}" fill="none" stroke="${fShade(edge, 0.35)}" stroke-width=".6"/>`;
+  else svg += fSpikes(kind, edge) + fBevel(pts, kind === "faceted" ? 3.2 : 4.2, edge);
+  svg += `</svg>`;
+  const extra = kind !== "shard" ? "" : `<svg class="cracks" viewBox="0 0 95 135" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="${edge}" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round" opacity=".9"><path d="M0 50 L12 47 L20 55 L31 52 L38 60"/><path d="M20 55 L23 66"/><path d="M95 72 L82 76 L74 70 L63 79 L57 76"/><path d="M74 70 L71 60"/></g></svg><div class="glint"></div>`;
+  return (FRAMES[rarity] = {
+    kind,
+    clip: pts ? `clip-path:polygon(${pts.map(([x, y]) => `${(x / FW * 100).toFixed(2)}% ${(y / FH * 100).toFixed(2)}%`).join(",")})` : "",
+    svg, gem: fGem(FRAME_TIER[kind], edge), extra,
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Card markup
 // ---------------------------------------------------------------------------
 function cardHTML(c, opts = {}) {
@@ -97,7 +186,8 @@ function cardHTML(c, opts = {}) {
   const pips = !levels ? "" : cap === Infinity
     ? `<div class="level-pips" title="Level ${lv}">Lv ${lv}</div>`
     : `<div class="level-pips" title="Level ${lv} of ${cap}">${"★".repeat(Math.min(lv, cap))}${"☆".repeat(Math.max(0, cap - lv))}</div>`;
-  return `<div class="card${lv ? " lv" + Math.min(lv, 3) : ""}" style="--edge:${edge};--fc:${fc}">
+  const fr = cardFrame(c.rarity);
+  return `<div class="card framed f-${fr.kind}${lv ? " lv" + Math.min(lv, 3) : ""}" style="--edge:${edge};--fc:${fc}"><div class="shape"><div class="face" style="${fr.clip}">
     ${medal(c.group)}
     ${opts.field ? "" : `<div class="cost">${cost}</div>`}
     <div class="name">${esc(c.name)}</div>
@@ -107,7 +197,8 @@ function cardHTML(c, opts = {}) {
     ${opts.field && c.equipped?.length ? `<div class="equip-count" title="Equipped">●${c.equipped.length}</div>` : ""}
     ${pips}
     ${statsHTML}
-  </div>`;
+    ${fr.gem}${fr.extra}
+  </div>${fr.svg}</div></div>`;
 }
 
 // ---------------------------------------------------------------------------

@@ -152,6 +152,7 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | EdgeR, EdgeG, EdgeB | Card edge color, each from 0 to 1 |
 | EquipmentAttachCost | Mana to attach equipment of this rarity from the equipment row |
 | DisplayOrder | Sort order |
+| Frame | Card frame shape: `chip` (rounded), `cut` (cut corners), `faceted` (uneven cuts and a shaded edge), `crystal` (crystals past the corners) or `shard` (jagged edge, spikes, cracks and a glint). Rarer cards should get spikier frames. |
 
 ### factions.csv
 

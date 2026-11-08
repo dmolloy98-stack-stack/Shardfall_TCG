@@ -17,7 +17,7 @@ Edit this file whenever the story changes. Open questions are listed at the end.
 - Every card is a shard, and each shard holds a power of its own. Every card should
   feel meaningful.
 - The more shards a faction holds, the better its chances of survival. That is what the
-  five factions fight over.
+  factions fight over.
 - In the story and flavor text, cards can be called shards. **In the rules and on
   buttons, they stay "cards"**, so new players aren't confused.
 
@@ -30,9 +30,10 @@ Edit this file whenever the story changes. Open questions are listed at the end.
   whole again, so the shards stop falling.
 - The story is told from a distance (no "you" in narration), for now.
 
-## The five factions
+## The factions
 
-Each faction comes from a different world.
+Each faction comes from a different world. More factions can join at any time, so the
+story never fixes how many there are.
 
 | Faction | Champion (Unknown card) | Personality |
 |---|---|---|
