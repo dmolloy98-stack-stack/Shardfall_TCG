@@ -464,7 +464,7 @@ function plateHTML(p, side) {
   const targetable = humanTarget() && pd.targetType === "charOrPlayer" && isValidTarget({ isPlayer: true, idx: p.idx });
   const attackable = side === "top" && U.selected && !forcedTarget(p);
   const y = side === "top" ? 3 : 937;
-  return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
+  return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
     <div class="life">${crystalSVG("life-crystal " + tier, cracks)}<b>${Math.max(0, p.health)}</b></div>
     <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em></div>
     ${attackable ? previewBadge(fightPreview(U.selected, null), true) : ""}

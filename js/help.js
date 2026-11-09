@@ -156,7 +156,7 @@ function renderSideInfo() {
   const board = document.getElementById("board");
   const panel = (p, cls) => {
     const plate = board.querySelector(`.plate[data-player="${p.idx}"]`);
-    const state = ["targetable", "attackable", "danger"].filter(k => plate?.classList.contains(k)).join(" ");
+    const state = ["targetable", "attackable", "danger", "critical"].filter(k => plate?.classList.contains(k)).join(" ");
     const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
     const tier = LIFE_TIERS.find(t => ratio >= t.min).cls;
     const token = cls === "me" ? board.querySelector('[data-act="token"]') : null;
