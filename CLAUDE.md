@@ -1,5 +1,10 @@
 # Notes for Claude
 
+## Code map
+
+`docs/code-map.md` shows how the files fit together. Update it when files are added, split or
+renamed, or when the flow between them changes.
+
 ## Back up every change to Google Drive
 
 The owner wants everything on GitHub also kept in Google Drive, with a full history,

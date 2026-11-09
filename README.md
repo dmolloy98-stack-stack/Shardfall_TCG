@@ -75,6 +75,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `js/decks.js` | The deck builder, saved custom decks and its walkthrough |
 | `js/intro.js` | The stained-glass cold open before the main menu |
 | `js/campaign.js` | The campaign: one match against each faction's champion, with its story text and saved progress |
+| `docs/code-map.md` | How the files fit together: diagrams of the big picture, one move's path and the screens, plus where to change things |
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
 | `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
