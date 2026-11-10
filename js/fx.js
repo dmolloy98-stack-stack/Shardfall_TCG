@@ -6,6 +6,16 @@
 // While a showcase or the finale plays, the computer waits before its next move.
 function fxBusy(ms) { U.busyUntil = Math.max(U.busyUntil || 0, performance.now() + ms); }
 const fxLayer = () => document.getElementById("fx-layer");
+// Adds a short-lived effect element to the effects layer and removes it after ms.
+// Every passing effect (sparks, damage numbers, rings, shards) is made here.
+function fxDiv(cls, css, ms) {
+  const el = document.createElement("div");
+  el.className = cls;
+  if (css) el.style.cssText = css;
+  fxLayer().appendChild(el);
+  setTimeout(() => el.remove(), ms);
+  return el;
+}
 // Runs fn after ms, unless a new game has started in the meantime.
 function later(ms, fn) { const game = S; setTimeout(() => { if (S === game) fn(); }, ms); }
 
@@ -186,39 +196,25 @@ function hitStop(uids, ms) {
 }
 // A damage number that pops and wobbles; bigger hits are bigger and golden.
 function damageNumber(x, y, amount, overkill) {
-  const el = document.createElement("div");
-  el.className = "dmg" + (amount >= 5 ? " heavy" : "");
-  el.style.cssText = `left:${x}px;top:${y}px;--size:${Math.min(76, 30 + amount * 5)}px`;
+  const el = fxDiv("dmg" + (amount >= 5 ? " heavy" : ""), `left:${x}px;top:${y}px;--size:${Math.min(76, 30 + amount * 5)}px`, 1300);
   el.textContent = `-${amount}`;
   if (overkill > 0) el.innerHTML += `<small>OVERKILL</small>`;
-  fxLayer().appendChild(el);
-  setTimeout(() => el.remove(), 1300);
 }
 // A white flash and a ring where a blow lands.
 function impactAt(x, y, amount) {
   if (REDUCED_MOTION) return;
-  const ring = document.createElement("div");
-  ring.className = "impact-ring";
-  ring.style.cssText = `left:${x}px;top:${y}px;--s:${feelTier(amount).ring}`;
-  fxLayer().appendChild(ring);
-  setTimeout(() => ring.remove(), 500);
+  fxDiv("impact-ring", `left:${x}px;top:${y}px;--s:${feelTier(amount).ring}`, 500);
 }
 // Bits of the life crystal fly off when a player is hit.
 const LIFE_CRYSTAL = idx => (U.phone ? plateCenter(idx) : sideOf(idx) === "top" ? { x: 554, y: 33 } : { x: 554, y: 967 });
 const TIER_COLORS = { healthy: ["#e3ffe8", "#3fd26b"], hurt: ["#fff0d6", "#ff9a2e"], low: ["#ffe0e0", "#ff3b3b"] };
 function crystalChips(idx, n, spread = 1) {
   if (REDUCED_MOTION) return;
-  const p = S.players[idx];
-  const ratio = Math.max(0, p.health / p.maxHealth);
-  const colors = TIER_COLORS[LIFE_TIERS.find(t => ratio >= t.min).cls];
+  const colors = TIER_COLORS[lifeTier(S.players[idx]).cls];
   const at = LIFE_CRYSTAL(idx), up = sideOf(idx) === "top" ? 1 : -1;
   for (let k = 0; k < n; k++) {
-    const el = document.createElement("div");
     const a = (Math.random() - 0.5) * Math.PI * spread, r = 60 + Math.random() * 90 * spread;
-    el.className = "life-chip";
-    el.style.cssText = `left:${at.x}px;top:${at.y}px;--dx:${Math.sin(a) * r}px;--dy:${up * Math.cos(a) * r}px;--r:${(Math.random() - 0.5) * 540}deg;--c:${colors[k % 2]};--s:${0.6 + Math.random() * 0.8}`;
-    fxLayer().appendChild(el);
-    setTimeout(() => el.remove(), 900);
+    fxDiv("life-chip", `left:${at.x}px;top:${at.y}px;--dx:${Math.sin(a) * r}px;--dy:${up * Math.cos(a) * r}px;--r:${(Math.random() - 0.5) * 540}deg;--c:${colors[k % 2]};--s:${0.6 + Math.random() * 0.8}`, 900);
   }
   for (const plate of document.querySelectorAll(`.plate[data-player="${idx}"], .si-player[data-player="${idx}"]`)) {
     plate.classList.remove("struck"); void plate.offsetWidth; plate.classList.add("struck");
@@ -238,11 +234,7 @@ function flashCard(uid, cls) {
 }
 // A short callout in the middle of the table, for big moments.
 function callout(text, sub) {
-  const el = document.createElement("div");
-  el.className = "callout";
-  el.innerHTML = `<b>${esc(text)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}`;
-  fxLayer().appendChild(el);
-  setTimeout(() => el.remove(), 1600);
+  fxDiv("callout", "", 1600).innerHTML = `<b>${esc(text)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -291,11 +283,7 @@ function showcase(card, player) {
 }
 function shockwave(x, y) {
   if (REDUCED_MOTION) return;
-  const el = document.createElement("div");
-  el.className = "shockwave";
-  el.style.cssText = `left:${x}px;top:${y}px`;
-  fxLayer().appendChild(el);
-  setTimeout(() => el.remove(), 700);
+  fxDiv("shockwave", `left:${x}px;top:${y}px`, 700);
 }
 
 // Skill spotlight: the skill's icon pops above the card when it takes effect.
@@ -304,12 +292,7 @@ function skillSpotlight(uid, text) {
   const skill = SKILL_TEXT[text];
   if (!skill || REDUCED_MOTION) return;
   const p = charCenter(uid);
-  const el = document.createElement("div");
-  el.className = "skill-pop";
-  el.style.cssText = `left:${p.x}px;top:${p.y - 30}px`;
-  el.innerHTML = `<span>${esc(DATA.skills[skill]?.icon || "✦")}</span><b>${esc(skill)}</b>`;
-  fxLayer().appendChild(el);
-  setTimeout(() => el.remove(), 1400);
+  fxDiv("skill-pop", `left:${p.x}px;top:${p.y - 30}px`, 1400).innerHTML = `<span>${esc(DATA.skills[skill]?.icon || "✦")}</span><b>${esc(skill)}</b>`;
   setTimeout(() => flashCard(uid, "skill-glow"), 0);
 }
 
@@ -363,10 +346,7 @@ function finale(winner) {
   const losers = winner == null ? [0, 1] : [1 - winner];
   later(450, () => {
     for (const i of losers) { crystalChips(i, 28, 2); const at = LIFE_CRYSTAL(i); shockwave(at.x, at.y); }
-    const flash = document.createElement("div");
-    flash.className = "final-flash";
-    fxLayer().appendChild(flash);
-    setTimeout(() => flash.remove(), 900);
+    fxDiv("final-flash", "", 900);
     shakeBy(16);
   });
   setTimeout(() => { if (S === game) { U.ended = true; render(); } }, 1700);

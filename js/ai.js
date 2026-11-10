@@ -19,15 +19,16 @@ function evaluate(me) {
   return boardValue(mine) - boardValue(theirs) + mine.hand.length * 0.5;
 }
 
+// A target in the form chooseTarget() takes: a player as it is, a card by its uid.
+const targetRef = t => (t.isPlayer ? t : { uid: t.uid });
+
 // Best target for the pending target choice.
 function aiPickTarget() {
   const pd = S.pending;
   const me = pd.owner;
-  const fx = effectFor(pd.source) || EFFECTS[pd.source.name];
-  const ctx = { card: pd.source, owner: S.players[me], spell: pd.spell };
   let best = null, bestScore = -Infinity;
-  for (const t of validTargets(fx, ctx)) {
-    const score = simulate(() => { chooseTarget(t.isPlayer ? t : { uid: t.uid }); return evaluate(me); });
+  for (const t of pendingTargets(pd)) {
+    const score = simulate(() => { chooseTarget(targetRef(t)); return evaluate(me); });
     if (score > bestScore) { bestScore = score; best = t; }
   }
   return best;
@@ -72,7 +73,7 @@ function aiSetupActions() {
   const tryAction = (label, run) => {
     const score = simulate(() => {
       if (!run()) return -Infinity;
-      if (S.pending?.kind === "target") { const t = aiPickTarget(); if (!t) return -Infinity; chooseTarget(t.isPlayer ? t : { uid: t.uid }); }
+      if (S.pending?.kind === "target") { const t = aiPickTarget(); if (!t) return -Infinity; chooseTarget(targetRef(t)); }
       if (S.pending?.kind === "choose") aiResolveChoice();
       return evaluate(me);
     });
@@ -134,7 +135,7 @@ function aiStep() {
   if (!S.pending && !active().isAI) return false;
   if (S.pending?.kind === "target") {
     const t = aiPickTarget();
-    if (t) chooseTarget(t.isPlayer ? t : { uid: t.uid }); else cancelPending();
+    if (t) chooseTarget(targetRef(t)); else cancelPending();
     return true;
   }
   if (S.pending?.kind === "choose") { aiResolveChoice(); return true; }

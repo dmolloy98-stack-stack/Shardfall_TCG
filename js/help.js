@@ -157,8 +157,7 @@ function renderSideInfo() {
   const panel = (p, cls) => {
     const plate = board.querySelector(`.plate[data-player="${p.idx}"]`);
     const state = ["targetable", "attackable", "danger", "critical"].filter(k => plate?.classList.contains(k)).join(" ");
-    const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
-    const tier = LIFE_TIERS.find(t => ratio >= t.min).cls;
+    const tier = lifeTier(p).cls;
     const token = cls === "me" ? board.querySelector('[data-act="token"]') : null;
     const tokenBtn = token ? `<button type="button" class="mana-token si-token" data-si="token" ${token.disabled ? "disabled" : ""} title="${esc(token.title)}">+1</button>` : "";
     return `<div class="si-player ${cls} ${state}" data-player="${p.idx}" style="--pc:${PLAYER_COLORS[p.idx]}" role="button" tabindex="0" aria-label="${esc(p.name)}: ${p.health} health, ${p.mana} of ${p.manaMax} mana, ${p.hand.length} cards in hand">

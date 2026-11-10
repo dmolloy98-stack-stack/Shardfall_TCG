@@ -143,7 +143,12 @@ const ACTIONS = {
     for (const c of chars(who(ctx))) { c.skills = []; c.disabled = true; c.ability = ""; updateRally(ownerOf(c)); emit("text", { uid: c.uid, text: "DISABLED", color: "#c9c9c9" }); }
     sweepDeaths();
   }],
-  convert: ["sw?", (ctx, who, extra) => { for (const c of chars(who(ctx))) convertToZombie(ctx, c, extra === "reanimate"); }],
+  convert: ["sw?", (ctx, who, extra) => {
+    for (const c of chars(who(ctx))) convertToZombie(ctx, c, extra === "reanimate");
+    // Changing faction or side can take away a bonus that was keeping a character alive
+    // (The Simplistic's +3, an area). Without this check it stayed on the table at 0 health.
+    sweepDeaths();
+  }],
   transform: ["sc", (ctx, who, id) => { for (const c of chars(who(ctx))) transformCharacter(c, DATA.cardsById[id].name); }],
   // players and cards
   heal: ["sn", (ctx, who, n) => { for (const p of players(who(ctx))) healPlayer(p, n(ctx)); }],
@@ -334,7 +339,6 @@ function runHook(c, when, ctx) {
   const block = CARD_FX[c.id]?.[when];
   if (block?.steps) runSteps(block.steps, { card: c, ...ctx });
 }
-const hasHook = (c, when) => !!(c && !c.disabled && CARD_FX[c.id]?.[when]);
 
 // Mana cost after "cost:" clauses ("reduce N", "set N if ...").
 function costFromEffect(c, p) {

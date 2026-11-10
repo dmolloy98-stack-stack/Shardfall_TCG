@@ -3,6 +3,14 @@
 // for events sent through emit() to play effects (damage numbers, shakes, banners).
 // Cards on the battlefield store their owner as a player index (0 or 1) instead of
 // a reference, so the whole state can be cloned for undo and for AI look-ahead.
+//
+// Short names used all through the game code:
+//   S        the whole game right now: both players, whose turn, the phase, the log
+//   p        a player (S.players[0] or S.players[1])     c   a card
+//   pd       S.pending: a choice the game is waiting on (pick a target, or pick from a list)
+//   fx       a card's play effect from EFFECTS (js/effects.js). (js/fx.js is visual effects.)
+//   ctx      who is doing something: { card, owner, spell } (plus target, holder, amount)
+//   stats(c) a character's attack and health as shown, with every bonus counted
 
 const PHASE = { DRAW: 0, SETUP: 1, BATTLE: 2, END: 3 };
 const RULES = {
@@ -18,8 +26,9 @@ const RULES = {
 const BACKLINE = () => DATA.text("zone_backline", "Backline");
 const backlineCount = p => p.field.areas.length + p.field.equips.length;
 
-// Counter spells need a response window that the original game never had.
-// They stay in the decks but cannot be cast until that system exists.
+// Counter spells need a response window that the original game never had. They are still in
+// data/cards.csv (so the Almanac shows them), but they can't be cast or put in a deck until
+// that system exists.
 const UNIMPLEMENTED = new Set(["Nullify", "Nope for One", "Nope for All", "Return to Sender", "Try Again"]);
 
 let S = null;              // live game state
@@ -76,7 +85,6 @@ function findArea(uid) {
   return null;
 }
 function allChars() { return S.players.flatMap(p => p.field.chars); }
-function countChars(pred) { return allChars().filter(pred).length; }
 // The game's own random numbers. They come from the match seed (S.seed), and the generator's
 // state lives in S.rng, so the same seed and the same moves always replay the same game.
 // AI look-ahead runs on a copy of S, so it never changes the real game's draws.
@@ -120,7 +128,7 @@ const shieldedFromCurses = c => c.group === "Simple" && simplisticOut();
 // Stats
 // ---------------------------------------------------------------------------
 function equipBonuses(c) {
-  let a = 0, h = 0, s = 0;
+  let a = 0, h = 0;
   for (const e of c.equipped || []) { a += e.attack; h += e.health; }
   return { a, h };
 }
@@ -424,12 +432,18 @@ function validTargets(fx, ctx) {
   return chars;
 }
 
+// The effect a waiting target choice will run. It is looked up by name, not through
+// effectFor(), so a choice that was already asked for still resolves if its card gets disabled.
+const pendingEffect = pd => EFFECTS[pd.source.name];
+// Everything the player may pick for a waiting target choice.
+function pendingTargets(pd) {
+  return validTargets(pendingEffect(pd), { card: pd.source, owner: S.players[pd.owner], spell: pd.spell });
+}
+
 function isValidTarget(target) {
   const pd = S.pending;
   if (!pd || pd.kind !== "target") return false;
-  const fx = effectFor(pd.source) || EFFECTS[pd.source.name];
-  const ctx = { card: pd.source, owner: S.players[pd.owner], spell: pd.spell };
-  return validTargets(fx, ctx).some(t => t.isPlayer ? target.isPlayer && target.idx === t.idx : t.uid === target.uid);
+  return pendingTargets(pd).some(t => t.isPlayer ? target.isPlayer && target.idx === t.idx : t.uid === target.uid);
 }
 
 // ---------------------------------------------------------------------------
@@ -550,6 +564,10 @@ function equipCost(c, owner, target, fromField) {
   return playCost(c, owner);
 }
 
+// When cards can be played and stored equipment attached: in Setup, and in Battle if the
+// card has Flash.
+const playWindowOpen = c => S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && hasSkill(c, "Flash"));
+
 function playCost(c, p) {
   p = p || active();
   return costFromEffect(c, p);   // "cost:" effects (js/effects.js)
@@ -562,9 +580,7 @@ function playBlocker(c, p) {
   if (S.pending) return "Finish the current choice first";
   if (UNIMPLEMENTED.has(c.name)) return "Counter spells are not in the game yet";
   if (!p.hasDrawn) return "Draw a card first";
-  const inSetup = S.phase === PHASE.SETUP;
-  const inBattleFlash = S.phase === PHASE.BATTLE && hasSkill(c, "Flash");
-  if (!inSetup && !inBattleFlash) return S.phase === PHASE.BATTLE ? "Only Flash cards can be played in Battle" : "Cards are played in the Setup phase";
+  if (!playWindowOpen(c)) return S.phase === PHASE.BATTLE ? "Only Flash cards can be played in Battle" : "Cards are played in the Setup phase";
   const cost = playCost(c, p);
   if (c.type === "Equipment") {
     const cheapest = Math.min(cost, ...p.field.chars.map(t => equipCost(c, p, t, false)));
@@ -659,7 +675,7 @@ function attachFieldEquipment(equipUid, targetUid) {
   const e = p.field.equips[i];
   const t = findChar(targetUid);
   if (!e || !t || t.p !== p || !p.hasDrawn || S.pending) return false;
-  if (!(S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && hasSkill(e, "Flash")))) return false;
+  if (!playWindowOpen(e)) return false;
   const cost = equipCost(e, p, t.c, true);
   if (p.mana < cost) return false;
   p.mana -= cost;
@@ -672,7 +688,7 @@ function attachFieldEquipment(equipUid, targetUid) {
 function canAttachFromField(e, p) {
   p = p || active();
   if (!p.hasDrawn || S.pending || S.over || !p.field.chars.length) return false;
-  if (!(S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && hasSkill(e, "Flash")))) return false;
+  if (!playWindowOpen(e)) return false;
   return p.field.chars.some(t => p.mana >= equipCost(e, p, t, true));
 }
 
@@ -683,7 +699,7 @@ function chooseTarget(target) {
   if (!allowed("chooseTarget", target)) return false;
   const pd = S.pending;
   if (!pd || pd.kind !== "target" || !isValidTarget(target)) return false;
-  const fx = effectFor(pd.source) || EFFECTS[pd.source.name];
+  const fx = pendingEffect(pd);
   const owner = S.players[pd.owner];
   const t = target.isPlayer ? target : (pd.targetType === "area" ? findArea(target.uid)?.c : findChar(target.uid)?.c);
   if (!t) return false;
@@ -721,8 +737,9 @@ function resolveChoice(picks, option) {
   const owner = S.players[pd.owner];
   const picked = pd.cards.filter(c => picks.includes(c.uid)).slice(0, pd.pick || 1);
   S.pending = null;
-  const removeFromGrave = c => { for (const q of S.players) { const i = q.grave.indexOf(q.grave.find(x => x.uid === c.uid)); if (i >= 0) q.grave.splice(i, 1); } };
-  const fresh = c => { const n = newCard(DATA.cardsById[c.id] || c); return n; };
+  const removeFromGrave = c => { for (const q of S.players) { const i = q.grave.findIndex(x => x.uid === c.uid); if (i >= 0) q.grave.splice(i, 1); } };
+  // A card leaving the graveyard comes back as a clean copy, without damage or buffs.
+  const fresh = c => newCard(DATA.cardsById[c.id] || c);
 
   if (pd.resolve === "messenger") {
     const foe = foeOf(owner);
@@ -777,7 +794,7 @@ function resolveChoice(picks, option) {
 // Combat (port of resolveCharacterAttack)
 // ---------------------------------------------------------------------------
 function canAttack(c) {
-  return S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active && !c.hasAttacked && !hasSkill(c, "Tower") && stats(c).a >= 0;
+  return S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active && !c.hasAttacked && !hasSkill(c, "Tower");
 }
 
 // Guards: characters with Challenge or Tower must be attacked before anything else on

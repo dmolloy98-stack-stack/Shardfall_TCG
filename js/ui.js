@@ -1,5 +1,11 @@
 // Shardfall interface: menu, Almanac, board rendering, input and effects.
 // The board is a fixed 1440x1000 stage (the LÖVE virtual size) scaled to the window.
+//
+// Short names used in the interface code (js/engine.js lists the rules ones: S, p, c, pd, fx):
+//   U    what the screen is showing: current screen, selected attacker, timers, settings
+//   L    where things sit on the 1440x1000 board, in board pixels
+//   $    finds one element on the page, like $("#board")
+//   act  runs a player's move through the rules, saves an undo step, redraws the board
 
 const W = 1440, H = 1000, CARD_W = 95, CARD_H = 135;
 const L = {
@@ -163,6 +169,9 @@ function cardFrame(rarity) {
 // ---------------------------------------------------------------------------
 // Card markup
 // ---------------------------------------------------------------------------
+// Cards with no faction are stored as "N/A" in the data and shown as "Neutral".
+const groupLabel = group => (group === "N/A" ? "Neutral" : group);
+
 function cardHTML(c, opts = {}) {
   const edge = DATA.rarities[c.rarity]?.color || "#8f97a3";
   const fc = DATA.factions[c.group]?.color || "#7a6d5c";
@@ -191,7 +200,7 @@ function cardHTML(c, opts = {}) {
     ${medal(c.group)}
     ${opts.field ? "" : `<div class="cost">${cost}</div>`}
     <div class="name">${esc(c.name)}</div>
-    <div class="type">${esc(c.type)} · ${esc(c.group === "N/A" ? "Neutral" : c.group)}</div>
+    <div class="type">${esc(c.type)} · ${esc(groupLabel(c.group))}</div>
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
     <div class="skills">${skills}</div>
     ${opts.field && c.equipped?.length ? `<div class="equip-count" title="Equipped">●${c.equipped.length}</div>` : ""}
@@ -252,12 +261,7 @@ function crystalSVG(cls, cracks = 0) {
 // Effects
 // ---------------------------------------------------------------------------
 function floatText(x, y, text, color, small) {
-  const el = document.createElement("div");
-  el.className = "float" + (small ? " small" : "");
-  el.style.left = x + "px"; el.style.top = y + "px"; el.style.color = color;
-  el.textContent = text;
-  $("#fx-layer").appendChild(el);
-  setTimeout(() => el.remove(), 1250);
+  fxDiv("float" + (small ? " small" : ""), `left:${x}px;top:${y}px;color:${color}`, 1250).textContent = text;
 }
 function banner(text) {
   const b = $("#banner");
@@ -272,12 +276,8 @@ function sparkle(x, y, n = 14) {
   if (REDUCED_MOTION) return;
   const colors = ["#ffffff", "#d9c8ff", "#a78bfa", "#ffd27a"];
   for (let k = 0; k < n; k++) {
-    const el = document.createElement("div");
     const a = (k / n) * Math.PI * 2 + Math.random() * 0.5, r = 50 + Math.random() * 60;
-    el.className = "spark";
-    el.style.cssText = `left:${x}px;top:${y}px;--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r}px;--c:${colors[k % colors.length]};--s:${0.6 + Math.random() * 0.9}`;
-    $("#fx-layer").appendChild(el);
-    setTimeout(() => el.remove(), 900);
+    fxDiv("spark", `left:${x}px;top:${y}px;--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r}px;--c:${colors[k % colors.length]};--s:${0.6 + Math.random() * 0.9}`, 900);
   }
 }
 
@@ -302,12 +302,8 @@ function shatter(uid, delay = 0, group = null) {
 // Each faction leaves the table its own way. Other cards shatter like crystal.
 const DEATHS = { Zombie: sinkAway, Digital: pixelAway, Monkey: tumbleAway, Fighter: slashAway };
 function deathPiece(src, cls, style = "", ms = 1000) {
-  const piece = document.createElement("div");
-  piece.className = cls;
+  const piece = fxDiv(cls, `left:${src.offsetLeft}px;top:${src.offsetTop}px;${style}`, ms);
   piece.innerHTML = src.innerHTML;
-  piece.style.cssText = `left:${src.offsetLeft}px;top:${src.offsetTop}px;${style}`;
-  $("#fx-layer").appendChild(piece);
-  setTimeout(() => piece.remove(), ms);
   return piece;
 }
 function sinkAway(src) {   // Zombie: sinks back into the ground
@@ -327,11 +323,7 @@ function tumbleAway(src) { // Monkey: knocked off the table, tumbling
 function slashAway(src) {  // Fighter: cut in two by a clean strike
   deathPiece(src, "death-slash", `clip-path:polygon(0 0, 100% 0, 100% 35%, 0 70%);--dx:-18px;--dy:-26px;--r:-8deg`, 1000);
   deathPiece(src, "death-slash", `clip-path:polygon(0 70%, 100% 35%, 100% 100%, 0 100%);--dx:18px;--dy:34px;--r:8deg`, 1000);
-  const line = document.createElement("div");
-  line.className = "death-slash-line";
-  line.style.cssText = `left:${src.offsetLeft - 10}px;top:${src.offsetTop + CARD_H * 0.525}px`;
-  $("#fx-layer").appendChild(line);
-  setTimeout(() => line.remove(), 500);
+  fxDiv("death-slash-line", `left:${src.offsetLeft - 10}px;top:${src.offsetTop + CARD_H * 0.525}px`, 500);
 }
 function shatterFrom(src, group) {
   if (DEATHS[group]) { DEATHS[group](src); sparkle(src.offsetLeft + CARD_W / 2, src.offsetTop + CARD_H / 2, 6); return; }
@@ -340,12 +332,8 @@ function shatterFrom(src, group) {
   ring.forEach((p, k) => {
     const q = ring[(k + 1) % ring.length];
     const mx = (p[0] + q[0]) / 2 - cx, my = (p[1] + q[1]) / 2 - cy;
-    const piece = document.createElement("div");
-    piece.className = "shard-piece";
-    piece.innerHTML = src.innerHTML;
-    piece.style.cssText = `left:${x}px;top:${y}px;clip-path:polygon(${cx}px ${cy}px, ${p[0]}px ${p[1]}px, ${q[0]}px ${q[1]}px);--dx:${mx * 1.6 + (Math.random() - 0.5) * 30}px;--dy:${my * 1.4 + 30 + Math.random() * 40}px;--r:${(Math.random() - 0.5) * 120}deg`;
-    $("#fx-layer").appendChild(piece);
-    setTimeout(() => piece.remove(), 950);
+    // one wedge of the card, from its center out to this stretch of the edge
+    deathPiece(src, "shard-piece", `clip-path:polygon(${cx}px ${cy}px, ${p[0]}px ${p[1]}px, ${q[0]}px ${q[1]}px);--dx:${mx * 1.6 + (Math.random() - 0.5) * 30}px;--dy:${my * 1.4 + 30 + Math.random() * 40}px;--r:${(Math.random() - 0.5) * 120}deg`, 950);
   });
   sparkle(x + cx, y + cy, 10);
 }
@@ -456,9 +444,13 @@ const recent = (map, uid, ms) => map.has(uid) && performance.now() - map.get(uid
 // ---------------------------------------------------------------------------
 // Health is a life crystal: green from 75% up, orange down to 35%, then red and cracked.
 const LIFE_TIERS = [{ min: 0.75, cls: "healthy" }, { min: 0.35, cls: "hurt" }, { min: 0, cls: "low" }];
-function plateHTML(p, side) {
+// A player's health as a share of their maximum (0 to 1), and which of the tiers above it is in.
+function lifeTier(p) {
   const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
-  const tier = LIFE_TIERS.find(t => ratio >= t.min).cls;
+  return { ratio, cls: LIFE_TIERS.find(t => ratio >= t.min).cls };
+}
+function plateHTML(p, side) {
+  const { ratio, cls: tier } = lifeTier(p);
   const cracks = tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4;
   const pd = S.pending;
   const targetable = humanTarget() && pd.targetType === "charOrPlayer" && isValidTarget({ isPlayer: true, idx: p.idx });
@@ -738,9 +730,18 @@ function onPhaseButton() {
   else act(advancePhase);
 }
 
-function clickChar(uid, side) {
+// With two or more guards (Challenge or Tower) the attacker's player picks which one to hit.
+// The rules send an attack aimed anywhere else to the first guard, which is right when there
+// is only one. With several, that took the choice away, so such a tap now asks for a guard.
+function mustPickGuard(target) {
+  const g = guards(opponent());
+  if (g.length < 2 || g.includes(target)) return false;
+  banner("Choose a guard to attack");
+  return true;
+}
+
+function clickChar(uid) {
   const human = humanTurn();
-  const pd = S.pending;
   const found = findChar(uid);
   if (!found) return;
   if (humanTarget()) {
@@ -758,6 +759,7 @@ function clickChar(uid, side) {
   if (human && S.phase === PHASE.BATTLE) {
     if (found.p === active() && canAttack(found.c)) { U.selected = U.selected === uid ? null : uid; render(); return; }
     if (found.p !== active() && U.selected) {
+      if (mustPickGuard(found.c)) return;
       const a = U.selected; U.selected = null;
       act(() => attack(a, uid));
       return;
@@ -896,7 +898,7 @@ function showDetail(c, ctx = {}) {
   openModal(`<div class="detail">
     ${cardHTML(c, ctx.field && findChar(c.uid) ? { field: true } : {})}
     <div class="detail-text">
-      <div><h2 id="modal-title">${esc(c.name)}</h2><p class="sub">${esc(c.type)} · ${esc(c.rarity)} · ${esc(c.group === "N/A" ? "Neutral" : c.group)}${c.race && c.race !== "N/A" ? " · " + esc(c.race) : ""} · ${c.manaCost} mana${spellKind}</p></div>
+      <div><h2 id="modal-title">${esc(c.name)}</h2><p class="sub">${esc(c.type)} · ${esc(c.rarity)} · ${esc(groupLabel(c.group))}${c.race && c.race !== "N/A" ? " · " + esc(c.race) : ""} · ${c.manaCost} mana${spellKind}</p></div>
       ${ability ? `<p class="ability">${esc(ability)}</p>` : ""}
       ${skillRows(c)}
       ${extra}
@@ -1033,15 +1035,14 @@ $("#board").addEventListener("click", e => {
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; act(endTurn); } return; }
   if (a === "face") { if (U.selected) { const s = U.selected; U.selected = null; act(() => attack(s, null)); } return; }
   if (a === "blade") { if (human) { U.selected = null; act(() => useBlade(uid)); } return; }
-  if (a === "char") return clickChar(uid, el.dataset.side);
+  if (a === "char") return clickChar(uid);
   if (a === "token") { if (human) act(useManaToken); return; }
   if (a === "grave") return showGrave(S.players[Number(el.dataset.player)]);
   if (a === "deck") { if (human && Number(el.dataset.player) === S.active && S.phase === PHASE.DRAW) onPhaseButton(); return; }
   if (a === "plate") {
     const idx = Number(el.dataset.player);
-    const pd = S.pending;
     if (humanTarget() && isValidTarget({ isPlayer: true, idx })) act(() => chooseTarget({ isPlayer: true, idx }));
-    else if (human && U.selected && idx !== S.active) { const s = U.selected; U.selected = null; act(() => attack(s, null)); }
+    else if (human && U.selected && idx !== S.active && !mustPickGuard(null)) { const s = U.selected; U.selected = null; act(() => attack(s, null)); }
     return;
   }
   if (a === "area") {
@@ -1223,7 +1224,7 @@ function renderAlmanac() {
   for (const g of groups) {
     if (want !== "All" && want !== g) continue;
     const cards = DATA.cardList.filter(c => c.group === g).sort((a, b) => (DATA.rarities[a.rarity]?.order - DATA.rarities[b.rarity]?.order) || a.manaCost - b.manaCost);
-    h += `<h2 class="faction-head" style="--fc:${DATA.factions[g]?.color || "#c9b48d"}">${esc(g === "N/A" ? "Neutral" : g)} <small style="font-size:.6em;color:var(--muted)">${cards.length} cards</small></h2>`;
+    h += `<h2 class="faction-head" style="--fc:${DATA.factions[g]?.color || "#c9b48d"}">${esc(groupLabel(g))} <small style="font-size:.6em;color:var(--muted)">${cards.length} cards</small></h2>`;
     h += cards.map(c => `<button type="button" class="chip-card" data-card="${c.id}" style="appearance:none;border:0;background:none;padding:0">${cardHTML(c)}</button>`).join("");
   }
   $("#alm-content").innerHTML = h + `</div>`;
