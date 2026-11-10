@@ -93,6 +93,7 @@ their own story or coaching, then hand over to the same engine.
 | Deck-building rules | `js/decks.js` and `data/game_rules.csv` |
 | Hint wording and settings | `js/help.js` |
 | The playable single-file copy | `tools/build-single.js` |
+| Checking a rules or card change broke nothing | `node tools/selftest.js . rand 1000` |
 
 ## Size and shape
 

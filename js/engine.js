@@ -133,39 +133,24 @@ function equipBonuses(c) {
   return { a, h };
 }
 
-// Area bonuses read from the area's ability text, exactly like getAreaEffectTotals in Lua.
-function areaBonuses(p, c) {
-  let a = 0, h = 0, parry = false;
-  for (const area of p.field.areas) {
-    const text = (area.ability + " " + area.name).toLowerCase();
-    if (area.group === c.group || text.includes("all characters")) {
-      const m = text.match(/([+-]\d+)\s+to all stats/) || text.match(/([+-]\d+)\s+in all stats/);
-      const n = m ? Number(m[1]) : 0;
-      a += n; h += n;
-      const at = text.match(/([+-]\d+)\s+attack/);
-      if (at) a += Number(at[1]);
-      if (text.includes("parry")) parry = true;
-    }
-  }
-  return { a, h, parry };
-}
-
 // Effective stats including equipment, areas, synergies and Rally. Health can be
 // negative here; display code clamps it.
 function rawStats(c) {
   const p = ownerOf(c);
-  const e = equipBonuses(c), ar = areaBonuses(p, c);
+  const e = equipBonuses(c);
   let buff = 0;
-  const aura = auraBonus(c, p);   // "aura:" effects from cards on this side (js/effects.js)
+  // "aura:" effects from this side's characters and areas (js/effects.js). An area's bonus
+  // is written in its Effect column, like "aura: buff allies.Monkey 1 0".
+  const aura = auraBonus(c, p);
   const extraA = aura.a, extraH = aura.h;
   if (c.group === "Simple" && simplisticOut()) buff += SIMPLISTIC_BONUS;
   // Simple equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
   const simpleGear = simplisticOut() ? SIMPLISTIC_BONUS * (c.equipped || []).filter(x => x.group === "Simple").length : 0;
   const rally = c.rallyBonus || 0;
   return {
-    a: c.attack + e.a + ar.a + buff + rally + extraA + simpleGear,
-    h: c.currentHealth + ar.h + buff + extraH + simpleGear,
-    parry: hasSkill(c, "Parry") || ar.parry,
+    a: c.attack + e.a + buff + rally + extraA + simpleGear,
+    h: c.currentHealth + buff + extraH + simpleGear,
+    parry: hasSkill(c, "Parry") || grantsSkill(c, "Parry"),
   };
 }
 function stats(c) {

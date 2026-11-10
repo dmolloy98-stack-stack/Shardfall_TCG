@@ -65,7 +65,7 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 | `gearEnters` | Equipment enters its owner's field |
 | `maxLevel` | The character reaches its last level |
 | `cost` | Changes the card's mana cost: `reduce <number>` or `set <number>` |
-| `aura` | A lasting bonus while it's on the field: `aura: buff <who> <attack> <health>` |
+| `aura` | A lasting bonus while the character or area is on the field: `aura: buff <who> <attack> <health>`, or a skill: `aura: grant <who> <Skill>` (Parry and Swift). This is how an area boosts characters, for example `aura: buff allies.Monkey 1 0` |
 | `grants` | Equipment only: the holder has these skills, for example `grants: Swift` |
 
 **Picking a target.** In a `play` clause, start with `target <kind> <intent>`, then use `target` as the "who" in the actions:

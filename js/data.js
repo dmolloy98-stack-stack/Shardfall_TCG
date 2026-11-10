@@ -59,7 +59,7 @@ function buildData(CSV) {
   const rarities = {};
   const rarityOrder = [];
   for (const c of csvRows(CSV.rarities)) {
-    rarities[c[1]] = { name: c[1], color: rgb(c[2], c[3], c[4]), attachCost: Number(c[5]) || 1, order: Number(c[6]), frame: c[7] || "chip" };
+    rarities[c[1]] = { name: c[1], color: rgb(c[2], c[3], c[4]), attachCost: c[5] !== "" && Number.isFinite(Number(c[5])) ? Number(c[5]) : 1, order: Number(c[6]), frame: c[7] || "chip" };
     rarityOrder.push(c[1]);
   }
 
@@ -75,6 +75,20 @@ function buildData(CSV) {
   };
   const skillsOf = s => (s || "").split("+").map(x => x.trim()).filter(x => x && x !== "---");
 
+  // A typing mistake in the card table stops the game with a message naming the card, the
+  // same way a mistake in a deck list or an Effect does. Without this, a misspelled skill or
+  // faction was ignored without a word and the card just played wrong.
+  const CARD_TYPES = ["Character", "Spell", "Equipment", "Area"];
+  const checkCard = card => {
+    const bad = (what, value, list) => { throw new Error(`data/cards.csv, card ${card.id}: ${what} "${value}" is not known. Use one of: ${list.join(", ")}.`); };
+    if (cardsById[card.id]) throw new Error(`data/cards.csv: the CardID ${card.id} is used twice.`);
+    if (cardsByName[card.name]) throw new Error(`data/cards.csv: two cards are named "${card.name}" (${cardsByName[card.name].id} and ${card.id}).`);
+    if (!CARD_TYPES.includes(card.type)) bad("the Type", card.type, CARD_TYPES);
+    if (!rarities[card.rarity]) bad("the Rarity", card.rarity, rarityOrder);
+    if (card.group !== "N/A" && !factions[card.group]) bad("the Faction", card.group, [...Object.keys(factions), "N/A"]);
+    for (const s of card.skills) if (!skills[s]) bad("the skill", s, skillOrder);
+  };
+
   const cardsById = {}, cardsByName = {}, cardList = [];
   for (const c of csvRows(CSV.cards)) {
     if (c.length < 8 || !c[0] || !c[2]) continue;
@@ -86,6 +100,7 @@ function buildData(CSV) {
       ability, description: c[10] || "", artKey: c[11] || c[0],
       effect: (c[12] || "").trim(),   // what the card does, read by js/effects.js
     };
+    checkCard(card);
     cardsById[card.id] = card;
     cardsByName[card.name] = card;
     cardList.push(card);

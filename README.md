@@ -79,6 +79,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
 | `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
+| `tools/selftest.js` | Plays many automatic games and reports anything broken: `node tools/selftest.js . ai 4` and `node tools/selftest.js . rand 1000` (needs Node.js). Run it after changing rules or cards |
 | `tools/guide-shots.js` | Retakes the annotated guide pictures: `node tools/guide-shots.js` (needs Node.js and Playwright) |
 | `original-lua/main.lua` | The LÖVE2D source this was ported from |
 

@@ -27,7 +27,7 @@ herd,5,Herd,Rare,Spell,N/A,Simple,---,---,Add 3 Simple Farmers to the field unde
 simplify,3,Simplify,Rare,Spell,N/A,Simple,---,---,Target character's stats become 1+1,,simplify,"play: target character harm, setStats target 1 1"
 simpler_farmer,5,Simpler Farmer,Exotic,Character,N/A,Simple,2+4,Signal,Simpler Farmer gets +1 Attack for each other Simple Farmer on the field,,simpler_farmer,play: buff self #allies.simple_farmer 0
 simple_defender,5,Simple Defender,Exotic,Character,N/A,Simple,1+6,Challenge+Tower,Add +2 health to this character during your End Phase,,simple_defender,endTurn: buff self 0 2
-simpledom,5,Simpledom,Exotic,Area,N/A,Simple,---,---,Simple characters gain +2 in all stats,,simpledom,
+simpledom,5,Simpledom,Exotic,Area,N/A,Simple,---,---,Simple characters gain +2 in all stats,,simpledom,aura: buff allies.Simple 2 2
 sabre,4,Sabre,Divine,Equipment,N/A,Simple,5+0,---,---,,sabre,
 simplicity,7,Simplicity,Divine,Spell,N/A,Simple,---,---,Reduce all target player's character's stats by -2 in all categories. You gain +2 HP for each character effected,,simplicity,play: script simplicity
 the_simplistic,8,The Simplistic,Unknown,Character,N/A,Simple,5+5,---,"While The Simplistic is on the field, all Simple cards can't be targeted by curse spells (buff spells still can), Simple characters and equipment get +3 to each stat, and Simple spells deal or give 3 more",,the_simplistic,
@@ -39,7 +39,7 @@ chimp,1,Chimp,Basic,Character,Animal,Monkey,1+2,Rally,---,,chimp,
 tree_branch,3,Tree Branch,Basic,Equipment,N/A,Monkey,2+1,---,If there are 3 or more monkeys on the field this costs 1,,tree_branch,cost: set 1 if #allies.Monkey>=3
 banana,1,Banana,Basic,Spell,N/A,Monkey,---,---,Target character gains +1 health. Add a Peel from your deck to your hand shuffle your deck,,banana,"play: target character help, buff target ripen 1, fetch peel, shuffle"
 peel,1,Peel,Basic,Spell,N/A,Monkey,---,---,Target character loses -1 health. If you control 3 or more monkeys it loses 2 health instead,,peel,"play: target character harm, damage target 1+#allies.Monkey>=3"
-jungle,3,Jungle,Basic,Area,N/A,Monkey,---,---,All Monkey cards gain +1 attack,,jungle,
+jungle,3,Jungle,Basic,Area,N/A,Monkey,---,---,All Monkey cards gain +1 attack,,jungle,aura: buff allies.Monkey 1 0
 orangutan,5,Orangutan,Rare,Character,Animal,Monkey,1+4,Signal+Rally,Gain +1 health for each other Monkey you control on the field,,orangutan,play: buff self 0 #allies.Monkey.other
 baboon,5,Baboon,Rare,Character,Animal,Monkey,0+2,Rush+Overwhelm,Gain +1 attack for each character on the field,,baboon,aura: buff self #everyone.other 0
 banana_tree,5,Banana Tree,Rare,Character,Animal,Monkey,0+5,Tower,During your end phase add a Banana to your hand,,banana_tree,endTurn: fetch banana
@@ -49,7 +49,7 @@ primate,6,Primate,Exotic,Character,Animal,Monkey,2+2,Signal+Rally,Search your de
 gorilla,5,Gorilla,Exotic,Character,Animal,Monkey,3+4,Rally,Each time Gorilla survives damage gain +1 Attack,,gorilla,"hurt: buff self 1 0, say self ""+1 ATK"" #ffe066"
 arboreal_intelligence,8,Arboreal Intelligence,Exotic,Spell,N/A,Monkey,---,---,Give all Monkey character cards +5 to all stats,,arboreal_intelligence,play: buff allies.Monkey 5 5
 call_of_the_jungle,6,Call of the Jungle,Divine,Spell,N/A,Monkey,---,---,Select 3 or less Monkey cards from your Graveyard return them to your hand,,call_of_the_jungle,play: script callOfTheJungle
-primeval_forest,7,Primeval Forest,Divine,Area,N/A,Monkey,---,---,All Monkey character cards have +3 to all stats,,primeval_forest,
+primeval_forest,7,Primeval Forest,Divine,Area,N/A,Monkey,---,---,All Monkey character cards have +3 to all stats,,primeval_forest,aura: buff allies.Monkey 3 3
 the_man_ape,7,The Man Ape,Unknown,Character,Animal,Monkey,4+4,Challenge+Cloak,When defending gain +10 to all stats. After each of your Battle phases you may sacrifice another Monkey you control to permanently give The Man Ape +1 to all stats and fully heal it,,the_man_ape,
 reanimated_corpse,0,Reanimated Corpse,Basic,Character,Undead,Zombie,0+1,Reanimate,---,,reanimated_corpse,
 lurker,1,Lurker,Basic,Character,Undead,Zombie,1+1,---,---,,lurker,
@@ -63,7 +63,7 @@ rise_from_the_dead,4,Rise from the Dead,Basic,Spell,N/A,Zombie,---,---,Return ta
 plaguemancer,8,Plaguemancer,Rare,Character,Undead,Zombie,2+2,Signal,Turn target character into a Zombie and gain control of it. That character gains Reanimate,,plaguemancer,"play: target character steal, convert target reanimate"
 breathing_wall,2,Breathing Wall,Rare,Character,Undead,Zombie,0+5,Tower+Challenge,---,,breathing_wall,
 sneaky_skinbag,4,Sneaky Skinbag,Rare,Character,Undead,Zombie,1+2,Cloak,During your End Phase create a Reanimated Corpse on your side of the field. Gain +1 health for each other Zombie on the field,,sneaky_skinbag,"endTurn: buff self 0 #allies.Zombie.other, summon reanimated_corpse 1"
-midnight_madness,6,Midnight Madness,Rare,Area,N/A,Zombie,---,---,Undead characters gain +2 to all stats,,midnight_madness,
+midnight_madness,6,Midnight Madness,Rare,Area,N/A,Zombie,---,---,Undead characters gain +2 to all stats,,midnight_madness,aura: buff allies.Zombie 2 2
 infection,5,Infection,Rare,Spell,N/A,Zombie,---,---,Turn target character into a Zombie and gain control of it,,infection,"play: target character steal, convert target"
 shadow_stitched_soldier,4,Shadow-Stitched Soldier,Exotic,Character,Undead,Zombie,3+2,Reanimate+Evolve,After returning from the Graveyard to the Field Evolve,,shadow_stitched_soldier,
 zombombadier,7,Zombombadier,Exotic,Character,Undead,Zombie,1+2,Reanimate+Evolve,Deal damage to all characters and players equal to this Zombombadier's stat line. After returning from the Graveyard to the Field Evolve,,zombombadier,enter: script zombombadier
@@ -84,7 +84,7 @@ black_belt_student,3,Black Belt Student,Rare,Character,N/A,Fighter,2+2,Parry+Tra
 fight_choreographer,6,Fight Choreographer,Rare,Character,N/A,Fighter,1+2,---,Each other Fighter character on the field gains +2 to all stats,,fight_choreographer,aura: buff allies.Fighter.other 2 2
 nunchucks,2,Nunchucks,Rare,Equipment,N/A,Fighter,2+0,Flash,Can be equipped anytime as long as you have the mana,,nunchucks,
 bo_staff,2,Bo Staff,Rare,Equipment,N/A,Fighter,2+2,Flash,Can be equipped anytime as long as you have the mana,,bo_staff,
-dojo,4,Dojo,Rare,Area,N/A,Fighter,---,---,Each Fighter character gains Parry and +2 to all stats,,dojo,
+dojo,4,Dojo,Rare,Area,N/A,Fighter,---,---,Each Fighter character gains Parry and +2 to all stats,,dojo,"aura: buff allies.Fighter 2 2, grant allies.Fighter Parry"
 fifth_degree_master,7,5th Degree Master,Exotic,Character,N/A,Fighter,3+3,Parry,,,fifth_degree_master,
 master_rat,10,Master Rat,Exotic,Character,N/A,Fighter,5+5,Parry,Summon 4 1+1 turtles who each have Gain +1 to each stat for every other turtle on the field,,master_rat,enter: script masterRat
 crane_kick,5,Crane Kick,Exotic,Spell,N/A,Fighter,---,---,Target character loses 7 health,,crane_kick,"play: target character harm, damage target 7"

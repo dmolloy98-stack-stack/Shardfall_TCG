@@ -26,7 +26,7 @@ const WHEN = {
   gearEnters: "When equipment enters its owner's field",
   maxLevel: "When the character reaches its last level",
   cost: "Changes the card's mana cost",
-  aura: "A lasting stat bonus while the card is on the field",
+  aura: "A lasting bonus while the character or area is on the field: stats, or a skill",
   grants: "Equipment: the holder has this skill",
 };
 
@@ -216,8 +216,9 @@ function compileEffect(text, where) {
         if (fs.length) block.filter = (c, ctx) => fs.every(f => f(c, ctx));
         if (filters.includes("enemy")) block.players = (idx, ctx) => idx !== ctx.owner.idx;
       } else if (when === "aura") {
-        if (w[0] !== "buff" || w.length !== 4) throw new Error(`${where}: an aura is written "aura: buff <who> <attack> <health>".`);
-        block.steps.push({ sel: parseSelector(w[1], where), a: parseNumber(w[2], where), h: parseNumber(w[3], where) });
+        if (w[0] === "buff" && w.length === 4) block.steps.push({ sel: parseSelector(w[1], where), a: parseNumber(w[2], where), h: parseNumber(w[3], where) });
+        else if (w[0] === "grant" && w.length === 3) (block.grants = block.grants || []).push({ sel: parseSelector(w[1], where), skill: w[2] });
+        else throw new Error(`${where}: an aura is written "aura: buff <who> <attack> <health>" or "aura: grant <who> <Skill>".`);
       } else {
         block.steps.push(parseAction(part, where));
       }
@@ -354,18 +355,24 @@ function costFromEffect(c, p) {
   return cost;
 }
 
+// Cards on a player's side that can have an aura: their characters and their areas.
+const auraSources = p => [...p.field.chars, ...p.field.areas].filter(src => !src.disabled && CARD_FX[src.id]?.aura);
+
 // Stat bonuses a character gets from aura clauses on its own side (itself included).
 function auraBonus(c, p) {
   let a = 0, h = 0;
-  for (const src of p.field.chars) {
-    if (src.disabled) continue;
-    const block = CARD_FX[src.id]?.aura;
-    if (!block) continue;
+  for (const src of auraSources(p)) {
     const ctx = { card: src, owner: p };
-    for (const st of block.steps) if (select(st.sel, ctx).includes(c)) { a += st.a(ctx); h += st.h(ctx); }
+    for (const st of CARD_FX[src.id].aura.steps) if (select(st.sel, ctx).includes(c)) { a += st.a(ctx); h += st.h(ctx); }
   }
   return { a, h };
 }
 
-// Equipment with "grants:" gives its skill to the character holding it.
-const grantsSkill = (c, skill) => (c.equipped || []).some(e => !e.disabled && CARD_FX[e.id]?.grants?.includes(skill));
+// A skill a character has without it being printed on the card: from equipment it holds
+// ("grants: Swift") or from an aura on its side ("aura: grant allies.Fighter Parry").
+// The rules look here for Swift and Parry.
+function grantsSkill(c, skill) {
+  if ((c.equipped || []).some(e => !e.disabled && CARD_FX[e.id]?.grants?.includes(skill))) return true;
+  const p = ownerOf(c);
+  return auraSources(p).some(src => (CARD_FX[src.id].aura.grants || []).some(g => g.skill === skill && select(g.sel, { card: src, owner: p }).includes(c)));
+}
