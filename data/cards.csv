@@ -63,7 +63,7 @@ rise_from_the_dead,4,Rise from the Dead,Basic,Spell,N/A,Zombie,---,---,Return ta
 plaguemancer,8,Plaguemancer,Rare,Character,Undead,Zombie,2+2,Signal,Turn target character into a Zombie and gain control of it. That character gains Reanimate,,plaguemancer,"play: target character steal, convert target reanimate"
 breathing_wall,2,Breathing Wall,Rare,Character,Undead,Zombie,0+5,Tower+Challenge,---,,breathing_wall,
 sneaky_skinbag,4,Sneaky Skinbag,Rare,Character,Undead,Zombie,1+2,Cloak,During your End Phase create a Reanimated Corpse on your side of the field. Gain +1 health for each other Zombie on the field,,sneaky_skinbag,"endTurn: buff self 0 #allies.Zombie.other, summon reanimated_corpse 1"
-midnight_madness,6,Midnight Madness,Rare,Area,N/A,Zombie,---,---,Undead characters gain +2 to all stats,,midnight_madness,aura: buff allies.Zombie 2 2
+midnight_madness,6,Midnight Madness,Rare,Area,N/A,Zombie,---,---,Undead characters gain +2 to all stats,,midnight_madness,aura: buff allies.Undead 2 2
 infection,5,Infection,Rare,Spell,N/A,Zombie,---,---,Turn target character into a Zombie and gain control of it,,infection,"play: target character steal, convert target"
 shadow_stitched_soldier,4,Shadow-Stitched Soldier,Exotic,Character,Undead,Zombie,3+2,Reanimate+Evolve,After returning from the Graveyard to the Field Evolve,,shadow_stitched_soldier,
 zombombadier,7,Zombombadier,Exotic,Character,Undead,Zombie,1+2,Reanimate+Evolve,Deal damage to all characters and players equal to this Zombombadier's stat line. After returning from the Graveyard to the Field Evolve,,zombombadier,enter: script zombombadier

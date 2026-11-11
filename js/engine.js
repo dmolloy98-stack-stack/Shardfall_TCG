@@ -286,6 +286,8 @@ function checkDeath(c) {
   if (rawStats(c).h > 0) return;
   const p = ownerOf(c);
   if (!p.field.chars.includes(c)) return;
+  // Reanimate brings the character back with its own printed stats. Health it had from
+  // equipment is not restored (the equipment stays on and still adds its attack).
   if (hasSkill(c, "Reanimate") && !c.reanimated) {
     c.reanimated = true; removeSkill(c, "Reanimate");
     c.currentHealth = c.baseHealth; c.attack = c.baseAttack;
@@ -394,11 +396,12 @@ function damageEverything(n) {
 function convertToZombie(ctx, t, givesReanimate) {
   const foe = foeOf(ctx.owner);
   if (t.owner !== foe.idx || ctx.owner.field.chars.length >= RULES.maxChars) {
-    if (givesReanimate || t.owner === ctx.owner.idx) { t.group = "Zombie"; }
+    if (givesReanimate || t.owner === ctx.owner.idx) { t.group = "Zombie"; t.race = "Undead"; }
     return;
   }
   foe.field.chars.splice(foe.field.chars.indexOf(t), 1);
-  t.owner = ctx.owner.idx; t.group = "Zombie"; t.rallyBonus = 0;
+  // An infected character becomes a Zombie in full: faction and race (so Undead bonuses reach it).
+  t.owner = ctx.owner.idx; t.group = "Zombie"; t.race = "Undead"; t.rallyBonus = 0;
   if (givesReanimate && !hasSkill(t, "Reanimate")) { t.skills.push("Reanimate"); t.reanimated = false; }
   ctx.owner.field.chars.push(t);
   updateRally(ctx.owner); updateRally(foe);

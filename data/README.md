@@ -92,7 +92,7 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 - kind: `character`, `characterOrPlayer` or `area`. Narrow it with dots: `character.enemy`, `character.mine`, `character.leveler` (has Level Up), `character.mine.levels` (has kept levels).
 - intent: `harm`, `help` or `steal`. This tells the computer player how to use it.
 
-**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). Narrow a group with dots: a faction (`allies.Monkey`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `strongest`.
+**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). Narrow a group with dots: a faction (`allies.Monkey`), a race from the Race column (`allies.Undead`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `strongest`.
 
 **Numbers** can be whole numbers or these words, joined with `+` or `-`:
 

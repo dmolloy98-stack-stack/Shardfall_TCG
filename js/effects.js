@@ -79,7 +79,8 @@ function selectorFilter(f) {
   if (f === "enemy") return (c, ctx) => c.owner !== ctx.owner.idx;
   if (f === "mine") return (c, ctx) => c.owner === ctx.owner.idx;
   if (f === "strongest") return null;   // handled after filtering
-  if (/^[A-Z]/.test(f)) return c => c.group === f;    // a faction
+  if (DATA.factions[f]) return c => c.group === f;    // a faction: allies.Monkey
+  if (/^[A-Z]/.test(f)) return c => c.race === f;     // a race: allies.Undead (the Race column)
   return c => c.id === f;                             // a CardID
 }
 function select(sel, ctx) {
