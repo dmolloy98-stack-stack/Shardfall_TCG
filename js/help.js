@@ -40,7 +40,7 @@ function hintText() {
     return "Nothing else in your hand fits your mana this turn. Press “To battle →” to attack. Mana you leave unspent can pay for a counter spell on the other player's turn, then it is gone.";
   }
   if (S.phase === PHASE.BATTLE) {
-    if (p.field.chars.some(c => canAttack(c))) return "Battle: characters with a green outline can attack. Tap one, then tap an enemy or attack the player directly. Each character attacks once per turn.";
+    if (p.field.chars.some(c => canAttack(c))) return "Battle: characters with a green outline can attack. Tap one, then tap an enemy or attack the player directly. Or press "All attack" to send every ready character at the player. Each character attacks once per turn.";
     if (p.field.chars.length) return "None of your characters can attack right now. New characters wait a turn unless they have Rush, and Tower characters never attack. Press “To end →”.";
     return "You have no characters to attack with. Press “To end →”.";
   }
@@ -117,6 +117,7 @@ function renderControls() {
   if (U.curtain) h += btn("curtain", "btn-primary");
   else if (U.ended) h += btn("camp-next", "btn-primary") + btn("again", U.campaign ? "" : "btn-primary") + btn("camp-map") + btn("tomenu");
   else {
+    h += btn("faceall", "danger");
     h += btn("face", "danger");
     if (U.armed || U.selected || (S.pending?.kind === "target" && !S.pending.required && !S.players[S.pending.owner].isAI)) h += `<button type="button" class="btn" data-press="cancel">Cancel</button>`;
     h += btn("phase", S.phase === PHASE.DRAW ? "btn-primary" : "");

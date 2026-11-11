@@ -593,10 +593,17 @@ function render() {
   h += `<div class="turn-info" style="top:372px"><b>Round ${S.round}</b><span style="color:${turnColor}">${esc(active().name)}'s turn</span></div>`;
   h += `<div class="phases">${DATA.phases.map((ph, i) => `<div class="phase-step${i === S.phase ? " on" : ""}">${esc(ph.name)}</div>`).join("")}</div>`;
   const forced = guards(them);
+  // "All attack": every character that can still attack goes for the player (see attackAllFace).
+  const readyN = human && S.phase === PHASE.BATTLE && !S.pending ? me.field.chars.filter(canAttack).length : 0;
+  const allBtn = (style = "") => `<button type="button" class="face-btn all" data-act="faceall" style="${style}">⚔ All attack ${esc(them.name)} (${readyN})</button>`;
   if (U.selected && human) {
     h += forced.length
       ? `<div class="instruction">${forced.length === 1 ? `${esc(forced[0].name)} has ${guardSkill(forced[0])} and must be attacked first` : "Attack one of the Challenge or Tower characters first"}</div>`
-      : `<button type="button" class="face-btn" data-act="face">⚔ Attack ${esc(them.name)} directly</button>`;
+      : readyN > 1
+        ? `<button type="button" class="face-btn" data-act="face" style="width:196px">⚔ Attack directly</button>${allBtn("left:728px;width:196px")}`
+        : `<button type="button" class="face-btn" data-act="face">⚔ Attack ${esc(them.name)} directly</button>`;
+  } else if (readyN > 0 && !forced.length && !S.over) {
+    h += allBtn();
   } else if (!S.over) {
     const instr = active().isAI ? `${active().name === "Computer" ? "The computer" : active().name} is taking its turn…` : DATA.phases[S.phase]?.instruction || "";
     h += `<div class="instruction">${esc(instr)}</div>`;
@@ -738,6 +745,17 @@ function onPhaseButton() {
 // With two or more guards (Challenge or Tower) the attacker's player picks which one to hit.
 // The rules send an attack aimed anywhere else to the first guard, which is right when there
 // is only one. With several, that took the choice away, so such a tap now asks for a guard.
+// "All attack player": every character that can attack hits the opposing player. Does nothing
+// while a guard (Challenge or Tower) stands, since the rules send those blows to the guard.
+// One Undo takes the whole attack back.
+function attackAllFace() {
+  if (guards(opponent()).length) return false;
+  const ids = active().field.chars.filter(canAttack).map(c => c.uid);
+  let any = false;
+  for (const uid of ids) { if (S.over) break; if (attack(uid, null)) any = true; }
+  return any;
+}
+
 function mustPickGuard(target) {
   const g = guards(opponent());
   if (g.length < 2 || g.includes(target)) return false;
@@ -1038,6 +1056,7 @@ $("#board").addEventListener("click", e => {
   if (a === "tomenu") { endTutorial(); return showScreen("menu"); }
   if (a === "phase") return onPhaseButton();
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; act(endTurn); } return; }
+  if (a === "faceall") { if (human && S.phase === PHASE.BATTLE) { U.selected = null; act(attackAllFace); } return; }
   if (a === "face") { if (U.selected) { const s = U.selected; U.selected = null; act(() => attack(s, null)); } return; }
   if (a === "blade") { if (human) { U.selected = null; act(() => useBlade(uid)); } return; }
   if (a === "char") return clickChar(uid);
