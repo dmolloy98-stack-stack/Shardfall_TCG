@@ -68,7 +68,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `js/data.js` | Loads and checks the CSV files, then starts the game |
 | `js/engine.js` | Game rules: turns, combat, skills. Shuffles come from a seed per match (shown in the game log), so a game can be replayed exactly |
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
-| `js/ai.js` | Computer opponent |
+| `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style |
 | `js/ui.js` | Board rendering, input, menu, Settings, Almanac |
 | `js/tutorial.js` | The tutorial: scripted steps, coach box, spotlight and arrows |
 | `js/help.js` | Beginner hints, the first-visit welcome, the in-game guide screen |
@@ -85,14 +85,14 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 
 ## The starter decks
 
-Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and one champion (an Unknown card) with at most 2 copies. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games with 25 starting health and the finished champions, all five starters win 46–53% of their games. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
+Every starter has 35 cards and follows the deck rules: at most 4 copies of a card, and one champion (an Unknown card) with at most 2 copies. They are meant as introductions to each faction; custom decks are where the real strategy lives. In computer-vs-computer games with 25 starting health and the finished champions, all five starters win 46–56% of their games. A game lasts about 14 turns in total (both players' turns counted). With the first-player draw skip and the second player's mana token, the first player wins about 54% of games.
 
 | Deck | Style | Cards costing 0–2 / 3–4 / 5+ | Characters |
 |---|---|---|---|
-| Simple | Go wide with humble characters and basic tools | 21 / 6 / 8 | 21 |
+| Simple | Go wide with humble characters and basic tools | 23 / 5 / 7 | 22 |
 | Monkey | Synergy: Rally monkeys power each other up | 20 / 5 / 10 | 25 |
 | Zombie | Big cost, high reward, slightly spell reliant | 13 / 10 / 12 | 22 |
-| Fighter | Martial artists that grow with equipment | 22 / 5 / 8 | 21 |
+| Fighter | Martial artists that grow with equipment | 22 / 6 / 7 | 20 |
 | Digital | Glass cannons that Level Up | 19 / 8 / 8 | 28 |
 
 ### Simple: a very simple way to play

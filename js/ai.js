@@ -1,6 +1,33 @@
 // Computer opponent. It plays one action per call to aiStep(), so the UI can
 // pause between actions and the human can follow what happened.
 // It uses simulate() to try a move on a copy of the state before committing.
+//
+// How it thinks:
+//   - evaluate() scores a position: its characters and health against the other side's.
+//   - In Setup it plans the turn: it tries its best few plays, then the best few follow-ups
+//     to each, and takes the first step of the line that ends in the best position. This is
+//     how it finds two cheap cards that beat one expensive one, or a buff before an attack.
+//   - In Battle it first checks whether attacking the player with everything wins the game.
+//     Otherwise it looks a few attacks ahead and takes the first step of the best line.
+//   - Each faction has a style (AI_STYLES) that changes what it values.
+
+// How each faction's computer player likes to play:
+//   face   how much it values hurting the enemy player      board  its own characters
+//   hand   cards kept in hand                               wild   how often it takes its
+//                                                                  second-best idea instead
+const AI_STYLES = {
+  Fighter: { face: 1.35, board: 0.95, hand: 0.4, wild: 0 },    // rushes the player down
+  Monkey:  { face: 1.1,  board: 1,    hand: 0.5, wild: 0.25 }, // unpredictable
+  Zombie:  { face: 0.9,  board: 1.15, hand: 0.6, wild: 0 },    // builds a swarm, strikes late
+  Digital: { face: 1,    board: 1.1,  hand: 0.5, wild: 0 },    // grows its characters
+  Simple:  { face: 1,    board: 1,    hand: 0.5, wild: 0 },    // steady
+};
+const AI_PLAIN = { face: 1, board: 1, hand: 0.5, wild: 0 };
+const aiStyle = idx => AI_STYLES[S.players[idx].faction] || AI_PLAIN;
+// Setup planning: how many plays ahead it looks, and how many options it follows at each step.
+const PLAN_DEPTH = 2, PLAN_WIDTH = 3;
+// Battle planning: the same, for attacks.
+const BATTLE_DEPTH = 3, BATTLE_WIDTH = 3;
 
 function charValue(c) {
   if (!c) return 0;
@@ -8,15 +35,22 @@ function charValue(c) {
   return st.a * 1.4 + st.h + (isSwift(c) ? 1.5 : 0) + (c.manaCost || 0) * 0.8 + (c.skills || []).length;
 }
 
-function boardValue(p) {
-  return p.field.chars.reduce((n, c) => n + charValue(c), 0) + p.health * 1.2;
-}
+const fieldValue = p => p.field.chars.reduce((n, c) => n + charValue(c), 0);
 
 // Score a position from the point of view of player index me.
 function evaluate(me) {
   if (S.over) return S.winner === me ? 1e6 : -1e6;
   const mine = S.players[me], theirs = S.players[1 - me];
-  return boardValue(mine) - boardValue(theirs) + mine.hand.length * 0.5;
+  const st = aiStyle(me);
+  let score = fieldValue(mine) * st.board + mine.health * 1.2
+    - fieldValue(theirs) - theirs.health * 1.2 * st.face
+    + mine.hand.length * st.hand;
+  // Danger: the other side's attackers could finish me next turn and nothing guards me.
+  if (!guards(mine).length) {
+    const threat = theirs.field.chars.reduce((n, c) => n + (hasSkill(c, "Tower") ? 0 : stats(c).a), 0);
+    if (threat >= mine.health) score -= 25;
+  }
+  return score;
 }
 
 // A target in the form chooseTarget() takes: a player as it is, a card by its uid.
@@ -64,6 +98,15 @@ function aiResolveChoice() {
   resolveChoice(picks, option);
 }
 
+// Do one setup action and answer any choice it raises, the way the computer would.
+// Returns false if the action could not be done.
+function aiDo(run) {
+  if (!run()) return false;
+  if (S.pending?.kind === "target") { const t = aiPickTarget(); if (!t) return false; chooseTarget(targetRef(t)); }
+  if (S.pending?.kind === "choose") aiResolveChoice();
+  return true;
+}
+
 // All candidate setup actions, each scored by simulating it.
 function aiSetupActions() {
   const me = S.active;
@@ -71,12 +114,7 @@ function aiSetupActions() {
   const base = evaluate(me);
   const actions = [];
   const tryAction = (label, run) => {
-    const score = simulate(() => {
-      if (!run()) return -Infinity;
-      if (S.pending?.kind === "target") { const t = aiPickTarget(); if (!t) return -Infinity; chooseTarget(targetRef(t)); }
-      if (S.pending?.kind === "choose") aiResolveChoice();
-      return evaluate(me);
-    });
+    const score = simulate(() => (aiDo(run) ? evaluate(me) : -Infinity));
     if (score > -Infinity) actions.push({ label, run, score });
   };
 
@@ -101,6 +139,44 @@ function aiSetupActions() {
   return actions.filter(a => a.gain > 0.5).sort((x, y) => y.gain - x.gain);
 }
 
+// The best position reachable from here with up to depth more setup plays.
+function aiPlanScore(me, depth) {
+  let best = evaluate(me);
+  if (depth <= 0 || S.over || S.pending) return best;
+  for (const a of aiSetupActions().slice(0, PLAN_WIDTH)) {
+    const score = simulate(() => (aiDo(a.run) ? aiPlanScore(me, depth - 1) : -Infinity));
+    if (score > best) best = score;
+  }
+  return best;
+}
+
+// The setup play to make now: the first step of the best line of plays, or null to stop.
+function aiPlanSetup() {
+  const me = S.active;
+  const options = aiSetupActions().slice(0, PLAN_WIDTH + 1);
+  if (!options.length) return null;
+  for (const a of options) a.plan = simulate(() => (aiDo(a.run) ? aiPlanScore(me, PLAN_DEPTH - 1) : -Infinity));
+  options.sort((x, y) => y.plan - x.plan);
+  // A wild player sometimes goes with its second idea.
+  const wild = aiStyle(me).wild;
+  if (wild && options.length > 1 && options[1].plan > evaluate(me) && rand() < wild) return options[1];
+  return options[0];
+}
+
+// If attacking the enemy player with every ready character wins the game right now, returns
+// the first attacker to send. Otherwise null.
+function aiLethal() {
+  const me = S.active;
+  if (guards(opponent()).length) return null;
+  const order = active().field.chars.filter(canAttack).map(c => c.uid);
+  if (!order.length) return null;
+  const wins = simulate(() => {
+    for (const uid of order) { if (S.over || S.pending) break; attack(uid, null); }
+    return S.over && S.winner === me;
+  });
+  return wins ? order[0] : null;
+}
+
 function aiAttackActions() {
   const me = S.active;
   const base = evaluate(me);
@@ -123,7 +199,40 @@ function aiAttackActions() {
       out.push({ blade: a.uid, target: t.uid, gain: score - base });
     }
   }
-  return out.filter(x => x.gain > 0).sort((x, y) => y.gain - x.gain);
+  return out.sort((x, y) => y.gain - x.gain);
+}
+
+// Do one battle action from aiAttackActions().
+function aiStrike(a) {
+  if (a.blade) { useBlade(a.blade); chooseTarget({ uid: a.target }); }
+  else attack(a.attacker, a.target);
+  if (S.pending?.kind === "target") { const t = aiPickTarget(); if (t) chooseTarget(targetRef(t)); }
+  if (S.pending?.kind === "choose") aiResolveChoice();
+}
+
+// The best position reachable from here with up to depth more attacks. Looking a few attacks
+// ahead finds lines where the first attack looks poor alone, like breaking a guard so the
+// others can reach the player.
+function aiBattleScore(me, depth) {
+  let best = evaluate(me);
+  if (depth <= 0 || S.over || S.pending) return best;
+  for (const a of aiAttackActions().slice(0, BATTLE_WIDTH)) {
+    const score = simulate(() => { aiStrike(a); return aiBattleScore(me, depth - 1); });
+    if (score > best) best = score;
+  }
+  return best;
+}
+
+// The attack to make now: the first step of the best line of attacks, or null to stop.
+function aiPlanBattle() {
+  const me = S.active;
+  const base = evaluate(me);
+  let best = null, bestScore = base;
+  for (const a of aiAttackActions().slice(0, BATTLE_WIDTH + 1)) {
+    const score = simulate(() => { aiStrike(a); return aiBattleScore(me, BATTLE_DEPTH - 1); });
+    if (score > bestScore) { bestScore = score; best = a; }
+  }
+  return best;
 }
 
 // Perform one AI action. Returns false when the AI has nothing more to do this turn.
@@ -145,14 +254,16 @@ function aiStep() {
     doDraw(); return true;
   }
   if (S.phase === PHASE.SETUP) {
-    const [best] = aiSetupActions();
+    const best = aiPlanSetup();
     if (best) { best.run(); return true; }
     // Spend the one-time mana token only when the extra mana unlocks a good play.
     if (active().manaToken && simulate(() => useManaToken() && aiSetupActions().length > 0)) { useManaToken(); return true; }
     advancePhase(); return true;
   }
   if (S.phase === PHASE.BATTLE) {
-    const [best] = aiAttackActions();
+    const lethal = aiLethal();
+    if (lethal != null) { attack(lethal, null); return true; }
+    const best = aiPlanBattle();
     if (best?.blade) { useBlade(best.blade); chooseTarget({ uid: best.target }); return true; }
     if (best) { attack(best.attacker, best.target); return true; }
     advancePhase(); return true;
