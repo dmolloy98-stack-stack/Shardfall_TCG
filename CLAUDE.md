@@ -34,7 +34,7 @@ The owner designs cards and decks in the Google Sheet "Shardfall – card and de
 (id `1RzePfEgUN4QJsLTDGnhU7xaTa0_snq2lVswEUy5JNX0`, in the "Shardfall _ CardGame" folder).
 Its tabs mirror the data files: Cards → `data/cards.csv` (Attack and Health become
 `Attack+Health` in Stats; ArtKey is the CardID), Decks plus Deck cards → `data/decks.csv`
-(one row per card becomes the `CardID:copies|…` CardList), Factions → `data/factions.csv`
+(one row per card becomes the `CardID:copies|…` CardList; skip rows with 0 copies, which mark a card taken out of a deck), Factions → `data/factions.csv`
 (Color is hex; convert to 0–1 RGB), Skills → `data/skills.csv`.
 
 When asked to add the sheet's rows to the game:
