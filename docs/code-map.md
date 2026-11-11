@@ -16,10 +16,10 @@ flowchart LR
   csv["Card tables<br/>data/*.csv"] -->|read once at start| data["Loader<br/>js/data.js"]
   data -->|Effect column| fx_text["Card abilities<br/>js/effects.js"]
   data -->|DATA| engine
-  fx_text -->|when a card does something| engine
+  fx_text -->|abilities, auras, special rules, counters| engine
 
   you["You<br/>js/ui.js · act()"] -->|play a card, attack| engine
-  ai["The computer<br/>js/ai.js · aiStep()"] -->|picks a move| engine
+  ai["The computer<br/>js/ai.js · aiStep()"] -->|plans ahead, picks a move| engine
   tut["The tutorial<br/>js/tutorial.js"] -->|blocks wrong moves| engine
 
   engine[["The rules<br/>js/engine.js<br/>S = the whole game"]]
@@ -31,30 +31,62 @@ flowchart LR
 ```
 
 Because the engine never draws, the computer can copy `S`, try a move on the copy
-(`simulate()`), and throw the copy away. Undo works the same way: `act()` saves a copy of
-`S` before every move.
+(`simulate()`), and throw the copy away. It does this to plan a whole turn: it tries its best
+few plays, then the best few follow-ups to each, and takes the first step of the best line.
+Undo works the same way: `act()` saves a copy of `S` before every move.
 
 Kept in the player's browser: settings and hints (`js/help.js`), custom decks
 (`js/decks.js`) and campaign progress (`js/campaign.js`).
 
 ## When you play a card
 
-Every move takes the same route, whether it's a card, an attack or an area.
+Every move takes the same route, whether it's a card, an attack or an area. Characters and
+spells have one extra stop: the other player may counter them.
 
 ```mermaid
 flowchart LR
   a["1. You drag a card<br/>ui.js"] --> b["2. Save a copy for Undo<br/>ui.js · act()"]
-  b --> c[["3. Check mana, place card<br/>engine.js"]]
-  c --> d["4. Its ability runs<br/>effects.js"]
-  d --> e["5. Hits shake, numbers pop<br/>fx.js"]
-  e --> f["6. Board is redrawn<br/>ui.js · render()"]
-  f --> g["7. Computer's turn? It moves<br/>ai.js"]
+  b --> c[["3. Check mana, pay for it<br/>engine.js"]]
+  c --> k[["4. Other side may counter<br/>engine.js · offerCounter()"]]
+  k --> d["5. Its ability runs<br/>effects.js"]
+  d --> e["6. Hits shake, numbers pop<br/>fx.js"]
+  e --> f["7. Board is redrawn<br/>ui.js · render()"]
+  f --> g["8. Computer's turn? It moves<br/>ai.js"]
+  k -.->|countered: to the graveyard, nothing happens| f
   g -.->|back through the rules| c
 ```
 
-Step 3 is the only place the rules live. If a card does the wrong thing, the fix is in
-`engine.js` or the card's Effect text. If it looks wrong, the fix is in `ui.js`, `fx.js` or
-`css/style.css`.
+Steps 3 and 4 are the only place the rules for playing a card live. If a card does the wrong
+thing, the fix is in `engine.js` or the card's Effect text. If it looks wrong, the fix is in
+`ui.js`, `fx.js` or `css/style.css`.
+
+**The counter stop.** If the other player holds a counter spell that can stop the card and has
+the unspent mana, the game pauses with a "Respond?" choice (`S.pending`, kind `choose`,
+`resolve: "counter"`). A person answers in the modal in `ui.js`; the computer answers in
+`aiResolveChoice()` in `ai.js`. A spell with a target asks for its target first, then opens the
+window. The computer's look-ahead never opens the window, so it can't learn what you hold.
+
+## How a card gets its behaviour
+
+Cards are data. What a card does is the **Effect** column of `data/cards.csv`, written as
+clauses separated by `;`. `js/effects.js` reads them once at start, checks them, and turns them
+into hooks the engine runs. A mistake stops the game with a message naming the card.
+
+| Clause | What it does | Example |
+|---|---|---|
+| `play:` | When the spell is cast, the Signal character enters, or the ability is used | `play: damage target 3` |
+| `enter:` `endTurn:` `attack:` `hurt:` … | When that happens to the card | `endTurn: levelUp self 1` |
+| `cost:` | Changes the mana cost | `cost: reduce 1` |
+| `aura:` | A lasting bonus while the character or **area** is on the field | `aura: buff allies.Monkey 1 0` |
+| `grants:` | Equipment gives its holder a skill | `grants: Swift` |
+| `rule:` | Switches on a special engine rule (champions mostly) | `rule: redirect` |
+| `counter:` | Makes the card a counter spell | `counter: character spell` |
+
+The engine asks `cardRule(card, "redirect")` and never looks at a card's name, so a card can be
+renamed freely and a new card can reuse a rule. Every rule is listed in `RULE_WORDS` in
+`js/effects.js` and in `data/README.md`. Oddball one-off abilities are `script` entries in the
+same file. `js/data.js` also checks the card table itself for unknown skills, rarities, types
+and factions.
 
 ## How the screens connect
 
@@ -81,8 +113,11 @@ their own story or coaching, then hand over to the same engine.
 | Card stats, costs, abilities, deck lists, rule numbers | `data/*.csv` (or the card and deck builder sheet) |
 | A new column in a table | `js/data.js` |
 | A new kind of card ability | `js/effects.js` |
+| A champion that bends a core rule | its `rule:` clause in the Effect column; the rule itself is in `js/engine.js` (list: `RULE_WORDS` in `js/effects.js`) |
+| An area's bonus, or a skill an area grants | the area's `aura:` clause in the Effect column |
+| A counter spell | its `counter:` clause in the Effect column; the window is `offerCounter()` in `js/engine.js` |
 | How the game plays: turns, phases, combat, winning | `js/engine.js` |
-| How smart or aggressive the computer is | `js/ai.js` |
+| How smart the computer is, or how each faction plays | `js/ai.js` (`PLAN_DEPTH`, `BATTLE_DEPTH`, `AI_STYLES`) |
 | Layout, card look, menus, phone layout | `js/ui.js` |
 | Animations and feedback | `js/fx.js` and `css/style.css` |
 | Colours and sizes | `css/style.css` |
@@ -97,10 +132,11 @@ their own story or coaching, then hand over to the same engine.
 
 ## Size and shape
 
-About 4,900 lines of JavaScript in 12 files (November 2026). The largest is `js/ui.js` at about
-1,375 lines. It mixes the menu, the Almanac, board drawing and input, so it is the first
-candidate to split if it passes about 2,000 lines.
+About 5,200 lines of JavaScript in 12 files (November 2026). The largest are `js/ui.js` at about
+1,380 lines and `js/engine.js` at about 1,030. `ui.js` mixes the menu, the Almanac, board
+drawing and input, so it is the first candidate to split if it passes about 2,000 lines.
 
 An automatic tool, [Graphify](https://github.com/Graphify-Labs/graphify), found the same
-structure. Its busiest functions were `emit()`, `render()`, `playCard()` and `attack()`. A
-tool like that becomes worth running regularly once the code is around 20,000 lines.
+structure (388 functions and 913 connections on 11 November). Its busiest functions were
+`emit()`, `render()`, `log()`, `hasSkill()`, `playCard()` and `attack()`. A tool like that
+becomes worth running regularly once the code is around 20,000 lines.
