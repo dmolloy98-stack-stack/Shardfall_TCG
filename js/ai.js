@@ -118,7 +118,7 @@ function aiAttackActions() {
   // Kenshi's Blade: a free 3 damage once per Battle Phase.
   for (const a of active().field.chars) {
     if (!canUseBlade(a)) continue;
-    for (const t of validTargets(EFFECTS["Kenshi's Blade"], { card: bladeOf(a), owner: active(), spell: false })) {
+    for (const t of validTargets(EFFECTS[bladeOf(a).id], { card: bladeOf(a), owner: active(), spell: false })) {
       const score = simulate(() => { useBlade(a.uid); chooseTarget({ uid: t.uid }); return evaluate(me); });
       out.push({ blade: a.uid, target: t.uid, gain: score - base });
     }

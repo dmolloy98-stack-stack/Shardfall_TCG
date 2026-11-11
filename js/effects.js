@@ -11,8 +11,9 @@
 //     cost: set 1 if #allies.Monkey>=3
 // Any action may end with "if <number test>", for example "if #allies.Monkey>=3".
 //
-// A few cards change the core rules (IP Man, The Man Ape, Soul Shepard...). Their logic stays
-// in the engine, or in SCRIPTS below for one-off abilities, and their Effect text points to it.
+// A few cards change the core rules (IP Man, The Man Ape, Soul Shepard...). That logic stays
+// in the engine as a named rule, and the card's Effect switches it on: "rule: redirect".
+// One-off abilities are in SCRIPTS below, and the Effect points to them: "script messenger".
 
 // When a clause happens.
 const WHEN = {
@@ -28,6 +29,25 @@ const WHEN = {
   cost: "Changes the card's mana cost",
   aura: "A lasting bonus while the character or area is on the field: stats, or a skill",
   grants: "Equipment: the holder has this skill",
+  rule: "Switches on one of the engine's special rules for this card (see RULE_WORDS)",
+};
+
+// The special rules a "rule:" clause can switch on, and what must follow each name.
+// The rules themselves are in js/engine.js; search there for the name in quotes.
+const RULE_WORDS = {
+  lord: "<Faction> <n>: while on the field, that faction's cards get +n, its spells +n, and curses can't target its cards",
+  redirect: ": once per turn, the first damage to it or its player goes to an enemy of its player's choice",
+  shepherd: "<Faction>: when another card of that faction dies, absorb its stats or return it to hand",
+  defend: "<n>: +n to all stats while defending",
+  sacrifice: "<Faction>: after its owner's Battle phase, may sacrifice one of that faction for +1 to all stats and a full heal",
+  freeEquip: ": its owner's equipment costs nothing",
+  equipCostMax: "<n>: equipping this character costs at most n",
+  levelGain: "<attack> <health>: what each Level Up gives it",
+  levelCap: "<n or none>: how many times it can Level Up",
+  survive: "<fights> <CardID>: transforms into that card after living through that many fights",
+  activate: ": an area whose play effect can be used once in each of its owner's Setup phases",
+  strike: ": equipment whose play effect its holder can use once per Battle phase",
+  teach: "<Skill>: equipment that gives its holder the skill for good",
 };
 
 // ---------------------------------------------------------------------------
@@ -149,7 +169,7 @@ const ACTIONS = {
     // (The Simplistic's +3, an area). Without this check it stayed on the table at 0 health.
     sweepDeaths();
   }],
-  transform: ["sc", (ctx, who, id) => { for (const c of chars(who(ctx))) transformCharacter(c, DATA.cardsById[id].name); }],
+  transform: ["sc", (ctx, who, id) => { for (const c of chars(who(ctx))) transformCharacter(c, id); }],
   // players and cards
   heal: ["sn", (ctx, who, n) => { for (const p of players(who(ctx))) healPlayer(p, n(ctx)); }],
   maxMana: ["sn", (ctx, who, n) => {
@@ -204,6 +224,17 @@ function compileEffect(text, where) {
     const [, when, rest] = m;
     const parts = splitOutside(rest, ",");
     if (when === "grants") { out.grants = parts; continue; }
+    if (when === "rule") {
+      out.rule = out.rule || {};
+      for (const part of parts) {
+        const [name, ...args] = words(part);
+        if (!RULE_WORDS[name]) throw new Error(`${where}: "${name}" is not a rule. Known rules: ${Object.keys(RULE_WORDS).join(", ")}.`);
+        const needs = RULE_WORDS[name].split(":")[0].split(">").length - 1;
+        if (args.length !== needs) throw new Error(`${where}: write this rule as "${name} ${RULE_WORDS[name].split(":")[0]}".`);
+        out.rule[name] = args;
+      }
+      continue;
+    }
     const block = out[when] || (out[when] = { steps: [] });
     for (const part of parts) {
       const w = words(part);
@@ -323,13 +354,13 @@ for (const [id, text] of Object.entries(TOKEN_EFFECTS)) CARD_FX[id] = compileEff
 
 const runSteps = (steps, ctx) => { for (const s of steps) s.run(ctx); };
 
-// EFFECTS[name]: the play clause in the shape the engine and the computer player use:
+// EFFECTS[CardID]: the play clause in the shape the engine and the computer player use:
 // { target, intent, filter, players, apply(ctx, target), now(ctx) }.
 const EFFECTS = {};
 for (const card of DATA.cardList) {
   const play = CARD_FX[card.id]?.play;
   if (!play) continue;
-  EFFECTS[card.name] = play.target
+  EFFECTS[card.id] = play.target
     ? { target: play.target, intent: play.intent, filter: play.filter, players: play.players, apply: (ctx, t) => runSteps(play.steps, { ...ctx, target: t }) }
     : { now: ctx => runSteps(play.steps, ctx) };
 }
@@ -340,6 +371,10 @@ function runHook(c, when, ctx) {
   const block = CARD_FX[c.id]?.[when];
   if (block?.steps) runSteps(block.steps, { card: c, ...ctx });
 }
+
+// A card's special rule from its Effect ("rule: defend 10" gives ["10"]), or undefined when it
+// doesn't have that rule. A disabled card has none.
+const cardRule = (c, name) => (c && !c.disabled ? CARD_FX[c.id]?.rule?.[name] : undefined);
 
 // Mana cost after "cost:" clauses ("reduce N", "set N if ...").
 function costFromEffect(c, p) {

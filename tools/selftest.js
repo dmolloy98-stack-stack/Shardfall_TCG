@@ -46,7 +46,7 @@ if("${mode}"==="ai"){
     try{ while(!S.over&&steps<1500){ steps++;
       const p=active(); const pd=S.pending; let did;
       if(pd){
-        if(pd.kind==="target"){ const ts=validTargets(EFFECTS[pd.source.name],{card:pd.source,owner:S.players[pd.owner],spell:pd.spell});
+        if(pd.kind==="target"){ const ts=validTargets(pendingEffect(pd),{card:pd.source,owner:S.players[pd.owner],spell:pd.spell});
           if(ts.length&&rnd()<0.85){ const t=pick(ts); did="target "+pd.source.name; if(!chooseTarget(t.isPlayer?t:{uid:t.uid})) note("valid target refused: "+pd.source.name,"seed "+seed); }
           else { did="cancel "+pd.source.name; if(!cancelPending()){ if(!ts.length){ note("STUCK: required target with no valid targets: "+pd.source.name,"seed "+seed); break; } } } }
         else { const k=Math.floor(rnd()*((pd.pick||1)+1)); const picks=pd.cards.slice().sort(()=>rnd()-0.5).slice(0,pd.required?Math.max(1,k):k).map(c=>c.uid);

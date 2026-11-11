@@ -67,6 +67,25 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 | `cost` | Changes the card's mana cost: `reduce <number>` or `set <number>` |
 | `aura` | A lasting bonus while the character or area is on the field: `aura: buff <who> <attack> <health>`, or a skill: `aura: grant <who> <Skill>` (Parry and Swift). This is how an area boosts characters, for example `aura: buff allies.Monkey 1 0` |
 | `grants` | Equipment only: the holder has these skills, for example `grants: Swift` |
+| `rule` | Switches on one of the game's special rules for this card (table below), for example `rule: redirect` |
+
+**Special rules.** A few cards, mostly the champions, bend the core rules. Each of those rules has a name, and any card can be given one in a `rule:` clause. The game never looks at a card's name, so you can rename a card freely, and a new card can reuse a rule.
+
+| Rule | What it does | Used by |
+|---|---|---|
+| `lord <Faction> <n>` | While it's on the field (either side), that faction's cards get +n to each stat, its spells deal or give n more, and curse spells can't target its cards | The Simplistic |
+| `redirect` | Once per turn, the first damage to it or its player goes to an enemy of its player's choice | IP Man |
+| `shepherd <Faction>` | When another of your cards of that faction dies: absorb its stats, or return it to your hand | Soul Shepard |
+| `defend <n>` | +n to all stats while defending | The Man Ape |
+| `sacrifice <Faction>` | After your Battle phase you may sacrifice one of that faction for +1 to all stats and a full heal | The Man Ape |
+| `freeEquip` | Your equipment costs nothing | Sensei |
+| `equipCostMax <n>` | Equipping this character costs at most n | Weapons Enthusiast |
+| `levelGain <attack> <health>` | What each Level Up gives it | Pesky Programmer |
+| `levelCap <n or none>` | How many times it can Level Up | Boss Level |
+| `survive <fights> <CardID>` | Transforms into that card after living through that many fights | Black Belt Student |
+| `activate` | An area whose play effect you may use once in each of your Setup phases | Data Transfer |
+| `strike` | Equipment whose play effect its holder may use once per Battle phase | Kenshi's Blade |
+| `teach <Skill>` | Equipment that gives its holder the skill for good | API Key |
 
 **Picking a target.** In a `play` clause, start with `target <kind> <intent>`, then use `target` as the "who" in the actions:
 

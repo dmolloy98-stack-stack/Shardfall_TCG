@@ -654,11 +654,13 @@ function renderPrompt() {
   let msg = null, cancel = true;
   if (U.curtain || U.ended) msg = null;
   else if (pd?.kind === "target" && !S.players[pd.owner].isAI) {
-    const what = pd.source.name === "Data Transfer" ? "one of your characters to lose a Level (you gain 2 HP)"
-      : pd.source.name === "IP Man" ? `an enemy character or player to take the ${pd.amount} damage instead`
-      : pd.source.name === "Kenshi's Blade" ? "an enemy character to take 3 damage"
+    // Wording for the special rules (js/engine.js), then the general cases.
+    const redirect = pd.amount != null;
+    const what = pd.source.id === "data_transfer" ? "one of your characters to lose a Level (you gain 2 HP)"
+      : redirect ? `an enemy character or player to take the ${pd.amount} damage instead`
+      : cardRule(pd.source, "strike") ? "an enemy character to take 3 damage"
       : pd.targetType === "area" ? "an area" : pd.targetType === "charOrPlayer" ? "a character or player" : "a character";
-    msg = `${pd.source.name}${pd.source.name === "IP Man" ? ` (${S.players[pd.owner].name})` : ""}: choose ${what}`;
+    msg = `${pd.source.name}${redirect ? ` (${S.players[pd.owner].name})` : ""}: choose ${what}`;
     cancel = !pd.required;
   } else if (U.armed) {
     const c = findCardAnywhere(U.armed.uid);
@@ -893,7 +895,7 @@ function showDetail(c, ctx = {}) {
   }
   if (UNIMPLEMENTED.has(c.name)) extra += `<p class="reason">Counter spells are not playable yet: they need a reaction window the game does not have.</p>`;
   const ability = c.ability || c.description;
-  const spellFx = c.type === "Spell" && EFFECTS[c.name]?.target ? EFFECTS[c.name] : null;
+  const spellFx = c.type === "Spell" && EFFECTS[c.id]?.target ? EFFECTS[c.id] : null;
   const spellKind = spellFx ? (spellFx.intent === "help" ? " · Buff spell" : " · Curse spell") : "";
   openModal(`<div class="detail">
     ${cardHTML(c, ctx.field && findChar(c.uid) ? { field: true } : {})}

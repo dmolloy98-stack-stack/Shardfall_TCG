@@ -56,7 +56,6 @@ function simulate(fn) {
 // Helpers
 // ---------------------------------------------------------------------------
 const hasSkill = (c, n) => (c.skills || []).includes(n);
-const named = (c, n) => c.name === n && !c.disabled;   // Disable switches off name-based abilities
 const removeSkill = (c, n) => { const i = (c.skills || []).indexOf(n); if (i >= 0) c.skills.splice(i, 1); };
 const active = () => S.players[S.active];
 const opponent = () => S.players[1 - S.active];
@@ -115,14 +114,23 @@ function settle() {
   if (!S.pending && S.passAfterChoice && !S.over) { S.passAfterChoice = false; finishTurn(); }
 }
 
-// The Simplistic: while it is on the field (either side), every Simple card gains +3 to each
-// stat (characters, and equipment on a character), Simple spells deal or give 3 more, and
-// curse spells can't target Simple cards. Buff spells still can.
-const simplisticOut = () => S.players.some(p => p.field.chars.some(x => named(x, "The Simplistic")));
-const SIMPLISTIC_BONUS = 3;
-const spellBoost = ctx => (ctx.spell && ctx.card.group === "Simple" && simplisticOut() ? SIMPLISTIC_BONUS : 0);
+// Special rules. A few cards bend the core rules (the champions, mostly). Each such rule has a
+// name, and a card gets it from its Effect column: "rule: redirect", "rule: lord Simple 3".
+// The engine asks cardRule(card, "redirect") and never looks at a card's name, so a card can be
+// renamed freely and a new card can reuse a rule. js/effects.js lists every rule (RULE_WORDS).
+
+// "rule: lord <Faction> <n>" (The Simplistic): while it is on the field (either side), every
+// card of that faction gains +n to each stat (characters, and equipment on a character), the
+// faction's spells deal or give n more, and curse spells can't target its cards. Buff spells
+// still can. Two lords of one faction don't add up.
+function lordBonus(group) {
+  let best = 0;
+  for (const c of allChars()) { const r = cardRule(c, "lord"); if (r && r[0] === group) best = Math.max(best, Number(r[1])); }
+  return best;
+}
+const spellBoost = ctx => (ctx.spell ? lordBonus(ctx.card.group) : 0);
 const isBuff = fx => fx.intent === "help";
-const shieldedFromCurses = c => c.group === "Simple" && simplisticOut();
+const shieldedFromCurses = c => lordBonus(c.group) > 0;
 
 // ---------------------------------------------------------------------------
 // Stats
@@ -143,9 +151,9 @@ function rawStats(c) {
   // is written in its Effect column, like "aura: buff allies.Monkey 1 0".
   const aura = auraBonus(c, p);
   const extraA = aura.a, extraH = aura.h;
-  if (c.group === "Simple" && simplisticOut()) buff += SIMPLISTIC_BONUS;
-  // Simple equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
-  const simpleGear = simplisticOut() ? SIMPLISTIC_BONUS * (c.equipped || []).filter(x => x.group === "Simple").length : 0;
+  buff += lordBonus(c.group);
+  // A lord's faction's equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
+  const simpleGear = (c.equipped || []).reduce((n, x) => n + lordBonus(x.group), 0);
   const rally = c.rallyBonus || 0;
   return {
     a: c.attack + e.a + buff + rally + extraA + simpleGear,
@@ -174,8 +182,8 @@ function triggerEvolve(c) {
   }
 }
 
-function transformCharacter(c, newName) {
-  const t = DATA.cardsByName[newName];
+function transformCharacter(c, newId) {
+  const t = DATA.cardsById[newId];
   if (!t) return;
   const n = structuredClone(t);
   n.currentHealth = Math.max(1, c.currentHealth + (n.health - c.health));
@@ -190,14 +198,16 @@ function transformCharacter(c, newName) {
 }
 
 // Level Up: +1 to all stats, up to 3 times, then the skill is used up. Each Level Up also
-// heals the character fully. Boss Level has no limit, Pesky Programmer grows +2 Attack
-// instead, and a Data Collector gains +1 Health when another of your characters levels up.
-const levelCap = c => (named(c, "Boss Level") ? Infinity : 3);
+// heals the character fully. "rule: levelCap none" lifts the limit (Boss Level) and
+// "rule: levelGain <attack> <health>" changes what a level gives (Pesky Programmer: 2 0).
+// A Data Collector gains +1 Health when another of your characters levels up.
+const levelCap = c => { const r = cardRule(c, "levelCap"); return !r ? 3 : r[0] === "none" ? Infinity : Number(r[0]); };
+const levelGains = c => { const r = cardRule(c, "levelGain"); return r ? [Number(r[0]), Number(r[1])] : [1, 1]; };
 function levelUp(c, times = 1) {
   for (let k = 0; k < times; k++) {
     if (!hasSkill(c, "Level Up") || (c.levelUpCount || 0) >= levelCap(c)) return;
     c.levelUpCount = (c.levelUpCount || 0) + 1;
-    const gains = named(c, "Pesky Programmer") ? [2, 0] : [1, 1];
+    const gains = levelGains(c);
     c.attack += gains[0]; c.currentHealth += gains[1];
     c.levelHealth = (c.levelHealth || 0) + gains[1];
     c.keptLevels = (c.keptLevels || 0) + 1;   // levels whose stats this character holds
@@ -223,8 +233,9 @@ function levelDown(c) {
   if (!(c.keptLevels > 0)) return false;
   c.keptLevels--;
   if (c.levelUpCount > 0) c.levelUpCount--;
-  if (named(c, "Pesky Programmer")) c.attack -= 2;
-  else { c.attack--; c.currentHealth--; c.levelHealth = Math.max(0, (c.levelHealth || 0) - 1); }
+  const [atk, hp] = levelGains(c);
+  c.attack -= atk; c.currentHealth -= hp;
+  c.levelHealth = Math.max(0, (c.levelHealth || 0) - hp);
   if (!hasSkill(c, "Level Up")) c.skills.push("Level Up");
   emit("text", { uid: c.uid, text: "LEVEL DOWN", color: "#c9c9c9" });
   checkDeath(c);
@@ -236,7 +247,7 @@ function levelDown(c) {
 // ---------------------------------------------------------------------------
 function dealDamageToPlayer(p, amount) {
   if (amount <= 0 || S.over) return;
-  const ip = p.field.chars.find(x => named(x, "IP Man") && x.redirectRound !== S.round);
+  const ip = p.field.chars.find(x => cardRule(x, "redirect") && x.redirectRound !== S.round);
   if (ip) { redirectDamage(ip, amount); return; }
   p.health = Math.max(0, p.health - amount);
   emit("playerDamage", { player: p.idx, amount });
@@ -250,7 +261,8 @@ function healPlayer(p, amount) {
 }
 
 function sendToGraveyard(p, c) {
-  const shepard = c.group === "Zombie" && p.field.chars.find(x => x !== c && named(x, "Soul Shepard"));
+  // "rule: shepherd <Faction>" (Soul Shepard): asked each time another card of that faction dies.
+  const shepard = p.field.chars.find(x => x !== c && cardRule(x, "shepherd")?.[0] === c.group);
   const gain = shepard && p.field.chars.includes(c) ? statsAsRead(c) : null;
   const i = p.field.chars.indexOf(c);
   if (i >= 0) p.field.chars.splice(i, 1);
@@ -260,8 +272,8 @@ function sendToGraveyard(p, c) {
   log(`${c.name} was destroyed.`);
   if (gain) {
     ask({
-      kind: "choose", source: shepard, owner: p.idx, title: "Soul Shepard",
-      prompt: `${c.name} fell. Absorb its stats into Soul Shepard, or return it to your hand?`,
+      kind: "choose", source: shepard, owner: p.idx, title: shepard.name,
+      prompt: `${c.name} fell. Absorb its stats into ${shepard.name}, or return it to your hand?`,
       cards: [c], options: [{ id: "absorb", label: `Absorb +${gain.a} / +${gain.h}` }, { id: "hand", label: "Return it to my hand" }],
       required: true, resolve: "shepard", deadUid: c.uid, shepardUid: shepard.uid, gain,
     });
@@ -287,15 +299,15 @@ function checkDeath(c) {
 
 function dealDamageToCharacter(c, amount) {
   if (!c || amount <= 0) return;
-  if (named(c, "IP Man") && c.redirectRound !== S.round && ownerOf(c).field.chars.includes(c)) { redirectDamage(c, amount); return; }
+  if (cardRule(c, "redirect") && c.redirectRound !== S.round && ownerOf(c).field.chars.includes(c)) { redirectDamage(c, amount); return; }
   c.currentHealth -= amount;
   emit("charDamage", { uid: c.uid, amount });
   if (rawStats(c).h <= 0) checkDeath(c);
   else runHook(c, "hurt", { owner: ownerOf(c) });
 }
 
-// IP Man: once per turn, the first damage that would hit IP Man or his player goes to an
-// enemy character or the enemy player instead. His player picks which.
+// "rule: redirect" (IP Man): once per turn, the first damage that would hit this character or
+// its player goes to an enemy character or the enemy player instead. Its player picks which.
 function redirectDamage(ip, amount) {
   ip.redirectRound = S.round;
   emit("text", { uid: ip.uid, text: "REDIRECT", color: "#ffd27a" });
@@ -394,7 +406,7 @@ function convertToZombie(ctx, t, givesReanimate) {
   log(`${ctx.owner.name} takes control of ${t.name}.`);
 }
 
-function effectFor(c) { return c.disabled ? null : EFFECTS[c.name] || null; }
+function effectFor(c) { return c.disabled ? null : EFFECTS[c.id] || null; }
 
 // Signal abilities fire when the character enters the field.
 function triggerSignal(c, owner) {
@@ -417,9 +429,9 @@ function validTargets(fx, ctx) {
   return chars;
 }
 
-// The effect a waiting target choice will run. It is looked up by name, not through
+// The effect a waiting target choice will run. It is looked up directly, not through
 // effectFor(), so a choice that was already asked for still resolves if its card gets disabled.
-const pendingEffect = pd => EFFECTS[pd.source.name];
+const pendingEffect = pd => EFFECTS[pd.source.id];
 // Everything the player may pick for a waiting target choice.
 function pendingTargets(pd) {
   return validTargets(pendingEffect(pd), { card: pd.source, owner: S.players[pd.owner], spell: pd.spell });
@@ -498,12 +510,13 @@ function useManaToken() {
   return true;
 }
 
-// Area abilities you can use from the field (Data Transfer).
+// "rule: activate" (Data Transfer): an area whose play effect its owner may use once in each
+// of their Setup phases.
 function canActivateArea(a, p) {
   p = p || active();
   if (S.over || S.pending || !p.hasDrawn || S.phase !== PHASE.SETUP || a.disabled) return false;
-  if (a.name !== "Data Transfer" || a.usedRound === S.round || !p.field.areas.includes(a)) return false;
-  return validTargets(EFFECTS["Data Transfer"], { card: a, owner: p, spell: false }).length > 0;
+  if (!cardRule(a, "activate") || a.usedRound === S.round || !p.field.areas.includes(a)) return false;
+  return validTargets(EFFECTS[a.id], { card: a, owner: p, spell: false }).length > 0;
 }
 function activateArea(uid) {
   if (!allowed("activateArea", uid)) return false;
@@ -542,9 +555,12 @@ function newGame({ deckId, opponentDeckId, mode, seed }) {
 // ---------------------------------------------------------------------------
 // Costs and playing cards
 // ---------------------------------------------------------------------------
+// "rule: freeEquip" (Sensei): its owner's equipment costs nothing.
+// "rule: equipCostMax <n>" (Weapons Enthusiast): equipping this character costs at most n.
 function equipCost(c, owner, target, fromField) {
-  if (owner && owner.field.chars.some(x => named(x, "Sensei"))) return 0;
-  if (target && named(target, "Weapons Enthusiast")) return Math.min(1, fromField ? DATA.rarities[c.rarity]?.attachCost ?? 1 : playCost(c, owner));
+  if (owner && owner.field.chars.some(x => cardRule(x, "freeEquip"))) return 0;
+  const most = target && cardRule(target, "equipCostMax");
+  if (most) return Math.min(Number(most[0]), fromField ? DATA.rarities[c.rarity]?.attachCost ?? 1 : playCost(c, owner));
   if (fromField) return DATA.rarities[c.rarity]?.attachCost ?? 1;
   return playCost(c, owner);
 }
@@ -648,7 +664,10 @@ function playCard(uid, opts = {}) {
 function attach(e, target) {
   target.equipped.push(e);
   target.currentHealth += e.health || 0;   // equipment health is current health, not max
-  if (e.name === "API Key" && !hasSkill(target, "Level Up") && (target.levelUpCount || 0) < levelCap(target)) target.skills.push("Level Up");
+  // "rule: teach <Skill>" (API Key): the holder gains the skill for good. Level Up is not
+  // given back to a character that has already used all its levels.
+  const teach = cardRule(e, "teach")?.[0];
+  if (teach && !hasSkill(target, teach) && (teach !== "Level Up" || (target.levelUpCount || 0) < levelCap(target))) target.skills.push(teach);
   emit("text", { uid: target.uid, text: "EQUIP", color: "#7fd6ff" });
 }
 
@@ -708,7 +727,7 @@ function cancelPending() {
   if (!allowed("cancelPending")) return false;
   if (!S.pending || S.pending.required) return false;
   if (S.pending.source?.type === "Area") S.pending.source.usedRound = null;   // cancelling Data Transfer keeps its use
-  if (S.pending.source?.name === "Kenshi's Blade") S.pending.source.bladeRound = null;
+  if (cardRule(S.pending.source, "strike")) S.pending.source.bladeRound = null;   // and a cancelled strike
   S.pending = null;
   settle();
   return true;
@@ -751,13 +770,13 @@ function resolveChoice(picks, option) {
     const shep = findChar(pd.shepardUid)?.c;
     if (option === "hand" && dead) {
       removeFromGrave(dead);
-      if (addToHand(owner, fresh(dead))) log(`Soul Shepard returns ${dead.name} to ${owner.name}'s hand.`);
+      if (addToHand(owner, fresh(dead))) log(`${pd.source.name} returns ${dead.name} to ${owner.name}'s hand.`);
     } else if (option === "absorb" && shep) {
       const g = pd.gain;
       shep.attack += g.a; shep.currentHealth += g.h;
       shep.baseAttack += g.a; shep.baseHealth += g.h;
       emit("text", { uid: shep.uid, text: `+${g.a}/+${g.h}`, color: "#8dff8d" });
-      log(`Soul Shepard absorbs ${dead?.name || "the fallen Zombie"}.`);
+      log(`${pd.source.name} absorbs ${dead?.name || "the fallen card"}.`);
     }
   } else if (pd.resolve === "apeSacrifice") {
     const ape = findChar(pd.apeUid)?.c;
@@ -813,7 +832,8 @@ function attack(attackerUid, targetUid) {
   log(`${a.name} attacks ${target.name}.`);
   const ts = stats(target);
   let ta = ts.a, shield = 0;
-  if (named(target, "The Man Ape")) { ta += 10; shield = 10; }   // when defending gain +10 to all stats
+  const defend = cardRule(target, "defend");   // "rule: defend <n>" (The Man Ape): +n to all stats while defending
+  if (defend) { ta += Number(defend[0]); shield = Number(defend[0]); }
   if (ts.parry) ta *= 2;                                                      // Parry: double damage when defending
 
   const hitTarget = () => {
@@ -846,20 +866,23 @@ function attack(attackerUid, targetUid) {
 // Swift: the skill, or wearing equipment that grants it (Zippy Shoes, Bow).
 const isSwift = c => hasSkill(c, "Swift") || grantsSkill(c, "Swift");
 
+// "rule: survive <fights> <CardID>" (Black Belt Student): after living through that many
+// fights, the character transforms into that card.
 function recordCombatSurvival(c) {
-  if (c && ownerOf(c).field.chars.includes(c) && named(c, "Black Belt Student")) {
+  const sv = c && cardRule(c, "survive");
+  if (sv && ownerOf(c).field.chars.includes(c)) {
     c.combatSurvived = (c.combatSurvived || 0) + 1;
-    if (c.combatSurvived >= 3) transformCharacter(c, "5th Degree Master");
+    if (c.combatSurvived >= Number(sv[0])) transformCharacter(c, sv[1]);
   }
 }
 
-// Kenshi's Blade: once per Battle Phase on your turn, the character holding it deals 3
-// damage to an enemy character of your choice.
-const bladeOf = c => (c.equipped || []).find(e => named(e, "Kenshi's Blade") && e.bladeRound !== S.round);
+// "rule: strike" (Kenshi's Blade): once per Battle Phase on your turn, the character holding
+// this equipment uses its play effect (3 damage to an enemy character of your choice).
+const bladeOf = c => (c.equipped || []).find(e => cardRule(e, "strike") && e.bladeRound !== S.round);
 function canUseBlade(c) {
   const blade = bladeOf(c);
   return !!blade && S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active
-    && validTargets(EFFECTS["Kenshi's Blade"], { card: blade, owner: ownerOf(c), spell: false }).length > 0;
+    && validTargets(EFFECTS[blade.id], { card: blade, owner: ownerOf(c), spell: false }).length > 0;
 }
 function useBlade(uid) {
   if (!allowed("useBlade", uid)) return false;
@@ -872,16 +895,18 @@ function useBlade(uid) {
   return true;
 }
 
-// The Man Ape: after each of your Battle phases you may sacrifice another Monkey you control
-// to give it +1 to all stats for good and heal it fully.
+// "rule: sacrifice <Faction>" (The Man Ape): after each of your Battle phases you may sacrifice
+// another character of that faction you control to give it +1 to all stats for good and heal
+// it fully.
 function afterBattle(p) {
-  for (const ape of p.field.chars.filter(c => named(c, "The Man Ape") && c.apeRound !== S.round)) {
+  for (const ape of p.field.chars.filter(c => cardRule(c, "sacrifice") && c.apeRound !== S.round)) {
     ape.apeRound = S.round;
-    const monkeys = p.field.chars.filter(c => c !== ape && c.group === "Monkey");
+    const faction = cardRule(ape, "sacrifice")[0];
+    const monkeys = p.field.chars.filter(c => c !== ape && c.group === faction);
     if (!monkeys.length) continue;
     ask({
-      kind: "choose", source: ape, owner: p.idx, title: "The Man Ape",
-      prompt: "Sacrifice a Monkey to give The Man Ape +1 to all stats and heal it fully?",
+      kind: "choose", source: ape, owner: p.idx, title: ape.name,
+      prompt: `Sacrifice a ${faction} to give ${ape.name} +1 to all stats and heal it fully?`,
       cards: monkeys, pick: 1, options: [{ id: "sacrifice", label: "Sacrifice it" }], resolve: "apeSacrifice", apeUid: ape.uid,
     });
   }
