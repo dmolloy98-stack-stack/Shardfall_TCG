@@ -137,6 +137,6 @@ About 5,200 lines of JavaScript in 12 files (November 2026). The largest are `js
 drawing and input, so it is the first candidate to split if it passes about 2,000 lines.
 
 An automatic tool, [Graphify](https://github.com/Graphify-Labs/graphify), found the same
-structure (388 functions and 913 connections on 11 November). Its busiest functions were
+structure (390 functions and 918 connections on 11 November). Its busiest functions were
 `emit()`, `render()`, `log()`, `hasSkill()`, `playCard()` and `attack()`. A tool like that
 becomes worth running regularly once the code is around 20,000 lines.
