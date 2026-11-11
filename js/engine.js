@@ -26,10 +26,17 @@ const RULES = {
 const BACKLINE = () => DATA.text("zone_backline", "Backline");
 const backlineCount = p => p.field.areas.length + p.field.equips.length;
 
-// Counter spells need a response window that the original game never had. They are still in
-// data/cards.csv (so the Almanac shows them), but they can't be cast or put in a deck until
-// that system exists.
-const UNIMPLEMENTED = new Set(["Nullify", "Nope for One", "Nope for All", "Return to Sender", "Try Again"]);
+// Counter spells. A card with a "counter:" clause in its Effect is not played on your own
+// turn. When the other player plays a character or casts a spell, the game stops and asks
+// whether you want to answer with a counter you hold and can pay for (with mana you left
+// unspent on your turn). A countered card is paid for and goes to its owner's graveyard
+// without doing anything. Each word after "counter:" is a kind of play the card can stop:
+const COUNTER_KINDS = {
+  character: h => h.card.type === "Character",
+  spell: h => h.card.type === "Spell",
+  spellSingle: h => h.card.type === "Spell" && !!h.target && !h.target.isPlayer,   // aimed at one character or area
+  spellMany: h => h.card.type === "Spell" && !h.target,                            // not aimed at one thing
+};
 
 let S = null;              // live game state
 let listeners = [];
@@ -131,6 +138,38 @@ function lordBonus(group) {
 const spellBoost = ctx => (ctx.spell ? lordBonus(ctx.card.group) : 0);
 const isBuff = fx => fx.intent === "help";
 const shieldedFromCurses = c => lordBonus(c.group) > 0;
+
+// A play waiting for an answer is described by "held": { owner, card, target }. target is
+// only there for a spell that was aimed: { isPlayer, idx } or { uid, area }.
+const countersFor = (p, held) => p.hand.filter(c => {
+  const kinds = counterKinds(c);
+  return kinds && p.mana >= playCost(c, p) && kinds.some(k => COUNTER_KINDS[k](held));
+});
+// Give the other player the chance to counter a card that was just played. Returns true when
+// the game is now waiting for their answer. The computer's look-ahead never opens this
+// window: it must not learn what the other player holds by trying its plays on a copy.
+function offerCounter(held) {
+  if (muted) return false;
+  const foe = S.players[1 - held.owner];
+  const cards = countersFor(foe, held);
+  if (!cards.length) return false;
+  S.pending = {
+    kind: "choose", resolve: "counter", source: held.card, owner: foe.idx, title: `${foe.name}: respond?`,
+    prompt: `${S.players[held.owner].name} plays ${held.card.name}. Pick a counter spell to stop it, or skip to let it happen.`,
+    cards, pick: 1, options: [{ id: "counter", label: "Counter it" }], held,
+  };
+  return true;
+}
+// Carry out a character or spell that was played and not countered.
+function finishPlay(held) {
+  const p = S.players[held.owner], c = held.card, fx = effectFor(c) || EFFECTS[c.id];
+  if (c.type === "Character") { putOnField(c, p); return; }
+  if (!held.target) { if (fx?.now) fx.now({ card: c, owner: p, spell: true }); return; }
+  const t = held.target.isPlayer ? held.target : (held.target.area ? findArea(held.target.uid) : findChar(held.target.uid))?.c;
+  if (!t) return;   // the target left the table while the answer was awaited
+  log(`${c.name} targets ${t.isPlayer ? S.players[t.idx].name : t.name}.`);
+  fx.apply({ card: c, owner: p, spell: true }, t);
+}
 
 // ---------------------------------------------------------------------------
 // Stats
@@ -582,7 +621,7 @@ function playBlocker(c, p) {
   p = p || active();
   if (S.over) return "The game is over";
   if (S.pending) return "Finish the current choice first";
-  if (UNIMPLEMENTED.has(c.name)) return "Counter spells are not in the game yet";
+  if (counterKinds(c)) return "A counter spell answers a card the other player plays";
   if (!p.hasDrawn) return "Draw a card first";
   if (!playWindowOpen(c)) return S.phase === PHASE.BATTLE ? "Only Flash cards can be played in Battle" : "Cards are played in the Setup phase";
   const cost = playCost(c, p);
@@ -649,7 +688,8 @@ function playCard(uid, opts = {}) {
 
   if (c.type === "Character") {
     log(`${p.name} summons ${c.name}.`);
-    putOnField(c, p);
+    const held = { owner: p.idx, card: c };
+    if (!offerCounter(held)) finishPlay(held);
   } else if (c.type === "Area") {
     p.field.areas.push(c);
     c.placed = S.round * 100 + backlineCount(p);
@@ -659,7 +699,8 @@ function playCard(uid, opts = {}) {
   } else {
     p.grave.push(c);
     log(`${p.name} casts ${c.name}.`);
-    if (fx?.now) fx.now({ card: c, owner: p, spell: true });
+    const held = { owner: p.idx, card: c };
+    if (!offerCounter(held)) finishPlay(held);
   }
   return true;
 }
@@ -719,6 +760,9 @@ function chooseTarget(target) {
     owner.grave.push(pd.source);
     emit("play", { card: pd.source, player: owner.idx });
     log(`${owner.name} casts ${pd.source.name}.`);
+    // the other player may counter it before it takes effect
+    const held = { owner: owner.idx, card: pd.source, target: target.isPlayer ? { isPlayer: true, idx: target.idx } : { uid: target.uid, area: pd.targetType === "area" } };
+    if (offerCounter(held)) return true;
   }
   log(`${pd.source.name} targets ${t.isPlayer ? S.players[t.idx].name : t.name}.`);
   fx.apply({ card: pd.source, owner, spell: pd.spell, amount: pd.amount }, t);
@@ -728,7 +772,7 @@ function chooseTarget(target) {
 
 function cancelPending() {
   if (!allowed("cancelPending")) return false;
-  if (!S.pending || S.pending.required) return false;
+  if (!S.pending || S.pending.required || S.pending.resolve === "counter") return false;
   if (S.pending.source?.type === "Area") S.pending.source.usedRound = null;   // cancelling Data Transfer keeps its use
   if (cardRule(S.pending.source, "strike")) S.pending.source.bladeRound = null;   // and a cancelled strike
   S.pending = null;
@@ -781,6 +825,18 @@ function resolveChoice(picks, option) {
       emit("text", { uid: shep.uid, text: `+${g.a}/+${g.h}`, color: "#8dff8d" });
       log(`${pd.source.name} absorbs ${dead?.name || "the fallen card"}.`);
     }
+  } else if (pd.resolve === "counter") {
+    const held = pd.held, caster = S.players[held.owner];
+    const want = option === "counter" ? picked[0] || (pd.cards.length === 1 ? pd.cards[0] : null) : null;
+    const i = want ? owner.hand.findIndex(x => x.uid === want.uid) : -1;
+    if (i >= 0 && owner.mana >= playCost(owner.hand[i], owner)) {
+      const counter = owner.hand.splice(i, 1)[0];
+      owner.mana -= playCost(counter, owner);
+      owner.grave.push(counter);
+      if (held.card.type === "Character") caster.grave.push(held.card);   // a spell is already there
+      emit("countered", { card: held.card, by: counter, player: owner.idx });
+      log(`${owner.name} casts ${counter.name}: ${held.card.name} is countered.`);
+    } else finishPlay(held);
   } else if (pd.resolve === "apeSacrifice") {
     const ape = findChar(pd.apeUid)?.c;
     const monkey = picked[0] && findChar(picked[0].uid)?.c;

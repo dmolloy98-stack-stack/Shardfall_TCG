@@ -67,6 +67,7 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 | `cost` | Changes the card's mana cost: `reduce <number>` or `set <number>` |
 | `aura` | A lasting bonus while the character or area is on the field: `aura: buff <who> <attack> <health>`, or a skill: `aura: grant <who> <Skill>` (Parry and Swift). This is how an area boosts characters, for example `aura: buff allies.Monkey 1 0` |
 | `grants` | Equipment only: the holder has these skills, for example `grants: Swift` |
+| `counter` | Makes the card a counter spell and says what it can stop: `character`, `spell`, `spellSingle` (a spell aimed at one character or area) or `spellMany` (a spell not aimed at one thing). For example `counter: character spell`. A counter is not played on your own turn: when the other player plays a card it can stop, the game asks you, and it costs mana you left unspent |
 | `rule` | Switches on one of the game's special rules for this card (table below), for example `rule: redirect` |
 
 **Special rules.** A few cards, mostly the champions, bend the core rules. Each of those rules has a name, and any card can be given one in a `rule:` clause. The game never looks at a card's name, so you can rename a card freely, and a new card can reuse a rule.

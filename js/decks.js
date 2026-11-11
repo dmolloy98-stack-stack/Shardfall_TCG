@@ -10,8 +10,8 @@ const DECK_RULES = {
   champions: DATA.rules.max_unknown_kinds ?? 1,   // different Unknown cards: a deck's champion
 };
 const copyLimit = card => (card.rarity === "Unknown" ? DECK_RULES.unknownCopies : DECK_RULES.copies);
-// Cards that can go in a deck: every card the game knows how to play.
-const buildable = card => !UNIMPLEMENTED.has(card.name);
+// Cards that can go in a deck: every card in the game.
+const buildable = card => !!card;
 
 // Saved decks: [{ id, name, cards: { cardId: copies } }]. Cards that are no longer in
 // data/cards.csv, or over the copy limit after a rules change, are dropped quietly.

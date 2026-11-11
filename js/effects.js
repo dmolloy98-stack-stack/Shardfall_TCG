@@ -30,6 +30,7 @@ const WHEN = {
   aura: "A lasting bonus while the character or area is on the field: stats, or a skill",
   grants: "Equipment: the holder has this skill",
   rule: "Switches on one of the engine's special rules for this card (see RULE_WORDS)",
+  counter: "A counter spell: the kinds of play it can stop (character, spell, spellSingle, spellMany)",
 };
 
 // The special rules a "rule:" clause can switch on, and what must follow each name.
@@ -225,6 +226,13 @@ function compileEffect(text, where) {
     const [, when, rest] = m;
     const parts = splitOutside(rest, ",");
     if (when === "grants") { out.grants = parts; continue; }
+    if (when === "counter") {
+      const kinds = words(rest);
+      for (const k of kinds) if (!COUNTER_KINDS[k]) throw new Error(`${where}: "${k}" is not something a counter can stop. Use: ${Object.keys(COUNTER_KINDS).join(", ")}.`);
+      if (!kinds.length) throw new Error(`${where}: say what the counter stops, for example "counter: spell".`);
+      out.counter = kinds;
+      continue;
+    }
     if (when === "rule") {
       out.rule = out.rule || {};
       for (const part of parts) {
@@ -376,6 +384,9 @@ function runHook(c, when, ctx) {
 // A card's special rule from its Effect ("rule: defend 10" gives ["10"]), or undefined when it
 // doesn't have that rule. A disabled card has none.
 const cardRule = (c, name) => (c && !c.disabled ? CARD_FX[c.id]?.rule?.[name] : undefined);
+
+// What a counter spell can stop (["character", "spell"]), or undefined for any other card.
+const counterKinds = c => CARD_FX[c.id]?.counter;
 
 // Mana cost after "cost:" clauses ("reduce N", "set N if ...").
 function costFromEffect(c, p) {

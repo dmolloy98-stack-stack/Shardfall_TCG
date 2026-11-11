@@ -86,6 +86,18 @@ function aiResolveChoice() {
     resolveChoice(best ? [best] : [], best ? "sacrifice" : null);
     return;
   }
+  // A counter spell: use one only when stopping the card is worth more than the counter costs,
+  // so a 4-mana counter is not spent on a 1-mana character.
+  if (pd.resolve === "counter") {
+    const letIt = simulate(() => { resolveChoice([], null); return evaluate(me); });
+    let best = null, bestGain = 0;
+    for (const c of pd.cards) {
+      const gain = simulate(() => { resolveChoice([c.uid], "counter"); return evaluate(me); }) - letIt - playCost(c, S.players[me]) * 1.2;
+      if (gain > bestGain) { bestGain = gain; best = c.uid; }
+    }
+    resolveChoice(best ? [best] : [], best ? "counter" : null);
+    return;
+  }
   if (pd.resolve === "messenger") {
     const top = pd.cards[0];
     resolveChoice([], top && top.manaCost >= 3 ? "take" : "discard");

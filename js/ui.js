@@ -431,6 +431,9 @@ onGameEvent((type, d) => {
       const at = el ? { x: el.offsetLeft + el.offsetWidth / 2, y: el.offsetTop + CARD_H / 2 } : { x: 720, y: L[side].chars + CARD_H / 2 };
       sparkle(at.x, at.y, d.card.type === "Spell" ? 22 : 14);
     }, 0);
+  } else if (type === "countered") {
+    banner(`${d.by.name}: ${d.card.name} is countered`);
+    sparkle(720, 430, 22);
   } else if (type === "death") {
     shatter(d.uid, delay, d.group);
   } else if (type === "gameOver") {
@@ -893,7 +896,7 @@ function showDetail(c, ctx = {}) {
       actions = `<div class="detail-actions">${btns.join("")}</div>`;
     } else actions = `<div class="detail-actions"><button type="button" class="btn btn-primary" data-m="play" data-uid="${c.uid}">Play for ${playCost(c)} mana</button></div>`;
   }
-  if (UNIMPLEMENTED.has(c.name)) extra += `<p class="reason">Counter spells are not playable yet: they need a reaction window the game does not have.</p>`;
+  if (counterKinds(c)) extra += `<p class="reason">Counter spell: you can't play it on your own turn. When the other player plays a card it can stop, the game asks you. It costs mana you left unspent on your turn.</p>`;
   const ability = c.ability || c.description;
   const spellFx = c.type === "Spell" && EFFECTS[c.id]?.target ? EFFECTS[c.id] : null;
   const spellKind = spellFx ? (spellFx.intent === "help" ? " · Buff spell" : " · Curse spell") : "";

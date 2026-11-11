@@ -3,12 +3,12 @@ flame_surge,3,Flame Surge,Basic,Spell,N/A,N/A,---,---,Deal 1 damage to all chara
 fire_storm,5,Fire Storm,Rare,Spell,N/A,N/A,---,---,Deal 3 damage to all characters and players,,fire_storm,play: damageAll 3
 whirlpool,4,Whirlpool,Basic,Area,N/A,N/A,---,---,All characters take 1 damage when this enters the field,,whirlpool,play: damage everyone 1
 call_back,4,Call Back,Rare,Spell,N/A,N/A,---,---,Return target character from a graveyard to your hand,,call_back,play: script callBack
-nullify,4,Nullify,Rare,Spell,N/A,N/A,---,Flash,Counter target character or spell,,nullify,
+nullify,4,Nullify,Rare,Spell,N/A,N/A,---,Flash,Counter target character or spell,,nullify,counter: character spell
 disable,3,Disable,Divine,Spell,N/A,N/A,---,---,Choose a character. That character now has no abilities,,disable,"play: target character harm, disable target"
-nope_for_one,2,Nope for One,Basic,Spell,N/A,N/A,---,Flash,Counter target spell which targets a single character,,nope_for_one,
-nope_for_all,2,Nope for All,Basic,Spell,N/A,N/A,---,Flash,Counter target spell which targets more than 1 character,,nope_for_all,
-return_to_sender,3,Return to Sender,Basic,Spell,N/A,N/A,---,Flash,Counter target character,,return_to_sender,
-try_again,3,Try Again,Basic,Spell,N/A,N/A,---,Flash,Counter target spell,,try_again,
+nope_for_one,2,Nope for One,Basic,Spell,N/A,N/A,---,Flash,Counter target spell which targets a single character,,nope_for_one,counter: spellSingle
+nope_for_all,2,Nope for All,Basic,Spell,N/A,N/A,---,Flash,Counter target spell which targets more than 1 character,,nope_for_all,counter: spellMany
+return_to_sender,3,Return to Sender,Basic,Spell,N/A,N/A,---,Flash,Counter target character,,return_to_sender,counter: character
+try_again,3,Try Again,Basic,Spell,N/A,N/A,---,Flash,Counter target spell,,try_again,counter: spell
 mana_horder,7,Mana Horder,Exotic,Character,Goblin,N/A,2+2,Signal,Steal a mana from an opposing player and add it to your own maximum mana,,mana_horder,"play: maxMana me 1, maxMana foe -1"
 area_denial,3,Area Denial,Basic,Spell,N/A,N/A,---,---,Destroy target Area,,area_denial,"play: target area harm, destroyArea target"
 simple_farmer,1,Simple Farmer,Basic,Character,N/A,Simple,1+1,---,"When played, search your deck for a Simple Farmer and add it to your hand. Once you control 3 Simple Farmers on the field, search your deck for a Simpler Farmer and put him on the field",,simple_farmer,"enter: fetch simple_farmer, summonFromDeck simpler_farmer if #allies.simple_farmer>=3"
