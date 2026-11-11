@@ -221,11 +221,14 @@ const humanTarget = () => S && !S.over && !U.curtain && S.pending?.kind === "tar
 // Characters are spaced out evenly and squeeze together when there are many (there is no limit).
 function charStep(n) { return Math.min(L.charStep, (L.frontW - CARD_W) / Math.max(1, n - 1)); }
 function charX(i, n) { const step = charStep(n); return 720 - ((n - 1) * step + CARD_W) / 2 + i * step; }
+// On a small screen the hand is drawn bigger, since it has the room.
+const PHONE_HAND = { w: 124, h: 176, font: 13, y: 722 };
 function handPos(i, n) {
-  const spacing = Math.min(105, 800 / Math.max(1, n));
-  const x = W / 2 - CARD_W / 2 - ((n - 1) * spacing) / 2 + i * spacing;
-  const d = x + CARD_W / 2 - W / 2;
-  return { x, y: L.handY + Math.abs(d) * 0.05, rot: d * 0.0007 };
+  const cw = U.small ? PHONE_HAND.w : CARD_W;
+  const spacing = Math.min(U.small ? 150 : 105, (U.small ? 1280 : 800) / Math.max(1, n));
+  const x = W / 2 - cw / 2 - ((n - 1) * spacing) / 2 + i * spacing;
+  const d = x + cw / 2 - W / 2;
+  return { x, y: (U.small ? PHONE_HAND.y : L.handY) + Math.abs(d) * (U.small ? 0.03 : 0.05), rot: d * 0.0007 };
 }
 // Center of a character on the stage, for floating numbers.
 function charCenter(uid) {
@@ -1182,7 +1185,13 @@ function fitStage() {
   $("#stage").style.transform = `translate(${(bw - W * U.scale) / 2}px, ${(bh - cropH * U.scale) / 2 - cropTop * U.scale}px) scale(${U.scale})`;
 }
 // Phones resize the page when the browser bars slide in and out, and on rotation.
-function onResize() { if (U.screen === "game") { fitStage(); renderOverlays(); } }
+function onResize() {
+  if (U.screen !== "game") return;
+  const was = U.small;
+  fitStage();
+  if (U.small !== was && S) render();   // the hand and the cards are drawn differently on a phone
+  else renderOverlays();
+}
 window.addEventListener("resize", onResize);
 window.visualViewport?.addEventListener("resize", onResize);
 window.visualViewport?.addEventListener("scroll", onResize);

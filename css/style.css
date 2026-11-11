@@ -1499,3 +1499,16 @@ html.intro-on .menu-inner { visibility: hidden; }
 /* A spell in hand waiting for its target: it stays lifted and glowing until cast or cancelled. */
 .hand-card.casting { transform: translateY(-40px) scale(1.12) !important; z-index: 55; }
 .hand-card.casting .card { --glow: drop-shadow(0 0 1.5px #ffd27a) drop-shadow(0 0 1.5px #ffd27a) drop-shadow(0 0 11px #ffd27a); }
+
+/* ------------------------------------------------------------ phone readability
+   The table is drawn shrunk on a small screen, so what matters is made bigger: the hand is larger
+   (see PHONE_HAND in js/ui.js), and the cards on the table drop the small type line and use
+   bigger name, skill and stat text. Tap any card to read all of it. */
+#stage.small .hand-card .card { font-size: 13px; }
+#stage.small .field-card .card .type,
+#stage.small .small-card .card .type { display: none; }
+#stage.small .field-card .card .name { font-size: 1.25em; }
+#stage.small .field-card .card .skills { font-size: 1.05em; }
+#stage.small .field-card .card .stats { font-size: 1.55em; }
+#stage.small .small-card .card .name { font-size: 1.2em; }
+#stage.small .small-card .card .stats { font-size: 1.4em; }
