@@ -1,9 +1,9 @@
 # Phone-only table: plan
 
-Status: **prototype, not in the game.** The prototype proves the idea works; this page says how
-to build it for real. Try it on a phone: the "Shardfall Phone Table" page on claude.ai
-(a copy of the game with `prototype.js` added; the toggle at the bottom of the match screen
-switches it on and off).
+Status: **DISCONTINUED. Kept for reference only; not in the game and not being built.**
+On 11 November 2026 the owner decided the current phone layout is good enough. The demo page
+on claude.ai was deleted. This page and `prototype.js` stay in case the idea is revived. If it
+is, the prototype proved it works, and the plan below says how it would be built.
 
 ![The prototype on an 844×390 phone](prototype-844x390.png)
 
