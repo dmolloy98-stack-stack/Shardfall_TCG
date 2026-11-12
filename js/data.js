@@ -5,7 +5,7 @@
 // and then starts the game scripts.
 
 const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks"];
-const GAME_SCRIPTS = ["js/engine.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/intro.js", "js/ui.js", "js/campaign.js"];
+const GAME_SCRIPTS = ["js/engine.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/intro.js", "js/ui.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
 let DATA = null;
 
 // Parsing (port of the DATA.load* functions in main.lua)
@@ -171,7 +171,7 @@ async function loadGame() {
     showDataError(err);
     return;
   }
-  // Each script runs as soon as it is added, in order. ui.js sets shardfallStarted
+  // Each script runs as soon as it is added, in order. boot.js sets shardfallStarted
   // once everything is in place.
   for (const text of code) {
     const el = document.createElement("script");

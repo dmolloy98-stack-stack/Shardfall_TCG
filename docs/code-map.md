@@ -92,14 +92,14 @@ and factions.
 
 ```mermaid
 flowchart LR
-  intro["Intro<br/>intro.js"] --> menu[["Main menu<br/>ui.js"]]
-  menu -->|Start game| pick["Pick decks<br/>ui.js"]
+  intro["Intro<br/>intro.js"] --> menu[["Main menu<br/>menu.js · storm.js"]]
+  menu -->|Start game| pick["Pick decks<br/>menu.js"]
   pick -->|Create your own| builder["Deck builder<br/>decks.js"]
   pick -->|starter or saved deck| match(["The match<br/>engine + ui + fx"])
-  menu --> campaign["Campaign<br/>campaign.js"] --> match
+  menu --> campaign["Campaign<br/>campaign.js · champions.js"] --> match
   menu --> tutorial["Tutorial<br/>tutorial.js"] --> match
   menu --> guide["How to play<br/>help.js · guide.js"]
-  menu --> almanac["Almanac<br/>ui.js"]
+  menu --> almanac["Almanac<br/>menu.js"]
   menu --> settings["Settings<br/>ui.js · help.js"]
 ```
 
@@ -118,10 +118,13 @@ their own story or coaching, then hand over to the same engine.
 | A counter spell | its `counter:` clause in the Effect column; the window is `offerCounter()` in `js/engine.js` |
 | How the game plays: turns, phases, combat, winning | `js/engine.js` |
 | How smart the computer is, or how each faction plays | `js/ai.js` (`PLAN_DEPTH`, `BATTLE_DEPTH`, `AI_STYLES`) |
-| Layout, card look, menus, phone layout | `js/ui.js` |
+| What a champion says, or how the computer plays it | `js/champions.js` (`CHAMPIONS`); the speech bubbles are in `js/campaign.js` |
+| Layout, card look, phone layout | `js/ui.js` |
+| The main menu, deck choice or Almanac | `js/menu.js` |
+| The falling-shards menu background | `js/storm.js` |
 | Animations and feedback | `js/fx.js` and `css/style.css` |
 | Colours and sizes | `css/style.css` |
-| A new menu button | `index.html`, then `js/ui.js` |
+| A new menu button | `index.html`, then `js/menu.js` |
 | Intro wording | `js/intro.js` |
 | Tutorial steps | `js/tutorial.js` |
 | Campaign order and story | `js/campaign.js` |
@@ -132,9 +135,10 @@ their own story or coaching, then hand over to the same engine.
 
 ## Size and shape
 
-About 5,200 lines of JavaScript in 12 files (November 2026). The largest are `js/ui.js` at about
-1,380 lines and `js/engine.js` at about 1,030. `ui.js` mixes the menu, the Almanac, board
-drawing and input, so it is the first candidate to split if it passes about 2,000 lines.
+About 5,400 lines of JavaScript in 16 files (November 2026). The largest are `js/engine.js` at
+about 1,030 and `js/ui.js` at about 1,200. The menu, the Almanac, the menu background and the
+start-up code used to live in `ui.js`; they are now `menu.js`, `storm.js` and `boot.js`. The scripts
+load in the order listed in `GAME_SCRIPTS` in `js/data.js`, with `boot.js` last.
 
 An automatic tool, [Graphify](https://github.com/Graphify-Labs/graphify), found the same
 structure (390 functions and 918 connections on 11 November). Its busiest functions were

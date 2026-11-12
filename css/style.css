@@ -1512,3 +1512,20 @@ html.intro-on .menu-inner { visibility: hidden; }
 #stage.small .field-card .card .stats { font-size: 1.55em; }
 #stage.small .small-card .card .name { font-size: 1.2em; }
 #stage.small .small-card .card .stats { font-size: 1.4em; }
+
+/* A champion's spoken line: a speech bubble by its health plate. */
+.camp-tag { margin: 2px 0 0; color: var(--muted); font-size: 0.95em; }
+.champ-say {
+  position: absolute; z-index: 60; max-width: 340px; padding: 8px 14px; border-radius: 14px;
+  background: rgba(24, 18, 40, 0.94); border: 1px solid #b9a4ff; color: #f1e8ff;
+  font-size: 22px; font-style: italic; pointer-events: none; transform: translate(0, -50%);
+  animation: champSay 4.2s ease-out forwards;
+}
+@keyframes champSay {
+  0% { opacity: 0; transform: translate(-12px, -50%) scale(0.9); }
+  8% { opacity: 1; transform: translate(0, -50%) scale(1.04); }
+  14% { transform: translate(0, -50%) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .champ-say { animation-name: champSayStill; } @keyframes champSayStill { 0%, 85% { opacity: 1; } 100% { opacity: 0; } } }

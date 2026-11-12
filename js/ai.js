@@ -23,7 +23,19 @@ const AI_STYLES = {
   Simple:  { face: 1,    board: 1,    hand: 0.5, wild: 0 },    // steady
 };
 const AI_PLAIN = { face: 1, board: 1, hand: 0.5, wild: 0 };
-const aiStyle = idx => AI_STYLES[S.players[idx].faction] || AI_PLAIN;
+// A champion (campaign only, see js/champions.js) adds its own tweaks on top of its faction's
+// style, and some of them change as the match goes on.
+function aiStyle(idx) {
+  const p = S.players[idx];
+  const base = AI_STYLES[p.faction] || AI_PLAIN;
+  const ch = championOf(p);
+  if (!ch) return base;
+  const { late, hurt, ...own } = ch.ai;
+  const st = { ...base, ...own };
+  if (late && S.round >= late.round) Object.assign(st, late);
+  if (hurt && p.health / p.maxHealth < hurt.below) Object.assign(st, hurt);
+  return st;
+}
 // Setup planning: how many plays ahead it looks, and how many options it follows at each step.
 const PLAN_DEPTH = 2, PLAN_WIDTH = 3;
 // Battle planning: the same, for attacks.
@@ -74,14 +86,14 @@ function aiResolveChoice() {
   // Soul Shepard and The Man Ape: try each answer on a copy of the game and take the best.
   if (pd.resolve === "shepard") {
     const score = o => simulate(() => { resolveChoice([], o); return evaluate(me); });
-    resolveChoice([], score("absorb") >= score("hand") ? "absorb" : "hand");
+    resolveChoice([], score("absorb") >= score("hand") + (aiStyle(me).gather || 0) ? "absorb" : "hand");
     return;
   }
   if (pd.resolve === "apeSacrifice") {
     let best = null, bestScore = simulate(() => { resolveChoice([], null); return evaluate(me); });
     for (const c of pd.cards) {
       const sc = simulate(() => { resolveChoice([c.uid], "sacrifice"); return evaluate(me); });
-      if (sc > bestScore + 0.5) { bestScore = sc; best = c.uid; }
+      if (sc > bestScore + (aiStyle(me).sac ?? 0.5)) { bestScore = sc; best = c.uid; }
     }
     resolveChoice(best ? [best] : [], best ? "sacrifice" : null);
     return;
@@ -167,7 +179,7 @@ function aiPlanSetup() {
   const me = S.active;
   const options = aiSetupActions().slice(0, PLAN_WIDTH + 1);
   if (!options.length) return null;
-  for (const a of options) a.plan = simulate(() => (aiDo(a.run) ? aiPlanScore(me, PLAN_DEPTH - 1) : -Infinity));
+  for (const a of options) a.plan = simulate(() => (aiDo(a.run) ? aiPlanScore(me, (aiStyle(me).depth ?? PLAN_DEPTH) - 1) : -Infinity));
   options.sort((x, y) => y.plan - x.plan);
   // A wild player sometimes goes with its second idea.
   const wild = aiStyle(me).wild;
@@ -239,10 +251,15 @@ function aiBattleScore(me, depth) {
 function aiPlanBattle() {
   const me = S.active;
   const base = evaluate(me);
-  let best = null, bestScore = base;
+  const st = aiStyle(me);
+  // A patient champion only attacks when it clearly gains, and keeps its champion card at home
+  // unless the gain is bigger still.
+  const champ = championOf(active()) ? active().field.chars.find(c => c.name === active().champion) : null;
+  let best = null, bestScore = base + (st.patience || 0);
   for (const a of aiAttackActions().slice(0, BATTLE_WIDTH + 1)) {
     const score = simulate(() => { aiStrike(a); return aiBattleScore(me, BATTLE_DEPTH - 1); });
-    if (score > bestScore) { bestScore = score; best = a; }
+    const need = champ && a.attacker === champ.uid ? st.champMargin || 0 : 0;
+    if (score - need > bestScore) { bestScore = score - need; best = a; }
   }
   return best;
 }
