@@ -63,6 +63,12 @@ function simulate(fn) {
 // Helpers
 // ---------------------------------------------------------------------------
 const hasSkill = (c, n) => (c.skills || []).includes(n);
+// Where a card is from (its Fracture; a hybrid has two), what it is (tribes) and what it does
+// (classes). A card can have one or two of each. c.group is the first fracture: it sets the color.
+const groupsOf = c => c.groups || [c.group];
+const inGroup = (c, g) => groupsOf(c).includes(g);
+const hasTribe = (c, t) => (c.tribes || []).includes(t);
+const hasClass = (c, k) => (c.classes || []).includes(k);
 const removeSkill = (c, n) => { const i = (c.skills || []).indexOf(n); if (i >= 0) c.skills.splice(i, 1); };
 const active = () => S.players[S.active];
 const opponent = () => S.players[1 - S.active];
@@ -135,9 +141,10 @@ function lordBonus(group) {
   for (const c of allChars()) { const r = cardRule(c, "lord"); if (r && r[0] === group) best = Math.max(best, Number(r[1])); }
   return best;
 }
-const spellBoost = ctx => (ctx.spell ? lordBonus(ctx.card.group) : 0);
+const lordBonusOf = c => Math.max(0, ...groupsOf(c).map(lordBonus));   // a hybrid takes its best lord
+const spellBoost = ctx => (ctx.spell ? lordBonusOf(ctx.card) : 0);
 const isBuff = fx => fx.intent === "help";
-const shieldedFromCurses = c => lordBonus(c.group) > 0;
+const shieldedFromCurses = c => lordBonusOf(c) > 0;
 
 // A play waiting for an answer is described by "held": { owner, card, target }. target is
 // only there for a spell that was aimed: { isPlayer, idx } or { uid, area }.
@@ -190,9 +197,9 @@ function rawStats(c) {
   // is written in its Effect column, like "aura: buff allies.Monkey 1 0".
   const aura = auraBonus(c, p);
   const extraA = aura.a, extraH = aura.h;
-  buff += lordBonus(c.group);
+  buff += lordBonusOf(c);
   // A lord's faction's equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
-  const simpleGear = (c.equipped || []).reduce((n, x) => n + lordBonus(x.group), 0);
+  const simpleGear = (c.equipped || []).reduce((n, x) => n + lordBonusOf(x), 0);
   const rally = c.rallyBonus || 0;
   return {
     a: c.attack + e.a + buff + rally + extraA + simpleGear,
@@ -207,8 +214,8 @@ function stats(c) {
 
 function updateRally(p) {
   const count = {};
-  for (const c of p.field.chars) if (hasSkill(c, "Rally")) count[c.group] = (count[c.group] || 0) + 1;
-  for (const c of p.field.chars) c.rallyBonus = hasSkill(c, "Rally") && (count[c.group] || 0) >= 3 ? 1 : 0;
+  for (const c of p.field.chars) if (hasSkill(c, "Rally")) for (const g of groupsOf(c)) count[g] = (count[g] || 0) + 1;
+  for (const c of p.field.chars) c.rallyBonus = hasSkill(c, "Rally") && groupsOf(c).some(g => (count[g] || 0) >= 3) ? 1 : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -301,7 +308,7 @@ function healPlayer(p, amount) {
 
 function sendToGraveyard(p, c) {
   // "rule: shepherd <Faction>" (Soul Shepard): asked each time another card of that faction dies.
-  const shepard = p.field.chars.find(x => x !== c && cardRule(x, "shepherd")?.[0] === c.group);
+  const shepard = p.field.chars.find(x => x !== c && inGroup(c, cardRule(x, "shepherd")?.[0]));
   const gain = shepard && p.field.chars.includes(c) ? statsAsRead(c) : null;
   const i = p.field.chars.indexOf(c);
   if (i >= 0) p.field.chars.splice(i, 1);
@@ -432,15 +439,22 @@ function damageEverything(n) {
   }
 }
 
+// An infected character becomes a Zombie in full: its fracture changes to Zombie (so Zombie
+// bonuses reach it) and it gains the Undead tribe on top of the tribes it had. Its class stays.
+function makeZombie(t) {
+  t.group = "Zombie"; t.groups = ["Zombie"];
+  if (!hasTribe(t, "Undead")) t.tribes = [...(t.tribes || []), "Undead"];
+}
+
 function convertToZombie(ctx, t, givesReanimate) {
   const foe = foeOf(ctx.owner);
   if (t.owner !== foe.idx || ctx.owner.field.chars.length >= RULES.maxChars) {
-    if (givesReanimate || t.owner === ctx.owner.idx) { t.group = "Zombie"; t.race = "Undead"; }
+    if (givesReanimate || t.owner === ctx.owner.idx) makeZombie(t);
     return;
   }
   foe.field.chars.splice(foe.field.chars.indexOf(t), 1);
-  // An infected character becomes a Zombie in full: faction and race (so Undead bonuses reach it).
-  t.owner = ctx.owner.idx; t.group = "Zombie"; t.race = "Undead"; t.rallyBonus = 0;
+  makeZombie(t);
+  t.owner = ctx.owner.idx; t.rallyBonus = 0;
   if (givesReanimate && !hasSkill(t, "Reanimate")) { t.skills.push("Reanimate"); t.reanimated = false; }
   ctx.owner.field.chars.push(t);
   updateRally(ctx.owner); updateRally(foe);
@@ -961,7 +975,7 @@ function afterBattle(p) {
   for (const ape of p.field.chars.filter(c => cardRule(c, "sacrifice") && c.apeRound !== S.round)) {
     ape.apeRound = S.round;
     const faction = cardRule(ape, "sacrifice")[0];
-    const monkeys = p.field.chars.filter(c => c !== ape && c.group === faction);
+    const monkeys = p.field.chars.filter(c => c !== ape && inGroup(c, faction));
     if (!monkeys.length) continue;
     ask({
       kind: "choose", source: ape, owner: p.idx, title: ape.name,

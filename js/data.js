@@ -74,6 +74,8 @@ function buildData(CSV) {
     return m ? [Number(m[1]), Number(m[2])] : [0, 0];
   };
   const skillsOf = s => (s || "").split("+").map(x => x.trim()).filter(x => x && x !== "---");
+  const namesOf = skillsOf;   // tribes and classes are written the same way: Human+Animal
+  const fracturesOf = s => { const l = namesOf(s); return l.length ? l : ["N/A"]; };
 
   // A typing mistake in the card table stops the game with a message naming the card, the
   // same way a mistake in a deck list or an Effect does. Without this, a misspelled skill or
@@ -85,7 +87,10 @@ function buildData(CSV) {
     if (cardsByName[card.name]) throw new Error(`data/cards.csv: two cards are named "${card.name}" (${cardsByName[card.name].id} and ${card.id}).`);
     if (!CARD_TYPES.includes(card.type)) bad("the Type", card.type, CARD_TYPES);
     if (!rarities[card.rarity]) bad("the Rarity", card.rarity, rarityOrder);
-    if (card.group !== "N/A" && !factions[card.group]) bad("the Faction", card.group, [...Object.keys(factions), "N/A"]);
+    for (const g of card.groups) if (g !== "N/A" && !factions[g]) bad("the Fracture", g, [...Object.keys(factions), "N/A"]);
+    if (card.groups.length > 1 && card.groups.includes("N/A")) bad("the Fracture", card.groups.join("+"), Object.keys(factions));
+    for (const k of [...card.tribes, ...card.classes]) if (/[a-z]:/.test(k)) bad("the tribe or class", k, ["a plain name"]);
+    if (card.type !== "Character" && (card.tribes.length || card.classes.length)) throw new Error(`data/cards.csv, card ${card.id}: only characters have tribes and classes. Use --- for a ${card.type}.`);
     for (const s of card.skills) if (!skills[s]) bad("the skill", s, skillOrder);
   };
 
@@ -96,7 +101,11 @@ function buildData(CSV) {
     const ability = c[9] && c[9] !== "---" ? c[9] : "";
     const card = {
       id: c[0], manaCost: Number(c[1]) || 0, name: c[2], rarity: c[3] || "Basic", type: c[4],
-      race: c[5], group: c[6], attack, health, skills: skillsOf(c[8]),
+      // Fracture (where it is from; a hybrid lists two, "Fighter+Monkey"; the first sets its color),
+      // tribes (species) and classes (job). The names in these three lists must not clash with a
+      // CardID, so "allies.Human" can't mean a card.
+      group: fracturesOf(c[6])[0], groups: fracturesOf(c[6]), tribes: namesOf(c[5]), classes: namesOf(c[13]),
+      attack, health, skills: skillsOf(c[8]),
       ability, description: c[10] || "", artKey: c[11] || c[0],
       effect: (c[12] || "").trim(),   // what the card does, read by js/effects.js
     };

@@ -73,6 +73,8 @@ function parseSelector(text, where) {
   if (!SELECTOR_BASES.includes(base)) throw new Error(`${where}: "${text}" is not someone an action can affect. Use one of: ${SELECTOR_BASES.join(", ")}.`);
   return { base, filters };
 }
+const ALL_TRIBES = new Set(), ALL_CLASSES = new Set();
+for (const card of DATA.cardList) { card.tribes.forEach(t => ALL_TRIBES.add(t)); card.classes.forEach(k => ALL_CLASSES.add(k)); }
 function selectorFilter(f) {
   if (f === "other") return (c, ctx) => c !== ctx.card;
   if (f === "leveler") return c => hasSkill(c, "Level Up");
@@ -80,8 +82,16 @@ function selectorFilter(f) {
   if (f === "enemy") return (c, ctx) => c.owner !== ctx.owner.idx;
   if (f === "mine") return (c, ctx) => c.owner === ctx.owner.idx;
   if (f === "strongest") return null;   // handled after filtering
-  if (DATA.factions[f]) return c => c.group === f;    // a faction: allies.Monkey
-  if (/^[A-Z]/.test(f)) return c => c.race === f;     // a race: allies.Undead (the Race column)
+  if (f === "swift") return c => isSwift(c);
+  if (f === "tower") return c => hasSkill(c, "Tower");
+  // Fracture, tribe or class, written plainly (allies.Monkey, allies.Undead, allies.Student) or with
+  // its kind in front (allies.class:Fighter). Use the kind when one name is two things: Fighter is
+  // both a fracture and a class, and the plain word means the fracture.
+  const kind = f.match(/^(fracture|tribe|class):(.+)$/);
+  if (kind) return { fracture: c => inGroup(c, kind[2]), tribe: c => hasTribe(c, kind[2]), class: c => hasClass(c, kind[2]) }[kind[1]];
+  if (DATA.factions[f]) return c => inGroup(c, f);
+  if (ALL_TRIBES.has(f)) return c => hasTribe(c, f);
+  if (ALL_CLASSES.has(f)) return c => hasClass(c, f);
   return c => c.id === f;                             // a CardID
 }
 function select(sel, ctx) {
@@ -288,7 +298,7 @@ const SCRIPTS = {
     for (const c of hit) { emit("charDamage", { uid: c.uid, amount: n }); checkDeath(c); }
   },
   primate(ctx) {
-    const picks = ctx.owner.deck.filter(n => n.group === "Monkey" && n.type === "Character" && n.name !== "Primate" && n.manaCost <= 2).slice(-2);
+    const picks = ctx.owner.deck.filter(n => inGroup(n, "Monkey") && n.type === "Character" && n.name !== "Primate" && n.manaCost <= 2).slice(-2);
     for (const n of picks) {
       if (ctx.owner.field.chars.length >= RULES.maxChars) break;
       ctx.owner.deck.splice(ctx.owner.deck.indexOf(n), 1);
@@ -296,7 +306,7 @@ const SCRIPTS = {
     }
   },
   callOfTheJungle(ctx) {
-    const cards = ctx.owner.grave.filter(c => c.group === "Monkey" && !c.token);
+    const cards = ctx.owner.grave.filter(c => inGroup(c, "Monkey") && !c.token);
     if (cards.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call of the Jungle", prompt: "Pick up to 3 Monkey cards to return to your hand.", cards, pick: 3, resolve: "toHand" });
   },
   soulSuction(ctx) {
@@ -308,12 +318,12 @@ const SCRIPTS = {
     if (ctx.owner.hand.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rotten Finger", prompt: "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" });
   },
   riseFromTheDead(ctx) {
-    const cards = ctx.owner.grave.filter(c => c.race === "Undead" && c.type === "Character");
+    const cards = ctx.owner.grave.filter(c => hasTribe(c, "Undead") && c.type === "Character");
     if (!cards.length || ctx.owner.field.chars.length >= RULES.maxChars) return;
     ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rise from the Dead", prompt: "Pick an Undead character from your graveyard to bring back to the field.", cards, pick: 1, options: [{ id: "field", label: "Bring it back to the field" }], resolve: "rise" });
   },
   keepComing() {
-    for (const c of allChars()) if (c.group === "Zombie") {
+    for (const c of allChars()) if (inGroup(c, "Zombie")) {
       if (hasSkill(c, "Reanimate")) c.currentHealth += 3;
       else { c.skills.push("Reanimate"); c.reanimated = false; }
     }
@@ -342,7 +352,7 @@ const SCRIPTS = {
   masterRat(ctx) {
     for (let k = 0; k < 4; k++) {
       const turtle = {
-        uid: S.nextUid++, id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", race: "Animal", group: "Fighter",
+        uid: S.nextUid++, id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", tribes: ["Animal"], classes: ["Student"], group: "Fighter", groups: ["Fighter"],
         manaCost: 0, attack: 1, health: 1, skills: [], ability: "Gain +1 to each stat for every other Turtle on the field",
         description: "", artKey: "turtle", token: true,
       };
