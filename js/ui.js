@@ -198,6 +198,17 @@ function tagBadge(kind, name) {
 const tagsHTML = c => (c.type === "Character" && (c.tribes?.length || c.classes?.length))
   ? `<div class="tags"><span>${(c.tribes || []).map(t => tagBadge("tribe", t)).join("")}</span><span>${(c.classes || []).map(k => tagBadge("class", k)).join("")}</span></div>` : "";
 
+// One line for every name: a name too wide for its box is set smaller to fit (never below 50%).
+// The width is measured with the card font; the box holds 5.45em of card text, and the name
+// is drawn at 0.98em, so 5.56 name-ems.
+let nameCtx = null;
+const nameFit = n => {
+  nameCtx = nameCtx || document.createElement("canvas").getContext("2d");
+  nameCtx.font = `800 100px ${getComputedStyle(document.body).fontFamily}`;
+  const w = nameCtx.measureText(n).width / 100;
+  return w > 5.15 ? `;--nf:${Math.max(0.5, 5.15 / w).toFixed(3)}` : "";
+};
+
 function cardHTML(c, opts = {}) {
   const edge = DATA.rarities[c.rarity]?.color || "#8f97a3";
   const fc = DATA.factions[c.group]?.color || "#7a6d5c";
@@ -222,10 +233,10 @@ function cardHTML(c, opts = {}) {
     ? `<div class="level-pips" title="Level ${lv}">Lv ${lv}</div>`
     : `<div class="level-pips" title="Level ${lv} of ${cap}">${"★".repeat(Math.min(lv, cap))}${"☆".repeat(Math.max(0, cap - lv))}</div>`;
   const fr = cardFrame(c.rarity);
-  return `<div class="card framed f-${fr.kind}${lv ? " lv" + Math.min(lv, 3) : ""}" style="--edge:${edge};--fc:${fc}"><div class="shape"><div class="face" style="${fr.clip}">
+  return `<div class="card framed f-${fr.kind}${lv ? " lv" + Math.min(lv, 3) : ""}" style="--edge:${edge};--fc:${fc}${nameFit(c.name)}"><div class="shape"><div class="face" style="${fr.clip}">
     ${medal(c.group)}${groupsOf(c).length > 1 ? medal(groupsOf(c)[1], "medal second") : ""}
     ${opts.field ? "" : `<div class="cost">${cost}</div>`}
-    <div class="name">${esc(c.name)}</div>
+    <div class="name"><span>${esc(c.name)}</span></div>
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
     ${tagsHTML(c)}
     <div class="skills">${skills}</div>
@@ -671,6 +682,15 @@ function renderOverlays() {
   renderRotate();
 }
 
+// What a hand card says when you hold the pointer over it: its ability, then what its skills do.
+function handTip(c) {
+  const parts = [];
+  const ab = c.ability || c.description;
+  if (ab) parts.push(esc(ab));
+  for (const k of c.skills || []) { const d = DATA.skills[k]?.desc; if (d) parts.push(`<b>${esc(k)}</b>: ${esc(d)}`); }
+  return parts.length ? `<div class="hand-tip">${parts.join("<br>")}</div>` : "";
+}
+
 function renderHand(p) {
   const layer = $("#hand-layer");
   const human = humanTurn() && p === active();
@@ -682,7 +702,7 @@ function renderHand(p) {
     if (recent(U.drawn, c.uid, 600)) cls.push("drawn");
     if (S.pending?.cast && S.pending.source === c) cls.push("casting");   // a spell waiting for its target
     const costShown = playCost(c, p);
-    return `<div class="${cls.join(" ")}" data-uid="${c.uid}" style="left:${pos.x}px;top:${pos.y}px;transform:rotate(${pos.rot}rad);z-index:${i + 1}">${cardHTML(c, { costOverride: costShown })}</div>`;
+    return `<div class="${cls.join(" ")}" data-uid="${c.uid}" style="left:${pos.x}px;top:${pos.y}px;transform:rotate(${pos.rot}rad);z-index:${i + 1}">${cardHTML(c, { costOverride: costShown })}${handTip(c)}</div>`;
   }).join("");
   if (U.curtain) layer.innerHTML = "";
 }
