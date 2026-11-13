@@ -226,7 +226,6 @@ function cardHTML(c, opts = {}) {
     ${medal(c.group)}${groupsOf(c).length > 1 ? medal(groupsOf(c)[1], "medal second") : ""}
     ${opts.field ? "" : `<div class="cost">${cost}</div>`}
     <div class="name">${esc(c.name)}</div>
-    <div class="type">${esc(c.type)} · ${esc(fractureLabel(c))}</div>
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
     ${tagsHTML(c)}
     <div class="skills">${skills}</div>
