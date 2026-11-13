@@ -1502,11 +1502,11 @@ html.intro-on .menu-inner { visibility: hidden; }
 
 /* ------------------------------------------------------------ phone readability
    The table is drawn shrunk on a small screen, so what matters is made bigger: the hand is larger
-   (see PHONE_HAND in js/ui.js), and the cards on the table drop the small type line and use
-   bigger name, skill and stat text. Tap any card to read all of it. */
+   (see PHONE_HAND in js/ui.js), and the cards on the table use bigger name, skill and stat text. Tap any card to read all of it. */
 #stage.small .hand-card .card { font-size: 13px; }
 #stage.small .field-card .card .name { font-size: 1.25em; }
 #stage.small .field-card .card .skills { font-size: 1.05em; }
+#stage.small .field-card .card .skills.long { font-size: 0.85em; white-space: nowrap; }   /* two or three skills: keep to one line */
 #stage.small .field-card .card .stats { font-size: 1.55em; }
 #stage.small .small-card .card .name { font-size: 1.2em; }
 #stage.small .small-card .card .stats { font-size: 1.4em; }
@@ -1551,4 +1551,16 @@ html.intro-on .menu-inner { visibility: hidden; }
 }
 .hand-card:hover .hand-tip, .hand-card.lift .hand-tip, .hand-card.held .hand-tip { display: block; }
 .hand-card.dragging .hand-tip { display: none; }
-.card .name span { font-size: calc(1em * var(--nf, 1)); }
+/* Names stay on one line: --nw is the name's width in its own ems (js/ui.js) and --nbox is how
+   many of those ems the name box holds, so a wider name is shrunk to fit (never below half). */
+.card { --nbox: 5.15; }
+.card .name span { font-size: calc(1em * clamp(0.5, var(--nbox) / var(--nw, 1), 1)); }
+/* A character on the table has no cost gem, so its name can run to the right edge. On the phone
+   table the name is also drawn bigger. */
+.field-card .card { --nbox: 6.7; }
+.field-card .card .name { right: 0.5em; }
+#stage.small .field-card .card { --nbox: 5.3; }
+#stage.small .field-card .card .name { left: 1.7em; right: 0.5em; }
+#stage.small .small-card .card { --nbox: 4.4; }
+#stage.small .small-card .card .name { left: 1.8em; right: 1.6em; }
+#stage.small .hand-tip { width: 300px; font-size: 24px; }

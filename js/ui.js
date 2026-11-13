@@ -198,15 +198,23 @@ function tagBadge(kind, name) {
 const tagsHTML = c => (c.type === "Character" && (c.tribes?.length || c.classes?.length))
   ? `<div class="tags"><span>${(c.tribes || []).map(t => tagBadge("tribe", t)).join("")}</span><span>${(c.classes || []).map(k => tagBadge("class", k)).join("")}</span></div>` : "";
 
-// One line for every name: a name too wide for its box is set smaller to fit (never below 50%).
-// The width is measured with the card font; the box holds 5.45em of card text, and the name
-// is drawn at 0.98em, so 5.56 name-ems.
+// One line for every name. The name's width (in ems of the name's own font) goes on the card as
+// --nw, and the style sheet shrinks a name wider than its box (never below half size); the box
+// differs between the normal card and the phone table, so the sum is done there (.card .name span).
+// Widths are measured once per name, and again if the card font arrives after the first cards.
 let nameCtx = null;
+const nameWidths = new Map();
+document.fonts?.ready.then(() => nameWidths.clear());
+document.fonts?.addEventListener?.("loadingdone", () => nameWidths.clear());
 const nameFit = n => {
-  nameCtx = nameCtx || document.createElement("canvas").getContext("2d");
-  nameCtx.font = `800 100px ${getComputedStyle(document.body).fontFamily}`;
-  const w = nameCtx.measureText(n).width / 100;
-  return w > 5.15 ? `;--nf:${Math.max(0.5, 5.15 / w).toFixed(3)}` : "";
+  let w = nameWidths.get(n);
+  if (w == null) {
+    nameCtx = nameCtx || document.createElement("canvas").getContext("2d");
+    nameCtx.font = `800 100px ${getComputedStyle(document.body).fontFamily}`;
+    w = nameCtx.measureText(n).width / 100;
+    nameWidths.set(n, w);
+  }
+  return `;--nw:${w.toFixed(3)}`;
 };
 
 function cardHTML(c, opts = {}) {
@@ -239,7 +247,7 @@ function cardHTML(c, opts = {}) {
     <div class="name"><span>${esc(c.name)}</span></div>
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
     ${tagsHTML(c)}
-    <div class="skills">${skills}</div>
+    <div class="skills${skills.length > 13 ? " long" : ""}">${skills}</div>
     ${opts.field && c.equipped?.length ? `<div class="equip-count" title="Equipped">●${c.equipped.length}</div>` : ""}
     ${pips}
     ${statsHTML}

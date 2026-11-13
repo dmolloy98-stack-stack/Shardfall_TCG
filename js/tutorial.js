@@ -535,12 +535,13 @@ function anatomyHTML(c) {
   const K = 1.1, X0 = 11.8, Y0 = 0.4;
   const parts = [
     { side: "L", y: 0.6, px: 1.25, py: 1.25, t: "Fracture", d: "The shattered world it is from" },
-    { side: "L", y: 3.3, px: 1.2, py: 3.1, t: "Card type", d: "Character, Spell, Equipment or Area" },
-    { side: "L", y: 9.4, px: 2.6, py: 10, t: "Skills", d: "Keywords with special rules" },
-    { side: "L", y: 12.4, px: 1.3, py: 13.15, t: "⚔ Attack", d: "Damage it deals" },
-    { side: "R", y: 0.6, px: 9.1, py: 1.3, t: "Mana cost", d: "What it costs to play" },
-    { side: "R", y: 5.2, px: 9.3, py: 6.5, t: "Rarity", d: "The edge color" },
-    { side: "R", y: 9.6, px: 4.9, py: 13.15, t: "♥ Health", d: "Damage it can take" },
+    { side: "L", y: 5.2, px: 1.45, py: 9.4, t: "Tribe", d: "What it is (round symbol)" },
+    { side: "L", y: 9.4, px: 3.2, py: 10.95, t: "Skills", d: "Keywords with special rules" },
+    { side: "L", y: 12.4, px: 1.3, py: 12.5, t: "⚔ Attack", d: "Damage it deals" },
+    { side: "R", y: 0.6, px: 8.45, py: 1.05, t: "Mana cost", d: "What it costs to play" },
+    { side: "R", y: 3.6, px: 9.3, py: 5, t: "Rarity", d: "The edge color and the gem" },
+    { side: "R", y: 6.6, px: 7.9, py: 9.4, t: "Class", d: "What it does (square symbol)" },
+    { side: "R", y: 9.6, px: 8.3, py: 12.5, t: "♥ Health", d: "Damage it can take" },
   ];
   const lines = parts.map(p => {
     const x = X0 + p.px * K, y = Y0 + p.py * K;
