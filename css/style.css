@@ -1552,9 +1552,9 @@ html.intro-on .menu-inner { visibility: hidden; }
 .hand-card:hover .hand-tip, .hand-card.lift .hand-tip, .hand-card.held .hand-tip { display: block; }
 .hand-card.dragging .hand-tip { display: none; }
 /* Names stay on one line: --nw is the name's width in its own ems (js/ui.js) and --nbox is how
-   many of those ems the name box holds, so a wider name is shrunk to fit (never below half). */
+   many of those ems the name box holds, so a wider name is shrunk to fit (never below 40%). */
 .card { --nbox: 5.15; }
-.card .name span { font-size: calc(1em * clamp(0.5, var(--nbox) / var(--nw, 1), 1)); }
+.card .name span { font-size: calc(1em * clamp(0.4, var(--nbox) / var(--nw, 1), 1)); }
 /* A character on the table has no cost gem, so its name can run to the right edge. On the phone
    table the name is also drawn bigger. */
 .field-card .card { --nbox: 6.7; }
@@ -1564,3 +1564,5 @@ html.intro-on .menu-inner { visibility: hidden; }
 #stage.small .small-card .card { --nbox: 4.4; }
 #stage.small .small-card .card .name { left: 1.8em; right: 1.6em; }
 #stage.small .hand-tip { width: 300px; font-size: 24px; }
+.card .name.two { white-space: normal; }
+.card .name.two span { max-width: 100%; }

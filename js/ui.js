@@ -202,6 +202,8 @@ const tagsHTML = c => (c.type === "Character" && (c.tribes?.length || c.classes?
 // --nw, and the style sheet shrinks a name wider than its box (never below half size); the box
 // differs between the normal card and the phone table, so the sum is done there (.card .name span).
 // Widths are measured once per name, and again if the card font arrives after the first cards.
+// The one exception to one line: names listed here may run to two lines (the owner's choice).
+const TWO_LINE_NAMES = new Set(["Shadow-Stitched Soldier"]);
 let nameCtx = null;
 const nameWidths = new Map();
 document.fonts?.ready.then(() => nameWidths.clear());
@@ -211,7 +213,9 @@ const nameFit = n => {
   if (w == null) {
     nameCtx = nameCtx || document.createElement("canvas").getContext("2d");
     nameCtx.font = `800 100px ${getComputedStyle(document.body).fontFamily}`;
-    w = nameCtx.measureText(n).width / 100;
+    // A two-line name only has to fit its widest word.
+    const parts = TWO_LINE_NAMES.has(n) ? n.split(" ") : [n];
+    w = Math.max(...parts.map(t => nameCtx.measureText(t).width)) / 100;
     nameWidths.set(n, w);
   }
   return `;--nw:${w.toFixed(3)}`;
@@ -244,7 +248,7 @@ function cardHTML(c, opts = {}) {
   return `<div class="card framed f-${fr.kind}${lv ? " lv" + Math.min(lv, 3) : ""}" style="--edge:${edge};--fc:${fc}${nameFit(c.name)}"><div class="shape"><div class="face" style="${fr.clip}">
     ${medal(c.group)}${groupsOf(c).length > 1 ? medal(groupsOf(c)[1], "medal second") : ""}
     ${opts.field ? "" : `<div class="cost">${cost}</div>`}
-    <div class="name"><span>${esc(c.name)}</span></div>
+    <div class="name${TWO_LINE_NAMES.has(c.name) ? " two" : ""}"><span>${esc(c.name)}</span></div>
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
     ${tagsHTML(c)}
     <div class="skills${skills.length > 13 ? " long" : ""}">${skills}</div>
