@@ -30,14 +30,15 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 | Name | Name shown on the card |
 | Rarity | `Basic`, `Rare`, `Exotic`, `Divine` or `Unknown` (see rarities.csv) |
 | Type | `Character`, `Spell`, `Equipment` or `Area` |
-| Race | `Animal`, `Undead`, `Goblin`, or `N/A` |
-| Faction | A FactionID from factions.csv, or `N/A` for neutral cards |
+| Tribes | A character's species, joined with `+` (`Human+Animal`): `Human`, `Animal`, `Undead`, `Cyber`, `Plant`, `Goblin`. `---` for anything that isn't a character. A new tribe only needs its name here |
+| Fracture | Where a card is from: a FactionID from factions.csv, or `N/A` for an Unbound card. A hybrid lists two, joined with `+` (`Fighter+Monkey`); the first sets its color. (The column was called Faction; the file `factions.csv` keeps its name) |
 | Stats | `Attack+Health`, or `---` |
 | Skills | Skill names joined with `+`, or `---` |
 | Ability | The card's rules text |
 | Description | Optional flavor text |
 | ArtKey | Picture name: the game shows `assets/cards/<ArtKey>.png` if that file exists |
 | Effect | What the card does, written with the actions below. Leave empty for a card with no ability |
+| Classes | A character's job, joined with `+` (`Master+Fighter`): `Warrior`, `Mage`, `Scout`, `Guardian`, `Worker`, `Student`, `Master`, `Fighter`. `---` for anything that isn't a character |
 
 ### Writing effects (the Effect column)
 
@@ -93,7 +94,7 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 - kind: `character`, `characterOrPlayer` or `area`. Narrow it with dots: `character.enemy`, `character.mine`, `character.leveler` (has Level Up), `character.mine.levels` (has kept levels).
 - intent: `harm`, `help` or `steal`. This tells the computer player how to use it.
 
-**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). Narrow a group with dots: a faction (`allies.Monkey`), a race from the Race column (`allies.Undead`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `strongest`.
+**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). Narrow a group with dots: a fracture (`allies.Monkey`), a tribe (`allies.Undead`), a class (`allies.Student`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `swift`, `tower`, `strongest`. Add the kind in front when one name is two things: Fighter is both a fracture and a class, so `allies.Fighter` means the fracture and `allies.class:Fighter` the class (`fracture:`, `tribe:` and `class:` all work). Filters add up: `allies.class:Student.class:Fighter` is your Students who are also Fighters.
 
 **Numbers** can be whole numbers or these words, joined with `+` or `-`:
 

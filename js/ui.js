@@ -169,8 +169,34 @@ function cardFrame(rarity) {
 // ---------------------------------------------------------------------------
 // Card markup
 // ---------------------------------------------------------------------------
-// Cards with no faction are stored as "N/A" in the data and shown as "Neutral".
-const groupLabel = group => (group === "N/A" ? "Neutral" : group);
+// Cards from no fracture are stored as "N/A" in the data and shown as "Unbound".
+const groupLabel = group => (group === "N/A" ? "Unbound" : group);
+const fractureLabel = c => groupsOf(c).map(groupLabel).join(" + ");
+
+// Tribes (species) and classes (jobs): plain placeholder symbols, to be replaced by art. Tribes sit
+// in round badges and classes in square ones. A name with no symbol shows its first letter.
+const TAG_GLYPHS = {
+  Human: '<circle cx="12" cy="8" r="3.6" fill="currentColor"/><path d="M5 20c0-4.6 3-7 7-7s7 2.4 7 7z" fill="currentColor"/>',
+  Animal: '<ellipse cx="12" cy="15.5" rx="4.6" ry="3.6" fill="currentColor"/><circle cx="6.3" cy="10.6" r="1.9" fill="currentColor"/><circle cx="10" cy="6.8" r="1.9" fill="currentColor"/><circle cx="14" cy="6.8" r="1.9" fill="currentColor"/><circle cx="17.7" cy="10.6" r="1.9" fill="currentColor"/>',
+  Undead: '<path d="M12 3.5c-4.2 0-7 2.7-7 6.4 0 2.2 1 3.7 2.6 4.6V18h2v-2h1.4v2h2v-2H15v2h2v-3.5c1.6-.9 2.6-2.4 2.6-4.6 0-3.7-2.8-6.4-7.6-6.4z" fill="currentColor"/><circle cx="9.3" cy="10.4" r="1.5" fill="var(--g-bg)"/><circle cx="14.7" cy="10.4" r="1.5" fill="var(--g-bg)"/>',
+  Cyber: '<path d="M12 3l7.5 4.3v9.4L12 21l-7.5-4.3V7.3z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/>',
+  Plant: '<path d="M12 21V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 12C7 12 5 8 5 4c5 0 7 3 7 8zM12 14c4 0 7-2.5 7-7-4.500 0-7 2.500-7 7z" fill="currentColor"/>',
+  Goblin: '<path d="M3 8l5 2.5h8L21 8l-2.600 6.500c-1 3.500-3.600 5.500-6.400 5.500s-5.400-2-6.400-5.500z" fill="currentColor"/><circle cx="9.500" cy="13" r="1.200" fill="var(--g-bg)"/><circle cx="14.500" cy="13" r="1.200" fill="var(--g-bg)"/>',
+  Warrior: '<path d="M12 2.500l2 3v9.500h-4V5.500z" fill="currentColor"/><path d="M6.500 15h11v2.200h-11zM11 17h2v4.500h-2z" fill="currentColor"/>',
+  Mage: '<path d="M12 3l2.400 6 6.100.6-4.700 4 1.500 6.100L12 16.700 6.700 19.700l1.500-6.100-4.700-4 6.100-.6z" fill="currentColor"/>',
+  Scout: '<path d="M2.500 12S6 5.500 12 5.500 21.500 12 21.500 12 18 18.500 12 18.500 2.500 12 2.500 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/>',
+  Guardian: '<path d="M12 2.500l8 3v6.200c0 4.800-3.300 8.200-8 9.800-4.700-1.600-8-5-8-9.800V5.500z" fill="currentColor"/>',
+  Worker: '<path d="M14.500 3.500a5 5 0 0 0-4.300 7L3.500 17.200l3.300 3.300 6.700-6.700a5 5 0 0 0 7-4.300l-3 3-3-.8-.8-3z" fill="currentColor"/>',
+  Student: '<path d="M3 6.500c3-1 6-1 9 .8 3-1.800 6-1.800 9-.8v12c-3-1-6-1-9 .8-3-1.800-6-1.800-9-.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 7.300V19" stroke="currentColor" stroke-width="1.800"/>',
+  Master: '<path d="M3.500 18.500L2.500 7l5.500 4.500L12 4.500l4 7L21.500 7l-1 11.500z" fill="currentColor"/>',
+  Fighter: '<rect x="5" y="9" width="14" height="10" rx="3" fill="currentColor"/><path d="M7.500 9V6.500M10.500 9V5M13.500 9V5M16.500 9V6.500" stroke="currentColor" stroke-width="2.400" stroke-linecap="round"/>',
+};
+function tagBadge(kind, name) {
+  const g = TAG_GLYPHS[name] || `<text x="12" y="16.500" text-anchor="middle" font-size="12" font-weight="800" fill="currentColor">${esc(name[0] || "?")}</text>`;
+  return `<svg class="tag ${kind}" viewBox="0 0 24 24" style="--g-bg:#e9dcc0" role="img" aria-label="${kind}: ${esc(name)}"><title>${esc(name)}</title><g color="#3a2a1c">${g}</g></svg>`;
+}
+const tagsHTML = c => (c.type === "Character" && (c.tribes?.length || c.classes?.length))
+  ? `<div class="tags"><span>${(c.tribes || []).map(t => tagBadge("tribe", t)).join("")}</span><span>${(c.classes || []).map(k => tagBadge("class", k)).join("")}</span></div>` : "";
 
 function cardHTML(c, opts = {}) {
   const edge = DATA.rarities[c.rarity]?.color || "#8f97a3";
@@ -197,11 +223,12 @@ function cardHTML(c, opts = {}) {
     : `<div class="level-pips" title="Level ${lv} of ${cap}">${"★".repeat(Math.min(lv, cap))}${"☆".repeat(Math.max(0, cap - lv))}</div>`;
   const fr = cardFrame(c.rarity);
   return `<div class="card framed f-${fr.kind}${lv ? " lv" + Math.min(lv, 3) : ""}" style="--edge:${edge};--fc:${fc}"><div class="shape"><div class="face" style="${fr.clip}">
-    ${medal(c.group)}
+    ${medal(c.group)}${groupsOf(c).length > 1 ? medal(groupsOf(c)[1], "medal second") : ""}
     ${opts.field ? "" : `<div class="cost">${cost}</div>`}
     <div class="name">${esc(c.name)}</div>
-    <div class="type">${esc(c.type)} · ${esc(groupLabel(c.group))}</div>
+    <div class="type">${esc(c.type)} · ${esc(fractureLabel(c))}</div>
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
+    ${tagsHTML(c)}
     <div class="skills">${skills}</div>
     ${opts.field && c.equipped?.length ? `<div class="equip-count" title="Equipped">●${c.equipped.length}</div>` : ""}
     ${pips}
@@ -897,6 +924,12 @@ function skillRows(c) {
   }).join("");
 }
 
+// "Tribe: Human, Animal · Class: Master": what a character is and what it does.
+function kindsLine(c) {
+  if (c.type !== "Character" || !(c.tribes?.length || c.classes?.length)) return "";
+  const part = (label, list, kind) => list?.length ? `<span class="kinds-part"><b>${label}</b> ${list.map(n => `${tagBadge(kind, n)}${esc(n)}`).join(", ")}</span>` : "";
+  return `<p class="kinds">${part(c.tribes?.length > 1 ? "Tribes" : "Tribe", c.tribes, "tribe")}${part(c.classes?.length > 1 ? "Classes" : "Class", c.classes, "class")}</p>`;
+}
 function showDetail(c, ctx = {}) {
   let actions = "", extra = "";
   if (ctx.field && c.owner != null && findChar(c.uid)) {
@@ -924,7 +957,7 @@ function showDetail(c, ctx = {}) {
   openModal(`<div class="detail">
     ${cardHTML(c, ctx.field && findChar(c.uid) ? { field: true } : {})}
     <div class="detail-text">
-      <div><h2 id="modal-title">${esc(c.name)}</h2><p class="sub">${esc(c.type)} · ${esc(c.rarity)} · ${esc(groupLabel(c.group))}${c.race && c.race !== "N/A" ? " · " + esc(c.race) : ""} · ${c.manaCost} mana${spellKind}</p></div>
+      <div><h2 id="modal-title">${esc(c.name)}</h2><p class="sub">${esc(c.type)} · ${esc(c.rarity)} · ${esc(fractureLabel(c))} · ${c.manaCost} mana${spellKind}</p>${kindsLine(c)}</div>
       ${ability ? `<p class="ability">${esc(ability)}</p>` : ""}
       ${skillRows(c)}
       ${extra}

@@ -1,6 +1,6 @@
 # Shardfall
 
-A two-player fantasy trading card game that runs in the browser. Pick one of five faction decks (Simple, Monkey, Zombie, Fighter, Digital) and play against the computer or against a friend on the same device.
+A two-player fantasy trading card game that runs in the browser. Pick one of five starter decks, one for each fracture (Simple, Monkey, Zombie, Fighter, Digital) and play against the computer or against a friend on the same device.
 
 This is a port of the original LÖVE2D / Lua version (`original-lua/main.lua`, kept for reference).
 
@@ -21,9 +21,9 @@ New players have three kinds of help:
 
 **The intro:** every time the game opens, a 20-second cold open of stained-glass panels tells how the Shardfall began (tap to go on, **Skip** to leave). First-time visitors are then offered the tutorial. Watch it again from Settings, or skip it with a link ending in `#menu`. The story, tone, champions and hidden clues are collected in [`docs/world.md`](docs/world.md).
 
-**Campaign** (main menu): five matches in a row against the computer, one for each faction's champion: The Simplistic, The Man Ape, IP Man, Boss Level and finally Soul Shepard. Each champion plays its faction's starter deck and starts with its champion card in hand. A short story card comes before each match and after each win. Beating a champion unlocks the next one; progress is saved in the browser on that device, and **Start over** locks them again. You play the deck chosen on the main menu.
+**Campaign** (main menu): five matches in a row against the computer, one for each fracture's champion: The Simplistic, The Man Ape, IP Man, Boss Level and finally Soul Shepard. Each champion plays its faction's starter deck and starts with its champion card in hand. A short story card comes before each match and after each win. Beating a champion unlocks the next one; progress is saved in the browser on that device, and **Start over** locks them again. You play the deck chosen on the main menu.
 
-**Your own decks:** on the main menu, **Create your own** opens the deck builder. Start from an empty deck or a copy of a starter, tap cards to add them (filter by faction and type, tap **i** to read a card), and watch the deck panel: card count against the 35-card minimum, the mana curve, how many characters, spells, equipment and areas, and tips. Copy limits from `data/game_rules.csv` are enforced. A short walkthrough runs the first time and from **? How to build**. Decks are saved in the browser on that device, appear on the main menu with an Edit button, and can't be started until they reach the minimum size. The computer opponent always uses a starter deck.
+**Your own decks:** on the main menu, **Create your own** opens the deck builder. Start from an empty deck or a copy of a starter, tap cards to add them (filter by fracture and type, tap **i** to read a card), and watch the deck panel: card count against the 35-card minimum, the mana curve, how many characters, spells, equipment and areas, and tips. Copy limits from `data/game_rules.csv` are enforced. A short walkthrough runs the first time and from **? How to build**. Decks are saved in the browser on that device, appear on the main menu with an Edit button, and can't be started until they reach the minimum size. The computer opponent always uses a starter deck.
 
 **On phones** the game works best held sideways, and it asks you to turn the phone if it's upright (with a "Play upright anyway" option). Held sideways, the strips along the top and bottom of the board are left off so the rest of the board is drawn bigger: each player's health, mana and card counts move to panels at the left (tap the opponent's panel to target or attack them), and the buttons (Menu, Full screen, Draw card / To battle / To end / Pass turn, Attack directly, Cancel) sit in a slim column at the right. Full screen hides the browser's bars where the phone allows it (not on iPhones; there, adding the game to the home screen does the same). In the tutorial the space beside the board holds the coach panel instead, which repeats each step's button at full size. Page scrolling, zooming and long-press menus are switched off on the game screen, and the board stays clear of the notch.
 
@@ -54,7 +54,9 @@ All cards, decks, skills and balance numbers are CSV files in the [`data/`](data
 
 GitHub displays each file as a table. Edit it with the pencil icon, or open it in Excel or Google Sheets, then save it as CSV and upload it back. [`data/README.md`](data/README.md) explains every column, and how to write a card's **Effect** from a set of building blocks (damage, buff, levelUp, fetch, summon and so on), so most new cards need no code. In the game, the **Almanac** (on the main menu) shows every card as it currently reads in these files.
 
-Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the faction symbol on that card.
+Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fracture symbol on that card.
+
+**Fractures, tribes and classes.** Every card is from a *fracture* (a shattered world: Simple, Monkey, Zombie, Fighter, Digital, or Unbound for none; a few are from two). Characters also have *tribes* (what they are: Human, Animal, Undead, Cyber, Plant, Goblin) and *classes* (what they do: Warrior, Mage, Scout, Guardian, Worker, Student, Master, Fighter), one or two of each. Cards can reward any of the three, so characters from different worlds can still work together. They are shown on the card with placeholder symbols and listed in the Almanac, which can filter by all three. The story behind them is in `docs/world.md`.
 
 ## Files
 
@@ -84,6 +86,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the factio
 | `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
 | `tools/selftest.js` | Plays many automatic games and reports anything broken: `node tools/selftest.js . ai 4` and `node tools/selftest.js . rand 1000` (needs Node.js). Run it after changing rules or cards |
+| `tools/kinds-test.js` | Checks the fracture, tribe and class rules and the cards built on them (Sensei, Speedrunner, hybrids, infection): `node tools/kinds-test.js .` |
 | `tools/guide-shots.js` | Retakes the annotated guide pictures: `node tools/guide-shots.js` (needs Node.js and Playwright) |
 | `original-lua/main.lua` | The LÖVE2D source this was ported from |
 

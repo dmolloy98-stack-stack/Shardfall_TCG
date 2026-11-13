@@ -41,9 +41,13 @@ $("#alm-back").addEventListener("click", () => showScreen(U.almanacReturn === "g
 
 function renderAlmanac() {
   document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab === U.almanacTab));
-  const filters = ["All", ...Object.keys(DATA.factions), "Neutral"];
+  const filters = ["All", ...Object.keys(DATA.factions), "Unbound"];
   $("#alm-filters").hidden = U.almanacTab !== "cards";
-  $("#alm-filters").innerHTML = filters.map(f => `<button type="button" class="chip" data-filter="${f}" aria-pressed="${f === U.almanacFilter}">${esc(f)}</button>`).join("");
+  // Three rows of filters: Fracture (where a card is from), Tribe (species) and Class (job).
+  const tribes = ["All", ...new Set(DATA.cardList.flatMap(c => c.tribes))].sort((x, y) => (x === "All" ? -1 : y === "All" ? 1 : x.localeCompare(y)));
+  const classes = ["All", ...new Set(DATA.cardList.flatMap(c => c.classes))].sort((x, y) => (x === "All" ? -1 : y === "All" ? 1 : x.localeCompare(y)));
+  const row = (label, attr, list, cur) => `<div class="chip-line"><span class="chip-label">${label}</span>${list.map(f => `<button type="button" class="chip" data-${attr}="${esc(f)}" aria-pressed="${f === cur}">${esc(f)}</button>`).join("")}</div>`;
+  $("#alm-filters").innerHTML = row("Fracture", "filter", filters, U.almanacFilter) + row("Tribe", "tribe", tribes, U.almanacTribe || "All") + row("Class", "class", classes, U.almanacClass || "All");
   if (U.almanacTab === "skills") {
     $("#alm-content").innerHTML = `<div class="skill-list">${DATA.skillOrder.map(name => {
       const sk = DATA.skills[name];
@@ -52,12 +56,13 @@ function renderAlmanac() {
     }).join("")}</div>`;
     return;
   }
+  const fitsKinds = c => (!U.almanacTribe || U.almanacTribe === "All" || hasTribe(c, U.almanacTribe)) && (!U.almanacClass || U.almanacClass === "All" || hasClass(c, U.almanacClass));
   const groups = [...Object.keys(DATA.factions), "N/A"];
-  const want = U.almanacFilter === "Neutral" ? "N/A" : U.almanacFilter;
+  const want = U.almanacFilter === "Unbound" ? "N/A" : U.almanacFilter;
   let h = `<div class="card-grid">`;
   for (const g of groups) {
     if (want !== "All" && want !== g) continue;
-    const cards = DATA.cardList.filter(c => c.group === g).sort((a, b) => (DATA.rarities[a.rarity]?.order - DATA.rarities[b.rarity]?.order) || a.manaCost - b.manaCost);
+    const cards = DATA.cardList.filter(c => (want === "All" ? c.group === g : inGroup(c, g)) && fitsKinds(c)).sort((a, b) => (DATA.rarities[a.rarity]?.order - DATA.rarities[b.rarity]?.order) || a.manaCost - b.manaCost);
     h += `<h2 class="faction-head" style="--fc:${DATA.factions[g]?.color || "#c9b48d"}">${esc(groupLabel(g))} <small style="font-size:.6em;color:var(--muted)">${cards.length} cards</small></h2>`;
     h += cards.map(c => `<button type="button" class="chip-card" data-card="${c.id}" style="appearance:none;border:0;background:none;padding:0">${cardHTML(c)}</button>`).join("");
   }
@@ -65,4 +70,10 @@ function renderAlmanac() {
 }
 document.querySelector(".tabs").addEventListener("click", e => { const t = e.target.closest("[data-tab]"); if (t) { U.almanacTab = t.dataset.tab; renderAlmanac(); } });
 $("#alm-filters").addEventListener("click", e => { const t = e.target.closest("[data-filter]"); if (t) { U.almanacFilter = t.dataset.filter; renderAlmanac(); } });
+$("#alm-filters").addEventListener("click", e => {
+  const t = e.target.closest("[data-tribe],[data-class]");
+  if (!t) return;
+  if (t.dataset.tribe) U.almanacTribe = t.dataset.tribe; else U.almanacClass = t.dataset.class;
+  renderAlmanac();
+});
 $("#alm-content").addEventListener("click", e => { const t = e.target.closest("[data-card]"); if (t) showDetail(DATA.cardsById[t.dataset.card]); });

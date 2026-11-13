@@ -30,10 +30,30 @@ Edit this file whenever the story changes. Open questions are listed at the end.
   whole again, so the shards stop falling.
 - The story is told from a distance (no "you" in narration), for now.
 
+## Fractures, tribes and classes
+
+Every card has three kinds of label, so cards can work together in more than one way.
+
+- **Fracture** is where a card is from: the shattered world it came out of. Today's five are
+  Simple, Monkey, Zombie, Fighter and Digital. A card from none is **Unbound**. A few cards
+  are from two fractures (Master Rat is Fighter and Monkey; Weapons Enthusiast is Fighter and
+  Simple): a shard where two worlds fused. In the data this column was once called Faction.
+- **Tribe** is what a character is: Human, Animal, Undead, Cyber, Plant or Goblin. A character
+  can have two (The Man Ape is Human and Animal; The Simplistic is Cyber and Human). A Zombie
+  infection adds Undead to the tribes a character already has.
+- **Class** is what a character does: Warrior, Mage, Scout, Guardian, Worker, Student, Master
+  or Fighter. A character can have two. Fighter-fracture characters are also the Fighter class.
+- Only characters have tribes and classes. Spells, equipment and areas may care about them
+  ("your Students", "Humans") but don't have their own.
+- Big bonuses stay tied to a fracture (Jungle, Simpledom, Primeval Forest, Arboreal
+  Intelligence); small ones can reach a tribe or class.
+- The labels are in `data/cards.csv` (Tribes, Fracture, Classes) and shown on the card with
+  placeholder symbols, until the art is made. The owner reviews them in the card sheet.
+
 ## The factions
 
-Each faction comes from a different world. More factions can join at any time, so the
-story never fixes how many there are.
+Each faction comes from a different world (a fracture). More factions can join at any time, so
+the story never fixes how many there are.
 
 | Faction | Champion (Unknown card) | Personality | How the computer plays it |
 |---|---|---|---|
@@ -84,6 +104,7 @@ story never fixes how many there are.
 
 | Where | Clue | What it hints at |
 |---|---|---|
+| Cards, The Simplistic's tribes | It is Cyber and Human. Cyber is the tribe of Boss Level, Glitch, Spam Bot, Data Collector, Server Farm and Digital Girlfriend, and no other Simple card has it | Boss Level made the Simple world. Nothing in the game says so |
 | Intro, first window ("each one was whole") | One green glass pane in the second ring is already cracked, before the worlds collide | Something was broken before the collision. Green is the Zombie color, which points suspicion their way |
 | Campaign, after beating Soul Shepard | The souls Soul Shepard gathered come from every world, not only its own, and the shards keep falling | The Zombies are victims too, and beating every champion does not end the Shardfall |
 | The Simplistic, every match | It says the same lines word for word, and repeats a line twice when hurt | It is a little robotic: made, not born |

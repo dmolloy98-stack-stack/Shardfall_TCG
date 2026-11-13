@@ -1529,3 +1529,17 @@ html.intro-on .menu-inner { visibility: hidden; }
   100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .champ-say { animation-name: champSayStill; } @keyframes champSayStill { 0%, 85% { opacity: 1; } 100% { opacity: 0; } } }
+
+/* Tribes (round badges) and classes (square badges): placeholder symbols at the foot of the art. */
+.card .tags { position: absolute; left: 0.75em; right: 0.75em; top: 4.4em; display: flex; justify-content: space-between; pointer-events: none; }
+.card .tags span { display: flex; gap: 0.15em; }
+.tag { width: 1.35em; height: 1.35em; padding: 0.12em; background: rgba(246, 236, 210, 0.92); box-shadow: 0 0 0 1px rgba(27, 19, 13, 0.55); }
+.tag.tribe { border-radius: 50%; }
+.tag.class { border-radius: 0.25em; }
+.card .medal.second { left: 1.55em; top: 1.5em; width: 1.2em; height: 1.2em; }
+#stage.small .small-card .card .tags { display: none; }
+.detail .kinds { margin: 4px 0 0; font-size: 0.95em; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.detail .kinds-part { display: inline-flex; align-items: center; gap: 5px; }
+.detail .kinds .tag { width: 20px; height: 20px; margin-right: 2px; background: #e9dcc0; }
+.chip-line { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+.chip-label { min-width: 4.8em; font-size: 0.82em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }

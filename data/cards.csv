@@ -26,7 +26,7 @@ staff,2,Staff,Rare,Equipment,---,Simple,2+1,---,---,,staff,,---
 herd,5,Herd,Rare,Spell,---,Simple,---,---,Add 3 Simple Farmers to the field under your control,,herd,play: summon simple_farmer 3,---
 simplify,3,Simplify,Rare,Spell,---,Simple,---,---,Target character's stats become 1+1,,simplify,"play: target character harm, setStats target 1 1",---
 simpler_farmer,5,Simpler Farmer,Exotic,Character,Human,Simple,2+4,Signal,Simpler Farmer gets +1 Attack for each other Simple Farmer on the field,,simpler_farmer,play: buff self #allies.simple_farmer 0,Worker
-simple_defender,5,Simple Defender,Exotic,Character,Human,Simple,1+6,Challenge+Tower,Add +2 health to this character during your End Phase,,simple_defender,endTurn: buff self 0 2,Guardian
+simple_defender,5,Simple Defender,Exotic,Character,Human,Simple,1+6,Challenge+Tower,"Add +2 health to this character during your End Phase, and +1 health to your other Tower characters",,simple_defender,"endTurn: buff self 0 2, buff allies.tower.other 0 1",Guardian
 simpledom,5,Simpledom,Exotic,Area,---,Simple,---,---,Simple characters gain +2 in all stats,,simpledom,aura: buff allies.Simple 2 2,---
 sabre,4,Sabre,Divine,Equipment,---,Simple,5+0,---,---,,sabre,,---
 simplicity,7,Simplicity,Divine,Spell,---,Simple,---,---,Reduce all target player's character's stats by -2 in all categories. You gain +2 HP for each character effected,,simplicity,play: script simplicity,---
@@ -74,7 +74,7 @@ soul_shepard,5,Soul Shepard,Unknown,Character,Undead,Zombie,3+3,---,"Each time a
 seasoned_monk,2,Seasoned Monk,Basic,Character,Human,Fighter,2+1,Parry+Swift,---,,seasoned_monk,,Warrior+Fighter
 white_belt_student,1,White Belt Student,Basic,Character,Human,Fighter,0+1,Level Up+Transform,Level Up whenever an equipment enters the Field. After Level Up is triggered 3 times Transform into Black Belt Student. Keep stats from Level Up,,white_belt_student,gearEnters: levelUp self 1; maxLevel: transform self black_belt_student,Student+Fighter
 weapons_enthusiast,1,Weapons Enthusiast,Basic,Character,Human,Fighter+Simple,1+1,---,Equip costs become 1 when equipping to Weapons Enthusiast,,weapons_enthusiast,rule: equipCostMax 1,Warrior+Fighter
-sensei,5,Sensei,Basic,Character,Human,Fighter,2+2,---,While Sensei is on the field all equip costs become 0,,sensei,rule: freeEquip,Master+Fighter
+sensei,5,Sensei,Basic,Character,Human,Fighter,2+2,---,"While Sensei is on the field all equip costs become 0, and your Students get +1 to all stats",,sensei,rule: freeEquip; aura: buff allies.class:Student 1 1,Master+Fighter
 sparring_gear,3,Sparring Gear,Basic,Equipment,---,Fighter,0+3,---,---,,sparring_gear,,---
 zippy_shoes,3,Zippy Shoes,Basic,Equipment,---,Fighter,0+2,---,The character holding this has Swift,,zippy_shoes,grants: Swift,---
 mc_knuckle_dusters,3,McKnuckle Dusters,Basic,Equipment,---,Fighter,3+0,---,---,,mc_knuckle_dusters,,---
@@ -85,7 +85,7 @@ fight_choreographer,6,Fight Choreographer,Rare,Character,Human,Fighter,1+2,---,E
 nunchucks,2,Nunchucks,Rare,Equipment,---,Fighter,2+0,Flash,Can be equipped anytime as long as you have the mana,,nunchucks,,---
 bo_staff,2,Bo Staff,Rare,Equipment,---,Fighter,2+2,Flash,Can be equipped anytime as long as you have the mana,,bo_staff,,---
 dojo,4,Dojo,Rare,Area,---,Fighter,---,---,Each Fighter character gains Parry and +2 to all stats,,dojo,"aura: buff allies.Fighter 2 2, grant allies.Fighter Parry",---
-fifth_degree_master,7,5th Degree Master,Exotic,Character,Human,Fighter,3+3,Parry,,,fifth_degree_master,,Master+Fighter
+fifth_degree_master,7,5th Degree Master,Exotic,Character,Human,Fighter,3+3,Parry,Your Student Fighters have Parry,,fifth_degree_master,aura: grant allies.class:Student.class:Fighter Parry,Master+Fighter
 master_rat,10,Master Rat,Exotic,Character,Animal,Fighter+Monkey,5+5,Parry,Summon 4 1+1 turtles who each have Gain +1 to each stat for every other turtle on the field,,master_rat,enter: script masterRat,Master+Fighter
 crane_kick,5,Crane Kick,Exotic,Spell,---,Fighter,---,---,Target character loses 7 health,,crane_kick,"play: target character harm, damage target 7",---
 shaolin_warrior,20,Shaolin Warrior,Divine,Character,Human,Fighter,10+10,Challenge,Each character and equipment on the field makes this card cost 1 less,,shaolin_warrior,cost: reduce #everyone+#gear,Warrior+Fighter
@@ -95,7 +95,7 @@ noob,0,Noob,Basic,Character,Human,Digital,1+1,Level Up,---,,noob,,Student
 glitch,1,Glitch,Basic,Character,Cyber,Digital,2+1,Level Up+Rush+Swift,---,,glitch,,Scout
 spam_bot,1,Spam Bot,Basic,Character,Cyber,Digital,1+1,Signal,Trigger target character's Level Up,,spam_bot,"play: target character.leveler help, levelUp target 1",Worker
 gaming_headset,1,Gaming Headset,Basic,Equipment,---,Digital,1+0,---,---,,gaming_headset,,---
-speedrunner,2,Speedrunner,Basic,Character,Human,Digital,2+1,Rush+Swift,---,,speedrunner,,Scout
+speedrunner,2,Speedrunner,Basic,Character,Human,Digital,2+1,Rush+Swift,Gets +1 attack for each other Swift character you control,,speedrunner,aura: buff self #allies.swift.other 0,Scout
 beta_tester,2,Beta Tester,Basic,Character,Human,Digital,1+2,Level Up,Levels Up during your End Phase,,beta_tester,endTurn: levelUp self 1,Worker
 upgrade,2,Upgrade,Basic,Spell,---,Digital,---,---,Trigger target character's Level Up,,upgrade,"play: target character.leveler help, levelUp target 1",---
 digital_girlfriend,2,Digital Girlfriend,Basic,Character,Cyber,Digital,2+1,Signal,Trigger target character's Level Up,,digital_girlfriend,"play: target character.leveler help, levelUp target 1",Worker

@@ -49,6 +49,7 @@ builds it, tests it, and explains it.
 - Run `node tools/selftest.js . ai 2` and `node tools/selftest.js . rand 300`. Expect
   `"problems": {}`. The fingerprint (currently 1694590925) must stay the same unless the
   change is meant to alter how the game plays; when it does change on purpose, say so.
+- Run `node tools/kinds-test.js .` after touching tribes, classes, fractures or the cards that use them; expect `ALL PASSED`.
 - For anything on screen, load the game in a browser (Playwright) at desktop and phone sizes
   and check for errors. Look at a screenshot before reporting a visual change.
 - Script load order matters: `js/boot.js` loads last, and the list is `GAME_SCRIPTS` in
@@ -87,9 +88,17 @@ skipping them silently.
 The owner designs cards and decks in the Google Sheet "Shardfall – card and deck builder"
 (id `1RzePfEgUN4QJsLTDGnhU7xaTa0_snq2lVswEUy5JNX0`, in the "Shardfall _ CardGame" folder).
 Its tabs mirror the data files: Cards → `data/cards.csv` (Attack and Health become
-`Attack+Health` in Stats; ArtKey is the CardID), Decks plus Deck cards → `data/decks.csv`
-(one row per card becomes the `CardID:copies|…` CardList; skip rows with 0 copies, which mark a card taken out of a deck), Factions → `data/factions.csv`
-(Color is hex; convert to 0–1 RGB), Skills → `data/skills.csv`.
+`Attack+Health` in Stats; ArtKey is the CardID; the sheet's Tribes, Classes and Fracture
+columns hold names separated by ", " and become `+`-joined lists, `---` when empty for a
+non-character; a card from no fracture is `N/A`, shown as Unbound), Decks plus Deck cards → `data/decks.csv`
+(one row per card becomes the `CardID:copies|…` CardList; skip rows with 0 copies, which mark a card taken out of a deck), Fractures → `data/factions.csv`
+(the tab was called Factions; Color is hex; convert to 0–1 RGB), Skills → `data/skills.csv`.
+The three draft tabs ("DRAFT …") are the owner's review notes and are not game data.
+
+Card vocabulary: a card has a **Fracture** (where it is from; a hybrid has two), and a
+character also has **Tribes** (what it is) and **Classes** (what it does), one or two of each.
+The owner chose these names, so use them in anything players see. In code the fracture is
+still `group`/`groups` and the data file is `factions.csv`. See `docs/world.md`.
 
 When asked to add the sheet's rows to the game:
 1. Read only rows whose Status is `Ready`. A Ready row with an existing ID replaces that row.

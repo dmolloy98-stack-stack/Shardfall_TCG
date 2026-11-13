@@ -534,7 +534,7 @@ function anatomyHTML(c) {
   // Points on the card (in card em units, the card is 9.5 x 13.5) and where each label sits.
   const K = 1.1, X0 = 11.8, Y0 = 0.4;
   const parts = [
-    { side: "L", y: 0.6, px: 1.25, py: 1.25, t: "Faction", d: "The family it belongs to" },
+    { side: "L", y: 0.6, px: 1.25, py: 1.25, t: "Fracture", d: "The shattered world it is from" },
     { side: "L", y: 3.3, px: 1.2, py: 3.1, t: "Card type", d: "Character, Spell, Equipment or Area" },
     { side: "L", y: 9.4, px: 2.6, py: 10, t: "Skills", d: "Keywords with special rules" },
     { side: "L", y: 12.4, px: 1.3, py: 13.15, t: "⚔ Attack", d: "Damage it deals" },

@@ -53,7 +53,7 @@ function showCampaign() {
   const done = cleared >= CAMPAIGN.length
     ? `<p class="camp-done">All ${NUMBER_WORDS[CAMPAIGN.length] || CAMPAIGN.length} champions beaten. The shards are still falling, though.</p>` : "";
   openModal(`<h2 id="modal-title">Campaign</h2>
-    <p class="sub">Beat each faction's champion in turn. Each one plays its faction's deck and starts with its champion in hand.</p>
+    <p class="sub">Beat each fracture's champion in turn. Each one plays its fracture's deck and starts with its champion in hand.</p>
     <p class="camp-deck">Your deck: <b>${esc(deck?.name || "none")}</b> <span>(change it on the main menu)</span></p>
     ${problem ? `<p class="deck-problem">${esc(problem)}</p>` : ""}
     <ol class="camp-list">${rows}</ol>${done}
