@@ -141,6 +141,6 @@ start-up code used to live in `ui.js`; they are now `menu.js`, `storm.js` and `b
 load in the order listed in `GAME_SCRIPTS` in `js/data.js`, with `boot.js` last.
 
 An automatic tool, [Graphify](https://github.com/Graphify-Labs/graphify), found the same
-structure (390 functions and 918 connections on 11 November). Its busiest functions were
+structure (400 functions and 921 connections on 13 November). Its busiest functions were
 `emit()`, `render()`, `log()`, `hasSkill()`, `playCard()` and `attack()`. A tool like that
 becomes worth running regularly once the code is around 20,000 lines.
