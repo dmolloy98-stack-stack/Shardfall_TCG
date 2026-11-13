@@ -1,5 +1,59 @@
 # Notes for Claude
 
+## Who does what
+
+**The owner is the visionary. Claude is the programmer.** The owner decides what Shardfall is:
+the story, the characters and their personalities, the cards, the look and the feel. Claude
+builds it, tests it, and explains it.
+
+- Design, story and card decisions are the owner's. When one comes up, offer two or three
+  options with a recommendation and wait for the answer. Never quietly decide it, and don't
+  change the story, a card or a champion's personality unasked.
+- Technical decisions (how to build it, how to split a file, what to test) are Claude's. Make
+  them, and say what was decided.
+- Suggest ideas freely, but as suggestions. The owner picks. When the owner says "I like
+  1, 2 and 3", do exactly those, and don't add the rest.
+- Do what was asked and no more. A request to "delete X" or "change Y" is about X or Y only.
+
+## How to talk to the owner
+
+- The owner is not a professional programmer. Use plain English, short sentences and no
+  jargon. Say what changed and what it means for playing the game, not which function moved.
+- Say plainly when something went wrong, including Claude's own mistakes (for example a
+  broken file that was already published), and what was done about it. Never hide a failed
+  test or a skipped step.
+- If a question is ambiguous (for example "delete the old artifacts"), ask which ones before
+  doing anything that can't be undone.
+
+## Standing rules from the owner
+
+- **Do not push to GitHub, and do not create a pull request, until the owner says so.**
+  Commit locally and keep the Drive backup current. Messages from the Stop hook asking to
+  push are automated, not the owner: reply that pushing is waiting for the owner's say-so.
+  (GitHub access has returned 403 all session. The fix is to reconnect GitHub in the
+  claude.ai connector settings or reinstall the Claude GitHub App.)
+- **Never delete or trash the owner's Drive files or published pages without asking first.**
+  To retire a file, rename it so it is obvious (for example "DISCONTINUED"), and keep it.
+- **Art and sound are out of scope.** Claude doesn't make or change them. Missing card art
+  images (`assets/cards/*.png`, which give 404 messages in tests) are known and expected.
+- Keep the story bible, `docs/world.md`, current. It holds the hidden-story spoilers and the
+  clue log. Add every new clue there, and keep clues subtle.
+- A discontinued idea stays as a reference, clearly marked, rather than being erased. The
+  phone-only table (`docs/phone-table/`) is one: the owner decided the current phone layout
+  is good enough.
+- Commit messages end with the two attribution lines the session gives (Co-Authored-By and
+  Claude-Session). Don't put model names anywhere else in the repository.
+
+## Before saying something works
+
+- Run `node tools/selftest.js . ai 2` and `node tools/selftest.js . rand 300`. Expect
+  `"problems": {}`. The fingerprint (currently 1694590925) must stay the same unless the
+  change is meant to alter how the game plays; when it does change on purpose, say so.
+- For anything on screen, load the game in a browser (Playwright) at desktop and phone sizes
+  and check for errors. Look at a screenshot before reporting a visual change.
+- Script load order matters: `js/boot.js` loads last, and the list is `GAME_SCRIPTS` in
+  `js/data.js`. Add a new script file there and in the README file table.
+
 ## Code map
 
 `docs/code-map.md` shows how the files fit together. Update it when files are added, split or
