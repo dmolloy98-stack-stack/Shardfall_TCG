@@ -3,18 +3,18 @@
    fixed 1440x1000 stage (the same virtual size as the LÖVE version) scaled to fit. */
 :root {
   --shard-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'%3E%3Cpath d='M20 1L36 14L32 38L20 47L8 38L4 14Z' fill='%23a78bfa' stroke='%23f1ebff' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M4 14L20 20L36 14M20 20L20 47M8 38L20 20L32 38' stroke='%23f1ebff' stroke-width='1' fill='none' opacity='.75'/%3E%3C/svg%3E");
-  --table: #160e09;
-  --wood: #3a2314;
-  --wood-hi: #6a4426;
-  --wood-line: #24150c;
+  --table: #0a0614;
+  --wood: #1c1236;      /* (old name) now the dark violet of the glass buttons and bars */
+  --wood-hi: #33245a;
+  --wood-line: #0b0714;
   --brass: #d9a64c;
-  --brass-dim: #8b6428;
+  --brass-dim: #6a55a8;   /* (old name) now the pale violet rim of glass panels */
   --parchment: #f2e7cf;
   --muted: #b7a68a;
   --paper: #cdbd9e;
   --paper-hi: #e7dbc0;
   --ink: #1b130d;
-  --panel: rgba(17, 10, 6, 0.92);
+  --panel: rgba(15, 10, 30, 0.93);
   --danger: #e2553d;
   --heal: #63d07a;
   --atk: #a3311a;
@@ -22,6 +22,15 @@
   --spd: #8a5d08;
   --target: #5fd0f0;
   --glow-play: #63e08a;
+
+  /* Stained glass: dark lead between jewel-coloured panes (the look of the whole game). */
+  --lead: #0b0714;
+  --lead-hi: #2a1d44;
+  --glass: #a78bfa;
+  /* glass-window:start */
+  --glass-window: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 1000' preserveAspectRatio='none'%3E%3Cpath d='M98 0L275 0L249 149ZM275 0L384 118L249 149ZM562 0L588 123L478 156ZM750 0L686 147L588 123ZM1044 0L1048 121L933 167ZM0 128L116 129L129 287ZM384 118L348 234L220 258ZM1288 136L1293 244L1207 249ZM220 258L348 234L380 408ZM584 220L751 261L612 404ZM1059 287L1055 356L945 409ZM945 409L1046 490L962 486ZM241 522L260 653L127 588ZM631 474L595 668L443 647ZM1046 490L1232 602L1118 584ZM595 668L755 598L719 793ZM1440 662L1440 772L1315 722ZM565 738L719 793L612 872ZM814 755L961 742L919 900ZM814 755L919 900L855 858ZM1315 722L1440 772L1440 915ZM0 897L114 841L0 1000ZM612 872L701 861L722 1000ZM612 872L722 1000L563 1000ZM919 900L1085 884L1115 1000Z' fill='hsla(265,70%,55%,.30)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M369 0L516 0L384 118ZM1044 0L1241 0L1196 91ZM1360 0L1440 0L1288 136ZM588 123L751 261L584 220ZM933 167L1048 121L1059 287ZM933 167L1059 287L959 222ZM0 214L129 287L0 331ZM348 234L481 269L469 367ZM751 261L830 293L720 373ZM830 293L945 409L864 415ZM0 331L136 398L0 529ZM136 398L142 475L0 529ZM210 379L353 485L241 522ZM720 373L864 415L835 480ZM864 415L945 409L835 480ZM1055 356L1238 394L1197 522ZM0 529L142 475L0 641ZM353 485L443 647L365 656ZM1350 524L1440 477L1440 662ZM0 641L127 588L0 779ZM365 656L443 647L449 773ZM443 647L595 668L449 773ZM822 655L814 755L719 793ZM320 707L449 773L367 845ZM719 793L814 755L855 858ZM1215 727L1315 722L1302 849Z' fill='hsla(215,75%,50%,.26)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M275 0L369 0L384 118ZM828 0L868 113L686 147ZM116 129L249 149L129 287ZM478 156L588 123L481 269ZM868 113L830 293L751 261ZM1048 121L1196 91L1207 249ZM1196 91L1288 136L1207 249ZM1288 136L1440 149L1293 244ZM220 258L210 379L136 398ZM220 258L380 408L210 379ZM830 293L959 222L945 409ZM959 222L1059 287L945 409ZM1059 287L1207 249L1238 394ZM1207 249L1293 244L1238 394ZM945 409L1055 356L1046 490ZM1238 394L1296 336L1350 524ZM1296 336L1440 357L1440 477ZM353 485L468 474L443 647ZM631 474L735 517L755 598ZM735 517L835 480L822 655ZM735 517L822 655L755 598ZM962 486L1118 584L986 667ZM127 588L260 653L132 755ZM755 598L822 655L719 793ZM1118 584L1215 727L1083 711ZM1232 602L1360 602L1315 722ZM0 779L132 755L114 841ZM229 723L367 845L275 839ZM449 773L565 738L612 872ZM612 872L563 1000L482 1000ZM919 900L1115 1000L954 1000ZM1302 849L1440 915L1361 1000Z' fill='hsla(175,65%,40%,.20)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M0 0L98 0L116 129ZM516 0L562 0L478 156ZM562 0L750 0L588 123ZM828 0L922 0L933 167ZM249 149L384 118L220 258ZM129 287L220 258L136 398ZM1059 287L1238 394L1055 356ZM1293 244L1440 222L1440 357ZM1293 244L1440 357L1296 336ZM210 379L380 408L353 485ZM945 409L962 486L835 480ZM142 475L241 522L127 588ZM1046 490L1197 522L1232 602ZM1350 524L1360 602L1232 602ZM127 588L132 755L0 779ZM260 653L229 723L132 755ZM260 653L365 656L229 723ZM595 668L719 793L565 738ZM822 655L961 742L814 755ZM132 755L275 839L114 841ZM229 723L320 707L367 845ZM449 773L509 864L367 845ZM719 793L855 858L701 861ZM855 858L954 1000L874 1000ZM1440 915L1440 1000L1361 1000Z' fill='hsla(330,65%,52%,.24)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M516 0L478 156L384 118ZM922 0L1044 0L933 167ZM1360 0L1288 136L1196 91ZM1440 0L1440 149L1288 136ZM1440 149L1440 222L1293 244ZM348 234L469 367L380 408ZM751 261L720 373L612 404ZM1293 244L1296 336L1238 394ZM380 408L469 367L468 474ZM612 404L720 373L735 517ZM1296 336L1440 477L1350 524ZM142 475L127 588L0 641ZM835 480L962 486L986 667ZM835 480L986 667L822 655ZM365 656L449 773L320 707ZM595 668L565 738L449 773ZM986 667L1118 584L1083 711ZM1232 602L1315 722L1215 727ZM1360 602L1440 662L1315 722ZM0 779L114 841L0 897ZM449 773L612 872L509 864ZM1083 711L1215 727L1222 878ZM1215 727L1302 849L1222 878ZM275 839L367 845L345 1000ZM275 839L345 1000L200 1000Z' fill='hsla(40,85%,50%,.16)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M750 0L828 0L686 147ZM1241 0L1360 0L1196 91ZM384 118L478 156L481 269ZM868 113L933 167L830 293ZM933 167L959 222L830 293ZM1048 121L1207 249L1059 287ZM481 269L584 220L612 404ZM830 293L864 415L720 373ZM380 408L468 474L353 485ZM469 367L612 404L468 474ZM612 404L735 517L631 474ZM720 373L835 480L735 517ZM1238 394L1350 524L1197 522ZM241 522L365 656L260 653ZM468 474L631 474L443 647ZM822 655L986 667L961 742ZM1118 584L1232 602L1215 727ZM719 793L701 861L612 872ZM961 742L1085 884L919 900ZM114 841L200 1000L144 1000ZM367 845L509 864L345 1000ZM509 864L612 872L482 1000ZM855 858L874 1000L722 1000ZM1085 884L1222 878L1159 1000ZM1085 884L1159 1000L1115 1000Z' fill='hsla(265,70%,55%,.12)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M0 0L116 129L0 128ZM98 0L249 149L116 129ZM828 0L933 167L868 113ZM1044 0L1196 91L1048 121ZM0 128L129 287L0 214ZM249 149L220 258L129 287ZM384 118L481 269L348 234ZM588 123L584 220L481 269ZM588 123L686 147L751 261ZM686 147L868 113L751 261ZM129 287L136 398L0 331ZM481 269L612 404L469 367ZM136 398L210 379L241 522ZM136 398L241 522L142 475ZM612 404L631 474L468 474ZM1055 356L1197 522L1046 490ZM241 522L353 485L365 656ZM631 474L755 598L595 668ZM962 486L1046 490L1118 584ZM1197 522L1350 524L1232 602ZM1350 524L1440 662L1360 602ZM365 656L320 707L229 723ZM986 667L1083 711L961 742ZM132 755L229 723L275 839ZM961 742L1083 711L1085 884ZM1083 711L1222 878L1085 884ZM1315 722L1440 915L1302 849ZM114 841L144 1000L0 1000ZM114 841L275 839L200 1000ZM509 864L482 1000L345 1000ZM701 861L855 858L722 1000ZM855 858L919 900L954 1000ZM1222 878L1302 849L1159 1000ZM1302 849L1361 1000L1159 1000Z' fill='hsla(215,75%,50%,.12)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3C/svg%3E");
+  /* glass-window:end */
+  --cames: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 135' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%230b0714' stroke-width='.6' stroke-linejoin='round' opacity='.28'%3E%3Cpath d='M0 38L24 52L41 31L70 47L95 30M24 52L18 96L52 112L70 47M18 96L0 118M52 112L60 135M70 47L88 92L95 88M88 92L52 112'/%3E%3C/g%3E%3C/svg%3E");
 
   --font-display: "IM Fell English SC", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-body: "Alegreya Sans", "Gill Sans", "Trebuchet MS", system-ui, sans-serif;
@@ -250,7 +259,15 @@ button { font: inherit; color: inherit; }
    rarity frame's outline, crystals included. .face is the paper, clipped to the outline. */
 .card.framed { background: none; box-shadow: none; overflow: visible; border-radius: 0; }
 .card.framed .shape { position: absolute; inset: 0; filter: drop-shadow(0 0.45em 0.4em rgba(0, 0, 0, 0.5)) var(--glow, drop-shadow(0 0 0 transparent)); transition: filter 0.2s; }
-.card.framed .face { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(170deg, var(--paper-hi), var(--paper) 55%, #b9a581); }
+.card.framed .face {
+  position: absolute; inset: 0; overflow: hidden;
+  /* A pane of glass tinted by the card's fracture: light at the top, deeper at the foot. */
+  background: linear-gradient(170deg, color-mix(in srgb, var(--fc) 20%, #f5eddb), color-mix(in srgb, var(--fc) 34%, #d4c6a8) 58%, color-mix(in srgb, var(--fc) 52%, #7d6a58));
+}
+/* Lead lines through the glass, and a streak of light across it. */
+.card.framed .face::before { content: ""; position: absolute; inset: 0; background: var(--cames) 0 0 / 100% 100%; pointer-events: none; }
+.card.framed .face::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 22%, rgba(255, 255, 255, 0.28) 34%, rgba(255, 255, 255, 0.05) 46%, transparent 58%); }
 .card.f-chip .face { border-radius: 0.8em; }
 .card .frame { position: absolute; left: -1em; top: -1em; width: 11.5em; height: 15.5em; overflow: visible; pointer-events: none; }
 .card .rarity-gem { position: absolute; left: 50%; bottom: 0.45em; width: 1.2em; height: 1.2em; transform: translateX(-50%); pointer-events: none; }
@@ -280,13 +297,16 @@ button { font: inherit; color: inherit; }
 /* The type and fracture line is not drawn on the card; the detail window shows it. */
 .card .art {
   position: absolute; left: 0.6em; right: 0.6em; top: 2.8em; height: 7.5em;
-  border-radius: 0.5em;
-  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--fc) 35%, #efe3c8), color-mix(in srgb, var(--fc) 15%, #d8c8a6));
-  box-shadow: inset 0 0 0 1px rgba(27, 19, 13, 0.45);
+  border-radius: 0.45em;
+  /* A jewel lit from behind: bright at the heart, deep at the lead edge. */
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--fc) 55%, #fff6e0), color-mix(in srgb, var(--fc) 78%, #1a1030) 115%);
+  box-shadow: inset 0 0 0 0.17em var(--lead), inset 0 0 0 0.27em rgba(255, 255, 255, 0.32), inset 0 0 1.1em rgba(11, 7, 20, 0.45);
   display: grid; place-items: center;
   overflow: hidden;
 }
-.card .art svg { width: 3em; height: 3em; opacity: 0.85; }
+.card .art svg { width: 3.4em; height: 3.4em; opacity: 0.9; filter: drop-shadow(0 0 0.25em rgba(255, 255, 255, 0.55)); }
+.card .art::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--cames) 0 0 / 100% 100%; opacity: 0.7; }
+.card .art img { position: relative; z-index: 0; }
 .card .art img { width: 100%; height: 100%; object-fit: cover; }
 .card .skills { position: absolute; left: 0.4em; right: 0.4em; bottom: 2.1em; text-align: center; font-size: 0.85em; font-weight: 700; line-height: 1.15; color: #3a2a1c; }
 .card .stats {
@@ -349,8 +369,8 @@ button, .btn { touch-action: manipulation; }
 
 .bar {
   position: absolute; left: 0; right: 0; height: 66px;
-  background: linear-gradient(#2c190d, #1f1209);
-  border-color: #a0662a; border-style: solid; border-width: 0;
+  background: linear-gradient(#150e29, #0a0615);
+  border-color: #3b2d6a; border-style: solid; border-width: 0;
 }
 .bar.top { top: 0; border-bottom-width: 4px; }
 .bar.bottom { bottom: 0; border-top-width: 4px; }
@@ -373,7 +393,7 @@ button, .btn { touch-action: manipulation; }
   cursor: pointer;
 }
 .pile.deck { background: linear-gradient(rgba(28, 18, 51, 0.6), rgba(28, 18, 51, 0.6)), var(--shard-emblem) center / 62% no-repeat, radial-gradient(circle at 50% 40%, #4b2e86, #1c1233 75%); box-shadow: 3px -3px 0 #1b2336, 6px -6px 0 #141a28, 0 6px 12px rgba(0,0,0,.5); border: 2px solid var(--fc); }
-.pile.grave { background: #1c100a; border: 2px solid #8a6a4f; box-shadow: 0 6px 12px rgba(0,0,0,.5); }
+.pile.grave { background: radial-gradient(circle at 50% 40%, #2a2038, #120c1e 80%); border: 2px solid #7d6aa8; box-shadow: 0 6px 12px rgba(0,0,0,.5); }
 .pile b { display: block; font-size: 26px; }
 
 .field-card { position: absolute; transition: left 0.3s ease, top 0.3s ease; cursor: pointer; }
@@ -673,7 +693,7 @@ button, .btn { touch-action: manipulation; }
 .hint {
   position: absolute; z-index: 110; box-sizing: border-box; overflow: auto;
   padding: 10px 12px;
-  background: rgba(20, 11, 5, 0.94); border: 2px solid var(--brass-dim); border-radius: 10px;
+  background: rgba(14, 9, 28, 0.94); border: 2px solid var(--brass-dim); border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   font-size: 14px; line-height: 1.4;
 }
@@ -685,7 +705,7 @@ button, .btn { touch-action: manipulation; }
 .hint-off { appearance: none; border: 0; background: none; padding: 0; color: var(--muted); font-size: 12.5px; text-decoration: underline; cursor: pointer; }
 .hint-chip {
   appearance: none; cursor: pointer; padding: 6px 12px; border-radius: 999px;
-  background: rgba(20, 11, 5, 0.94); border: 2px solid var(--brass-dim); font-size: 14px; font-weight: 700;
+  background: rgba(14, 9, 28, 0.94); border: 2px solid var(--brass-dim); font-size: 14px; font-weight: 700;
 }
 
 /* First-visit welcome */
@@ -1132,7 +1152,7 @@ dl.words dd { margin: 0; }
   .bld-name { font-size: 1.3rem; order: 3; flex-basis: 100%; max-width: none; }
   .bld-bar-actions .btn { font-size: 0.9rem; }
   .bld-deck {
-    position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 20; max-height: 60vh; max-height: 60dvh; background: #170d07;
+    position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 20; max-height: 60vh; max-height: 60dvh; background: #0f0a1d;
     border-radius: 14px 14px 0 0; border-width: 2px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px);
     box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
   }
@@ -1566,3 +1586,94 @@ html.intro-on .menu-inner { visibility: hidden; }
 #stage.small .hand-tip { width: 300px; font-size: 24px; }
 .card .name.two { white-space: normal; }
 .card .name.two span { max-width: 100%; }
+
+/* ============================================================ stained glass
+   Shardfall's look: the world is a shattered window. Dark lead between panes of jewel-coloured
+   glass, light coming through, and shards still falling. Cards (above), the Glass board skin,
+   buttons and panels all share it. tools/make-glass.js draws the window behind the board. */
+
+/* buttons: little panes of glass in a lead frame */
+.btn {
+  border: 2px solid var(--lead);
+  border-radius: 4px 12px 4px 12px;
+  background: linear-gradient(160deg, rgba(167, 139, 250, 0.42), rgba(70, 48, 130, 0.9) 55%, #1b1032);
+  color: #f3ecff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.26), inset 0 2px 0 rgba(255, 255, 255, 0.22), 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+.btn:hover:not(:disabled) { border-color: var(--lead); box-shadow: inset 0 0 0 1px rgba(255, 233, 170, 0.8), inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 0 14px rgba(167, 139, 250, 0.6); }
+.btn-primary { background: linear-gradient(160deg, rgba(255, 214, 130, 0.65), #b8691f 55%, #5a2a0c); color: #fff6e4; }
+.btn-primary:hover:not(:disabled) { box-shadow: inset 0 0 0 1px rgba(255, 244, 200, 0.9), inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 0 16px rgba(255, 200, 110, 0.7); }
+
+/* panels and windows: dark lead with a glass rim */
+.modal-box, .coach-box {
+  background: linear-gradient(160deg, #1e1536, #0f0a1d);
+  border: 3px solid var(--lead);
+  box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.4), 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 28px rgba(140, 90, 255, 0.22);
+}
+
+/* the Glass board */
+#stage.skin-glass #board {
+  background:
+    var(--glass-window) 0 0 / 100% 100% no-repeat,
+    radial-gradient(ellipse 75% 34% at 50% 0%, rgba(150, 110, 255, 0.28), transparent 72%),
+    radial-gradient(ellipse 75% 34% at 50% 100%, rgba(255, 190, 120, 0.2), transparent 72%),
+    radial-gradient(ellipse 60% 30% at 50% 50%, rgba(255, 255, 255, 0.07), transparent 75%),
+    #090614;
+}
+/* Falling shards, slow and glassy, and a sweep of light that crosses the window now and then. */
+.skin-glass .scene i {
+  display: block; position: absolute; top: -40px; width: 12px; height: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(167, 139, 250, 0.7) 60%, rgba(90, 60, 170, 0.5));
+  clip-path: polygon(50% 0, 100% 34%, 76% 100%, 24% 88%, 0 30%);
+  filter: drop-shadow(0 0 5px rgba(190, 160, 255, 0.8));
+  animation: altar-fall 16s linear infinite;
+}
+.skin-glass .scene i:nth-child(1) { left: 6%; animation-delay: -2s; }
+.skin-glass .scene i:nth-child(2) { left: 24%; animation-delay: -9s; animation-duration: 19s; }
+.skin-glass .scene i:nth-child(3) { left: 43%; animation-delay: -5s; animation-duration: 14s; }
+.skin-glass .scene i:nth-child(4) { left: 64%; animation-delay: -12s; animation-duration: 20s; }
+.skin-glass .scene i:nth-child(5) { left: 82%; animation-delay: -7s; }
+.skin-glass .scene i:nth-child(6) { left: 96%; animation-delay: -14s; animation-duration: 18s; }
+.skin-glass .scene::after {
+  content: ""; position: absolute; inset: -20% 0; pointer-events: none; mix-blend-mode: screen;
+  background: linear-gradient(105deg, transparent 40%, rgba(190, 160, 255, 0.16) 47%, rgba(255, 255, 255, 0.22) 50%, rgba(190, 160, 255, 0.16) 53%, transparent 60%) -120% 0 / 60% 100% no-repeat;
+  animation: glass-sweep 18s ease-in-out infinite;
+}
+@keyframes glass-sweep { 0%, 62% { background-position: -120% 0; } 100% { background-position: 260% 0; } }
+/* Each player's half is a slab of glass lit in their fracture's colour. */
+.skin-glass .side {
+  left: 12px; right: 12px; border-radius: 10px;
+  background:
+    radial-gradient(ellipse 80% 90% at 50% 100%, color-mix(in srgb, var(--fc) 30%, transparent), transparent 75%),
+    linear-gradient(rgba(10, 6, 22, 0.42), rgba(10, 6, 22, 0.55));
+  border: 3px solid var(--lead);
+  box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.35), inset 0 0 60px rgba(0, 0, 0, 0.5), 0 0 26px color-mix(in srgb, var(--fc) 40%, transparent);
+}
+.skin-glass .side.top { height: 300px; background: radial-gradient(ellipse 80% 90% at 50% 0%, color-mix(in srgb, var(--fc) 30%, transparent), transparent 75%), linear-gradient(rgba(10, 6, 22, 0.42), rgba(10, 6, 22, 0.55)); }
+.skin-glass .side.bottom { top: 432px; height: 498px; }
+/* The crack where the two worlds meet. */
+.skin-glass .rift::before {
+  content: ""; position: absolute; left: 20px; right: 20px; top: 33px; height: 10px;
+  background: linear-gradient(90deg, transparent, #b9a0ff 12%, #fff 50%, #b9a0ff 88%, transparent);
+  clip-path: polygon(0 50%, 4% 20%, 9% 70%, 15% 30%, 22% 75%, 29% 25%, 36% 70%, 43% 35%, 50% 80%, 57% 30%, 64% 72%, 71% 28%, 78% 74%, 85% 32%, 91% 68%, 96% 24%, 100% 50%, 96% 62%, 91% 100%, 85% 62%, 78% 100%, 71% 60%, 64% 96%, 57% 58%, 50% 100%, 43% 62%, 36% 96%, 29% 56%, 22% 100%, 15% 58%, 9% 96%, 4% 60%);
+  filter: drop-shadow(0 0 6px #9b6bff) drop-shadow(0 0 16px #7c3aed);
+}
+.skin-glass .lane { background: rgba(6, 3, 14, 0.3); box-shadow: inset 0 0 0 2px var(--lead), inset 0 0 0 3px rgba(190, 160, 255, 0.2), inset 0 4px 14px rgba(0, 0, 0, 0.6); }
+.skin-glass .slot { border: 2px solid var(--lead); background: radial-gradient(circle at 50% 40%, rgba(167, 139, 250, 0.16), rgba(10, 6, 22, 0.5)); box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.22), inset 0 0 12px rgba(120, 80, 220, 0.25); }
+.skin-glass .bar { background: linear-gradient(#150e29, #0a0615); border-color: var(--lead); box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.3); }
+.skin-glass .bar.top { box-shadow: inset 0 -1px 0 rgba(190, 160, 255, 0.55); }
+.skin-glass .bar.bottom { box-shadow: inset 0 1px 0 rgba(190, 160, 255, 0.55); }
+.skin-glass .zone-label { color: rgba(225, 212, 255, 0.62); }
+.skin-glass .log { color: rgba(228, 218, 255, 0.7); text-shadow: 0 1px 2px #000; }
+.skin-preview.skin-glass { background: var(--glass-window) 0 0 / 100% 100% no-repeat, linear-gradient(#1d1238, #090614); }
+
+/* A card played from nowhere in particular assembles out of light, shard by shard. */
+.enter-assemble .card { animation: assemble 0.75s ease-out; }
+@keyframes assemble {
+  0% { opacity: 0; transform: scale(1.35); filter: brightness(2.4) saturate(0.4); clip-path: polygon(50% 50%, 50% 50%, 50% 50%); }
+  40% { opacity: 1; filter: brightness(1.8); clip-path: polygon(50% -10%, 110% 30%, 100% 110%, -10% 100%, -10% 20%); }
+  70% { transform: scale(0.97); filter: brightness(1.2); clip-path: none; }
+  100% { transform: none; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) { .skin-glass .scene i, .skin-glass .scene::after, .enter-assemble .card { animation: none; } }

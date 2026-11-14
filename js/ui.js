@@ -32,7 +32,7 @@ const U = {
   almanacTab: "cards", almanacFilter: "All", almanacReturn: "menu", guideReturn: "menu",
   scale: 1,
   tutorial: null,        // the running tutorial (js/tutorial.js), if any
-  skin: PREFS.get("board", "altar"),   // board look: altar, battlefield or warmap (chosen in Settings)
+  skin: PREFS.get("looks") === 2 ? PREFS.get("board", "glass") : "glass",   // board look: glass, altar, battlefield or warmap (chosen in Settings)
   turnColor: null,       // player whose color the turn crystal shows (it changes when the falling shard lands)
   manaSeen: [], manaSpent: [],   // last mana shown per player, and crystals just spent
   lungeVec: new Map(),   // uid -> how far an attacker swoops toward its target
@@ -61,7 +61,7 @@ function medal(group, cls = "medal") {
   return `<svg class="${cls}" viewBox="0 0 24 24" style="--g-bg:${color}" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="${color}" stroke="#1b130d" stroke-width="1"/><g color="#f6ecd2">${GLYPHS[group] || GLYPHS["N/A"]}</g></svg>`;
 }
 function glyph(group) {
-  return `<svg viewBox="0 0 24 24" style="--g-bg:transparent" aria-hidden="true"><g color="#3a2a1c">${GLYPHS[group] || GLYPHS["N/A"]}</g></svg>`;
+  return `<svg viewBox="0 0 24 24" style="--g-bg:transparent" aria-hidden="true"><g color="#1a1226">${GLYPHS[group] || GLYPHS["N/A"]}</g></svg>`;
 }
 
 // Optional painted art: assets/cards/<ArtKey>.png. Each key is probed once.
@@ -600,8 +600,9 @@ function manaHTML(p, side) {
 }
 
 // Board skins change only how the table looks, never the layout or the rules.
-// The Crystal Altar is the main board; the others can be picked in Settings.
+// Stained Glass is the main board; the others can be picked in Settings.
 const SKINS = [
+  { id: "glass", name: "Stained Glass", desc: "A shattered window: lead lines, jewel light, shards still falling" },
   { id: "altar", name: "Crystal Altar", desc: "A glowing stone altar under the falling shards" },
   { id: "battlefield", name: "Shattered Battlefield", desc: "Floating islands over a shard rift, each side styled after its deck" },
   { id: "warmap", name: "War Map", desc: "An inked battle map by candlelight" },
@@ -610,6 +611,7 @@ function setSkin(id) {
   if (!SKINS.some(k => k.id === id)) return;
   U.skin = id;
   PREFS.set("board", id);
+  PREFS.set("looks", 2);   // a board picked after the Stained Glass update is remembered
 }
 function skinButtons(attr) {
   return SKINS.map(k => `<button type="button" class="skin-tile" ${attr}="${k.id}" aria-pressed="${k.id === U.skin}"><span class="skin-preview skin-${k.id}"></span><strong>${esc(k.name)}</strong><span>${esc(k.desc)}</span></button>`).join("");

@@ -300,7 +300,7 @@ function skillSpotlight(uid, text) {
 const FACTION_ENTRANCE = { Simple: "enter-sprout", Monkey: "enter-bounce", Zombie: "enter-rise", Fighter: "enter-stance", Digital: "enter-glitch" };
 function spawnClass(sp) {
   if (sp.big) return "spawn-7";
-  return FACTION_ENTRANCE[sp.faction] || "spawn-" + sp.cost;
+  return FACTION_ENTRANCE[sp.faction] || "enter-assemble";
 }
 
 // ---------------------------------------------------------------------------
