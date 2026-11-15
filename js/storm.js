@@ -8,10 +8,10 @@ const storm = (() => {
   const cv = $("#storm"), ctx = cv.getContext("2d");
   // Shard colors: [light core, deep edge, glow rgb]. Later each faction could get its own.
   const PALETTE = [
-    ["#ffffff", "#b9a4ff", "190,170,255"],
-    ["#f1e8ff", "#7c3aed", "139,92,246"],
-    ["#e9ddff", "#9b6bff", "167,128,255"],
-    ["#ffffff", "#d8ccff", "225,215,255"],
+    ["#ffffff", "#bcd8ff", "190,220,255"],
+    ["#eef6ff", "#3b82f6", "90,150,255"],
+    ["#e6f1ff", "#6ba3ff", "120,170,255"],
+    ["#ffffff", "#d3e6ff", "210,230,255"],
   ];
   // Outline of a crystal shard (unit size): a long, uneven hexagon with a sharp tip.
   const SHAPE = [[0, -1.7], [0.55, -0.55], [0.45, 0.85], [0, 1.25], [-0.5, 0.75], [-0.58, -0.6]];
@@ -43,15 +43,15 @@ const storm = (() => {
 
   function sky(t) {
     const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, "#06030d"); g.addColorStop(0.55, "#120a20"); g.addColorStop(1, "#1a0c16");
+    g.addColorStop(0, "#04060f"); g.addColorStop(0.55, "#0a1226"); g.addColorStop(1, "#0b1026");
     ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
     // a faint violet glow over the horizon where the shards land
     const rg = ctx.createRadialGradient(w / 2, h * 1.1, 10, w / 2, h * 1.1, h * 0.8);
-    rg.addColorStop(0, "rgba(150,90,255,0.22)"); rg.addColorStop(1, "rgba(150,90,255,0)");
+    rg.addColorStop(0, "rgba(90,140,255,0.22)"); rg.addColorStop(1, "rgba(90,140,255,0)");
     ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h);
     for (const s of stars) {
       ctx.globalAlpha = 0.35 + 0.35 * Math.sin(t * 1.3 + s.t);
-      ctx.fillStyle = "#e8e0ff";
+      ctx.fillStyle = "#e6f0ff";
       ctx.fillRect(s.x, s.y, s.r, s.r);
     }
     ctx.globalAlpha = 1;
