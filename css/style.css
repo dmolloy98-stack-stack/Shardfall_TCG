@@ -1677,3 +1677,24 @@ html.intro-on .menu-inner { visibility: hidden; }
   100% { transform: none; filter: none; }
 }
 @media (prefers-reduced-motion: reduce) { .skin-glass .scene i, .skin-glass .scene::after, .enter-assemble .card { animation: none; } }
+
+/* ------------------------------------------------------------ bigger touch areas
+   The small buttons keep their look but get an invisible, thumb-sized area around them.
+   Buttons on the shrunken table use --tap (set in js/ui.js: 44 screen pixels in table units),
+   so on a desktop screen, where the table is full size, almost nothing changes. The hint and the
+   welcome link sit outside the table and only grow on touch screens. */
+.stage-btn, .mana-token { position: relative; }
+.stage-btn { position: absolute; }
+.stage-btn::after, .mana-token::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: max(100%, var(--tap, 0px)); height: max(100%, var(--tap, 0px));
+  transform: translate(-50%, -50%);
+}
+@media (pointer: coarse) {
+  .hint-x, .hint-off, .link-btn, .coach-quit { position: relative; }
+  .hint-x::after, .hint-off::after, .link-btn::after, .coach-quit::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%);
+  }
+  .si-token { position: relative; }
+  .si-token::after { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
+}

@@ -1248,6 +1248,9 @@ function fitStage() {
   }
   $("#stage").classList.toggle("small", U.small);
   $("#stage-wrap").classList.toggle("phone", U.phone);
+  // How big 44 screen pixels (a comfortable thumb) is in the table's own units. The board is
+  // shrunk to fit a phone, so its little buttons borrow this for an invisible bigger tap area.
+  document.documentElement.style.setProperty("--tap", (44 / U.scale).toFixed(1) + "px");
   $("#stage").style.transform = `translate(${(bw - W * U.scale) / 2}px, ${(bh - cropH * U.scale) / 2 - cropTop * U.scale}px) scale(${U.scale})`;
 }
 // Phones resize the page when the browser bars slide in and out, and on rotation.
