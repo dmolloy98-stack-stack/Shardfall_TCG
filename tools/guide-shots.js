@@ -199,7 +199,7 @@ function showDiagram(html) {
       <div style="font-size:54px;color:#ffd27a;line-height:1">⚔</div>
       <div style="display:grid;gap:10px;justify-items:center">${lab("Defender", "Simple Farmer")}${card("Simple Farmer")}</div></div>
       <ol style="margin:0;padding-left:1.3em;font-size:19px;line-height:1.5;max-width:560px">
-        <li><b style="color:#ffe3a8">Compare ⚡ Speed.</b> The Bowman's 2 beats the Farmer's 1, so the Bowman strikes first.</li>
+        <li><b style="color:#ffe3a8">The Bowman has Swift (»),</b> so it strikes first. Without Swift, both would strike at the same time.</li>
         <li><b style="color:#ffe3a8">The Bowman deals its ⚔ Attack</b> (1) to the Farmer's ♥ Health (1).</li>
         <li><b style="color:#ffe3a8">The Farmer drops to 0 Health</b> and is knocked out before it can strike back.</li></ol>`;
   });

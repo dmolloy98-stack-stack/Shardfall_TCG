@@ -13,9 +13,10 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 
 - **IDs are permanent.** `CardID`, `DeckID`, `SkillID` and `FactionID` link the files together. You can rename what players see (`Name`) any time, but don't change an ID once a deck uses it.
 - **Commas inside a value** need the whole value in double quotes: `"When played, search your deck"`. Spreadsheet apps do this for you.
-- **Stats** are written `Attack+Health+Speed`, for example `2+1+1`. Use `---` for cards without stats.
+- **Stats** are written `Attack+Health`, for example `2+1`. Use `---` for cards without stats.
 - **Skills** are joined with `+`, for example `Signal+Rally`. Use `---` for none. Skill names must match the `Name` column in `skills.csv`.
-- **Ability text** describes what a card does. Changing the numbers on a card (cost, stats, skills) works straight away. A brand-new *ability* also needs game code, so ask for that when you add one.
+- **Ability text** is what players read. The **Effect** column is what the game actually does (see "Writing effects" below). Keep the two saying the same thing. Changing numbers in either works straight away; most new abilities can be built from the effect actions without any code.
+- **Card and deck builder.** New cards and decks can also be designed in the Google Sheet "Shardfall – card and deck builder" and added by Claude; see CLAUDE.md.
 - **Changes are saved per file.** If you edit in a spreadsheet, export only the sheet you changed.
 
 ## The files
@@ -29,13 +30,116 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 | Name | Name shown on the card |
 | Rarity | `Basic`, `Rare`, `Exotic`, `Divine` or `Unknown` (see rarities.csv) |
 | Type | `Character`, `Spell`, `Equipment` or `Area` |
-| Race | `Animal`, `Undead`, `Goblin`, or `N/A` |
-| Faction | A FactionID from factions.csv, or `N/A` for neutral cards |
-| Stats | `Attack+Health+Speed`, or `---` |
+| Tribes | A character's species, joined with `+` (`Human+Animal`): `Human`, `Animal`, `Undead`, `Cyber`, `Plant`, `Goblin`. `---` for anything that isn't a character. A new tribe only needs its name here |
+| Fracture | Where a card is from: a FactionID from factions.csv, or `N/A` for an Unbound card. A hybrid lists two, joined with `+` (`Fighter+Monkey`); the first sets its color. (The column was called Faction; the file `factions.csv` keeps its name) |
+| Stats | `Attack+Health`, or `---` |
 | Skills | Skill names joined with `+`, or `---` |
 | Ability | The card's rules text |
 | Description | Optional flavor text |
 | ArtKey | Picture name: the game shows `assets/cards/<ArtKey>.png` if that file exists |
+| Effect | What the card does, written with the actions below. Leave empty for a card with no ability |
+| Classes | A character's job, joined with `+` (`Master+Fighter`): `Warrior`, `Mage`, `Scout`, `Guardian`, `Worker`, `Student`, `Master`, `Fighter`. `---` for anything that isn't a character |
+
+### Writing effects (the Effect column)
+
+An effect is one or more **clauses** separated by `;`. A clause starts with **when** it happens, then a colon, then one or more **actions** separated by commas:
+
+```
+play: target character harm, damage target 1+boost
+endTurn: buff self 0 2
+cost: set 1 if #allies.Monkey>=3
+```
+
+If a value has a comma in it (any effect with two actions), the whole Effect cell needs double quotes. Spreadsheet apps add them for you. If an effect has a mistake, the game shows an error naming the card instead of starting.
+
+**When**
+
+| When | Happens |
+|---|---|
+| `play` | A spell is cast, a Signal character enters, an area is played, or an ability is used (IP Man, Kenshi's Blade, Data Transfer) |
+| `enter` | The character enters the field |
+| `endTurn` | At the end of its owner's turn. On equipment: at the end of the holder's owner's turn |
+| `attack` | The character attacks |
+| `hurt` | The character takes damage and survives |
+| `reanimate` | The character comes back through Reanimate |
+| `allyLevelUp` | Another of its owner's characters levels up |
+| `gearEnters` | Equipment enters its owner's field |
+| `maxLevel` | The character reaches its last level |
+| `cost` | Changes the card's mana cost: `reduce <number>` or `set <number>` |
+| `aura` | A lasting bonus while the character or area is on the field: `aura: buff <who> <attack> <health>`, or a skill: `aura: grant <who> <Skill>` (Parry and Swift). This is how an area boosts characters, for example `aura: buff allies.Monkey 1 0` |
+| `grants` | Equipment only: the holder has these skills, for example `grants: Swift` |
+| `counter` | Makes the card a counter spell and says what it can stop: `character`, `spell`, `spellSingle` (a spell aimed at one character or area) or `spellMany` (a spell not aimed at one thing). For example `counter: character spell`. A counter is not played on your own turn: when the other player plays a card it can stop, the game asks you, and it costs mana you left unspent |
+| `rule` | Switches on one of the game's special rules for this card (table below), for example `rule: redirect` |
+
+**Special rules.** A few cards, mostly the champions, bend the core rules. Each of those rules has a name, and any card can be given one in a `rule:` clause. The game never looks at a card's name, so you can rename a card freely, and a new card can reuse a rule.
+
+| Rule | What it does | Used by |
+|---|---|---|
+| `lord <Faction> <n>` | While it's on the field (either side), that faction's cards get +n to each stat, its spells deal or give n more, and curse spells can't target its cards | The Simplistic |
+| `redirect` | Once per turn, the first damage to it or its player goes to an enemy of its player's choice | IP Man |
+| `shepherd <Faction>` | When another of your cards of that faction dies: absorb its stats, or return it to your hand | Soul Shepard |
+| `defend <n>` | +n to all stats while defending | The Man Ape |
+| `sacrifice <Faction>` | After your Battle phase you may sacrifice one of that faction for +1 to all stats and a full heal | The Man Ape |
+| `freeEquip` | Your equipment costs nothing | Sensei |
+| `equipCostMax <n>` | Equipping this character costs at most n | Weapons Enthusiast |
+| `levelGain <attack> <health>` | What each Level Up gives it | Pesky Programmer |
+| `levelCap <n or none>` | How many times it can Level Up | Boss Level |
+| `survive <fights> <CardID>` | Transforms into that card after living through that many fights | Black Belt Student |
+| `activate` | An area whose play effect you may use once in each of your Setup phases | Data Transfer |
+| `strike` | Equipment whose play effect its holder may use once per Battle phase | Kenshi's Blade |
+| `teach <Skill>` | Equipment that gives its holder the skill for good | API Key |
+
+**Picking a target.** In a `play` clause, start with `target <kind> <intent>`, then use `target` as the "who" in the actions:
+
+- kind: `character`, `characterOrPlayer` or `area`. Narrow it with dots: `character.enemy`, `character.mine`, `character.leveler` (has Level Up), `character.mine.levels` (has kept levels).
+- intent: `harm`, `help` or `steal`. This tells the computer player how to use it.
+
+**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). Narrow a group with dots: a fracture (`allies.Monkey`), a tribe (`allies.Undead`), a class (`allies.Student`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `swift`, `tower`, `strongest`. Add the kind in front when one name is two things: Fighter is both a fracture and a class, so `allies.Fighter` means the fracture and `allies.class:Fighter` the class (`fracture:`, `tribe:` and `class:` all work). Filters add up: `allies.class:Student.class:Fighter` is your Students who are also Fighters.
+
+**Numbers** can be whole numbers or these words, joined with `+` or `-`:
+
+| Word | Means |
+|---|---|
+| `#allies.Monkey` | How many there are |
+| `#allies.Monkey>=3` | 1 if there are at least 3, otherwise 0 |
+| `boost` | +3 on Simple spells while The Simplistic is out |
+| `ripen` | 1 after Ripen was cast |
+| `amount` | The damage being redirected (IP Man) |
+
+Any action can end with `if <number>`: it only happens when the number is more than 0, for example `if #allies.simple_farmer>=3`.
+
+**Actions**
+
+| Action | Does |
+|---|---|
+| `damage <who> <n>` | Deals n damage to characters or players |
+| `damageAll <n>` | n damage to every character and both players |
+| `buff <who> <attack> <health>` | Adds to attack and health (use negative numbers to lower them) |
+| `shrink <who> <n>` | Loses n attack and n health |
+| `setStats <who> <attack> <health>` | Stats become exactly these |
+| `loseAttack <who> <n>` | Loses n attack (not below 0) |
+| `grow <who> <n>` | Gains n health for good (raises its full health too) |
+| `levelUp <who> <n>` | Levels up n times |
+| `destroy <who>` | Destroys the character, ignoring Reanimate |
+| `destroyArea <who>` | Destroys an area |
+| `grant <who> <Skill> [temp]` | Gives a skill; `temp` = until its owner's next turn |
+| `removeSkill <who> <Skill>` | Takes a skill away |
+| `disable <who>` | Removes all skills and abilities |
+| `convert <who> [reanimate]` | Turns it into a Zombie under your control |
+| `transform <who> <CardID>` | Becomes another card |
+| `heal <me/foe> <n>` | The player gains n health |
+| `maxMana <me/foe> <n>` | Changes maximum mana (negative to take it away) |
+| `draw <me/foe> <n>` | Draws n cards |
+| `discardHand <me/foe>` | Discards the whole hand |
+| `fetch <CardID>` | Takes that card from your deck into your hand |
+| `shuffle` | Shuffles your deck |
+| `summon <CardID> <n>` | Puts n new copies onto your field |
+| `summonFromDeck <CardID>` | Moves that card from your deck onto your field |
+| `flag ripen` | Remembers that Ripen was cast |
+| `say <who> "TEXT" <color>` | Shows a word over the card, like `"+1 ATK" #ffe066` |
+| `script <name>` | Runs a one-off ability written in `js/effects.js` |
+
+**Cards whose rules stay in code.** A few cards change how the game itself works, so their Effect is empty or a `script`: The Simplistic, IP Man (his redirect), The Man Ape, Soul Shepard, Boss Level, Pesky Programmer, Sensei, Weapons Enthusiast, Kenshi's Blade (the once-per-battle use), Black Belt Student, API Key (the Level Up it gives). Ask for code when a new card needs a rule like these.
 
 ### decks.csv: the starter decks shown on the menu
 
@@ -69,6 +173,7 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | EdgeR, EdgeG, EdgeB | Card edge color, each from 0 to 1 |
 | EquipmentAttachCost | Mana to attach equipment of this rarity from the equipment row |
 | DisplayOrder | Sort order |
+| Frame | Card frame shape: `chip` (rounded), `cut` (cut corners), `faceted` (uneven cuts and a shaded edge), `crystal` (crystals past the corners) or `shard` (jagged edge, spikes, cracks and a glint). Rarer cards should get spikier frames. |
 
 ### factions.csv
 
@@ -86,10 +191,25 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 |---|---|
 | starting_player_health | Health each player starts with |
 | starting_hand_size | Cards in the opening hand |
+| max_hand_size | Most cards a hand can hold; a card drawn or returned to a full hand goes to the graveyard |
 | mana_growth_per_turn | Maximum mana gained each turn |
 | max_field_backline | Most cards on one side's backline (areas and stored equipment together) |
 | max_field_characters | Optional. Leave it out for no limit on characters (the default) |
+| event_every_rounds | A random event hits the table every this many rounds (a round is one player's turn, shown as Round). 0 turns events off |
+| event_warning_rounds | How many rounds ahead the next event is announced |
 | min_deck_size, max_copies, max_unknown_copies, max_unknown_kinds | Deck-building rules (max_unknown_kinds: how many different Unknown cards, the champions, a deck may hold) |
+
+### events.csv: random events
+
+Every few rounds (see `event_every_rounds` in game_rules.csv) one of these hits the table for both players and lasts one round. The next one is announced two rounds ahead.
+
+| Column | Meaning |
+|---|---|
+| EventID | Permanent ID. The game's rules key on it, so don't change it |
+| Name | Name shown on the warning card |
+| Description | One short sentence shown under the name |
+
+You can rename an event or reword its description here. What an event *does* is written in `js/engine.js` ("Random events"), so a new event needs code. The four today: `spell_surge` (spells cost 1 less), `tremor` (every character takes 1 damage), `windfall` (each player draws an extra card; a full hand or empty deck is skipped) and `amplified_areas` (area bonuses are doubled).
 
 ### phases.csv and ui_text.csv
 

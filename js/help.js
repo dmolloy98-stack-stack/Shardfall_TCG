@@ -30,17 +30,17 @@ function hintText() {
     const g = guards(opponent());
     if (g.length === 1) return `${g[0].name} has ${guardSkill(g[0])} (${DATA.skills[guardSkill(g[0])].icon}), so your attack has to go to it first.`;
     if (g.length) return "The other side has several Challenge or Tower characters. Your attack has to go to one of them first.";
-    return "Tap an enemy glowing red to fight it (or drag onto it), or attack the player directly. The badge above each enemy shows how the fight ends; ⚡ means your character strikes first.";
+    return "Tap an enemy glowing red to fight it (or drag onto it), or attack the player directly. Both characters hit at the same time, unless one has Swift (»). The badge above each enemy shows how the fight ends.";
   }
   if (S.phase === PHASE.DRAW) return "Your turn starts with the Draw step. Press “Draw card” to take the top card of your deck.";
   if (S.phase === PHASE.SETUP) {
     if (p.hand.some(c => canPlay(c, p))) return `Setup: cards glowing green in your hand fit your ${p.mana} mana. Drag one onto the table, or tap it to read it first.`;
-    if (p.manaToken && p.hand.some(c => playCost(c, p) === p.mana + 1 && !UNIMPLEMENTED.has(c.name))) return "Tap the +1 beside your mana to use your one-time bonus mana and afford one more card.";
+    if (p.manaToken && p.hand.some(c => playCost(c, p) === p.mana + 1 && !counterKinds(c))) return "Tap the +1 beside your mana to use your one-time bonus mana and afford one more card.";
     if (p.field.equips.some(e => canAttachFromField(e, p))) return `You can attach equipment saved on your ${BACKLINE()}: tap it, then tap a character. Or press “To battle →”.`;
-    return "Nothing else in your hand fits your mana this turn. Press “To battle →” to attack. Unspent mana doesn't carry over.";
+    return "Nothing else in your hand fits your mana this turn. Press “To battle →” to attack. Mana you leave unspent can pay for a counter spell on the other player's turn, then it is gone.";
   }
   if (S.phase === PHASE.BATTLE) {
-    if (p.field.chars.some(c => canAttack(c))) return "Battle: characters with a green outline can attack. Tap one, then tap an enemy or attack the player directly. Each character attacks once per turn.";
+    if (p.field.chars.some(c => canAttack(c))) return "Battle: characters with a green outline can attack. Tap one, then tap an enemy or attack the player directly. Or press All attack to send every ready character at the player. Each character attacks once per turn.";
     if (p.field.chars.length) return "None of your characters can attack right now. New characters wait a turn unless they have Rush, and Tower characters never attack. Press “To end →”.";
     return "You have no characters to attack with. Press “To end →”.";
   }
@@ -75,8 +75,16 @@ function renderHint() {
   const gutter = sr.left - wr.left;
   box.classList.toggle("narrow", gutter >= 120 && gutter < 200);
   box.style.maxHeight = wr.height - 16 + "px";
-  if (gutter >= 120) {
-    const w = Math.min(gutter - 12, 300);
+  if (U.phone) {
+    // between the two players' health panels at the left
+    const opp = document.querySelector("#sideinfo .si-player.opp"), me = document.querySelector("#sideinfo .si-player.me");
+    const w = Math.min(gutter - 12, 220);
+    const top = opp ? opp.getBoundingClientRect().bottom + 8 : wr.top + 8;
+    const bottom = me ? me.getBoundingClientRect().top - 8 : wr.bottom - 8;
+    box.classList.add("narrow");
+    Object.assign(box.style, { left: wr.left + (gutter - w) / 2 + "px", width: w + "px", top: top + "px", bottom: "", maxHeight: Math.max(40, bottom - top) + "px" });
+  } else if (gutter >= 120) {
+    const w = Math.min(gutter - 12, U.small ? 220 : 300);
     Object.assign(box.style, { left: wr.left + (gutter - w) / 2 + "px", width: w + "px", top: "", bottom: "" });
     box.style.top = Math.max(wr.top + 8, sr.top + sr.height * 0.5 - box.offsetHeight / 2) + "px";
   } else {
@@ -95,7 +103,7 @@ function renderControls() {
   const sr = document.getElementById("stage").getBoundingClientRect();
   const wr = document.getElementById("stage-wrap").getBoundingClientRect();
   const gutter = wr.right - sr.right;
-  if (U.screen !== "game" || !S || !U.small || U.tutorial || gutter < 96) { bar.hidden = true; return; }
+  if (U.screen !== "game" || !S || !U.small || U.tutorial || gutter < 88) { bar.hidden = true; return; }
   const board = document.getElementById("board");
   const btn = (act, cls = "") => {
     const b = board.querySelector(`[data-act="${act}"]`);
@@ -103,9 +111,13 @@ function renderControls() {
     return `<button type="button" class="btn ${cls}" data-press="${act}" ${b.disabled ? "disabled" : ""}>${esc(b.textContent.trim())}</button>`;
   };
   let h = btn("menu", "btn-small");
+  // Full screen hides the browser's bars, which gives the board noticeably more room.
+  // Phones that can't do it (iPhone browsers) don't get the button.
+  if (document.fullscreenEnabled && !document.fullscreenElement) h += `<button type="button" class="btn btn-small" data-press="fullscreen">⛶ Full screen</button>`;
   if (U.curtain) h += btn("curtain", "btn-primary");
-  else if (U.ended) h += btn("again", "btn-primary") + btn("tomenu");
+  else if (U.ended) h += btn("camp-next", "btn-primary") + btn("again", U.campaign ? "" : "btn-primary") + btn("camp-map") + btn("tomenu");
   else {
+    h += btn("faceall", "danger");
     h += btn("face", "danger");
     if (U.armed || U.selected || (S.pending?.kind === "target" && !S.pending.required && !S.players[S.pending.owner].isAI)) h += `<button type="button" class="btn" data-press="cancel">Cancel</button>`;
     h += btn("phase", S.phase === PHASE.DRAW ? "btn-primary" : "");
@@ -113,14 +125,58 @@ function renderControls() {
   }
   bar.hidden = false;
   bar.innerHTML = h;
-  const w = Math.min(gutter - 16, 190);
-  Object.assign(bar.style, { left: sr.right + (gutter - w) / 2 + "px", width: w + "px", top: wr.top + 8 + "px", height: wr.height - 16 + "px" });
+  // A slim column against the screen edge, so the buttons stay out of the board's way.
+  const w = Math.max(80, Math.min(gutter - 12, 118));
+  Object.assign(bar.style, { left: wr.right - w - Math.min(8, (gutter - w) / 2) + "px", width: w + "px", top: wr.top + 6 + "px", height: wr.height - 12 + "px" });
 }
 document.getElementById("controls").addEventListener("click", e => {
   const b = e.target.closest("[data-press]");
   if (!b) return;
   if (b.dataset.press === "cancel") cancelSomething();
+  else if (b.dataset.press === "fullscreen") goFullscreen();
   else document.querySelector(`#board [data-act="${b.dataset.press}"]`)?.click();
+});
+
+function goFullscreen() {
+  document.documentElement.requestFullscreen?.({ navigationUI: "hide" })
+    .then(() => screen.orientation?.lock?.("landscape").catch(() => {}))   // Android keeps it sideways
+    .catch(() => {})
+    .finally(() => setTimeout(onResize, 200));
+}
+document.addEventListener("fullscreenchange", () => setTimeout(onResize, 100));
+
+// On a phone held sideways the table's top and bottom strips are cut off (fitStage), so
+// each player's health, mana and hand size are shown at the left of the table instead.
+// Tapping a player's panel taps their health crystal on the table (to target them).
+function renderSideInfo() {
+  const box = document.getElementById("sideinfo");
+  if (U.screen !== "game" || !S || !U.phone) { box.hidden = true; return; }
+  const sr = document.getElementById("stage").getBoundingClientRect();
+  const wr = document.getElementById("stage-wrap").getBoundingClientRect();
+  const gutter = sr.left - wr.left;
+  const board = document.getElementById("board");
+  const panel = (p, cls) => {
+    const plate = board.querySelector(`.plate[data-player="${p.idx}"]`);
+    const state = ["targetable", "attackable", "danger", "critical"].filter(k => plate?.classList.contains(k)).join(" ");
+    const tier = lifeTier(p).cls;
+    const token = cls === "me" ? board.querySelector('[data-act="token"]') : null;
+    const tokenBtn = token ? `<button type="button" class="mana-token si-token" data-si="token" ${token.disabled ? "disabled" : ""} title="${esc(token.title)}">+1</button>` : "";
+    return `<div class="si-player ${cls} ${state}" data-player="${p.idx}" style="--pc:${PLAYER_COLORS[p.idx]}" role="button" tabindex="0" aria-label="${esc(p.name)}: ${p.health} health, ${p.mana} of ${p.manaMax} mana, ${p.hand.length} cards in hand">
+      <div class="si-life">${crystalSVG("life-crystal " + tier, tier === "low" ? 2 : 0)}<b>${Math.max(0, p.health)}</b></div>
+      <div class="si-text"><span class="si-name">${esc(p.name)}</span>
+        <span class="si-mana">${crystalSVG("mana-crystal lit")}<b>${p.mana}</b>/${p.manaMax}${tokenBtn}</span>
+        <span class="si-hand">Hand ${p.hand.length} · Deck ${p.deck.length}</span></div>
+    </div>`;
+  };
+  box.innerHTML = panel(S.players[1 - viewIdx()], "opp") + panel(S.players[viewIdx()], "me");
+  box.hidden = false;
+  const w = Math.max(96, Math.min(gutter - 10, 200));
+  Object.assign(box.style, { left: wr.left + Math.max(4, (gutter - w) / 2) + "px", width: w + "px", top: wr.top + 6 + "px", height: wr.height - 12 + "px" });
+}
+document.getElementById("sideinfo").addEventListener("click", e => {
+  if (e.target.closest('[data-si="token"]')) { document.querySelector('#board [data-act="token"]')?.click(); return; }
+  const p = e.target.closest(".si-player");
+  if (p) document.querySelector(`#board .plate[data-player="${p.dataset.player}"]`)?.click();
 });
 
 // Held upright, a phone shows the board very small. Suggest turning it sideways,

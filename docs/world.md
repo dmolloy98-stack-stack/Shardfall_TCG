@@ -17,7 +17,7 @@ Edit this file whenever the story changes. Open questions are listed at the end.
 - Every card is a shard, and each shard holds a power of its own. Every card should
   feel meaningful.
 - The more shards a faction holds, the better its chances of survival. That is what the
-  five factions fight over.
+  factions fight over.
 - In the story and flavor text, cards can be called shards. **In the rules and on
   buttons, they stay "cards"**, so new players aren't confused.
 
@@ -30,24 +30,47 @@ Edit this file whenever the story changes. Open questions are listed at the end.
   whole again, so the shards stop falling.
 - The story is told from a distance (no "you" in narration), for now.
 
-## The five factions
+## Fractures, tribes and classes
 
-Each faction comes from a different world.
+Every card has three kinds of label, so cards can work together in more than one way.
 
-| Faction | Champion (Unknown card) | Personality |
-|---|---|---|
-| Simple | The Simplistic | TBD |
-| Monkey | The Man Ape | TBD |
-| Zombie | Soul Shepard | TBD |
-| Fighter | IP Man | TBD |
-| Digital | Boss Level | TBD |
+- **Fracture** is where a card is from: the shattered world it came out of. Today's five are
+  Simple, Monkey, Zombie, Fighter and Digital. A card from none is **Unbound**. A few cards
+  are from two fractures (Master Rat is Fighter and Monkey; Weapons Enthusiast is Fighter and
+  Simple): a shard where two worlds fused. In the data this column was once called Faction.
+- **Tribe** is what a character is: Human, Animal, Undead, Cyber, Plant or Goblin. A character
+  can have two (The Man Ape is Human and Animal; The Simplistic is Cyber and Human). A Zombie
+  infection adds Undead to the tribes a character already has.
+- **Class** is what a character does: Warrior, Mage, Scout, Guardian, Worker, Student, Master
+  or Fighter. A character can have two. Fighter-fracture characters are also the Fighter class.
+- Only characters have tribes and classes. Spells, equipment and areas may care about them
+  ("your Students", "Humans") but don't have their own.
+- Big bonuses stay tied to a fracture (Jungle, Simpledom, Primeval Forest, Arboreal
+  Intelligence); small ones can reach a tribe or class.
+- The labels are in `data/cards.csv` (Tribes, Fracture, Classes) and shown on the card with
+  placeholder symbols, until the art is made. The owner reviews them in the card sheet.
+
+## The factions
+
+Each faction comes from a different world (a fracture). More factions can join at any time, so
+the story never fixes how many there are.
+
+| Faction | Champion (Unknown card) | Personality | How the computer plays it |
+|---|---|---|---|
+| Simple | The Simplistic | A cheerful, stubborn homebody who insists everything was fine before the Shardfall. Short, calm sentences, and it repeats itself word for word | Steady: plans one play at a time and does not chase the player |
+| Monkey | The Man Ape | A loud, boasting troop boss who hoards shards like bananas. Loyal to the troop, yet sacrifices cousins without guilt | Territorial: keeps a big board, sacrifices readily, and attacks harder once below half health |
+| Zombie | Soul Shepard | A gentle, sad keeper of the fallen who never argues. Kind first, unsettling second | Patient collector: builds a swarm, takes fallen Zombies back into hand, strikes late |
+| Fighter | IP Man | A calm, polite master who bows before and after every fight. Treats a loss as a lesson. Grieving under the calm | Patient: waits for a clean exchange and keeps IP Man at home for his redirect |
+| Digital | Boss Level | A smug final boss that narrates its own phases ("LEVEL UP", "CRITICAL HIT") | Confident early (grows its team), dangerous late (goes for the player from round 5) |
 
 - The champion is each faction's "top dog" card, of Unknown rarity.
 - **Deck rule:** a deck holds only one kind of Unknown card (its champion), with up to
   2 copies. This is `max_unknown_kinds` and `max_unknown_copies` in
   `data/game_rules.csv`.
-- Champions' personalities, and the art that shows them, are still to be decided.
-- Later, champions may speak during matches (taunts, reactions).
+- Champions speak during campaign matches: a line in the match log and a speech bubble by
+  their health plate, at most one every 7 seconds and 8 a match. The lines, the one-line
+  tag on the story card and the computer's play style are in `js/champions.js`.
+- Their art is still to come.
 
 ## Tone
 
@@ -61,14 +84,36 @@ Each faction comes from a different world.
 - Clues are scattered **everywhere, but hidden well enough that they're very hard to
   notice**, like the clues to the One Piece in *One Piece*.
 - Places for clues: card descriptions (flavor text, mostly empty today), small art
-  details, the intro, names, and the order of things.
+  details, the intro, names, champion lines, and the order of things.
 - Keep a log of every clue below, so the story stays consistent.
+
+### The truth (spoilers, never stated outright in the game yet)
+
+- **Boss Level** caused the Shardfall, together with other factions that are not in the game
+  yet. It was trying to make its own universe "level up", but the attempt broke its universe
+  and the others it touched.
+- **The Simplistic**, and the Simple deck, were created by Boss Level: a deliberately small,
+  simple "level one" world. That is why the Simplistic repeats itself word for word and
+  says "Start small, then level up". It is a little robotic, but the player should not
+  notice that early.
+- The Zombies are victims, blamed because they were the first to be found among the wreckage.
+- Boss Level is fight four, so the late clues can be bolder than the early ones. The campaign
+  ends with the shards still falling, so the truth is not told yet.
 
 ### Clue log
 
 | Where | Clue | What it hints at |
 |---|---|---|
+| Cards, The Simplistic's tribes | It is Cyber and Human. Cyber is the tribe of Boss Level, Glitch, Spam Bot, Data Collector, Server Farm and Digital Girlfriend, and no other Simple card has it | Boss Level made the Simple world. Nothing in the game says so |
 | Intro, first window ("each one was whole") | One green glass pane in the second ring is already cracked, before the worlds collide | Something was broken before the collision. Green is the Zombie color, which points suspicion their way |
+| Campaign, after beating Soul Shepard | The souls Soul Shepard gathered come from every world, not only its own, and the shards keep falling | The Zombies are victims too, and beating every champion does not end the Shardfall |
+| The Simplistic, every match | It says the same lines word for word, and repeats a line twice when hurt | It is a little robotic: made, not born |
+| Campaign, after beating The Simplistic | "Start small, then level up." It says it exactly as it said it before | Boss Level's word "level up", in the mouth of its creation |
+| Campaign, The Man Ape's story card | The ground still hums where the jungle first appeared | The jungle was put there, not grown |
+| Campaign, IP Man's story card | He swears the sky flickered, just once, a moment before the break | The break was a glitch: it came from something like a screen |
+| Campaign, Boss Level's story card | Its desktop wallpaper is a quiet turnip field | Boss Level made the Simplistic's world |
+| Campaign, after beating Boss Level | Somewhere in the code, a turnip field keeps loading | The same, a little louder |
+| Boss Level, when it loses | "CONTINUE? 3... 2... I only wanted to level up. All of it." | Its motive |
 
 ## The intro (cold open)
 
@@ -79,9 +124,20 @@ Each faction comes from a different world.
   ending in `#menu`.
 - The text lives in `js/intro.js` (`INTRO_PANELS`). It is a placeholder to be rewritten.
 
+## The campaign
+
+- One match per champion, in this order: The Simplistic, The Man Ape, IP Man, Boss Level,
+  Soul Shepard. Zombie comes last because the other champions blame it.
+- Each match has a short story card before it (with the champion's one-line tag) and a line
+  after a win, in `js/campaign.js` (`CAMPAIGN`). The champions' in-match lines and play
+  styles are in `js/champions.js`. Narration stays at a distance (no "you").
+- Nothing in the code assumes five champions. To add one, add a stage to `CAMPAIGN`, an entry
+  to `CHAMPIONS` and a starter deck for its faction.
+
 ## Open questions
 
-- Champion personalities and art.
+- Champion art.
+- Which other factions helped Boss Level, and what do their champions say about it?
 - Do rarities mean something in the story? One idea: Unknown shards are fragments from
   the moment of the break, which would explain why there is only one per deck.
 - Is there a place at the center of it all, for example the altar on the board?

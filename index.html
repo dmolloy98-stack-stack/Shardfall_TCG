@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Shardfall</title>
+<!-- Added to a phone's home screen, the game opens without the browser's bars. -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shardfall">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,6 +55,7 @@
 
         <div class="menu-actions">
           <button type="button" id="btn-start" class="btn btn-primary">Start game</button>
+          <button type="button" id="btn-campaign" class="btn">Campaign</button>
           <button type="button" id="btn-tutorial" class="btn">Tutorial</button>
           <button type="button" id="btn-rules" class="btn">How to play</button>
           <button type="button" id="btn-almanac" class="btn">Almanac</button>
@@ -119,6 +125,7 @@
     </div>
     <div id="hint" class="hint" hidden></div>
     <div id="controls" class="controls" hidden></div>
+    <div id="sideinfo" class="sideinfo" hidden></div>
     <div id="coach" class="coach" hidden></div>
     <div id="rotate" class="rotate" hidden>
       <svg class="rotate-phone" viewBox="0 0 64 64" aria-hidden="true"><rect x="20" y="8" width="24" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="46" r="2" fill="currentColor"/></svg>

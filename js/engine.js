@@ -3,6 +3,14 @@
 // for events sent through emit() to play effects (damage numbers, shakes, banners).
 // Cards on the battlefield store their owner as a player index (0 or 1) instead of
 // a reference, so the whole state can be cloned for undo and for AI look-ahead.
+//
+// Short names used all through the game code:
+//   S        the whole game right now: both players, whose turn, the phase, the log
+//   p        a player (S.players[0] or S.players[1])     c   a card
+//   pd       S.pending: a choice the game is waiting on (pick a target, or pick from a list)
+//   fx       a card's play effect from EFFECTS (js/effects.js). (js/fx.js is visual effects.)
+//   ctx      who is doing something: { card, owner, spell } (plus target, holder, amount)
+//   stats(c) a character's attack and health as shown, with every bonus counted
 
 const PHASE = { DRAW: 0, SETUP: 1, BATTLE: 2, END: 3 };
 const RULES = {
@@ -12,13 +20,26 @@ const RULES = {
   maxChars: DATA.rules.max_field_characters ?? Infinity,   // no limit unless game_rules.csv sets one
   // Characters stand on the frontline; areas and stored equipment share the backline.
   maxBackline: DATA.rules.max_field_backline ?? 10,
+  // A card that would go to a full hand goes to the graveyard instead.
+  maxHand: DATA.rules.max_hand_size ?? 8,
+  // A random event hits the board every eventEvery rounds (0 = never) and is announced eventWarn rounds ahead.
+  eventEvery: DATA.rules.event_every_rounds ?? 0,
+  eventWarn: DATA.rules.event_warning_rounds ?? 2,
 };
 const BACKLINE = () => DATA.text("zone_backline", "Backline");
 const backlineCount = p => p.field.areas.length + p.field.equips.length;
 
-// Counter spells need a response window that the original game never had.
-// They stay in the decks but cannot be cast until that system exists.
-const UNIMPLEMENTED = new Set(["Nullify", "Nope for One", "Nope for All", "Return to Sender", "Try Again"]);
+// Counter spells. A card with a "counter:" clause in its Effect is not played on your own
+// turn. When the other player plays a character or casts a spell, the game stops and asks
+// whether you want to answer with a counter you hold and can pay for (with mana you left
+// unspent on your turn). A countered card is paid for and goes to its owner's graveyard
+// without doing anything. Each word after "counter:" is a kind of play the card can stop:
+const COUNTER_KINDS = {
+  character: h => h.card.type === "Character",
+  spell: h => h.card.type === "Spell",
+  spellSingle: h => h.card.type === "Spell" && !!h.target && !h.target.isPlayer,   // aimed at one character or area
+  spellMany: h => h.card.type === "Spell" && !h.target,                            // not aimed at one thing
+};
 
 let S = null;              // live game state
 let listeners = [];
@@ -45,7 +66,12 @@ function simulate(fn) {
 // Helpers
 // ---------------------------------------------------------------------------
 const hasSkill = (c, n) => (c.skills || []).includes(n);
-const named = (c, n) => c.name === n && !c.disabled;   // Disable switches off name-based abilities
+// Where a card is from (its Fracture; a hybrid has two), what it is (tribes) and what it does
+// (classes). A card can have one or two of each. c.group is the first fracture: it sets the color.
+const groupsOf = c => c.groups || [c.group];
+const inGroup = (c, g) => groupsOf(c).includes(g);
+const hasTribe = (c, t) => (c.tribes || []).includes(t);
+const hasClass = (c, k) => (c.classes || []).includes(k);
 const removeSkill = (c, n) => { const i = (c.skills || []).indexOf(n); if (i >= 0) c.skills.splice(i, 1); };
 const active = () => S.players[S.active];
 const opponent = () => S.players[1 - S.active];
@@ -74,9 +100,18 @@ function findArea(uid) {
   return null;
 }
 function allChars() { return S.players.flatMap(p => p.field.chars); }
-function countChars(pred) { return allChars().filter(pred).length; }
+// The game's own random numbers. They come from the match seed (S.seed), and the generator's
+// state lives in S.rng, so the same seed and the same moves always replay the same game.
+// AI look-ahead runs on a copy of S, so it never changes the real game's draws.
+function rand() {
+  let t = (S.rng = (S.rng + 0x6d2b79f5) >>> 0);
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const newSeed = () => (Math.random() * 4294967296) >>> 0;
 function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
   return arr;
 }
 function takeFromDeck(p, pred) {
@@ -84,59 +119,106 @@ function takeFromDeck(p, pred) {
   return i >= 0 ? p.deck.splice(i, 1)[0] : null;
 }
 
+// A choice for a player. If another one is already waiting, this one waits its turn.
+function ask(pd) {
+  if (S.pending) S.queue.push(pd);
+  else S.pending = pd;
+}
+// After a choice is made: show the next waiting one, or finish a turn that was paused for it.
+function settle() {
+  if (!S.pending && S.queue.length) S.pending = S.queue.shift();
+  if (!S.pending && S.passAfterChoice && !S.over) { S.passAfterChoice = false; finishTurn(); }
+}
+
+// Special rules. A few cards bend the core rules (the champions, mostly). Each such rule has a
+// name, and a card gets it from its Effect column: "rule: redirect", "rule: lord Simple 3".
+// The engine asks cardRule(card, "redirect") and never looks at a card's name, so a card can be
+// renamed freely and a new card can reuse a rule. js/effects.js lists every rule (RULE_WORDS).
+
+// "rule: lord <Faction> <n>" (The Simplistic): while it is on the field (either side), every
+// card of that faction gains +n to each stat (characters, and equipment on a character), the
+// faction's spells deal or give n more, and curse spells can't target its cards. Buff spells
+// still can. Two lords of one faction don't add up.
+function lordBonus(group) {
+  let best = 0;
+  for (const c of allChars()) { const r = cardRule(c, "lord"); if (r && r[0] === group) best = Math.max(best, Number(r[1])); }
+  return best;
+}
+const lordBonusOf = c => Math.max(0, ...groupsOf(c).map(lordBonus));   // a hybrid takes its best lord
+const spellBoost = ctx => (ctx.spell ? lordBonusOf(ctx.card) : 0);
+const isBuff = fx => fx.intent === "help";
+const shieldedFromCurses = c => lordBonusOf(c) > 0;
+
+// A play waiting for an answer is described by "held": { owner, card, target }. target is
+// only there for a spell that was aimed: { isPlayer, idx } or { uid, area }.
+const countersFor = (p, held) => p.hand.filter(c => {
+  const kinds = counterKinds(c);
+  return kinds && p.mana >= playCost(c, p) && kinds.some(k => COUNTER_KINDS[k](held));
+});
+// Give the other player the chance to counter a card that was just played. Returns true when
+// the game is now waiting for their answer. The computer's look-ahead never opens this
+// window: it must not learn what the other player holds by trying its plays on a copy.
+function offerCounter(held) {
+  if (muted) return false;
+  const foe = S.players[1 - held.owner];
+  const cards = countersFor(foe, held);
+  if (!cards.length) return false;
+  S.pending = {
+    kind: "choose", resolve: "counter", source: held.card, owner: foe.idx, title: `${foe.name}: respond?`,
+    prompt: `${S.players[held.owner].name} plays ${held.card.name}. Pick a counter spell to stop it, or skip to let it happen.`,
+    cards, pick: 1, options: [{ id: "counter", label: "Counter it" }], held,
+  };
+  return true;
+}
+// Carry out a character or spell that was played and not countered.
+function finishPlay(held) {
+  const p = S.players[held.owner], c = held.card, fx = effectFor(c) || EFFECTS[c.id];
+  if (c.type === "Character") { putOnField(c, p); return; }
+  if (!held.target) { if (fx?.now) fx.now({ card: c, owner: p, spell: true }); return; }
+  const t = held.target.isPlayer ? held.target : (held.target.area ? findArea(held.target.uid) : findChar(held.target.uid))?.c;
+  if (!t) return;   // the target left the table while the answer was awaited
+  log(`${c.name} targets ${t.isPlayer ? S.players[t.idx].name : t.name}.`);
+  fx.apply({ card: c, owner: p, spell: true }, t);
+}
+
 // ---------------------------------------------------------------------------
 // Stats
 // ---------------------------------------------------------------------------
 function equipBonuses(c) {
-  let a = 0, h = 0, s = 0;
-  for (const e of c.equipped || []) { a += e.attack; h += e.health; s += e.speed; }
-  return { a, h, s };
-}
-
-// Area bonuses read from the area's ability text, exactly like getAreaEffectTotals in Lua.
-function areaBonuses(p, c) {
-  let a = 0, h = 0, s = 0, parry = false;
-  for (const area of p.field.areas) {
-    const text = (area.ability + " " + area.name).toLowerCase();
-    if (area.group === c.group || text.includes("all characters")) {
-      const m = text.match(/([+-]\d+)\s+to all stats/) || text.match(/([+-]\d+)\s+in all stats/);
-      const n = m ? Number(m[1]) : 0;
-      a += n; h += n; s += n;
-      const sp = text.match(/([+-]\d+)\s+speed/);
-      if (sp) s += Number(sp[1]);
-      if (text.includes("parry")) parry = true;
-    }
-  }
-  return { a, h, s, parry };
+  let a = 0, h = 0;
+  for (const e of c.equipped || []) { a += e.attack; h += e.health; }
+  return { a, h };
 }
 
 // Effective stats including equipment, areas, synergies and Rally. Health can be
 // negative here; display code clamps it.
 function rawStats(c) {
   const p = ownerOf(c);
-  const e = equipBonuses(c), ar = areaBonuses(p, c);
+  const e = equipBonuses(c);
   let buff = 0;
-  if (c.group === "Fighter") buff += 2 * p.field.chars.filter(x => named(x, "Fight Choreographer") && x !== c).length;
-  if (c.name === "Turtle") buff += p.field.chars.filter(x => x.name === "Turtle" && x !== c).length;
-  let extraA = 0;
-  if (named(c, "Baboon")) extraA += countChars(x => x !== c);   // +1 attack per other character on the field
+  // "aura:" effects from this side's characters and areas (js/effects.js). An area's bonus
+  // is written in its Effect column, like "aura: buff allies.Monkey 1 0".
+  const aura = auraBonus(c, p);
+  const extraA = aura.a, extraH = aura.h;
+  buff += lordBonusOf(c);
+  // A lord's faction's equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
+  const simpleGear = (c.equipped || []).reduce((n, x) => n + lordBonusOf(x), 0);
   const rally = c.rallyBonus || 0;
   return {
-    a: c.attack + e.a + ar.a + buff + rally + extraA,
-    h: c.currentHealth + ar.h + buff,
-    s: c.speed + e.s + ar.s + buff + rally,
-    parry: hasSkill(c, "Parry") || ar.parry,
+    a: c.attack + e.a + buff + rally + extraA + simpleGear,
+    h: c.currentHealth + buff + extraH + simpleGear,
+    parry: hasSkill(c, "Parry") || grantsSkill(c, "Parry"),
   };
 }
 function stats(c) {
   const r = rawStats(c);
-  return { a: Math.max(0, r.a), h: Math.max(0, r.h), s: Math.max(0, r.s), parry: r.parry };
+  return { a: Math.max(0, r.a), h: Math.max(0, r.h), parry: r.parry };
 }
 
 function updateRally(p) {
   const count = {};
-  for (const c of p.field.chars) if (hasSkill(c, "Rally")) count[c.group] = (count[c.group] || 0) + 1;
-  for (const c of p.field.chars) c.rallyBonus = hasSkill(c, "Rally") && (count[c.group] || 0) >= 3 ? 1 : 0;
+  for (const c of p.field.chars) if (hasSkill(c, "Rally")) for (const g of groupsOf(c)) count[g] = (count[g] || 0) + 1;
+  for (const c of p.field.chars) c.rallyBonus = hasSkill(c, "Rally") && groupsOf(c).some(g => (count[g] || 0) >= 3) ? 1 : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -144,13 +226,13 @@ function updateRally(p) {
 // ---------------------------------------------------------------------------
 function triggerEvolve(c) {
   if (hasSkill(c, "Evolve") && !c.hasEvolved) {
-    c.attack += 3; c.currentHealth += 3; c.speed += 3; c.hasEvolved = true; removeSkill(c, "Evolve");
+    c.attack += 3; c.currentHealth += 3; c.hasEvolved = true; removeSkill(c, "Evolve");
     emit("text", { uid: c.uid, text: "EVOLVE!", color: "#b98cff" });
   }
 }
 
-function transformCharacter(c, newName) {
-  const t = DATA.cardsByName[newName];
+function transformCharacter(c, newId) {
+  const t = DATA.cardsById[newId];
   if (!t) return;
   const n = structuredClone(t);
   n.currentHealth = Math.max(1, c.currentHealth + (n.health - c.health));
@@ -159,31 +241,40 @@ function transformCharacter(c, newName) {
   n.levelUpCount = c.levelUpCount || 0;
   n.combatSurvived = 0;
   Object.assign(c, n);
-  c.baseAttack = c.attack; c.baseHealth = c.health; c.baseSpeed = c.speed;
+  c.baseAttack = c.attack; c.baseHealth = c.health;
   emit("text", { uid: c.uid, text: "TRANSFORM!", color: "#6fe3ff" });
   log(`${t.name} appears through Transform.`);
 }
 
-// Level Up: +1 to all stats, up to 3 times, then the skill is used up.
-// Boss Level has no limit, Pesky Programmer grows +2 Attack and +2 Speed instead,
-// and a Data Collector takes the stats when another of your characters levels up.
-const levelCap = c => (named(c, "Boss Level") ? Infinity : 3);
+// Level Up: +1 to all stats, up to 3 times, then the skill is used up. Each Level Up also
+// heals the character fully. "rule: levelCap none" lifts the limit (Boss Level) and
+// "rule: levelGain <attack> <health>" changes what a level gives (Pesky Programmer: 2 0).
+// A Data Collector gains +1 Health when another of your characters levels up.
+const levelCap = c => { const r = cardRule(c, "levelCap"); return !r ? 3 : r[0] === "none" ? Infinity : Number(r[0]); };
+const levelGains = c => { const r = cardRule(c, "levelGain"); return r ? [Number(r[0]), Number(r[1])] : [1, 1]; };
 function levelUp(c, times = 1) {
   for (let k = 0; k < times; k++) {
     if (!hasSkill(c, "Level Up") || (c.levelUpCount || 0) >= levelCap(c)) return;
     c.levelUpCount = (c.levelUpCount || 0) + 1;
-    const collector = ownerOf(c).field.chars.find(x => x !== c && named(x, "Data Collector"));
-    const gains = named(c, "Pesky Programmer") ? [2, 0, 2] : [1, 1, 1];
-    const into = collector || c;
-    into.attack += gains[0]; into.currentHealth += gains[1]; into.speed += gains[2];
-    into.keptLevels = (into.keptLevels || 0) + 1;   // levels whose stats this character holds
-    emit("text", { uid: c.uid, text: collector ? "DATA SENT" : "LEVEL UP", color: "#ffd25e" });
-    if (collector) emit("text", { uid: collector.uid, text: "+DATA", color: "#6fe3ff" });
+    const gains = levelGains(c);
+    c.attack += gains[0]; c.currentHealth += gains[1];
+    c.levelHealth = (c.levelHealth || 0) + gains[1];
+    c.keptLevels = (c.keptLevels || 0) + 1;   // levels whose stats this character holds
+    healFully(c);
+    emit("text", { uid: c.uid, text: "LEVEL UP", color: "#ffd25e" });
+    const owner = ownerOf(c);
+    for (const x of owner.field.chars.slice()) if (x !== c) runHook(x, "allyLevelUp", { owner });
     if (c.levelUpCount >= levelCap(c)) {
       removeSkill(c, "Level Up");
-      if (named(c, "White Belt Student")) transformCharacter(c, "Black Belt Student");
+      runHook(c, "maxLevel", { owner });
     }
   }
+}
+
+// Heal all damage: health goes back to the card's health plus equipment and Level Up gains.
+function healFully(c) {
+  const full = (c.baseHealth ?? c.health) + equipBonuses(c).h + (c.levelHealth || 0);
+  if (c.currentHealth < full) c.currentHealth = full;
 }
 
 // Undo one Level Up (Data Transfer). The skill comes back if it was used up.
@@ -191,8 +282,9 @@ function levelDown(c) {
   if (!(c.keptLevels > 0)) return false;
   c.keptLevels--;
   if (c.levelUpCount > 0) c.levelUpCount--;
-  if (named(c, "Pesky Programmer")) { c.attack -= 2; c.speed -= 2; }
-  else { c.attack--; c.currentHealth--; c.speed--; }
+  const [atk, hp] = levelGains(c);
+  c.attack -= atk; c.currentHealth -= hp;
+  c.levelHealth = Math.max(0, (c.levelHealth || 0) - hp);
   if (!hasSkill(c, "Level Up")) c.skills.push("Level Up");
   emit("text", { uid: c.uid, text: "LEVEL DOWN", color: "#c9c9c9" });
   checkDeath(c);
@@ -204,6 +296,8 @@ function levelDown(c) {
 // ---------------------------------------------------------------------------
 function dealDamageToPlayer(p, amount) {
   if (amount <= 0 || S.over) return;
+  const ip = p.field.chars.find(x => cardRule(x, "redirect") && x.redirectRound !== S.round);
+  if (ip) { redirectDamage(ip, amount); return; }
   p.health = Math.max(0, p.health - amount);
   emit("playerDamage", { player: p.idx, amount });
   checkHealthWin();
@@ -216,12 +310,23 @@ function healPlayer(p, amount) {
 }
 
 function sendToGraveyard(p, c) {
+  // "rule: shepherd <Faction>" (Soul Shepard): asked each time another card of that faction dies.
+  const shepard = p.field.chars.find(x => x !== c && inGroup(c, cardRule(x, "shepherd")?.[0]));
+  const gain = shepard && p.field.chars.includes(c) ? statsAsRead(c) : null;
   const i = p.field.chars.indexOf(c);
   if (i >= 0) p.field.chars.splice(i, 1);
   p.grave.push(c);
   updateRally(p);
-  emit("death", { uid: c.uid });
+  emit("death", { uid: c.uid, group: c.group });
   log(`${c.name} was destroyed.`);
+  if (gain) {
+    ask({
+      kind: "choose", source: shepard, owner: p.idx, title: shepard.name,
+      prompt: `${c.name} fell. Absorb its stats into ${shepard.name}, or return it to your hand?`,
+      cards: [c], options: [{ id: "absorb", label: `Absorb +${gain.a} / +${gain.h}` }, { id: "hand", label: "Return it to my hand" }],
+      required: true, resolve: "shepard", deadUid: c.uid, shepardUid: shepard.uid, gain,
+    });
+  }
   sweepDeaths();   // losing a Rally partner or a synergy source can drop others to 0 health
 }
 
@@ -230,10 +335,12 @@ function checkDeath(c) {
   if (rawStats(c).h > 0) return;
   const p = ownerOf(c);
   if (!p.field.chars.includes(c)) return;
+  // Reanimate brings the character back with its own printed stats. Health it had from
+  // equipment is not restored (the equipment stays on and still adds its attack).
   if (hasSkill(c, "Reanimate") && !c.reanimated) {
     c.reanimated = true; removeSkill(c, "Reanimate");
-    c.currentHealth = c.baseHealth; c.attack = c.baseAttack; c.speed = c.baseSpeed;
-    if (named(c, "Hungry Corpse")) { c.attack++; c.currentHealth++; c.speed++; }
+    c.currentHealth = c.baseHealth; c.attack = c.baseAttack;
+    runHook(c, "reanimate", { owner: p });
     triggerEvolve(c); // "After returning from the Graveyard to the Field, Evolve"
     emit("text", { uid: c.uid, text: "REANIMATE", color: "#8dff8d" });
     log(`${c.name} reanimates.`);
@@ -243,18 +350,31 @@ function checkDeath(c) {
 
 function dealDamageToCharacter(c, amount) {
   if (!c || amount <= 0) return;
+  if (cardRule(c, "redirect") && c.redirectRound !== S.round && ownerOf(c).field.chars.includes(c)) { redirectDamage(c, amount); return; }
   c.currentHealth -= amount;
   emit("charDamage", { uid: c.uid, amount });
   if (rawStats(c).h <= 0) checkDeath(c);
-  else if (named(c, "Gorilla")) {
-    c.attack++; c.speed++;
-    emit("text", { uid: c.uid, text: "+1 ATK/SPD", color: "#ffe066" });
-  }
+  else runHook(c, "hurt", { owner: ownerOf(c) });
+}
+
+// "rule: redirect" (IP Man): once per turn, the first damage that would hit this character or
+// its player goes to an enemy character or the enemy player instead. Its player picks which.
+function redirectDamage(ip, amount) {
+  ip.redirectRound = S.round;
+  emit("text", { uid: ip.uid, text: "REDIRECT", color: "#ffd27a" });
+  log(`${ip.name} redirects ${amount} damage.`);
+  ask({ kind: "target", source: ip, owner: ip.owner, spell: false, targetType: "charOrPlayer", intent: "harm", required: true, amount });
 }
 
 // After areas or synergy sources change, characters whose health dropped to 0 die.
 function sweepDeaths() {
   for (const c of allChars().slice()) checkDeath(c);
+}
+
+// A character's stats as its card reads on the table, buffs included and damage ignored.
+function statsAsRead(c) {
+  const r = rawStats(c);
+  return { a: Math.max(0, r.a), h: Math.max(0, r.h - c.currentHealth + (c.baseHealth ?? c.health)) };
 }
 
 function destroyCharacter(c) {   // Death's Grasp: ignores Reanimate
@@ -290,235 +410,31 @@ function putOnField(c, p) {
 }
 
 function initBattlefieldCharacter(c, p) {
-  c.baseAttack = c.attack; c.baseHealth = c.health; c.baseSpeed = c.speed;
+  c.baseAttack = c.attack; c.baseHealth = c.health;
   c.currentHealth = c.health; c.equipped = []; c.hasAttacked = !hasSkill(c, "Rush");
-  c.owner = p.idx; c.levelUpCount = 0; c.combatSurvived = 0; c.reanimated = false;
+  c.owner = p.idx; c.levelUpCount = 0; c.levelHealth = 0; c.keptLevels = 0; c.combatSurvived = 0; c.reanimated = false;
   emit("enter", { uid: c.uid, cost: c.manaCost || 0 });
 
-  if (named(c, "Zombombadier")) {
-    const d = c.attack + c.health + c.speed;
-    for (const q of S.players) {
-      for (const x of q.field.chars.filter(x => x !== c)) dealDamageToCharacter(x, d);
-      dealDamageToPlayer(q, d);
-    }
-  }
-  if (named(c, "Master Rat")) {
-    for (let k = 0; k < 4; k++) {
-      if (p.field.chars.length >= RULES.maxChars) break;
-      const turtle = {
-        uid: S.nextUid++, id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", race: "Animal", group: "Fighter",
-        manaCost: 0, attack: 1, health: 1, speed: 1, skills: [], ability: "Gain +1 to each stat for every other Turtle on the field",
-        description: "", artKey: "turtle", token: true,
-      };
-      putOnField(turtle, p);
-    }
-  } else if (named(c, "Simple Farmer")) {
-    const extra = takeFromDeck(p, x => x.name === "Simple Farmer");
-    if (extra) { p.hand.push(extra); emit("handAdd", { player: p.idx }); }
-    const farmers = p.field.chars.filter(x => x.name === "Simple Farmer").length;
-    if (farmers >= 3 && p.field.chars.length < RULES.maxChars) {
-      const big = takeFromDeck(p, x => x.name === "Simpler Farmer");
-      if (big) { putOnField(big, p); log("Three farmers call the Simpler Farmer to the field."); }
-    }
-  }
+  runHook(c, "enter", { owner: p });
   updateRally(p);
   triggerSignal(c, p);
 }
 
 // Equipment entering the field levels up White Belt Students.
 function equipmentEntered(p) {
-  for (const x of p.field.chars) if (named(x, "White Belt Student")) levelUp(x);
+  for (const x of p.field.chars.slice()) runHook(x, "gearEnters", { owner: p });
 }
 
 // ---------------------------------------------------------------------------
 // Card effects
-// Each entry may define:
+// What each card does is written in data/cards.csv (the Effect column) and turned into
+// EFFECTS and hooks by js/effects.js. An EFFECTS entry may define:
 //   target: "char" | "charOrPlayer" | "area"  (the player then picks a target)
-//   intent: "harm" | "help"                   (used by the computer player)
+//   intent: "harm" | "help" | "steal"         (used by the computer player)
 //   apply(ctx, target)                        (run once a target is chosen)
 //   now(ctx)                                  (run immediately, no target)
 // ctx = { card, owner, spell }
 // ---------------------------------------------------------------------------
-const loseHealth = n => (ctx, t) => dealDamageToCharacter(t, n);
-
-const EFFECTS = {
-  // Simple
-  "Simple Barkeep": { target: "char", intent: "help", apply: (ctx, t) => { t.currentHealth += 1; } },
-  "Slap": { target: "char", intent: "harm", apply: loseHealth(1) },
-  "Simple Wizard": { target: "charOrPlayer", intent: "harm", apply: (ctx, t) => t.isPlayer ? dealDamageToPlayer(S.players[t.idx], 2) : dealDamageToCharacter(t, 2) },
-  "Simplify": { target: "char", intent: "harm", apply: (ctx, t) => { t.attack = 1; t.currentHealth = 1; t.speed = 1; } },
-  "Simple Messenger": {
-    now: ctx => {
-      const foe = foeOf(ctx.owner);
-      const top = foe.deck[foe.deck.length - 1];
-      if (!top) return;
-      S.pending = {
-        kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: `Top of ${foe.name}'s deck`,
-        prompt: "Put this card on top of your deck, or discard it.",
-        cards: [top], options: [{ id: "take", label: "Put on my deck" }, { id: "discard", label: "Discard it" }],
-        resolve: "messenger",
-      };
-    },
-  },
-  "Herd": {
-    now: ctx => {
-      for (let k = 0; k < 3; k++) { const f = cardByName("Simple Farmer"); if (!f || !putOnField(f, ctx.owner)) break; }
-    },
-  },
-  "Simplicity": {
-    now: ctx => {
-      const foe = foeOf(ctx.owner);
-      const hit = foe.field.chars.slice();
-      for (const c of hit) { c.attack -= 2; c.speed -= 2; c.currentHealth -= 2; }
-      healPlayer(ctx.owner, 2 * hit.length);
-      for (const c of hit) { emit("charDamage", { uid: c.uid, amount: 2 }); checkDeath(c); }
-    },
-  },
-  "Orangutan": { now: ctx => { ctx.card.currentHealth += ctx.owner.field.chars.filter(x => x.group === "Monkey" && x !== ctx.card).length; } },
-  "Simpler Farmer": { now: ctx => { const n = ctx.owner.field.chars.filter(x => x.name === "Simple Farmer").length; ctx.card.attack += n; ctx.card.speed += n; } },
-  "Mana Horder": {
-    now: ctx => {
-      const foe = foeOf(ctx.owner);
-      ctx.owner.manaMax++; ctx.owner.mana++;
-      foe.manaMax = Math.max(0, foe.manaMax - 1); foe.mana = Math.min(foe.mana, foe.manaMax);
-    },
-  },
-
-  // Monkey
-  "Monkey Apprentice": {
-    now: ctx => {
-      const b = takeFromDeck(ctx.owner, x => x.name === "Banana");
-      if (b) { ctx.owner.hand.push(b); emit("handAdd", { player: ctx.owner.idx }); }
-      shuffle(ctx.owner.deck);
-    },
-  },
-  "Banana": {
-    target: "char", intent: "help",
-    apply: (ctx, t) => {
-      t.currentHealth += 1;
-      if (ctx.owner.ripen) t.attack += 1;
-      const peel = takeFromDeck(ctx.owner, x => x.name === "Peel");
-      if (peel) { ctx.owner.hand.push(peel); emit("handAdd", { player: ctx.owner.idx }); }
-      shuffle(ctx.owner.deck);
-    },
-  },
-  "Peel": { target: "char", intent: "harm", apply: (ctx, t) => dealDamageToCharacter(t, ctx.owner.field.chars.filter(x => x.group === "Monkey").length >= 3 ? 2 : 1) },
-  "Ripen": { now: ctx => { ctx.owner.ripen = true; } },
-  "Primate": {
-    now: ctx => {
-      const picks = ctx.owner.deck.filter(n => n.group === "Monkey" && n.type === "Character" && n.name !== "Primate" && n.manaCost <= 2).slice(-2);
-      for (const n of picks) {
-        if (ctx.owner.field.chars.length >= RULES.maxChars) break;
-        ctx.owner.deck.splice(ctx.owner.deck.indexOf(n), 1);
-        putOnField(n, ctx.owner);
-      }
-    },
-  },
-  "Arboreal Intelligence": {
-    now: ctx => { for (const c of ctx.owner.field.chars) if (c.group === "Monkey") { c.attack += 5; c.currentHealth += 5; c.speed += 5; } },
-  },
-  "Call of the Jungle": {
-    now: ctx => {
-      const cards = ctx.owner.grave.filter(c => c.group === "Monkey" && !c.token);
-      if (!cards.length) return;
-      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call of the Jungle", prompt: "Pick up to 3 Monkey cards to return to your hand.", cards, pick: 3, resolve: "toHand" };
-    },
-  },
-
-  // Zombie
-  "Haunt the Living": { target: "char", intent: "help", apply: (ctx, t) => { if (!hasSkill(t, "Reanimate")) { t.skills.push("Reanimate"); t.reanimated = false; } } },
-  "Plaguemancer": { target: "char", intent: "steal", apply: (ctx, t) => convertToZombie(ctx, t, true) },
-  "Infection": { target: "char", intent: "steal", apply: (ctx, t) => convertToZombie(ctx, t, false) },
-  "Soul Suction": {
-    target: "char", intent: "harm",
-    apply: (ctx, t) => {
-      const st = stats(t);
-      healPlayer(ctx.owner, st.a + st.h + st.s);
-      dealDamageToCharacter(t, 99999);
-    },
-  },
-  "Death's Grasp": { target: "char", intent: "harm", apply: (ctx, t) => destroyCharacter(t) },
-  "Rotten Hand": {
-    now: ctx => {
-      const p = ctx.owner;
-      while (p.hand.length) p.grave.push(p.hand.pop());
-      for (let k = 0; k < 3; k++) drawCard(p);
-    },
-  },
-  "Rotten Finger": {
-    now: ctx => {
-      if (!ctx.owner.hand.length) return;
-      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rotten Finger", prompt: "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" };
-    },
-  },
-  "Rise from the Dead": {
-    now: ctx => {
-      const cards = ctx.owner.grave.filter(c => c.race === "Undead" && c.type === "Character");
-      if (!cards.length || ctx.owner.field.chars.length >= RULES.maxChars) return;
-      const options = [{ id: "field", label: "Bring it back to the field" }];
-      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rise from the Dead", prompt: "Pick an Undead character from your graveyard to bring back to the field.", cards, pick: 1, options, resolve: "rise" };
-    },
-  },
-  "They Just Keep Coming": {
-    now: () => {
-      for (const c of allChars()) if (c.group === "Zombie") {
-        if (hasSkill(c, "Reanimate")) c.currentHealth += 3;
-        else { c.skills.push("Reanimate"); c.reanimated = false; }
-      }
-    },
-  },
-
-  // Fighter
-  "Sweep the Leg": { target: "char", intent: "harm", apply: (ctx, t) => { t.speed = Math.max(0, t.speed - 1); } },
-  "Bite the Ear": { target: "char", intent: "harm", apply: loseHealth(1) },
-  "Crane Kick": { target: "char", intent: "harm", apply: loseHealth(7) },
-
-  // Digital
-  "Digital Girlfriend": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t) },
-  "Spam Bot": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t) },
-  "Upgrade": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t) },
-  "Gymfluencer": { target: "char", intent: "help", filter: c => hasSkill(c, "Level Up"), apply: (ctx, t) => levelUp(t, 2) },
-  "Catfish": {
-    target: "char", intent: "harm",
-    apply: (ctx, t) => { t.attack -= 1; t.speed -= 1; t.currentHealth -= 1; emit("charDamage", { uid: t.uid, amount: 1 }); checkDeath(t); },
-  },
-  "Secure the Data": {
-    target: "char", intent: "help",
-    apply: (ctx, t) => { if (!hasSkill(t, "Cloak")) { t.skills.push("Cloak"); t.tempCloak = true; } emit("text", { uid: t.uid, text: "SECURED", color: "#6fe3ff" }); },
-  },
-  "Data Transfer": {   // activated from the field during your Setup phase, once per turn
-    target: "char", intent: "help", filter: (c, ctx) => c.owner === ctx.owner.idx && c.keptLevels > 0,
-    apply: (ctx, t) => { if (levelDown(t)) healPlayer(ctx.owner, 2); },
-  },
-  "Digital Drainage": {
-    now: ctx => {
-      const levelers = ctx.owner.field.chars.filter(c => hasSkill(c, "Level Up"));
-      for (const c of levelers) levelUp(c, 3);
-      const alive = levelers.filter(c => ctx.owner.field.chars.includes(c));
-      if (!alive.length) return;
-      const top = alive.reduce((a, b) => (stats(b).a > stats(a).a ? b : a));
-      const drain = top.levelUpCount || 0;
-      for (const c of foeOf(ctx.owner).field.chars) { c.attack -= drain; emit("text", { uid: c.uid, text: `-${drain} ATK`, color: "#ff8a6b" }); }
-    },
-  },
-
-  // Neutral
-  "Flame Surge": { now: () => damageEverything(1) },
-  "Fire Storm": { now: () => damageEverything(3) },
-  "Area Denial": { target: "area", intent: "harm", apply: (ctx, t) => { const f = findArea(t.uid); if (f) { f.p.field.areas.splice(f.i, 1); f.p.grave.push(t); log(`${t.name} was destroyed.`); sweepDeaths(); } } },
-  "Disable": {
-    target: "char", intent: "harm",
-    apply: (ctx, t) => { t.skills = []; t.disabled = true; t.ability = ""; updateRally(ownerOf(t)); emit("text", { uid: t.uid, text: "DISABLED", color: "#c9c9c9" }); },
-  },
-  "Call Back": {
-    now: ctx => {
-      const cards = S.players.flatMap(p => p.grave).filter(c => c.type === "Character" && !c.token);
-      if (!cards.length) return;
-      S.pending = { kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call Back", prompt: "Pick a character from either graveyard to add to your hand.", cards, pick: 1, resolve: "toHand" };
-    },
-  },
-};
-
 function damageEverything(n) {
   for (const q of S.players) {
     for (const x of q.field.chars.slice()) dealDamageToCharacter(x, n);
@@ -526,14 +442,22 @@ function damageEverything(n) {
   }
 }
 
+// An infected character becomes a Zombie in full: its fracture changes to Zombie (so Zombie
+// bonuses reach it) and it gains the Undead tribe on top of the tribes it had. Its class stays.
+function makeZombie(t) {
+  t.group = "Zombie"; t.groups = ["Zombie"];
+  if (!hasTribe(t, "Undead")) t.tribes = [...(t.tribes || []), "Undead"];
+}
+
 function convertToZombie(ctx, t, givesReanimate) {
   const foe = foeOf(ctx.owner);
   if (t.owner !== foe.idx || ctx.owner.field.chars.length >= RULES.maxChars) {
-    if (givesReanimate || t.owner === ctx.owner.idx) { t.group = "Zombie"; }
+    if (givesReanimate || t.owner === ctx.owner.idx) makeZombie(t);
     return;
   }
   foe.field.chars.splice(foe.field.chars.indexOf(t), 1);
-  t.owner = ctx.owner.idx; t.group = "Zombie"; t.rallyBonus = 0;
+  makeZombie(t);
+  t.owner = ctx.owner.idx; t.rallyBonus = 0;
   if (givesReanimate && !hasSkill(t, "Reanimate")) { t.skills.push("Reanimate"); t.reanimated = false; }
   ctx.owner.field.chars.push(t);
   updateRally(ctx.owner); updateRally(foe);
@@ -541,7 +465,7 @@ function convertToZombie(ctx, t, givesReanimate) {
   log(`${ctx.owner.name} takes control of ${t.name}.`);
 }
 
-function effectFor(c) { return c.disabled ? null : EFFECTS[c.name] || null; }
+function effectFor(c) { return c.disabled ? null : EFFECTS[c.id] || null; }
 
 // Signal abilities fire when the character enters the field.
 function triggerSignal(c, owner) {
@@ -550,24 +474,32 @@ function triggerSignal(c, owner) {
   if (!fx) return;
   const ctx = { card: c, owner, spell: false };
   if (fx.target) {
-    if (validTargets(fx, ctx).length) S.pending = { kind: "target", source: c, owner: owner.idx, spell: false, targetType: fx.target, intent: fx.intent };
+    if (validTargets(fx, ctx).length) ask({ kind: "target", source: c, owner: owner.idx, spell: false, targetType: fx.target, intent: fx.intent });
   } else if (fx.now) fx.now(ctx);
 }
 
 // Valid targets for a targeted effect. Spells cannot target Cloak characters.
+// Curse spells (anything but a buff) can't target Simple cards while The Simplistic is out.
 function validTargets(fx, ctx) {
-  if (fx.target === "area") return S.players.flatMap(p => p.field.areas);
-  const chars = allChars().filter(c => !(ctx.spell && hasSkill(c, "Cloak")) && !(c === ctx.card && fx.intent !== "help") && (!fx.filter || fx.filter(c, ctx)));
-  if (fx.target === "charOrPlayer") return [...chars, ...S.players.map(p => ({ isPlayer: true, idx: p.idx }))];
+  const cursed = c => ctx.spell && !isBuff(fx) && shieldedFromCurses(c);
+  if (fx.target === "area") return S.players.flatMap(p => p.field.areas).filter(a => !cursed(a));
+  const chars = allChars().filter(c => !(ctx.spell && hasSkill(c, "Cloak")) && !cursed(c) && !(c === ctx.card && fx.intent !== "help") && (!fx.filter || fx.filter(c, ctx)));
+  if (fx.target === "charOrPlayer") return [...chars, ...S.players.filter(p => !fx.players || fx.players(p.idx, ctx)).map(p => ({ isPlayer: true, idx: p.idx }))];
   return chars;
+}
+
+// The effect a waiting target choice will run. It is looked up directly, not through
+// effectFor(), so a choice that was already asked for still resolves if its card gets disabled.
+const pendingEffect = pd => EFFECTS[pd.source.id];
+// Everything the player may pick for a waiting target choice.
+function pendingTargets(pd) {
+  return validTargets(pendingEffect(pd), { card: pd.source, owner: S.players[pd.owner], spell: pd.spell });
 }
 
 function isValidTarget(target) {
   const pd = S.pending;
   if (!pd || pd.kind !== "target") return false;
-  const fx = effectFor(pd.source) || EFFECTS[pd.source.name];
-  const ctx = { card: pd.source, owner: S.players[pd.owner], spell: pd.spell };
-  return validTargets(fx, ctx).some(t => t.isPlayer ? target.isPlayer && target.idx === t.idx : t.uid === target.uid);
+  return pendingTargets(pd).some(t => t.isPlayer ? target.isPlayer && target.idx === t.idx : t.uid === target.uid);
 }
 
 // ---------------------------------------------------------------------------
@@ -594,9 +526,22 @@ function buildDeck(deckId) {
 function drawCard(p) {
   if (!p.deck.length) { deckOut(p); return null; }
   const c = p.deck.pop();
-  p.hand.push(c);
-  emit("draw", { player: p.idx, uid: c.uid });
+  if (addToHand(p, c, false)) emit("draw", { player: p.idx, uid: c.uid });
   return c;
+}
+
+// Every card that goes to a hand comes through here. A hand holds at most RULES.maxHand
+// cards; one more goes to the graveyard instead (it "burns").
+function addToHand(p, c, announce = true) {
+  if (p.hand.length >= RULES.maxHand) {
+    p.grave.push(c);
+    emit("burn", { player: p.idx, card: c });
+    log(`${p.name}'s hand is full, so ${c.name} goes to the graveyard.`);
+    return false;
+  }
+  p.hand.push(c);
+  if (announce) emit("handAdd", { player: p.idx });
+  return true;
 }
 
 function startTurn(p) {
@@ -607,7 +552,8 @@ function startTurn(p) {
   for (const c of p.field.chars) {
     c.hasAttacked = false;
     c.attackedThisTurn = false;
-    if (c.tempCloak) { removeSkill(c, "Cloak"); c.tempCloak = false; }   // Secure the Data lasts until your next turn
+    for (const sk of c.tempSkills || []) removeSkill(c, sk);   // e.g. Secure the Data lasts until your next turn
+    c.tempSkills = [];
   }
 }
 
@@ -623,12 +569,13 @@ function useManaToken() {
   return true;
 }
 
-// Area abilities you can use from the field (Data Transfer).
+// "rule: activate" (Data Transfer): an area whose play effect its owner may use once in each
+// of their Setup phases.
 function canActivateArea(a, p) {
   p = p || active();
   if (S.over || S.pending || !p.hasDrawn || S.phase !== PHASE.SETUP || a.disabled) return false;
-  if (a.name !== "Data Transfer" || a.usedRound === S.round || !p.field.areas.includes(a)) return false;
-  return validTargets(EFFECTS["Data Transfer"], { card: a, owner: p, spell: false }).length > 0;
+  if (!cardRule(a, "activate") || a.usedRound === S.round || !p.field.areas.includes(a)) return false;
+  return validTargets(EFFECTS[a.id], { card: a, owner: p, spell: false }).length > 0;
 }
 function activateArea(uid) {
   if (!allowed("activateArea", uid)) return false;
@@ -640,12 +587,14 @@ function activateArea(uid) {
   return true;
 }
 
-function newGame({ deckId, opponentDeckId, mode }) {
-  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, mode, nextUid: 1, log: [] };
+function newGame({ deckId, opponentDeckId, mode, seed, events }) {
+  seed = (seed ?? newSeed()) >>> 0;
+  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], mode, nextUid: 1, log: [], seed, rng: seed,
+        event: null, upcoming: null, lastEvent: null, noEvents: events === false };
   let opp = opponentDeckId;
   if (!opp) {
     const others = DATA.deckOrder.filter(id => id !== deckId);
-    opp = others.length ? others[Math.floor(Math.random() * others.length)] : deckId;
+    opp = others.length ? others[Math.floor(rand() * others.length)] : deckId;
   }
   S.players = [makePlayer(0, deckId, false), makePlayer(1, opp, mode === "ai")];
   for (const p of S.players) {
@@ -658,27 +607,80 @@ function newGame({ deckId, opponentDeckId, mode }) {
   S.players[0].hasDrawn = true;
   S.phase = PHASE.SETUP;
   S.players[1].manaToken = true;
-  log(`${S.players[0].name} (${S.players[0].faction}) vs ${S.players[1].name} (${S.players[1].faction})`);
+  log(`${S.players[0].name} (${S.players[0].faction}) vs ${S.players[1].name} (${S.players[1].faction}) · match seed ${seed}`);
   emit("newGame", {});
   return S;
 }
 
 // ---------------------------------------------------------------------------
+// Random events
+// ---------------------------------------------------------------------------
+// Every RULES.eventEvery rounds (a round is one player's turn) a random event hits the board for
+// both players and lasts that one round. Rounds 6, 11, 16 ... are event rounds. The next event is
+// chosen and announced RULES.eventWarn rounds ahead, so each player gets a turn to plan for it.
+// What each event is called and how it is described is in data/events.csv; what it does is here.
+const eventNow = id => !!S.event && S.event.id === id;   // used by costFromEffect and auraBonus in js/effects.js
+const EVENT_ON_START = {
+  tremor() { for (const c of allChars().slice()) if (ownerOf(c).field.chars.includes(c)) dealDamageToCharacter(c, 1); },
+  windfall() { for (const p of S.players) if (p.deck.length && p.hand.length < RULES.maxHand) drawCard(p); },   // a full hand or empty deck is skipped, never punished
+};
+// spell_surge (js/effects.js costFromEffect) and amplified_areas (auraBonus) work while the event lasts.
+const EVENT_IDS = ["spell_surge", "tremor", "windfall", "amplified_areas"];
+
+function nextEventRound(r) {
+  const k = Math.max(1, Math.ceil((r - 1) / RULES.eventEvery));
+  return 1 + RULES.eventEvery * k;
+}
+
+function updateEvent() {
+  if (!RULES.eventEvery || S.noEvents || S.over) return;
+  const known = (DATA.eventOrder || []).filter(id => EVENT_IDS.includes(id));
+  if (!known.length) return;
+  const r = S.round;
+  if (S.event && S.event.round < r) {
+    const gone = S.event; S.event = null;
+    log(`${DATA.events[gone.id].name} is over.`);
+    emit("eventEnd", { id: gone.id });
+    if (gone.id === "amplified_areas") sweepDeaths();   // bonuses that doubled are gone again
+  }
+  const at = nextEventRound(r);
+  if (!S.upcoming && at - r <= RULES.eventWarn) {
+    const pool = known.filter(id => id !== S.lastEvent);
+    const choices = pool.length ? pool : known;
+    const id = choices[Math.floor(rand() * choices.length)];
+    S.upcoming = { id, round: at };
+    S.lastEvent = id;
+    log(`Coming up in round ${at}: ${DATA.events[id].name}. ${DATA.events[id].desc}`);
+    emit("eventWarn", { id, round: at });
+  }
+  if (S.upcoming && S.upcoming.round === r) {
+    S.event = S.upcoming; S.upcoming = null;
+    log(`EVENT: ${DATA.events[S.event.id].name}. ${DATA.events[S.event.id].desc}`);
+    emit("eventStart", { id: S.event.id });
+    EVENT_ON_START[S.event.id]?.();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Costs and playing cards
 // ---------------------------------------------------------------------------
+// "rule: freeEquip" (Sensei): its owner's equipment costs nothing.
+// "rule: equipCostMax <n>" (Weapons Enthusiast): equipping this character costs at most n.
 function equipCost(c, owner, target, fromField) {
-  if (owner && owner.field.chars.some(x => named(x, "Sensei"))) return 0;
-  if (target && named(target, "Weapons Enthusiast")) return 0;
+  if (owner && owner.field.chars.some(x => cardRule(x, "freeEquip"))) return 0;
+  const most = target && cardRule(target, "equipCostMax");
+  if (most) return Math.min(Number(most[0]), fromField ? DATA.rarities[c.rarity]?.attachCost ?? 1 : playCost(c, owner));
   if (fromField) return DATA.rarities[c.rarity]?.attachCost ?? 1;
   return playCost(c, owner);
 }
 
+// When cards can be played and stored equipment attached: in Setup, and in Battle if the
+// card has Flash.
+const playWindowOpen = c => S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && hasSkill(c, "Flash"));
+
 function playCost(c, p) {
   p = p || active();
-  if (c.name === "Shaolin Warrior") return Math.max(0, c.manaCost - S.players.reduce((n, q) => n + q.field.chars.length + q.field.equips.length, 0));
-  if (c.name === "Tree Branch" && p.field.chars.filter(x => x.group === "Monkey").length >= 3) return 1;
-  if (c.name === "They Just Keep Coming") return Math.max(0, c.manaCost - countChars(x => x.group === "Zombie"));
-  return c.manaCost;
+  return costFromEffect(c, p);   // "cost:" effects (js/effects.js)
 }
 
 // Returns null when the card can be played, otherwise a short reason.
@@ -686,11 +688,9 @@ function playBlocker(c, p) {
   p = p || active();
   if (S.over) return "The game is over";
   if (S.pending) return "Finish the current choice first";
-  if (UNIMPLEMENTED.has(c.name)) return "Counter spells are not in the game yet";
+  if (counterKinds(c)) return "A counter spell answers a card the other player plays";
   if (!p.hasDrawn) return "Draw a card first";
-  const inSetup = S.phase === PHASE.SETUP;
-  const inBattleFlash = S.phase === PHASE.BATTLE && hasSkill(c, "Flash");
-  if (!inSetup && !inBattleFlash) return S.phase === PHASE.BATTLE ? "Only Flash cards can be played in Battle" : "Cards are played in the Setup phase";
+  if (!playWindowOpen(c)) return S.phase === PHASE.BATTLE ? "Only Flash cards can be played in Battle" : "Cards are played in the Setup phase";
   const cost = playCost(c, p);
   if (c.type === "Equipment") {
     const cheapest = Math.min(cost, ...p.field.chars.map(t => equipCost(c, p, t, false)));
@@ -741,28 +741,33 @@ function playCard(uid, opts = {}) {
     return true;
   }
 
+  // A spell that needs a target is only paid for once the target is picked, so cancelling
+  // the choice leaves the card in hand and the mana unspent.
+  const fx = effectFor(c);
+  if (c.type === "Spell" && fx?.target) {
+    S.pending = { kind: "target", source: c, owner: p.idx, spell: true, targetType: fx.target, intent: fx.intent, cast: { cost: playCost(c, p) } };
+    return true;
+  }
+
   p.mana -= playCost(c, p);
   p.hand.splice(index, 1);
   emit("play", { card: c, player: p.idx });
 
   if (c.type === "Character") {
     log(`${p.name} summons ${c.name}.`);
-    putOnField(c, p);
+    const held = { owner: p.idx, card: c };
+    if (!offerCounter(held)) finishPlay(held);
   } else if (c.type === "Area") {
     p.field.areas.push(c);
     c.placed = S.round * 100 + backlineCount(p);
     log(`${p.name} plays the area ${c.name}.`);
-    if (c.name === "Whirlpool") {
-      for (const x of allChars().slice()) { dealDamageToCharacter(x, 1); if (allChars().includes(x)) x.speed -= 1; }
-    }
+    if (fx?.now) fx.now({ card: c, owner: p, spell: false });   // e.g. Whirlpool
     sweepDeaths();
   } else {
     p.grave.push(c);
     log(`${p.name} casts ${c.name}.`);
-    const fx = effectFor(c);
-    const ctx = { card: c, owner: p, spell: true };
-    if (fx?.target) S.pending = { kind: "target", source: c, owner: p.idx, spell: true, targetType: fx.target, intent: fx.intent };
-    else if (fx?.now) fx.now(ctx);
+    const held = { owner: p.idx, card: c };
+    if (!offerCounter(held)) finishPlay(held);
   }
   return true;
 }
@@ -770,7 +775,10 @@ function playCard(uid, opts = {}) {
 function attach(e, target) {
   target.equipped.push(e);
   target.currentHealth += e.health || 0;   // equipment health is current health, not max
-  if (e.name === "API Key" && !hasSkill(target, "Level Up") && (target.levelUpCount || 0) < levelCap(target)) target.skills.push("Level Up");
+  // "rule: teach <Skill>" (API Key): the holder gains the skill for good. Level Up is not
+  // given back to a character that has already used all its levels.
+  const teach = cardRule(e, "teach")?.[0];
+  if (teach && !hasSkill(target, teach) && (teach !== "Level Up" || (target.levelUpCount || 0) < levelCap(target))) target.skills.push(teach);
   emit("text", { uid: target.uid, text: "EQUIP", color: "#7fd6ff" });
 }
 
@@ -782,7 +790,7 @@ function attachFieldEquipment(equipUid, targetUid) {
   const e = p.field.equips[i];
   const t = findChar(targetUid);
   if (!e || !t || t.p !== p || !p.hasDrawn || S.pending) return false;
-  if (!(S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && hasSkill(e, "Flash")))) return false;
+  if (!playWindowOpen(e)) return false;
   const cost = equipCost(e, p, t.c, true);
   if (p.mana < cost) return false;
   p.mana -= cost;
@@ -795,7 +803,7 @@ function attachFieldEquipment(equipUid, targetUid) {
 function canAttachFromField(e, p) {
   p = p || active();
   if (!p.hasDrawn || S.pending || S.over || !p.field.chars.length) return false;
-  if (!(S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && hasSkill(e, "Flash")))) return false;
+  if (!playWindowOpen(e)) return false;
   return p.field.chars.some(t => p.mana >= equipCost(e, p, t, true));
 }
 
@@ -806,21 +814,36 @@ function chooseTarget(target) {
   if (!allowed("chooseTarget", target)) return false;
   const pd = S.pending;
   if (!pd || pd.kind !== "target" || !isValidTarget(target)) return false;
-  const fx = effectFor(pd.source) || EFFECTS[pd.source.name];
+  const fx = pendingEffect(pd);
   const owner = S.players[pd.owner];
   const t = target.isPlayer ? target : (pd.targetType === "area" ? findArea(target.uid)?.c : findChar(target.uid)?.c);
   if (!t) return false;
   S.pending = null;
+  if (pd.cast) {   // a spell waiting in hand for its target: pay for it and cast it now
+    const i = owner.hand.indexOf(pd.source);
+    if (i < 0) return false;
+    owner.mana -= pd.cast.cost;
+    owner.hand.splice(i, 1);
+    owner.grave.push(pd.source);
+    emit("play", { card: pd.source, player: owner.idx });
+    log(`${owner.name} casts ${pd.source.name}.`);
+    // the other player may counter it before it takes effect
+    const held = { owner: owner.idx, card: pd.source, target: target.isPlayer ? { isPlayer: true, idx: target.idx } : { uid: target.uid, area: pd.targetType === "area" } };
+    if (offerCounter(held)) return true;
+  }
   log(`${pd.source.name} targets ${t.isPlayer ? S.players[t.idx].name : t.name}.`);
-  fx.apply({ card: pd.source, owner, spell: pd.spell }, t);
+  fx.apply({ card: pd.source, owner, spell: pd.spell, amount: pd.amount }, t);
+  settle();
   return true;
 }
 
 function cancelPending() {
   if (!allowed("cancelPending")) return false;
-  if (!S.pending || S.pending.required) return false;
+  if (!S.pending || S.pending.required || S.pending.resolve === "counter") return false;
   if (S.pending.source?.type === "Area") S.pending.source.usedRound = null;   // cancelling Data Transfer keeps its use
+  if (cardRule(S.pending.source, "strike")) S.pending.source.bladeRound = null;   // and a cancelled strike
   S.pending = null;
+  settle();
   return true;
 }
 
@@ -832,8 +855,9 @@ function resolveChoice(picks, option) {
   const owner = S.players[pd.owner];
   const picked = pd.cards.filter(c => picks.includes(c.uid)).slice(0, pd.pick || 1);
   S.pending = null;
-  const removeFromGrave = c => { for (const q of S.players) { const i = q.grave.indexOf(q.grave.find(x => x.uid === c.uid)); if (i >= 0) q.grave.splice(i, 1); } };
-  const fresh = c => { const n = newCard(DATA.cardsById[c.id] || c); return n; };
+  const removeFromGrave = c => { for (const q of S.players) { const i = q.grave.findIndex(x => x.uid === c.uid); if (i >= 0) q.grave.splice(i, 1); } };
+  // A card leaving the graveyard comes back as a clean copy, without damage or buffs.
+  const fresh = c => newCard(DATA.cardsById[c.id] || c);
 
   if (pd.resolve === "messenger") {
     const foe = foeOf(owner);
@@ -843,7 +867,7 @@ function resolveChoice(picks, option) {
       else { foe.grave.push(top); log(`${top.name} is discarded from ${foe.name}'s deck.`); }
     }
   } else if (pd.resolve === "toHand") {
-    for (const c of picked) { removeFromGrave(c); owner.hand.push(fresh(c)); emit("handAdd", { player: owner.idx }); log(`${c.name} returns to ${owner.name}'s hand.`); }
+    for (const c of picked) { removeFromGrave(c); if (addToHand(owner, fresh(c))) log(`${c.name} returns to ${owner.name}'s hand.`); }
   } else if (pd.resolve === "discardDraw") {
     const c = picked[0];
     if (c) { owner.hand.splice(owner.hand.findIndex(x => x.uid === c.uid), 1); owner.grave.push(c); }
@@ -855,7 +879,44 @@ function resolveChoice(picks, option) {
       log(`${c.name} rises onto the field.`);
       putOnField(fresh(c), owner);
     }
+  } else if (pd.resolve === "shepard") {
+    const dead = owner.grave.find(x => x.uid === pd.deadUid);
+    const shep = findChar(pd.shepardUid)?.c;
+    if (option === "hand" && dead) {
+      removeFromGrave(dead);
+      if (addToHand(owner, fresh(dead))) log(`${pd.source.name} returns ${dead.name} to ${owner.name}'s hand.`);
+    } else if (option === "absorb" && shep) {
+      const g = pd.gain;
+      shep.attack += g.a; shep.currentHealth += g.h;
+      shep.baseAttack += g.a; shep.baseHealth += g.h;
+      emit("text", { uid: shep.uid, text: `+${g.a}/+${g.h}`, color: "#8dff8d" });
+      log(`${pd.source.name} absorbs ${dead?.name || "the fallen card"}.`);
+    }
+  } else if (pd.resolve === "counter") {
+    const held = pd.held, caster = S.players[held.owner];
+    const want = option === "counter" ? picked[0] || (pd.cards.length === 1 ? pd.cards[0] : null) : null;
+    const i = want ? owner.hand.findIndex(x => x.uid === want.uid) : -1;
+    if (i >= 0 && owner.mana >= playCost(owner.hand[i], owner)) {
+      const counter = owner.hand.splice(i, 1)[0];
+      owner.mana -= playCost(counter, owner);
+      owner.grave.push(counter);
+      if (held.card.type === "Character") caster.grave.push(held.card);   // a spell is already there
+      emit("countered", { card: held.card, by: counter, player: owner.idx });
+      log(`${owner.name} casts ${counter.name}: ${held.card.name} is countered.`);
+    } else finishPlay(held);
+  } else if (pd.resolve === "apeSacrifice") {
+    const ape = findChar(pd.apeUid)?.c;
+    const monkey = picked[0] && findChar(picked[0].uid)?.c;
+    if (ape && monkey && monkey !== ape) {
+      log(`${owner.name} sacrifices ${monkey.name} to ${ape.name}.`);
+      destroyCharacter(monkey);
+      ape.attack++; ape.health++;
+      ape.baseAttack++; ape.baseHealth++;
+      ape.currentHealth = ape.baseHealth + equipBonuses(ape).h;   // fully healed
+      emit("text", { uid: ape.uid, text: "+1 ALL", color: "#ffd25e" });
+    }
   }
+  settle();
   return true;
 }
 
@@ -863,7 +924,7 @@ function resolveChoice(picks, option) {
 // Combat (port of resolveCharacterAttack)
 // ---------------------------------------------------------------------------
 function canAttack(c) {
-  return S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active && !c.hasAttacked && !hasSkill(c, "Tower") && stats(c).a >= 0;
+  return S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active && !c.hasAttacked && !hasSkill(c, "Tower");
 }
 
 // Guards: characters with Challenge or Tower must be attacked before anything else on
@@ -887,6 +948,7 @@ function attack(attackerUid, targetUid) {
   a.hasAttacked = true;
   a.attackedThisTurn = true;
   emit("lunge", { uid: a.uid, target: target ? target.uid : null, player: defender.idx });
+  runHook(a, "attack", { owner: p });
   const as = stats(a);
   if (!target) {
     log(`${a.name} attacks ${defender.name} for ${as.a}.`);
@@ -895,8 +957,9 @@ function attack(attackerUid, targetUid) {
   }
   log(`${a.name} attacks ${target.name}.`);
   const ts = stats(target);
-  let ta = ts.a, tspd = ts.s, shield = 0;
-  if (named(target, "The Man Ape")) { ta += 10; tspd += 10; shield = 10; }   // when defending gain +10 to all stats
+  let ta = ts.a, shield = 0;
+  const defend = cardRule(target, "defend");   // "rule: defend <n>" (The Man Ape): +n to all stats while defending
+  if (defend) { ta += Number(defend[0]); shield = Number(defend[0]); }
   if (ts.parry) ta *= 2;                                                      // Parry: double damage when defending
 
   const hitTarget = () => {
@@ -906,22 +969,72 @@ function attack(attackerUid, targetUid) {
   };
   const alive = c => ownerOf(c).field.chars.includes(c);
 
-  if (as.s >= tspd) {
+  // Both strike at the same time, unless exactly one of them has Swift: that one strikes
+  // first, and takes no damage back if its blow knocks the other out.
+  const aSwift = isSwift(a), tSwift = isSwift(target);
+  const first = aSwift && !tSwift ? a : tSwift && !aSwift ? target : null;
+  emit("clash", { attacker: a.uid, target: target.uid, swift: first ? first.uid : null });
+  if (aSwift && !tSwift) {
     hitTarget();
     if (alive(target) && alive(a)) dealDamageToCharacter(a, ta);
-  } else {
+  } else if (tSwift && !aSwift) {
     dealDamageToCharacter(a, ta);
     if (alive(a)) hitTarget();
+  } else {
+    hitTarget();
+    if (alive(a)) dealDamageToCharacter(a, ta);
   }
+  if (first && alive(first) && !alive(first === a ? target : a)) emit("text", { uid: first.uid, text: "» NO REPLY", color: "#9fe7ff" });
   recordCombatSurvival(a); recordCombatSurvival(target);
-  if (alive(a) && !alive(target) && named(a, "Pro Gamer")) levelUp(a);   // levels up after a knockout
   return true;
 }
 
+// Swift: the skill, or wearing equipment that grants it (Zippy Shoes, Bow).
+const isSwift = c => hasSkill(c, "Swift") || grantsSkill(c, "Swift");
+
+// "rule: survive <fights> <CardID>" (Black Belt Student): after living through that many
+// fights, the character transforms into that card.
 function recordCombatSurvival(c) {
-  if (c && ownerOf(c).field.chars.includes(c) && named(c, "Black Belt Student")) {
+  const sv = c && cardRule(c, "survive");
+  if (sv && ownerOf(c).field.chars.includes(c)) {
     c.combatSurvived = (c.combatSurvived || 0) + 1;
-    if (c.combatSurvived >= 3) transformCharacter(c, "5th Degree Master");
+    if (c.combatSurvived >= Number(sv[0])) transformCharacter(c, sv[1]);
+  }
+}
+
+// "rule: strike" (Kenshi's Blade): once per Battle Phase on your turn, the character holding
+// this equipment uses its play effect (3 damage to an enemy character of your choice).
+const bladeOf = c => (c.equipped || []).find(e => cardRule(e, "strike") && e.bladeRound !== S.round);
+function canUseBlade(c) {
+  const blade = bladeOf(c);
+  return !!blade && S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active
+    && validTargets(EFFECTS[blade.id], { card: blade, owner: ownerOf(c), spell: false }).length > 0;
+}
+function useBlade(uid) {
+  if (!allowed("useBlade", uid)) return false;
+  const f = findChar(uid);
+  if (!f || !canUseBlade(f.c)) return false;
+  const blade = bladeOf(f.c);
+  blade.bladeRound = S.round;
+  log(`${f.c.name} strikes with ${blade.name}.`);
+  S.pending = { kind: "target", source: blade, owner: f.p.idx, spell: false, targetType: "char", intent: "harm" };
+  return true;
+}
+
+// "rule: sacrifice <Faction>" (The Man Ape): after each of your Battle phases you may sacrifice
+// another character of that faction you control to give it +1 to all stats for good and heal
+// it fully.
+function afterBattle(p) {
+  for (const ape of p.field.chars.filter(c => cardRule(c, "sacrifice") && c.apeRound !== S.round)) {
+    ape.apeRound = S.round;
+    const faction = cardRule(ape, "sacrifice")[0];
+    const monkeys = p.field.chars.filter(c => c !== ape && inGroup(c, faction));
+    if (!monkeys.length) continue;
+    ask({
+      kind: "choose", source: ape, owner: p.idx, title: ape.name,
+      prompt: `Sacrifice a ${faction} to give ${ape.name} +1 to all stats and heal it fully?`,
+      cards: monkeys, pick: 1, options: [{ id: "sacrifice", label: "Sacrifice it" }], resolve: "apeSacrifice", apeUid: ape.uid,
+    });
   }
 }
 
@@ -943,47 +1056,44 @@ function doDraw() {
 function advancePhase() {
   if (!allowed("advancePhase")) return false;
   if (S.over || S.pending || S.phase === PHASE.DRAW) return false;
+  const leavingBattle = S.phase === PHASE.BATTLE;
   if (S.phase < PHASE.END) S.phase++;
   emit("phase", {});
+  if (leavingBattle) afterBattle(active());
   return true;
 }
 
-// End-of-turn abilities (port of endPhase in Lua)
+// End-of-turn abilities: each "endTurn:" effect on this player's characters, the equipment
+// they hold, and their areas.
 function endPhaseEffects(p) {
-  // Digital: Server Farm, API Key, Beta Tester and Data Transfer level characters up at the end of your turn
-  const farms = p.field.chars.filter(c => named(c, "Server Farm")).length;
   for (const c of p.field.chars.slice()) {
-    if (farms) levelUp(c, farms);
-    const keys = (c.equipped || []).filter(e => e.name === "API Key").length;
-    if (keys) levelUp(c, keys);
-    if (named(c, "Beta Tester")) levelUp(c);
+    runHook(c, "endTurn", { owner: p });
+    for (const e of (c.equipped || []).slice()) runHook(e, "endTurn", { owner: p, holder: c });
   }
-  for (const a of p.field.areas) {
-    if (a.name !== "Data Transfer" || a.disabled) continue;
-    const levelers = p.field.chars.filter(c => hasSkill(c, "Level Up"));
-    if (levelers.length) levelUp(levelers.reduce((x, y) => (stats(y).a > stats(x).a ? y : x)));
-  }
-  for (const c of p.field.chars.slice()) {
-    if (named(c, "Simple Defender")) c.currentHealth += 2;
-    if (named(c, "Banana Tree")) { const b = takeFromDeck(p, x => x.name === "Banana"); if (b) { p.hand.push(b); emit("handAdd", { player: p.idx }); } }
-    if (named(c, "Sneaky Skinbag")) {
-      c.currentHealth += p.field.chars.filter(x => x.group === "Zombie" && x !== c).length;
-      const corpse = cardByName("Reanimated Corpse");
-      if (corpse && p.field.chars.length < RULES.maxChars) putOnField(corpse, p);
-    }
-  }
+  for (const a of p.field.areas.slice()) runHook(a, "endTurn", { owner: p });
 }
 
 function endTurn() {
   if (!allowed("endTurn")) return false;
   if (S.over) return false;
-  if (S.pending && S.pending.kind === "target") S.pending = null;
+  if (S.pending && S.pending.kind === "target" && !S.pending.required) S.pending = null;
   if (S.pending) return false;
+  // Passing straight from Battle still ends the Battle phase first, which can ask The Man Ape's question.
+  if (S.phase === PHASE.BATTLE) {
+    S.phase = PHASE.END;
+    afterBattle(active());
+    if (S.pending) { S.passAfterChoice = true; return true; }
+  }
+  finishTurn();
+  return true;
+}
+
+function finishTurn() {
   endPhaseEffects(active());
   S.active = 1 - S.active;
   S.phase = PHASE.DRAW;
   S.round++;
   startTurn(active());
+  updateEvent();
   emit("turn", { player: S.active });
-  return true;
 }

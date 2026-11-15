@@ -10,8 +10,8 @@ const DECK_RULES = {
   champions: DATA.rules.max_unknown_kinds ?? 1,   // different Unknown cards: a deck's champion
 };
 const copyLimit = card => (card.rarity === "Unknown" ? DECK_RULES.unknownCopies : DECK_RULES.copies);
-// Cards that can go in a deck: every card the game knows how to play.
-const buildable = card => !UNIMPLEMENTED.has(card.name);
+// Cards that can go in a deck: every card in the game.
+const buildable = card => !!card;
 
 // Saved decks: [{ id, name, cards: { cardId: copies } }]. Cards that are no longer in
 // data/cards.csv, or over the copy limit after a rules change, are dropped quietly.
@@ -106,18 +106,18 @@ const builderDirty = () => JSON.stringify([B.name, B.cards]) !== B.saved;
 
 function renderBuilder() {
   byId("bld-name").value = B.name;
-  const factions = ["All", ...Object.keys(DATA.factions), "Neutral"];
+  const factions = ["All", ...Object.keys(DATA.factions), "Unbound"];
   byId("bld-filters").innerHTML =
-    `<div class="chip-row" role="group" aria-label="Faction">${factions.map(f => `<button type="button" class="chip" data-faction="${f}" aria-pressed="${f === B.faction}">${esc(f === "All" ? "All factions" : f)}</button>`).join("")}</div>
+    `<div class="chip-row" role="group" aria-label="Fracture">${factions.map(f => `<button type="button" class="chip" data-faction="${f}" aria-pressed="${f === B.faction}">${esc(f === "All" ? "All fractures" : f)}</button>`).join("")}</div>
      <div class="chip-row" role="group" aria-label="Card type">${["All", ...TYPES].map(t => `<button type="button" class="chip" data-type="${t}" aria-pressed="${t === B.type}">${esc(t === "All" ? "All types" : t + "s")}</button>`).join("")}</div>`;
   renderPool();
   renderDeckPanel();
 }
 
 function renderPool() {
-  const want = B.faction === "Neutral" ? "N/A" : B.faction;
+  const want = B.faction === "Unbound" ? "N/A" : B.faction;
   const cards = DATA.cardList
-    .filter(c => buildable(c) && (want === "All" || c.group === want) && (B.type === "All" || c.type === B.type))
+    .filter(c => buildable(c) && (want === "All" || inGroup(c, want)) && (B.type === "All" || c.type === B.type))
     .sort((a, b) => a.manaCost - b.manaCost || a.name.localeCompare(b.name));
   byId("bld-cards").innerHTML = cards.map(c => {
     const n = B.cards[c.id] || 0, max = copyLimit(c);
@@ -284,7 +284,7 @@ byId("bld-name").addEventListener("input", e => { B.name = e.target.value; });
 // ---------------------------------------------------------------------------
 const WALK = [
   { at: "#bld-cards", title: "Pick your cards", text: "Every card in the game is here. Tap a card to add a copy to your deck. Tap the <b>i</b> on a card to read it first." },
-  { at: "#bld-filters", title: "Filter", text: "Show one faction or one type of card. You can mix factions, but cards from the same faction are made to work together. Rally, for example, needs three characters of one faction." },
+  { at: "#bld-filters", title: "Filter", text: "Show one fracture (the shattered world a card is from) or one type of card. You can mix fractures, but cards from the same fracture are made to work together. Rally, for example, needs three characters of one fracture." },
   { at: ".bld-head", sheet: true, title: "Your deck", text: `A deck needs at least <b>${DECK_RULES.min} cards</b>. You can have up to ${DECK_RULES.copies} copies of a card. Unknown cards are champions: one per deck, up to ${DECK_RULES.unknownCopies} copies. Tap <b>−</b> in the list to take one out.` },
   { at: ".bld-curve", sheet: true, title: "Mana curve", text: "How many cards cost each amount. Keep plenty of cheap cards (1 to 3 mana) so you have something to play in your first turns, and only a few big, expensive ones." },
   { at: ".bld-types", sheet: true, title: "Card types", text: "Characters do the fighting, so most decks want at least 15. Spells, equipment and areas back them up." },

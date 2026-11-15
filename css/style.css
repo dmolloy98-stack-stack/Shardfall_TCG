@@ -3,18 +3,18 @@
    fixed 1440x1000 stage (the same virtual size as the LÖVE version) scaled to fit. */
 :root {
   --shard-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'%3E%3Cpath d='M20 1L36 14L32 38L20 47L8 38L4 14Z' fill='%23a78bfa' stroke='%23f1ebff' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M4 14L20 20L36 14M20 20L20 47M8 38L20 20L32 38' stroke='%23f1ebff' stroke-width='1' fill='none' opacity='.75'/%3E%3C/svg%3E");
-  --table: #160e09;
-  --wood: #3a2314;
-  --wood-hi: #6a4426;
-  --wood-line: #24150c;
+  --table: #070a18;
+  --wood: #101838;      /* (old name) now the deep indigo of the crystal buttons and bars */
+  --wood-hi: #223066;
+  --wood-line: #05070f;
   --brass: #d9a64c;
-  --brass-dim: #8b6428;
+  --brass-dim: #5d79c2;   /* (old name) now the pale ice-blue rim of crystal panels */
   --parchment: #f2e7cf;
   --muted: #b7a68a;
   --paper: #cdbd9e;
   --paper-hi: #e7dbc0;
   --ink: #1b130d;
-  --panel: rgba(17, 10, 6, 0.92);
+  --panel: rgba(8, 12, 28, 0.93);
   --danger: #e2553d;
   --heal: #63d07a;
   --atk: #a3311a;
@@ -22,6 +22,18 @@
   --spd: #8a5d08;
   --target: #5fd0f0;
   --glow-play: #63e08a;
+
+  /* Stained glass: dark lead between jewel-coloured panes (the look of the whole game). */
+  --lead: #05070f;
+  --lead-hi: #1a2548;
+  --glass: #8fb4ff;
+  /* glass-window:start */
+  --glass-window: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 1000' preserveAspectRatio='none'%3E%3Cpath d='M98 0L275 0L249 149ZM275 0L384 118L249 149ZM562 0L588 123L478 156ZM750 0L686 147L588 123ZM1044 0L1048 121L933 167ZM0 128L116 129L129 287ZM384 118L348 234L220 258ZM1288 136L1293 244L1207 249ZM220 258L348 234L380 408ZM584 220L751 261L612 404ZM1059 287L1055 356L945 409ZM945 409L1046 490L962 486ZM241 522L260 653L127 588ZM631 474L595 668L443 647ZM1046 490L1232 602L1118 584ZM595 668L755 598L719 793ZM1440 662L1440 772L1315 722ZM565 738L719 793L612 872ZM814 755L961 742L919 900ZM814 755L919 900L855 858ZM1315 722L1440 772L1440 915ZM0 897L114 841L0 1000ZM612 872L701 861L722 1000ZM612 872L722 1000L563 1000ZM919 900L1085 884L1115 1000Z' fill='hsla(265,70%,55%,.30)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M369 0L516 0L384 118ZM1044 0L1241 0L1196 91ZM1360 0L1440 0L1288 136ZM588 123L751 261L584 220ZM933 167L1048 121L1059 287ZM933 167L1059 287L959 222ZM0 214L129 287L0 331ZM348 234L481 269L469 367ZM751 261L830 293L720 373ZM830 293L945 409L864 415ZM0 331L136 398L0 529ZM136 398L142 475L0 529ZM210 379L353 485L241 522ZM720 373L864 415L835 480ZM864 415L945 409L835 480ZM1055 356L1238 394L1197 522ZM0 529L142 475L0 641ZM353 485L443 647L365 656ZM1350 524L1440 477L1440 662ZM0 641L127 588L0 779ZM365 656L443 647L449 773ZM443 647L595 668L449 773ZM822 655L814 755L719 793ZM320 707L449 773L367 845ZM719 793L814 755L855 858ZM1215 727L1315 722L1302 849Z' fill='hsla(215,75%,50%,.26)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M275 0L369 0L384 118ZM828 0L868 113L686 147ZM116 129L249 149L129 287ZM478 156L588 123L481 269ZM868 113L830 293L751 261ZM1048 121L1196 91L1207 249ZM1196 91L1288 136L1207 249ZM1288 136L1440 149L1293 244ZM220 258L210 379L136 398ZM220 258L380 408L210 379ZM830 293L959 222L945 409ZM959 222L1059 287L945 409ZM1059 287L1207 249L1238 394ZM1207 249L1293 244L1238 394ZM945 409L1055 356L1046 490ZM1238 394L1296 336L1350 524ZM1296 336L1440 357L1440 477ZM353 485L468 474L443 647ZM631 474L735 517L755 598ZM735 517L835 480L822 655ZM735 517L822 655L755 598ZM962 486L1118 584L986 667ZM127 588L260 653L132 755ZM755 598L822 655L719 793ZM1118 584L1215 727L1083 711ZM1232 602L1360 602L1315 722ZM0 779L132 755L114 841ZM229 723L367 845L275 839ZM449 773L565 738L612 872ZM612 872L563 1000L482 1000ZM919 900L1115 1000L954 1000ZM1302 849L1440 915L1361 1000Z' fill='hsla(175,65%,40%,.20)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M0 0L98 0L116 129ZM516 0L562 0L478 156ZM562 0L750 0L588 123ZM828 0L922 0L933 167ZM249 149L384 118L220 258ZM129 287L220 258L136 398ZM1059 287L1238 394L1055 356ZM1293 244L1440 222L1440 357ZM1293 244L1440 357L1296 336ZM210 379L380 408L353 485ZM945 409L962 486L835 480ZM142 475L241 522L127 588ZM1046 490L1197 522L1232 602ZM1350 524L1360 602L1232 602ZM127 588L132 755L0 779ZM260 653L229 723L132 755ZM260 653L365 656L229 723ZM595 668L719 793L565 738ZM822 655L961 742L814 755ZM132 755L275 839L114 841ZM229 723L320 707L367 845ZM449 773L509 864L367 845ZM719 793L855 858L701 861ZM855 858L954 1000L874 1000ZM1440 915L1440 1000L1361 1000Z' fill='hsla(330,65%,52%,.24)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M516 0L478 156L384 118ZM922 0L1044 0L933 167ZM1360 0L1288 136L1196 91ZM1440 0L1440 149L1288 136ZM1440 149L1440 222L1293 244ZM348 234L469 367L380 408ZM751 261L720 373L612 404ZM1293 244L1296 336L1238 394ZM380 408L469 367L468 474ZM612 404L720 373L735 517ZM1296 336L1440 477L1350 524ZM142 475L127 588L0 641ZM835 480L962 486L986 667ZM835 480L986 667L822 655ZM365 656L449 773L320 707ZM595 668L565 738L449 773ZM986 667L1118 584L1083 711ZM1232 602L1315 722L1215 727ZM1360 602L1440 662L1315 722ZM0 779L114 841L0 897ZM449 773L612 872L509 864ZM1083 711L1215 727L1222 878ZM1215 727L1302 849L1222 878ZM275 839L367 845L345 1000ZM275 839L345 1000L200 1000Z' fill='hsla(40,85%,50%,.16)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M750 0L828 0L686 147ZM1241 0L1360 0L1196 91ZM384 118L478 156L481 269ZM868 113L933 167L830 293ZM933 167L959 222L830 293ZM1048 121L1207 249L1059 287ZM481 269L584 220L612 404ZM830 293L864 415L720 373ZM380 408L468 474L353 485ZM469 367L612 404L468 474ZM612 404L735 517L631 474ZM720 373L835 480L735 517ZM1238 394L1350 524L1197 522ZM241 522L365 656L260 653ZM468 474L631 474L443 647ZM822 655L986 667L961 742ZM1118 584L1232 602L1215 727ZM719 793L701 861L612 872ZM961 742L1085 884L919 900ZM114 841L200 1000L144 1000ZM367 845L509 864L345 1000ZM509 864L612 872L482 1000ZM855 858L874 1000L722 1000ZM1085 884L1222 878L1159 1000ZM1085 884L1159 1000L1115 1000Z' fill='hsla(265,70%,55%,.12)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M0 0L116 129L0 128ZM98 0L249 149L116 129ZM828 0L933 167L868 113ZM1044 0L1196 91L1048 121ZM0 128L129 287L0 214ZM249 149L220 258L129 287ZM384 118L481 269L348 234ZM588 123L584 220L481 269ZM588 123L686 147L751 261ZM686 147L868 113L751 261ZM129 287L136 398L0 331ZM481 269L612 404L469 367ZM136 398L210 379L241 522ZM136 398L241 522L142 475ZM612 404L631 474L468 474ZM1055 356L1197 522L1046 490ZM241 522L353 485L365 656ZM631 474L755 598L595 668ZM962 486L1046 490L1118 584ZM1197 522L1350 524L1232 602ZM1350 524L1440 662L1360 602ZM365 656L320 707L229 723ZM986 667L1083 711L961 742ZM132 755L229 723L275 839ZM961 742L1083 711L1085 884ZM1083 711L1222 878L1085 884ZM1315 722L1440 915L1302 849ZM114 841L144 1000L0 1000ZM114 841L275 839L200 1000ZM509 864L482 1000L345 1000ZM701 861L855 858L722 1000ZM855 858L919 900L954 1000ZM1222 878L1302 849L1159 1000ZM1302 849L1361 1000L1159 1000Z' fill='hsla(215,75%,50%,.12)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3C/svg%3E");
+  /* glass-window:end */
+  /* crystal-cracks:start */
+  --crystal-cracks: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 1000' preserveAspectRatio='none'%3E%3Cpath d='M195.2137583156148 371.89698609714384L148 403L91 449L38 503M136.20298780446132 318.72134909410744L99 318L18 296L-19 291L-54 297M-22.891101960452723 145.09061968557583L-53 70M316.8 400L268 399L230 389L195 372L136 319L97 297L51 231L24 196L-23 145L-80 94M265.59009501969473 403.62508170245786L229 439L197 497L170 534L162 576M184.42773064839272 452.7038661344296L154 497L91 542M126.00625764258808 498.24858448548093L119 591M316.8 400L266 404L184 453L126 498L85 524L47 538L1 555L-60 570M748.0453360794302 254.96373680642543L708 209L642 146M712.4023839379207 327.47417915438814L741 293L748 255L787 174L812 138M631.9244277650349 148.613421641433L573 101M720 400L712 327L687 276L658 217L632 149L586 82L549 13M613.4694388578716 481.3786255972474L558 460M701.7880147221449 449.8530327656623L613 481L541 544L504 566M856.2166135312254 605.0329697625247L918 565M720 400L702 450L706 521L726 553L779 594L813 604L856 605L909 616L988 609M1195.6146318360313 354.7992786992533L1214 292L1251 209L1299 150L1326 118M1123.2 400L1196 355L1221 327L1301 287L1335 277L1426 292L1476 291L1550 281M1195.1426526788975 541.9657089588121L1162 619L1105 670M1123.2 400L1163 448L1191 491L1195 542L1201 593L1214 641L1229 711L1239 750' fill='none' stroke='rgb(205,232,255)' stroke-opacity='0.07' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M195.2137583156148 371.89698609714384L148 403L91 449L38 503M136.20298780446132 318.72134909410744L99 318L18 296L-19 291L-54 297M-22.891101960452723 145.09061968557583L-53 70M316.8 400L268 399L230 389L195 372L136 319L97 297L51 231L24 196L-23 145L-80 94M265.59009501969473 403.62508170245786L229 439L197 497L170 534L162 576M184.42773064839272 452.7038661344296L154 497L91 542M126.00625764258808 498.24858448548093L119 591M316.8 400L266 404L184 453L126 498L85 524L47 538L1 555L-60 570M748.0453360794302 254.96373680642543L708 209L642 146M712.4023839379207 327.47417915438814L741 293L748 255L787 174L812 138M631.9244277650349 148.613421641433L573 101M720 400L712 327L687 276L658 217L632 149L586 82L549 13M613.4694388578716 481.3786255972474L558 460M701.7880147221449 449.8530327656623L613 481L541 544L504 566M856.2166135312254 605.0329697625247L918 565M720 400L702 450L706 521L726 553L779 594L813 604L856 605L909 616L988 609M1195.6146318360313 354.7992786992533L1214 292L1251 209L1299 150L1326 118M1123.2 400L1196 355L1221 327L1301 287L1335 277L1426 292L1476 291L1550 281M1195.1426526788975 541.9657089588121L1162 619L1105 670M1123.2 400L1163 448L1191 491L1195 542L1201 593L1214 641L1229 711L1239 750' fill='none' stroke='rgb(205,232,255)' stroke-opacity='0.2' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M195.2137583156148 371.89698609714384L148 403L91 449L38 503M136.20298780446132 318.72134909410744L99 318L18 296L-19 291L-54 297M-22.891101960452723 145.09061968557583L-53 70M316.8 400L268 399L230 389L195 372L136 319L97 297L51 231L24 196L-23 145L-80 94M265.59009501969473 403.62508170245786L229 439L197 497L170 534L162 576M184.42773064839272 452.7038661344296L154 497L91 542M126.00625764258808 498.24858448548093L119 591M316.8 400L266 404L184 453L126 498L85 524L47 538L1 555L-60 570M748.0453360794302 254.96373680642543L708 209L642 146M712.4023839379207 327.47417915438814L741 293L748 255L787 174L812 138M631.9244277650349 148.613421641433L573 101M720 400L712 327L687 276L658 217L632 149L586 82L549 13M613.4694388578716 481.3786255972474L558 460M701.7880147221449 449.8530327656623L613 481L541 544L504 566M856.2166135312254 605.0329697625247L918 565M720 400L702 450L706 521L726 553L779 594L813 604L856 605L909 616L988 609M1195.6146318360313 354.7992786992533L1214 292L1251 209L1299 150L1326 118M1123.2 400L1196 355L1221 327L1301 287L1335 277L1426 292L1476 291L1550 281M1195.1426526788975 541.9657089588121L1162 619L1105 670M1123.2 400L1163 448L1191 491L1195 542L1201 593L1214 641L1229 711L1239 750' fill='none' stroke='rgb(205,232,255)' stroke-opacity='0.85' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  /* crystal-cracks:end */
+  --cames: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 135' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%230b0714' stroke-width='.6' stroke-linejoin='round' opacity='.28'%3E%3Cpath d='M0 38L24 52L41 31L70 47L95 30M24 52L18 96L52 112L70 47M18 96L0 118M52 112L60 135M70 47L88 92L95 88M88 92L52 112'/%3E%3C/g%3E%3C/svg%3E");
 
   --font-display: "IM Fell English SC", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-body: "Alegreya Sans", "Gill Sans", "Trebuchet MS", system-ui, sans-serif;
@@ -246,55 +258,79 @@ button { font: inherit; color: inherit; }
   flex: none;
   overflow: hidden;
 }
+/* Front of a card: .shape carries the drop shadow and any glow (--glow), so both follow the
+   rarity frame's outline, crystals included. .face is the paper, clipped to the outline. */
+.card.framed { background: none; box-shadow: none; overflow: visible; border-radius: 0; }
+.card.framed .shape { position: absolute; inset: 0; filter: drop-shadow(0 0.45em 0.4em rgba(0, 0, 0, 0.5)) var(--glow, drop-shadow(0 0 0 transparent)); transition: filter 0.2s; }
+.card.framed .face {
+  position: absolute; inset: 0; overflow: hidden;
+  /* A pane of glass tinted by the card's fracture: light at the top, deeper at the foot. */
+  background: linear-gradient(170deg, color-mix(in srgb, var(--fc) 20%, #f5eddb), color-mix(in srgb, var(--fc) 34%, #d4c6a8) 58%, color-mix(in srgb, var(--fc) 52%, #7d6a58));
+}
+/* Lead lines through the glass, and a streak of light across it. */
+.card.framed .face::before { content: ""; position: absolute; inset: 0; background: var(--cames) 0 0 / 100% 100%; pointer-events: none; }
+.card.framed .face::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 22%, rgba(255, 255, 255, 0.28) 34%, rgba(255, 255, 255, 0.05) 46%, transparent 58%); }
+.card.f-chip .face { border-radius: 0.8em; }
+.card .frame { position: absolute; left: -1em; top: -1em; width: 11.5em; height: 15.5em; overflow: visible; pointer-events: none; }
+.card .rarity-gem { position: absolute; left: 50%; bottom: 0.45em; width: 1.2em; height: 1.2em; transform: translateX(-50%); pointer-events: none; }
+.card .cracks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.card .glint { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,236,170,.55) 48%, rgba(255,255,255,.7) 50%, rgba(255,236,170,.55) 52%, transparent 65%) 130% 0 / 250% 100% no-repeat;
+  animation: glint 4.5s ease-in-out infinite; }
+@keyframes glint { 0%, 55% { background-position: 130% 0; } 100% { background-position: -30% 0; } }
+@media (prefers-reduced-motion: reduce) { .card .glint { animation: none; background-position: 50% 0; opacity: 0.5; } }
 .card .medal { position: absolute; left: 0.4em; top: 0.4em; width: 1.7em; height: 1.7em; }
 .card .cost {
-  position: absolute; right: 0.35em; top: 0.3em;
-  width: 2em; height: 2em;
+  position: absolute; right: 0.25em; top: 0.25em;
+  width: 1.6em; height: 1.6em;
   display: grid; place-items: center;
-  font-weight: 800; font-size: 0.95em;
+  font-weight: 800; font-size: 0.8em;
   color: #fff4d6;
   background: radial-gradient(circle at 35% 30%, #f3b347, #9a4f12);
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
 .card .name {
-  position: absolute; left: 2.2em; right: 2.2em; top: 0.45em;
-  font-weight: 800; font-size: 0.98em; line-height: 1.05;
+  position: absolute; left: 2.15em; right: 1.9em; top: 0.45em;
+  font-weight: 800; font-size: 0.98em; line-height: 1.05; white-space: nowrap;
   text-align: center;
-  height: 2.2em;
+  height: 1.7em;
   display: flex; align-items: center; justify-content: center;
 }
-.card .type { position: absolute; left: 0.4em; right: 0.4em; top: 2.75em; text-align: center; font-size: 0.82em; color: #4b3a2a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The type and fracture line is not drawn on the card; the detail window shows it. */
 .card .art {
-  position: absolute; left: 0.6em; right: 0.6em; top: 4.2em; height: 5em;
-  border-radius: 0.5em;
-  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--fc) 35%, #efe3c8), color-mix(in srgb, var(--fc) 15%, #d8c8a6));
-  box-shadow: inset 0 0 0 1px rgba(27, 19, 13, 0.45);
+  position: absolute; left: 0.6em; right: 0.6em; top: 2.8em; height: 7.5em;
+  border-radius: 0.45em;
+  /* A jewel lit from behind: bright at the heart, deep at the lead edge. */
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--fc) 55%, #fff6e0), color-mix(in srgb, var(--fc) 78%, #1a1030) 115%);
+  box-shadow: inset 0 0 0 0.17em var(--lead), inset 0 0 0 0.27em rgba(255, 255, 255, 0.32), inset 0 0 1.1em rgba(11, 7, 20, 0.45);
   display: grid; place-items: center;
   overflow: hidden;
 }
-.card .art svg { width: 3em; height: 3em; opacity: 0.85; }
+.card .art svg { width: 3.4em; height: 3.4em; opacity: 0.9; filter: drop-shadow(0 0 0.25em rgba(255, 255, 255, 0.55)); }
+.card .art::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--cames) 0 0 / 100% 100%; opacity: 0.7; }
+.card .art img { position: relative; z-index: 0; }
 .card .art img { width: 100%; height: 100%; object-fit: cover; }
-.card .skills { position: absolute; left: 0.4em; right: 0.4em; top: 9.55em; text-align: center; font-size: 0.85em; font-weight: 700; line-height: 1.15; color: #3a2a1c; }
+.card .skills { position: absolute; left: 0.4em; right: 0.4em; bottom: 2.1em; text-align: center; font-size: 0.85em; font-weight: 700; line-height: 1.15; color: #3a2a1c; }
 .card .stats {
-  position: absolute; left: 0.5em; right: 0.5em; bottom: 0.5em;
+  position: absolute; left: 0.7em; right: 0.7em; bottom: 0.5em;
   display: flex; justify-content: space-between;
   font-weight: 800; font-size: 1.05em;
   font-variant-numeric: tabular-nums;
 }
 .card .stats .a { color: var(--atk); }
 .card .stats .h { color: var(--hp); }
-.card .stats .s { color: var(--spd); }
 .card .stats .low { color: var(--danger); }
 .card .stats .up { text-decoration: underline; text-underline-offset: 0.15em; }
 .card .equip-count {
-  position: absolute; right: 0.5em; top: 9.3em;
+  position: absolute; right: 0.9em; top: 3.15em;
   min-width: 1.6em; height: 1.6em; padding: 0 0.3em;
   border-radius: 1em;
   background: #2f6f8f; color: #fff;
   display: grid; place-items: center;
   font-size: 0.85em; font-weight: 800;
 }
-.card .sick { position: absolute; left: 0.5em; top: 9.3em; font-size: 0.85em; font-weight: 800; color: #5a4632; }
+.card .sick { position: absolute; left: 0.9em; top: 3.15em; font-size: 0.85em; font-weight: 800; color: #5a4632; }
 /* Card backs carry the shard emblem. */
 .card.back {
   background: var(--shard-emblem) center / 46% no-repeat, radial-gradient(circle at 50% 45%, #4b2e86, #1c1233 72%);
@@ -333,19 +369,11 @@ button, .btn { touch-action: manipulation; }
 }
 #board.rotate-in { animation: rotate-in 0.75s cubic-bezier(.3,.7,.2,1); }
 @keyframes rotate-in { from { transform: rotate(180deg) scale(0.85); } to { transform: none; } }
-.shake { animation: shake 0.35s linear; }
-@keyframes shake {
-  20% { translate: -6px 3px; } 40% { translate: 5px -4px; } 60% { translate: -4px -2px; } 80% { translate: 3px 4px; }
-}
-.shake-big { animation: shake-big 0.6s linear; }
-@keyframes shake-big {
-  10% { translate: -14px 6px; } 25% { translate: 12px -8px; } 40% { translate: -10px -6px; } 55% { translate: 8px 9px; } 70% { translate: -6px 4px; } 85% { translate: 4px -3px; }
-}
 
 .bar {
   position: absolute; left: 0; right: 0; height: 66px;
-  background: linear-gradient(#2c190d, #1f1209);
-  border-color: #a0662a; border-style: solid; border-width: 0;
+  background: linear-gradient(#150e29, #0a0615);
+  border-color: #3b2d6a; border-style: solid; border-width: 0;
 }
 .bar.top { top: 0; border-bottom-width: 4px; }
 .bar.bottom { bottom: 0; border-top-width: 4px; }
@@ -368,17 +396,17 @@ button, .btn { touch-action: manipulation; }
   cursor: pointer;
 }
 .pile.deck { background: linear-gradient(rgba(28, 18, 51, 0.6), rgba(28, 18, 51, 0.6)), var(--shard-emblem) center / 62% no-repeat, radial-gradient(circle at 50% 40%, #4b2e86, #1c1233 75%); box-shadow: 3px -3px 0 #1b2336, 6px -6px 0 #141a28, 0 6px 12px rgba(0,0,0,.5); border: 2px solid var(--fc); }
-.pile.grave { background: #1c100a; border: 2px solid #8a6a4f; box-shadow: 0 6px 12px rgba(0,0,0,.5); }
+.pile.grave { background: radial-gradient(circle at 50% 40%, #2a2038, #120c1e 80%); border: 2px solid #7d6aa8; box-shadow: 0 6px 12px rgba(0,0,0,.5); }
 .pile b { display: block; font-size: 26px; }
 
 .field-card { position: absolute; transition: left 0.3s ease, top 0.3s ease; cursor: pointer; }
 .field-card .card { transition: transform 0.15s, filter 0.2s; }
 .field-card:hover .card { transform: translateY(-3px); }
 .field-card.spent .card { filter: brightness(0.62) saturate(0.7); }
-.field-card.selected .card { box-shadow: 0 0 0 4px var(--brass), 0 0 26px var(--brass); }
-.field-card.targetable .card { box-shadow: 0 0 0 4px var(--target), 0 0 24px var(--target); animation: pulse 1.1s ease-in-out infinite; }
-.field-card.attackable .card { box-shadow: 0 0 0 4px var(--danger), 0 0 24px var(--danger); animation: pulse 1.1s ease-in-out infinite; }
-.field-card.ready .card { box-shadow: 0 0 0 3px rgba(99, 224, 138, 0.8), 0 0.5em 0.9em rgba(0,0,0,.45); }
+.field-card.selected .card { --glow: drop-shadow(0 0 1.5px var(--brass)) drop-shadow(0 0 1.5px var(--brass)) drop-shadow(0 0 12px var(--brass)); }
+.field-card.targetable .card { --glow: drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 12px var(--target)); animation: pulse 1.1s ease-in-out infinite; }
+.field-card.attackable .card { --glow: drop-shadow(0 0 1.5px var(--danger)) drop-shadow(0 0 1.5px var(--danger)) drop-shadow(0 0 12px var(--danger)); animation: pulse 1.1s ease-in-out infinite; }
+.field-card.ready .card { --glow: drop-shadow(0 0 1.5px rgba(99, 224, 138, 0.9)) drop-shadow(0 0 1.5px rgba(99, 224, 138, 0.9)); }
 @keyframes pulse { 50% { filter: brightness(1.15); } }
 .field-card.hit .card { animation: hit 0.45s; }
 @keyframes hit {
@@ -407,14 +435,14 @@ button, .btn { touch-action: manipulation; }
 @keyframes slam { from { transform: translateY(-160px) scale(1.6); opacity: 0; } 70% { opacity: 1; } }
 
 .small-card { position: absolute; cursor: pointer; }
-.small-card.targetable .card { box-shadow: 0 0 0 4px var(--target), 0 0 24px var(--target); }
+.small-card.targetable .card { --glow: drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 12px var(--target)); }
 .small-card .attach-cost {
   position: absolute; left: 0; right: 0; top: 138px;
   text-align: center; font-size: 12px; font-weight: 700; color: var(--muted);
 }
-.small-card.activatable .card { box-shadow: 0 0 0 3px var(--glow-play), 0 0 18px rgba(99,224,138,.6); animation: pulse 1.4s ease-in-out infinite; }
+.small-card.activatable .card { --glow: drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 8px var(--glow-play)); animation: pulse 1.4s ease-in-out infinite; }
 
-.small-card.armed .card { box-shadow: 0 0 0 4px var(--target), 0 0 22px var(--target); }
+.small-card.armed .card { --glow: drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 11px var(--target)); }
 
 .opp-hand { position: absolute; display: flex; }
 .opp-hand .card { font-size: 4px; margin-left: -14px; box-shadow: 0 2px 4px rgba(0,0,0,.6), inset 0 0 0 1px #5a6f96; }
@@ -449,9 +477,9 @@ button, .btn { touch-action: manipulation; }
 
 /* hand */
 #hand-layer { position: absolute; inset: 0; pointer-events: none; }
-.hand-card { position: absolute; pointer-events: auto; cursor: grab; transition: transform 0.15s, top 0.25s, left 0.25s; touch-action: none; }
+.hand-card { position: absolute; pointer-events: auto; cursor: grab; transition: transform 0.22s cubic-bezier(.34, 1.56, .64, 1), top 0.25s, left 0.25s; touch-action: none; }
 .hand-card:hover, .hand-card.lift { transform: translateY(-34px) scale(1.13) !important; z-index: 50; }
-.hand-card.playable .card { box-shadow: 0 0 0 3px var(--glow-play), 0 0 18px rgba(99,224,138,.6), 0 0.5em 0.9em rgba(0,0,0,.45); }
+.hand-card.playable .card { --glow: drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 8px var(--glow-play)); }
 .hand-card.dragging { opacity: 0.25; }
 .hand-card.drawn .card { animation: drawn 0.55s cubic-bezier(.2,.7,.3,1); }
 @keyframes drawn { from { transform: translate(-560px, -150px) rotate(-20deg) scale(0.8); } }
@@ -516,12 +544,39 @@ button, .btn { touch-action: manipulation; }
 /* Phone controls beside the board */
 .controls {
   position: absolute; z-index: 110;
-  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
 }
-.controls .btn { width: 100%; min-height: 48px; padding: 0.3em 0.5em; font-size: 1rem; line-height: 1.15; }
-.controls .btn-small { min-height: 40px; font-size: 0.9rem; }
+.controls .btn { width: 100%; min-height: 42px; padding: 0.25em 0.35em; font-size: 0.82rem; line-height: 1.1; letter-spacing: 0.02em; }
+.controls .btn-small { min-height: 34px; font-size: 0.74rem; }
 .controls [data-press="menu"] { position: absolute; top: 0; }
+.controls [data-press="fullscreen"] { position: absolute; top: 42px; }
 .controls .danger { border-color: var(--danger); background: linear-gradient(#8a2a17, #4d140a); }
+
+/* Phone held sideways: health and mana beside the table (see renderSideInfo) */
+#stage-wrap.phone { overflow: hidden; }
+.sideinfo { position: absolute; z-index: 110; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.si-player {
+  pointer-events: auto; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; padding: 6px 7px;
+  background: rgba(20, 11, 5, 0.9); border: 2px solid color-mix(in srgb, var(--pc) 55%, #3a2a1c); border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+.si-life { position: relative; width: 34px; height: 41px; flex: none; }
+.si-life svg { width: 100%; height: 100%; }
+.si-life b { position: absolute; inset: 0; display: grid; place-items: center; padding-top: 3px; font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px #000, 0 0 6px #000; font-variant-numeric: tabular-nums; }
+.si-text { display: grid; gap: 1px; min-width: 0; line-height: 1.15; }
+.si-name { font-size: 12px; font-weight: 800; color: var(--pc); text-shadow: 0 1px 2px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.si-mana { display: flex; align-items: center; gap: 3px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.si-mana b { color: var(--parchment); font-size: 14px; }
+.si-mana svg { width: 12px; height: 15px; flex: none; }
+.si-mana.broke { animation: nudge 0.4s, broke 0.6s; }
+.si-hand { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.si-token { position: static; width: 24px; height: 24px; margin-left: 4px; font-size: 11px; }
+.si-player.targetable { border-color: var(--target); box-shadow: 0 0 0 2px var(--target), 0 0 14px var(--target); animation: pulse 1.1s ease-in-out infinite; }
+.si-player.attackable { border-color: var(--danger); box-shadow: 0 0 0 2px var(--danger), 0 0 14px var(--danger); animation: pulse 1.1s ease-in-out infinite; }
+.si-player.danger .si-life { animation: heartbeat 1.25s ease-in-out infinite; border-radius: 50%; }
+.si-player.critical .si-life { animation-duration: 0.8s; }
+.si-player.struck .si-life { animation: struck 0.5s; }
 
 /* ------------------------------------------------------------------- modal */
 .modal { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; }
@@ -550,10 +605,10 @@ button, .btn { touch-action: manipulation; }
 .detail-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .reason { color: #f1a78f; font-weight: 700; }
 .statline { display: flex; gap: 16px; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
-.statline .a { color: #ff8a6b; } .statline .h { color: #7be08f; } .statline .s { color: #f2c55c; }
+.statline .a { color: #ff8a6b; } .statline .h { color: #7be08f; }
 .modal-cards { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
 .modal-cards .card { font-size: 11px; cursor: pointer; }
-.modal-cards .picked .card { box-shadow: 0 0 0 4px var(--target), 0 0 18px var(--target); }
+.modal-cards .picked .card { --glow: drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 9px var(--target)); }
 .modal-cards button { appearance: none; border: 0; background: none; padding: 0; cursor: pointer; border-radius: 9px; }
 .menu-list { display: grid; gap: 10px; margin-top: 16px; min-width: min(320px, 100%); }
 .menu-list .btn { width: 100%; }
@@ -641,7 +696,7 @@ button, .btn { touch-action: manipulation; }
 .hint {
   position: absolute; z-index: 110; box-sizing: border-box; overflow: auto;
   padding: 10px 12px;
-  background: rgba(20, 11, 5, 0.94); border: 2px solid var(--brass-dim); border-radius: 10px;
+  background: rgba(14, 9, 28, 0.94); border: 2px solid var(--brass-dim); border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   font-size: 14px; line-height: 1.4;
 }
@@ -653,7 +708,7 @@ button, .btn { touch-action: manipulation; }
 .hint-off { appearance: none; border: 0; background: none; padding: 0; color: var(--muted); font-size: 12.5px; text-decoration: underline; cursor: pointer; }
 .hint-chip {
   appearance: none; cursor: pointer; padding: 6px 12px; border-radius: 999px;
-  background: rgba(20, 11, 5, 0.94); border: 2px solid var(--brass-dim); font-size: 14px; font-weight: 700;
+  background: rgba(14, 9, 28, 0.94); border: 2px solid var(--brass-dim); font-size: 14px; font-weight: 700;
 }
 
 /* First-visit welcome */
@@ -744,8 +799,15 @@ dl.words dd { margin: 0; }
 .plate .who { display: grid; line-height: 1.2; min-width: 0; }
 .plate .who .name { font-size: 17px; font-weight: 800; color: var(--pc); text-shadow: 0 1px 2px #000; }
 .plate .who em { font-style: normal; color: var(--muted); font-size: 13px; }
-.plate.danger .life { animation: crack-pulse 1s ease-in-out infinite; border-radius: 50%; }
-@keyframes crack-pulse { 50% { filter: drop-shadow(0 0 10px rgba(226, 85, 61, 0.9)); } }
+/* Low life: the crystal beats like a heart (lub-dub), faster when nearly dead. */
+.plate.danger .life { animation: heartbeat 1.25s ease-in-out infinite; border-radius: 50%; }
+.plate.critical .life { animation-duration: 0.8s; }
+@keyframes heartbeat {
+  0%, 56%, 100% { transform: scale(1); filter: none; }
+  14% { transform: scale(1.16); filter: drop-shadow(0 0 12px rgba(226, 85, 61, 0.95)); }
+  28% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(226, 85, 61, 0.5)); }
+  42% { transform: scale(1.1); filter: drop-shadow(0 0 9px rgba(226, 85, 61, 0.85)); }
+}
 .plate.targetable .life, .plate.attackable .life { animation: pulse 1.1s ease-in-out infinite; }
 .plate.targetable .life-crystal { filter: drop-shadow(0 0 4px var(--target)) drop-shadow(0 0 12px var(--target)); }
 .plate.attackable .life-crystal { filter: drop-shadow(0 0 4px var(--danger)) drop-shadow(0 0 14px var(--danger)); }
@@ -1006,7 +1068,7 @@ dl.words dd { margin: 0; }
 .bld-card { position: relative; }
 .bld-add { appearance: none; border: 0; background: none; padding: 0; cursor: pointer; border-radius: 9px; display: block; }
 .bld-add:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
-.bld-card.in-deck .card { box-shadow: 0 0 0 3px #a78bfa, 0 0 16px rgba(167, 139, 250, 0.6); }
+.bld-card.in-deck .card { --glow: drop-shadow(0 0 1.5px #a78bfa) drop-shadow(0 0 1.5px #a78bfa) drop-shadow(0 0 8px #a78bfa); }
 .bld-card.full .card { filter: saturate(0.6) brightness(0.8); }
 .bld-count {
   position: absolute; top: -8px; right: -8px; z-index: 2; pointer-events: none;
@@ -1093,7 +1155,7 @@ dl.words dd { margin: 0; }
   .bld-name { font-size: 1.3rem; order: 3; flex-basis: 100%; max-width: none; }
   .bld-bar-actions .btn { font-size: 0.9rem; }
   .bld-deck {
-    position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 20; max-height: 60vh; max-height: 60dvh; background: #170d07;
+    position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 20; max-height: 60vh; max-height: 60dvh; background: #0f0a1d;
     border-radius: 14px 14px 0 0; border-width: 2px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px);
     box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
   }
@@ -1115,13 +1177,6 @@ dl.words dd { margin: 0; }
 }
 
 /* ============================================================ game feel (js/fx.js) */
-/* Screen shake sized to the blow. */
-.shake-n { animation: shake-n 0.42s linear; }
-@keyframes shake-n {
-  10% { translate: calc(var(--amp) * -1) calc(var(--amp) * 0.4); } 25% { translate: var(--amp) calc(var(--amp) * -0.5); }
-  40% { translate: calc(var(--amp) * -0.6) calc(var(--amp) * 0.3); } 60% { translate: calc(var(--amp) * 0.4) 0; }
-  80% { translate: calc(var(--amp) * -0.2) 0; } 100% { translate: 0 0; }
-}
 
 /* Aiming line from the attacker (or the hand) to the pointer. */
 #aim { position: absolute; left: 0; top: 0; width: 1440px; height: 1000px; z-index: 58; pointer-events: none; overflow: visible; opacity: 0; transition: opacity 0.12s; }
@@ -1212,7 +1267,7 @@ dl.words dd { margin: 0; }
 .showcase-dim { position: absolute; inset: 0; background: radial-gradient(circle at 50% 43%, rgba(30, 10, 60, 0.35), rgba(0, 0, 0, 0.6)); animation: fade-in 0.25s; }
 @keyframes fade-in { from { opacity: 0; } }
 .showcase { position: absolute; left: 720px; top: 430px; z-index: 4; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 8px; animation: showcase-in 0.35s cubic-bezier(.2,1.4,.4,1); }
-.showcase .card { font-size: 22px; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85), 0 0 60px rgba(180, 140, 255, 0.9), 0 30px 60px rgba(0, 0, 0, 0.7); }
+.showcase .card { font-size: 22px; --glow: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 30px rgba(180, 140, 255, 0.9)); }
 .showcase p { margin: 0; font: 700 20px var(--font-body); color: #e8deff; text-shadow: 0 2px 4px #000; letter-spacing: 0.06em; }
 .showcase.burst { animation: showcase-burst 0.35s ease-in forwards; }
 @keyframes showcase-in { from { transform: translate(-50%, -50%) scale(0.2) rotate(-8deg); opacity: 0; } }
@@ -1238,7 +1293,7 @@ dl.words dd { margin: 0; }
 .skill-pop b { font: 800 16px var(--font-body); color: #ffe7a8; text-shadow: 0 2px 3px #000; letter-spacing: 0.06em; text-transform: uppercase; }
 @keyframes skill-pop { 0% { scale: 0.2; opacity: 0; } 18% { scale: 1.2; opacity: 1; } 30% { scale: 1; } 75% { opacity: 1; } 100% { opacity: 0; translate: -50% -110%; } }
 .field-card.skill-glow .card { animation: skill-glow 0.9s ease-out; }
-@keyframes skill-glow { 0% { box-shadow: 0 0 0 6px #ffe7a8, 0 0 40px #ffcf6a; filter: brightness(1.6); } 100% { box-shadow: none; filter: none; } }
+@keyframes skill-glow { 0% { filter: brightness(1.6) drop-shadow(0 0 3px #ffe7a8) drop-shadow(0 0 16px #ffcf6a); } 100% { filter: none; } }
 
 /* Each faction enters its own way. */
 .enter-sprout .card { animation: sprout 0.65s cubic-bezier(.3,1.6,.5,1); transform-origin: 50% 100%; }
@@ -1371,3 +1426,414 @@ html.intro-on .menu-inner { visibility: hidden; }
   .intro-panel .glass { height: min(70vh, 300px); }
   .intro-title { grid-template-columns: 1fr; text-align: center; }
 }
+
+/* Kenshi's Blade: the once-per-Battle strike, on the character holding it */
+.blade-btn {
+  position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); z-index: 6;
+  padding: 3px 9px; border-radius: 999px; border: 1.5px solid #ffd27a;
+  background: linear-gradient(#7a2318, #4a120b); color: #ffe3a8;
+  font: 800 12px/1.2 var(--font-body); letter-spacing: .02em; white-space: nowrap; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.6), 0 0 10px rgba(255,180,90,.45);
+  animation: blade-pulse 1.6s ease-in-out infinite;
+}
+.blade-btn:hover, .blade-btn:focus-visible { background: linear-gradient(#a3301f, #5e170e); outline: none; }
+@keyframes blade-pulse { 50% { box-shadow: 0 2px 6px rgba(0,0,0,.6), 0 0 18px rgba(255,180,90,.8); } }
+@media (prefers-reduced-motion: reduce) { .blade-btn { animation: none; } }
+
+/* Level Up progress on table cards: stars, and a glow that grows with each level */
+.card .level-pips {
+  position: absolute; left: 50%; top: 3.05em; transform: translateX(-50%);
+  padding: 0.1em 0.45em; border-radius: 1em; background: rgba(27, 19, 13, 0.72);
+  font-size: 1.05em; font-weight: 800; letter-spacing: 0.08em; line-height: 1.15; white-space: nowrap;
+  color: #ffd25e; text-shadow: 0 0 0.3em rgba(255, 210, 94, 0.8);
+  pointer-events: none;
+}
+.card.lv1 { --glow: drop-shadow(0 0 0.35em rgba(255, 210, 94, 0.6)); }
+.card.lv2 { --glow: drop-shadow(0 0 0.25em rgba(255, 210, 94, 0.8)) drop-shadow(0 0 0.6em rgba(255, 210, 94, 0.7)); }
+.card.lv3 { --glow: drop-shadow(0 0 0.3em rgba(255, 210, 94, 0.95)) drop-shadow(0 0 0.9em rgba(255, 210, 94, 0.85)); animation: lv-pulse 1.6s ease-in-out infinite; }
+@keyframes lv-pulse { 50% { filter: brightness(1.12) drop-shadow(0 0 0.8em rgba(255, 225, 130, 1)); } }
+
+/* Faction deaths */
+.death-sink, .death-pixel, .death-tumble, .death-slash { position: absolute; width: 95px; height: 135px; pointer-events: none; z-index: 2; }
+.death-sink { animation: death-sink 1.1s ease-in forwards; transform-origin: 50% 100%; }
+@keyframes death-sink {
+  0% { transform: none; filter: none; clip-path: inset(0 0 0 0); }
+  25% { transform: rotate(-2deg); filter: sepia(0.6) hue-rotate(60deg) brightness(0.8); }
+  100% { transform: translateY(120px) rotate(3deg); filter: sepia(1) hue-rotate(60deg) brightness(0.35); clip-path: inset(0 0 100% 0); }
+}
+.death-pixel { animation: death-pixel 0.8s steps(5) forwards; }
+@keyframes death-pixel {
+  0% { transform: none; opacity: 1; filter: none; }
+  30% { transform: translate(calc(var(--dx) * 0.2), 0); filter: hue-rotate(160deg) saturate(3); opacity: 1; }
+  60% { opacity: 0.2; }
+  70% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0.6); opacity: 0; filter: hue-rotate(260deg) saturate(4); }
+}
+.death-tumble { animation: death-tumble 1s cubic-bezier(0.3, -0.3, 0.7, 1) forwards; }
+@keyframes death-tumble {
+  0% { transform: none; opacity: 1; }
+  100% { transform: translate(var(--dx), 260px) rotate(var(--r)) scale(0.7); opacity: 0; }
+}
+.death-slash { animation: death-slash 0.95s ease-out 0.12s forwards; }
+@keyframes death-slash {
+  0% { transform: none; opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; }
+}
+.death-slash-line {
+  position: absolute; width: 115px; height: 4px; z-index: 3; pointer-events: none;
+  background: linear-gradient(90deg, transparent, #fff 20%, #fff 80%, transparent);
+  box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.8);
+  transform: rotate(-20deg) scaleX(0); transform-origin: 0 50%;
+  animation: slash-line 0.45s ease-out forwards;
+}
+@keyframes slash-line { 40% { transform: rotate(-20deg) scaleX(1); opacity: 1; } 100% { transform: rotate(-20deg) scaleX(1); opacity: 0; } }
+
+/* Campaign */
+.camp-deck { margin: 10px 0 4px; color: var(--muted); }
+.camp-deck b { color: var(--brass); }
+.camp-list { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }
+.camp-stage {
+  display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid color-mix(in srgb, var(--fc) 55%, transparent);
+}
+.camp-stage.locked { opacity: 0.5; }
+.camp-stage.cleared { background: color-mix(in srgb, var(--fc) 14%, transparent); }
+.camp-medal { width: 40px; height: 40px; flex: none; }
+.camp-medal.big { width: 72px; height: 72px; display: block; margin: 0 auto 6px; }
+.camp-who { flex: 1; display: grid; min-width: 0; }
+.camp-who span { font-size: 0.9em; color: var(--muted); }
+.camp-done { color: var(--brass); font-style: italic; }
+.camp-reset { margin-left: auto; }
+.camp-intro { text-align: center; }
+.camp-step { margin: 0; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.8em; }
+.camp-story { font-style: italic; line-height: 1.45; margin: 12px auto 16px; max-width: 34em; }
+.camp-story.end { margin: 4px auto 10px; max-width: 30em; }
+.camp-intro .detail-actions { justify-content: center; }
+@media (prefers-reduced-motion: reduce) { .card.lv3 { animation: none; } }
+
+/* Mana: crystals just spent flare and go dark; trying a card you can't afford shakes the row. */
+.mana-crystal.spend { animation: mana-spend 0.45s ease-out; }
+@keyframes mana-spend {
+  0% { transform: scale(1.4); filter: brightness(2.6) drop-shadow(0 0 10px rgba(150, 180, 255, 1)); }
+  100% { transform: none; filter: none; }
+}
+.mana.broke .mana-row { animation: nudge 0.4s, broke 0.6s; }
+@keyframes broke { 30% { filter: drop-shadow(0 0 6px #ff4a4a) brightness(1.3) hue-rotate(110deg); } }
+/* A spell in hand waiting for its target: it stays lifted and glowing until cast or cancelled. */
+.hand-card.casting { transform: translateY(-40px) scale(1.12) !important; z-index: 55; }
+.hand-card.casting .card { --glow: drop-shadow(0 0 1.5px #ffd27a) drop-shadow(0 0 1.5px #ffd27a) drop-shadow(0 0 11px #ffd27a); }
+
+/* ------------------------------------------------------------ phone readability
+   The table is drawn shrunk on a small screen, so what matters is made bigger: the hand is larger
+   (see PHONE_HAND in js/ui.js), and the cards on the table use bigger name, skill and stat text. Tap any card to read all of it. */
+#stage.small .hand-card .card { font-size: 13px; }
+#stage.small .field-card .card .name { font-size: 1.25em; }
+#stage.small .field-card .card .skills { font-size: 1.05em; }
+#stage.small .field-card .card .skills.long { font-size: 0.85em; white-space: nowrap; }   /* two or three skills: keep to one line */
+#stage.small .field-card .card .stats { font-size: 1.55em; }
+#stage.small .small-card .card .name { font-size: 1.2em; }
+#stage.small .small-card .card .stats { font-size: 1.4em; }
+
+/* A champion's spoken line: a speech bubble by its health plate. */
+.camp-tag { margin: 2px 0 0; color: var(--muted); font-size: 0.95em; }
+.champ-say {
+  position: absolute; z-index: 60; max-width: 340px; padding: 8px 14px; border-radius: 14px;
+  background: rgba(24, 18, 40, 0.94); border: 1px solid #b9a4ff; color: #f1e8ff;
+  font-size: 22px; font-style: italic; pointer-events: none; transform: translate(0, -50%);
+  animation: champSay 4.2s ease-out forwards;
+}
+@keyframes champSay {
+  0% { opacity: 0; transform: translate(-12px, -50%) scale(0.9); }
+  8% { opacity: 1; transform: translate(0, -50%) scale(1.04); }
+  14% { transform: translate(0, -50%) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .champ-say { animation-name: champSayStill; } @keyframes champSayStill { 0%, 85% { opacity: 1; } 100% { opacity: 0; } } }
+
+/* Tribes (round badges) and classes (square badges): placeholder symbols at the foot of the art. */
+.card .tags { position: absolute; left: 0.75em; right: 0.95em; top: 8.75em; display: flex; justify-content: space-between; pointer-events: none; }
+.card .tags span { display: flex; gap: 0.15em; }
+.tag { width: 1.35em; height: 1.35em; padding: 0.12em; background: rgba(246, 236, 210, 0.72); box-shadow: 0 0 0 1px rgba(27, 19, 13, 0.4); }
+.tag.tribe { border-radius: 50%; }
+.tag.class { border-radius: 0.25em; }
+.card .medal.second { left: 1.55em; top: 1.5em; width: 1.2em; height: 1.2em; }
+#stage.small .small-card .card .tags { display: none; }
+.detail .kinds { margin: 4px 0 0; font-size: 0.95em; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.detail .kinds-part { display: inline-flex; align-items: center; gap: 5px; }
+.detail .kinds .tag { width: 20px; height: 20px; margin-right: 2px; background: #e9dcc0; }
+.chip-line { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+.chip-label { min-width: 4.8em; font-size: 0.82em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Card text in the hand: hold the pointer over (or press) a hand card to read what it does. */
+.hand-tip {
+  display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  width: 190px; padding: 7px 10px; border-radius: 10px; pointer-events: none;
+  background: rgba(24, 18, 40, 0.96); border: 1px solid #b9a4ff; color: #f1e8ff;
+  font-size: 15px; line-height: 1.25; text-align: center;
+}
+.hand-card:hover .hand-tip, .hand-card.lift .hand-tip, .hand-card.held .hand-tip { display: block; }
+.hand-card.dragging .hand-tip { display: none; }
+/* Names stay on one line: --nw is the name's width in its own ems (js/ui.js) and --nbox is how
+   many of those ems the name box holds, so a wider name is shrunk to fit (never below 40%). */
+.card { --nbox: 5.15; }
+.card .name span { font-size: calc(1em * clamp(0.4, var(--nbox) / var(--nw, 1), 1)); }
+/* A character on the table has no cost gem, so its name can run to the right edge. On the phone
+   table the name is also drawn bigger. */
+.field-card .card { --nbox: 6.7; }
+.field-card .card .name { right: 0.5em; }
+#stage.small .field-card .card { --nbox: 5.3; }
+#stage.small .field-card .card .name { left: 1.7em; right: 0.5em; }
+#stage.small .small-card .card { --nbox: 4.4; }
+#stage.small .small-card .card .name { left: 1.8em; right: 1.6em; }
+#stage.small .hand-tip { width: 300px; font-size: 24px; }
+.card .name.two { white-space: normal; }
+.card .name.two span { max-width: 100%; }
+
+/* ============================================================ stained glass
+   Shardfall's look: the world is a shattered window. Dark lead between panes of jewel-coloured
+   glass, light coming through, and shards still falling. Cards (above), the Glass board skin,
+   buttons and panels all share it. tools/make-glass.js draws the window behind the board. */
+
+/* buttons: little panes of glass in a lead frame */
+.btn {
+  border: 2px solid var(--lead);
+  border-radius: 4px 12px 4px 12px;
+  background: linear-gradient(160deg, rgba(167, 139, 250, 0.42), rgba(70, 48, 130, 0.9) 55%, #1b1032);
+  color: #f3ecff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.26), inset 0 2px 0 rgba(255, 255, 255, 0.22), 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+.btn:hover:not(:disabled) { border-color: var(--lead); box-shadow: inset 0 0 0 1px rgba(255, 233, 170, 0.8), inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 0 14px rgba(167, 139, 250, 0.6); }
+.btn-primary { background: linear-gradient(160deg, rgba(255, 214, 130, 0.65), #b8691f 55%, #5a2a0c); color: #fff6e4; }
+.btn-primary:hover:not(:disabled) { box-shadow: inset 0 0 0 1px rgba(255, 244, 200, 0.9), inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 0 16px rgba(255, 200, 110, 0.7); }
+
+/* panels and windows: dark lead with a glass rim */
+.modal-box, .coach-box {
+  background: linear-gradient(160deg, #1e1536, #0f0a1d);
+  border: 3px solid var(--lead);
+  box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.4), 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 28px rgba(140, 90, 255, 0.22);
+}
+
+/* the Glass board */
+#stage.skin-glass #board {
+  background:
+    var(--glass-window) 0 0 / 100% 100% no-repeat,
+    radial-gradient(ellipse 75% 34% at 50% 0%, rgba(150, 110, 255, 0.28), transparent 72%),
+    radial-gradient(ellipse 75% 34% at 50% 100%, rgba(255, 190, 120, 0.2), transparent 72%),
+    radial-gradient(ellipse 60% 30% at 50% 50%, rgba(255, 255, 255, 0.07), transparent 75%),
+    #090614;
+}
+/* Falling shards, slow and glassy, and a sweep of light that crosses the window now and then. */
+.skin-glass .scene i {
+  display: block; position: absolute; top: -40px; width: 12px; height: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(167, 139, 250, 0.7) 60%, rgba(90, 60, 170, 0.5));
+  clip-path: polygon(50% 0, 100% 34%, 76% 100%, 24% 88%, 0 30%);
+  filter: drop-shadow(0 0 5px rgba(190, 160, 255, 0.8));
+  animation: altar-fall 16s linear infinite;
+}
+.skin-glass .scene i:nth-child(1) { left: 6%; animation-delay: -2s; }
+.skin-glass .scene i:nth-child(2) { left: 24%; animation-delay: -9s; animation-duration: 19s; }
+.skin-glass .scene i:nth-child(3) { left: 43%; animation-delay: -5s; animation-duration: 14s; }
+.skin-glass .scene i:nth-child(4) { left: 64%; animation-delay: -12s; animation-duration: 20s; }
+.skin-glass .scene i:nth-child(5) { left: 82%; animation-delay: -7s; }
+.skin-glass .scene i:nth-child(6) { left: 96%; animation-delay: -14s; animation-duration: 18s; }
+.skin-glass .scene::after {
+  content: ""; position: absolute; inset: -20% 0; pointer-events: none; mix-blend-mode: screen;
+  background: linear-gradient(105deg, transparent 40%, rgba(190, 160, 255, 0.16) 47%, rgba(255, 255, 255, 0.22) 50%, rgba(190, 160, 255, 0.16) 53%, transparent 60%) -120% 0 / 60% 100% no-repeat;
+  animation: glass-sweep 18s ease-in-out infinite;
+}
+@keyframes glass-sweep { 0%, 62% { background-position: -120% 0; } 100% { background-position: 260% 0; } }
+/* Each player's half is a slab of glass lit in their fracture's colour. */
+.skin-glass .side {
+  left: 12px; right: 12px; border-radius: 10px;
+  background:
+    radial-gradient(ellipse 80% 90% at 50% 100%, color-mix(in srgb, var(--fc) 30%, transparent), transparent 75%),
+    linear-gradient(rgba(10, 6, 22, 0.42), rgba(10, 6, 22, 0.55));
+  border: 3px solid var(--lead);
+  box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.35), inset 0 0 60px rgba(0, 0, 0, 0.5), 0 0 26px color-mix(in srgb, var(--fc) 40%, transparent);
+}
+.skin-glass .side.top { height: 300px; background: radial-gradient(ellipse 80% 90% at 50% 0%, color-mix(in srgb, var(--fc) 30%, transparent), transparent 75%), linear-gradient(rgba(10, 6, 22, 0.42), rgba(10, 6, 22, 0.55)); }
+.skin-glass .side.bottom { top: 432px; height: 498px; }
+/* The crack where the two worlds meet. */
+.skin-glass .rift::before {
+  content: ""; position: absolute; left: 20px; right: 20px; top: 33px; height: 10px;
+  background: linear-gradient(90deg, transparent, #b9a0ff 12%, #fff 50%, #b9a0ff 88%, transparent);
+  clip-path: polygon(0 50%, 4% 20%, 9% 70%, 15% 30%, 22% 75%, 29% 25%, 36% 70%, 43% 35%, 50% 80%, 57% 30%, 64% 72%, 71% 28%, 78% 74%, 85% 32%, 91% 68%, 96% 24%, 100% 50%, 96% 62%, 91% 100%, 85% 62%, 78% 100%, 71% 60%, 64% 96%, 57% 58%, 50% 100%, 43% 62%, 36% 96%, 29% 56%, 22% 100%, 15% 58%, 9% 96%, 4% 60%);
+  filter: drop-shadow(0 0 6px #9b6bff) drop-shadow(0 0 16px #7c3aed);
+}
+.skin-glass .lane { background: rgba(6, 3, 14, 0.3); box-shadow: inset 0 0 0 2px var(--lead), inset 0 0 0 3px rgba(190, 160, 255, 0.2), inset 0 4px 14px rgba(0, 0, 0, 0.6); }
+.skin-glass .slot { border: 2px solid var(--lead); background: radial-gradient(circle at 50% 40%, rgba(167, 139, 250, 0.16), rgba(10, 6, 22, 0.5)); box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.22), inset 0 0 12px rgba(120, 80, 220, 0.25); }
+.skin-glass .bar { background: linear-gradient(#150e29, #0a0615); border-color: var(--lead); box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.3); }
+.skin-glass .bar.top { box-shadow: inset 0 -1px 0 rgba(190, 160, 255, 0.55); }
+.skin-glass .bar.bottom { box-shadow: inset 0 1px 0 rgba(190, 160, 255, 0.55); }
+.skin-glass .zone-label { color: rgba(225, 212, 255, 0.62); }
+.skin-glass .log { color: rgba(228, 218, 255, 0.7); text-shadow: 0 1px 2px #000; }
+.skin-preview.skin-glass { background: var(--glass-window) 0 0 / 100% 100% no-repeat, linear-gradient(#1d1238, #090614); }
+
+/* A card played from nowhere in particular assembles out of light, shard by shard. */
+.enter-assemble .card { animation: assemble 0.75s ease-out; }
+@keyframes assemble {
+  0% { opacity: 0; transform: scale(1.35); filter: brightness(2.4) saturate(0.4); clip-path: polygon(50% 50%, 50% 50%, 50% 50%); }
+  40% { opacity: 1; filter: brightness(1.8); clip-path: polygon(50% -10%, 110% 30%, 100% 110%, -10% 100%, -10% 20%); }
+  70% { transform: scale(0.97); filter: brightness(1.2); clip-path: none; }
+  100% { transform: none; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) { .skin-glass .scene i, .skin-glass .scene::after, .enter-assemble .card { animation: none; } }
+
+/* ------------------------------------------------------------ bigger touch areas
+   The small buttons keep their look but get an invisible, thumb-sized area around them.
+   Buttons on the shrunken table use --tap (set in js/ui.js: 44 screen pixels in table units),
+   so on a desktop screen, where the table is full size, almost nothing changes. The hint and the
+   welcome link sit outside the table and only grow on touch screens. */
+.stage-btn, .mana-token { position: relative; }
+.stage-btn { position: absolute; }
+.stage-btn::after, .mana-token::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: max(100%, var(--tap, 0px)); height: max(100%, var(--tap, 0px));
+  transform: translate(-50%, -50%);
+}
+@media (pointer: coarse) {
+  .hint-x, .hint-off, .link-btn, .coach-quit { position: relative; }
+  .hint-x::after, .hint-off::after, .link-btn::after, .coach-quit::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%);
+  }
+  .si-token { position: relative; }
+  .si-token::after { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
+}
+
+/* ------------------------------------------------------------ the Shattered Crystal board
+   One dark, glassy surface (crystal) broken into big slabs that sit slightly apart (tabletop).
+   Light leaks up through the cracks. The long cracks across the table are drawn by
+   tools/make-crystal.js; the seams inside each slab are the --crystal-seam picture below. */
+:root {
+  --ice: 205, 232, 255;
+  --crystal-seam: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cg fill='none' stroke-linejoin='round'%3E%3Cpath id='a' d='M33 0L35.5 18L32 36L36 55L33 74L35 100M35.5 18L41 27M71 0L68.5 22L72 41L69 63L71.5 82L69 100M72 41L78 49' vector-effect='non-scaling-stroke' stroke='%2302030a' stroke-width='6'/%3E%3Cpath d='M33 0L35.5 18L32 36L36 55L33 74L35 100M35.5 18L41 27M71 0L68.5 22L72 41L69 63L71.5 82L69 100M72 41L78 49' vector-effect='non-scaling-stroke' stroke='rgb(205,232,255)' stroke-opacity='.12' stroke-width='10'/%3E%3Cpath d='M33 0L35.5 18L32 36L36 55L33 74L35 100M35.5 18L41 27M71 0L68.5 22L72 41L69 63L71.5 82L69 100M72 41L78 49' vector-effect='non-scaling-stroke' stroke='rgb(205,232,255)' stroke-opacity='.75' stroke-width='1.2'/%3E%3C/g%3E%3C/svg%3E");
+}
+#stage.skin-crystal #board {
+  background:
+    var(--crystal-cracks) 0 0 / 100% 100% no-repeat,
+    radial-gradient(ellipse 85% 11% at 50% 40%, rgba(var(--ice), 0.26), transparent 75%),
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(110, 140, 255, 0.14), transparent 75%),
+    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(110, 140, 255, 0.12), transparent 75%),
+    linear-gradient(#070a18, #04050d 45%, #070a18);
+}
+.skin-crystal .scene i {
+  display: block; position: absolute; top: -40px; width: 11px; height: 17px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(160, 200, 255, 0.6) 60%, rgba(80, 110, 200, 0.4));
+  clip-path: polygon(50% 0, 100% 34%, 76% 100%, 24% 88%, 0 30%);
+  filter: drop-shadow(0 0 5px rgba(var(--ice), 0.7));
+  animation: altar-fall 18s linear infinite;
+}
+.skin-crystal .scene i:nth-child(1) { left: 5%; animation-delay: -2s; }
+.skin-crystal .scene i:nth-child(2) { left: 25%; animation-delay: -9s; animation-duration: 21s; }
+.skin-crystal .scene i:nth-child(3) { left: 44%; animation-delay: -5s; animation-duration: 15s; }
+.skin-crystal .scene i:nth-child(4) { left: 63%; animation-delay: -12s; animation-duration: 22s; }
+.skin-crystal .scene i:nth-child(5) { left: 83%; animation-delay: -7s; }
+.skin-crystal .scene i:nth-child(6) { left: 96%; animation-delay: -14s; animation-duration: 19s; }
+/* Each player's half is a slab of dark crystal with chipped corners, lit in their fracture's colour. */
+.skin-crystal .side {
+  left: 12px; right: 12px;
+  --slab: polygon(1.2% 0, 38% 0, 40% 2.5%, 98.8% 0, 100% 5%, 100% 88%, 97% 100%, 60% 100%, 57.5% 96%, 3% 100%, 0 93%, 0 6%);
+  clip-path: var(--slab);
+  background: linear-gradient(135deg, rgba(var(--ice), 0.95), rgba(120, 150, 225, 0.35) 42%, rgba(var(--ice), 0.75));
+}
+.skin-crystal .side.top { height: 300px; }
+.skin-crystal .side.bottom { top: 432px; height: 498px; --slab: polygon(2% 0, 40% 0, 42.5% 3%, 96% 0, 100% 4%, 100% 94%, 98.8% 100%, 62% 100%, 59.5% 97%, 4% 100%, 0 95%, 0 8%); }
+.skin-crystal .side::before {
+  content: ""; position: absolute; inset: 2px; clip-path: var(--slab);
+  background:
+    radial-gradient(ellipse 75% 85% at 50% 100%, color-mix(in srgb, var(--fc) 40%, transparent), transparent 75%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.07), transparent 28%, rgba(255, 255, 255, 0.04) 62%, transparent),
+    linear-gradient(rgba(8, 11, 26, 0.93), rgba(4, 6, 15, 0.96));
+}
+.skin-crystal .side.top::before {
+  background:
+    radial-gradient(ellipse 75% 85% at 50% 0%, color-mix(in srgb, var(--fc) 40%, transparent), transparent 75%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.07), transparent 28%, rgba(255, 255, 255, 0.04) 62%, transparent),
+    linear-gradient(rgba(4, 6, 15, 0.96), rgba(8, 11, 26, 0.93));
+}
+.skin-crystal .side::after {
+  content: ""; position: absolute; inset: 2px; clip-path: var(--slab);
+  background: var(--crystal-seam) 0 0 / 100% 100% no-repeat;
+  opacity: 0.8; animation: crystal-breathe 7s ease-in-out infinite alternate;
+}
+@keyframes crystal-breathe { from { opacity: 0.55; } to { opacity: 1; } }
+/* The big seam where the two halves meet: light pours up through it. */
+.skin-crystal .rift::before {
+  content: ""; position: absolute; left: 20px; right: 20px; top: 33px; height: 10px;
+  background: linear-gradient(90deg, transparent, rgb(150, 190, 255) 12%, #fff 50%, rgb(150, 190, 255) 88%, transparent);
+  clip-path: polygon(0 50%, 4% 20%, 9% 70%, 15% 30%, 22% 75%, 29% 25%, 36% 70%, 43% 35%, 50% 80%, 57% 30%, 64% 72%, 71% 28%, 78% 74%, 85% 32%, 91% 68%, 96% 24%, 100% 50%, 96% 62%, 91% 100%, 85% 62%, 78% 100%, 71% 60%, 64% 96%, 57% 58%, 50% 100%, 43% 62%, 36% 96%, 29% 56%, 22% 100%, 15% 58%, 9% 96%, 4% 60%);
+  filter: drop-shadow(0 0 6px rgb(120, 170, 255)) drop-shadow(0 0 18px rgb(80, 120, 255));
+}
+.skin-crystal .lane { background: rgba(2, 3, 10, 0.34); box-shadow: inset 0 0 0 1px rgba(var(--ice), 0.14), inset 0 4px 14px rgba(0, 0, 0, 0.6); }
+.skin-crystal .slot { border: 1px solid rgba(var(--ice), 0.3); background: rgba(8, 12, 28, 0.5); box-shadow: inset 0 0 10px rgba(120, 170, 255, 0.14); }
+.skin-crystal .bar { background: linear-gradient(#0a0f20, #05070f); border-color: rgba(var(--ice), 0.3); box-shadow: inset 0 0 0 1px rgba(var(--ice), 0.1); }
+.skin-crystal .zone-label { color: rgba(var(--ice), 0.55); }
+.skin-crystal .log { color: rgba(225, 238, 255, 0.72); text-shadow: 0 1px 2px #000; }
+.skin-preview.skin-crystal { background: var(--crystal-cracks) 0 0 / 100% 100% no-repeat, linear-gradient(#0b1024, #04050d); }
+@media (prefers-reduced-motion: reduce) { .skin-crystal .scene i, .skin-crystal .side::after { animation: none; } }
+
+/* ------------------------------------------------------- the crystal look for cards, buttons and panels
+   The same Shattered Crystal look as the board: cool ice-blue on near-black, faceted glass, thin
+   glowing cracks. This section sits last so it wins over the earlier stained-glass rules. */
+:root {
+  /* Facets (pale and dark triangles) and one thin glowing crack, drawn once for every card face. */
+  --card-facets: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 135' preserveAspectRatio='none'%3E%3Cpath d='M0 0H44L0 62Z' fill='white' fill-opacity='.14'/%3E%3Cpath d='M95 0V46L62 0Z' fill='white' fill-opacity='.08'/%3E%3Cpath d='M95 135H48L95 72Z' fill='%23050a1e' fill-opacity='.10'/%3E%3Cpath d='M0 135V98L34 135Z' fill='%23050a1e' fill-opacity='.07'/%3E%3Cpath d='M0 44L21 52L30 71L52 81L60 104L95 112M30 71L22 98' fill='none' stroke='white' stroke-opacity='.55' stroke-width='1' vector-effect='non-scaling-stroke' stroke-linejoin='round'/%3E%3Cpath d='M0 44L21 52L30 71L52 81L60 104L95 112M30 71L22 98' fill='none' stroke='%23050a1e' stroke-opacity='.25' stroke-width='3' vector-effect='non-scaling-stroke' stroke-linejoin='round' transform='translate(.6 .8)'/%3E%3C/svg%3E");
+}
+/* Cards: frosted crystal, tinted by the card's fracture, faceted, with one fine crack. */
+.card.framed .face {
+  background: linear-gradient(170deg, color-mix(in srgb, var(--fc) 16%, #eef5ff), color-mix(in srgb, var(--fc) 32%, #cdd9ee) 58%, color-mix(in srgb, var(--fc) 52%, #7586ac));
+}
+.card.framed .face::before { background: var(--card-facets) 0 0 / 100% 100%; }
+.card.framed .face::after { background: linear-gradient(115deg, transparent 22%, rgba(255, 255, 255, 0.3) 34%, rgba(220, 238, 255, 0.06) 46%, transparent 58%); }
+.card .art {
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--fc) 55%, #f2f8ff), color-mix(in srgb, var(--fc) 78%, #0b1226) 115%);
+  box-shadow: inset 0 0 0 0.15em rgba(8, 12, 30, 0.85), inset 0 0 0 0.25em rgba(205, 232, 255, 0.75), inset 0 0 1.1em rgba(5, 8, 22, 0.5);
+}
+.card .art::after { background: var(--card-facets) 0 0 / 100% 100%; opacity: 0.55; }
+/* Buttons: faceted blue glass with a bright rim; the main button stays warm amber. */
+.btn {
+  border: 1px solid rgba(var(--ice), 0.6);
+  border-radius: 3px 10px 3px 10px;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.2) 0 16%, transparent 16% 62%, rgba(255, 255, 255, 0.06) 62%),
+    linear-gradient(160deg, rgba(var(--ice), 0.22), rgba(34, 50, 110, 0.92) 55%, #0a1230);
+  color: #eaf3ff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34), inset 0 0 12px rgba(120, 170, 255, 0.16), 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+.btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.95); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 0 14px rgba(150, 195, 255, 0.3), 0 0 14px rgba(var(--ice), 0.55); }
+.btn-primary {
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.22) 0 16%, transparent 16% 62%, rgba(255, 255, 255, 0.07) 62%),
+    linear-gradient(160deg, rgba(255, 214, 130, 0.65), #b8691f 55%, #5a2a0c);
+  border-color: rgba(255, 232, 170, 0.8);
+}
+.btn-primary:hover:not(:disabled) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 16px rgba(255, 200, 110, 0.7); }
+/* Panels and windows: dark crystal with an ice rim and a pale facet in one corner. */
+.modal-box, .coach-box {
+  background: linear-gradient(135deg, rgba(var(--ice), 0.1) 0 12%, transparent 12%), linear-gradient(160deg, #0d1432, #05070f);
+  border: 1px solid rgba(var(--ice), 0.5);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 26px rgba(110, 150, 255, 0.2);
+}
+
+/* ------------------------------------------------------------ random events
+   A small card in the middle band: when the next event hits and what it does. */
+.event-pill {
+  position: absolute; left: 985px; top: 372px; width: 225px; height: 58px; box-sizing: border-box;
+  padding: 5px 9px; border-radius: 6px; overflow: hidden;
+  display: grid; grid-template-rows: auto auto auto; align-content: center; line-height: 1.2;
+  background: rgba(20, 14, 6, 0.8); border: 1px solid rgba(255, 214, 130, 0.65);
+  color: var(--parchment); pointer-events: none;
+}
+.event-pill .event-when { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass); }
+.event-pill b { font-family: var(--font-display); font-weight: 400; font-size: 15px; letter-spacing: 0.03em; }
+.event-pill .event-desc { font-size: 11px; color: rgba(242, 231, 207, 0.8); white-space: nowrap; }
+.event-pill.now { border-color: #ffe9aa; box-shadow: 0 0 14px rgba(255, 214, 130, 0.65); animation: event-glow 1.6s ease-in-out infinite alternate; }
+@keyframes event-glow { from { box-shadow: 0 0 6px rgba(255, 214, 130, 0.4); } to { box-shadow: 0 0 18px rgba(255, 214, 130, 0.85); } }
+.skin-crystal .event-pill { background: rgba(6, 10, 26, 0.88); border-color: rgba(var(--ice), 0.6); }
+.skin-crystal .event-pill .event-when { color: rgb(150, 195, 255); }
+.skin-crystal .event-pill.now { border-color: #fff; box-shadow: 0 0 14px rgba(var(--ice), 0.7); animation-name: event-glow-ice; }
+@keyframes event-glow-ice { from { box-shadow: 0 0 6px rgba(var(--ice), 0.4); } to { box-shadow: 0 0 18px rgba(var(--ice), 0.9); } }
+@media (prefers-reduced-motion: reduce) { .event-pill.now { animation: none; } }

@@ -69,13 +69,12 @@
 
   <h2 id="card">3. Reading a card</h2>
   <figure class="fit">
-    <img src="guide/card.png" width="597" height="307" alt="A Simple Bowman card with each part labelled: faction, card type, skills, attack, mana cost, rarity, health and speed">
+    <img src="guide/card.png" width="597" height="307" alt="A Simple Bowman card with each part labelled: fracture, tribe, skills, attack, mana cost, rarity, class and health">
   </figure>
   <p>The three numbers at the bottom are a character's <b>stats</b>:</p>
   <ul>
     <li><b>⚔ Attack</b>: the damage it deals when it fights.</li>
     <li><b>♥ Health</b>: how much damage it can take. At 0 it is knocked out.</li>
-    <li><b>⚡ Speed</b>: in a fight, the faster character strikes first.</li>
   </ul>
   <p>The number in the orange diamond is the card's <b>mana cost</b>. <b>Tap any card</b> to see it large with its full <b>ability</b> (what it does) and an explanation of each skill.</p>
 
@@ -84,7 +83,7 @@
     <div><b>Character</b>Stays on the table and fights. Most of your cards are characters.</div>
     <div><b>Spell</b>Does something once, like dealing damage, then goes to the graveyard.</div>
     <div><b>Equipment</b>Attaches to one of your characters and adds its numbers to that character's stats.</div>
-    <div><b>Area</b>Goes on your backline and keeps affecting the game, for example giving your characters +1 Speed.</div>
+    <div><b>Area</b>Goes on your backline and keeps affecting the game, for example giving your characters +1 Attack.</div>
   </div>
 
   <h3>Rarity</h3>
@@ -108,6 +107,14 @@
     <li>Mana you don't spend is lost at the end of the turn, so try to use it.</li>
     <li>Going first is an advantage, so the first player <b>skips their first Draw</b>, and the second player gets a one-time <b>+1</b> token next to their mana. Tap it on any of your turns for 1 extra mana that turn.</li>
   </ul>
+
+  <h3>Random events</h3>
+  <ul>
+    <li>Every <b><span data-rule="event_every_rounds">5</span></b> rounds (a round is one player's turn, shown as "Round" in the middle of the table) a <b>random event</b> hits the table for both players. It lasts one round.</li>
+    <li>You get a <b>warning first</b>. A small card in the middle of the table says what is coming, how soon, and what it does, so you have time to plan.</li>
+    <li>The events:</li>
+  </ul>
+  <ul data-fill="events"></ul>
 
   <h2 id="playing">5. Playing cards</h2>
   <figure>
@@ -143,12 +150,11 @@
   </ol>
   <h3>How a fight works</h3>
   <figure class="fit">
-    <img src="guide/fight.png" width="657" height="386" alt="Simple Bowman (Speed 2) attacks Simple Farmer (Speed 1) and strikes first">
+    <img src="guide/fight.png" width="657" height="386" alt="Simple Bowman, which has Swift, attacks Simple Farmer and strikes first">
   </figure>
   <ol>
-    <li>Compare <b>⚡ Speed</b>. The faster character strikes first. If they're tied, the <b>attacker</b> strikes first.</li>
-    <li>The first striker deals its <b>⚔ Attack</b> as damage to the other's <b>♥ Health</b>.</li>
-    <li>If the other character survives, it strikes back with its own Attack.</li>
+    <li>Both characters strike <b>at the same time</b>: each deals its <b>⚔ Attack</b> as damage to the other's <b>♥ Health</b>.</li>
+    <li>A character with the <b>Swift</b> skill (») strikes <b>first</b>. If that blow knocks the other out, it takes no damage back. If both have Swift, they strike at the same time.</li>
     <li>A character at 0 Health is <b>knocked out</b> and goes to the graveyard.</li>
   </ol>
   <ul>
@@ -164,7 +170,7 @@
     <li><b>Bonuses add up.</b> A character's stats on the table include its equipment, areas and other cards' abilities. An <u>underlined</u> number means it has a bonus. Tap a character to see its equipment.</li>
     <li><b>Read the ability.</b> Ability text says <i>when</i> something happens: when played, at the end of your turn, while you control something, or when it is knocked out.</li>
     <li><b>Answer big threats with spells.</b> In the tutorial, <b>Simplify</b> turns a 5-Health wall into a 1 / 1 / 1 that any character can beat.</li>
-    <li><b>Build around a plan.</b> Each faction has a style. Simple Farmers bring more Farmers. Monkeys with <b>Rally</b> get stronger in groups. Zombies <b>Reanimate</b> after being knocked out. Fighters grow with equipment. Digital characters <b>Level Up</b>.</li>
+    <li><b>Build around a plan.</b> Each fracture has a style. Simple Farmers bring more Farmers. Monkeys with <b>Rally</b> get stronger in groups. Zombies <b>Reanimate</b> after being knocked out. Fighters grow with equipment. Digital characters <b>Level Up</b>.</li>
   </ul>
   <p>Counter spells (Nullify, Nope for One, Nope for All, Return to Sender and Try Again) can't be played yet.</p>
 
@@ -178,7 +184,7 @@
   </div>
 
   <h2 id="decks">9. The decks</h2>
-  <p>Pick a deck on the main menu. Each belongs to a faction with its own style. <b>Simple</b> is the best place to start: its cards each do one clear thing.</p>
+  <p>Pick a deck on the main menu. Each belongs to a fracture with its own style. <b>Simple</b> is the best place to start: its cards each do one clear thing.</p>
   <ul class="plain-list" data-fill="decks">
     <li>Simple, Monkey, Zombie, Fighter and Digital</li>
   </ul>
@@ -188,7 +194,7 @@
   <h2 id="tips">10. Tips for your first games</h2>
   <ul>
     <li><b>Spend your mana every turn.</b> Cheap characters early on add up.</li>
-    <li><b>Check Speed before you attack.</b> If the enemy is faster and its Attack is at least your Health, your character is knocked out before it hits back.</li>
+    <li><b>Check the enemy's Attack before you attack.</b> Both characters hit at once, so if its Attack is at least your Health, your character is knocked out too. The badge above each enemy shows how the fight will end.</li>
     <li><b>Hit the player when it's safe.</b> If you can't win a fight, attacking directly still gets you closer to winning.</li>
     <li><b>Tap cards to read them.</b> Especially the computer's: you can read its characters too.</li>
     <li><b>Use the +1 token</b> if you're the second player and one more mana lets you play a card.</li>
@@ -197,18 +203,20 @@
   <h2 id="words">11. Words to know</h2>
   <dl class="words">
     <dt>Mana</dt><dd>What you spend to play cards. It refills every turn.</dd>
-    <dt>Hand</dt><dd>The cards you hold. Only you can see them.</dd>
+    <dt>Hand</dt><dd>The cards you hold. Only you can see them. A hand holds up to <span data-rule="max_hand_size">8</span> cards; a card drawn into a full hand goes to the graveyard.</dd>
     <dt>Deck</dt><dd>Your face-down pile. You draw from it.</dd>
     <dt>Table</dt><dd>Where played characters, areas and equipment sit. Also called the field or battlefield.</dd>
     <dt>Frontline</dt><dd>The row where your characters stand and fight.</dd>
     <dt>Backline</dt><dd>The row behind your frontline, for areas and saved equipment.</dd>
     <dt>Graveyard</dt><dd>Where used spells and knocked-out cards go.</dd>
-    <dt>Stats</dt><dd>A character's Attack, Health and Speed.</dd>
+    <dt>Stats</dt><dd>A character's Attack and Health.</dd>
     <dt>Ability</dt><dd>The text on a card describing what it does.</dd>
     <dt>Skill</dt><dd>A keyword with a rule, like Rush or Challenge.</dd>
     <dt>Target</dt><dd>The card or player an ability affects. You pick it by tapping.</dd>
     <dt>Knocked out</dt><dd>A character whose Health reached 0. It goes to the graveyard.</dd>
-    <dt>Faction</dt><dd>The family a card belongs to: Simple, Monkey, Zombie, Fighter or Digital. Some cards are Neutral.</dd>
+    <dt>Fracture</dt><dd>The shattered world a card is from: Simple, Monkey, Zombie, Fighter or Digital. A few cards are from two fractures, and some are Unbound (from none).</dd>
+    <dt>Tribe</dt><dd>What a character is, such as Human, Animal, Undead or Cyber. A character can have two. Some cards help every character of one tribe, whatever fracture it is from.</dd>
+    <dt>Class</dt><dd>What a character does, such as Warrior, Mage, Scout, Guardian, Worker, Student, Master or Fighter. A character can have two. Some cards help every character of one class.</dd>
   </dl>
 </main>
 

@@ -19,7 +19,7 @@ function startTutorial() {
   clearTimeout(U.aiTimer);
   Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
-  newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai" });
+  newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai", events: false });   // lessons are scripted, so no random events
   const [me, tr] = S.players;
   tr.name = "Trainer"; tr.faction = "Training"; tr.deckLabel = "Training deck";
   tr.health = tr.maxHealth = TUT_TRAINER_HEALTH;
@@ -27,12 +27,12 @@ function startTutorial() {
   // Hands are fixed, and decks are drawn from the end, so every lesson happens on cue.
   me.hand = make(["Simple Farmer", "Simple Barkeep", "Simplify"]);
   me.deck = make(["Simple Swordsman", "Herd", "Simple Farmer", "Simple Wizard", "Slap", "Sword"]);
-  tr.hand = make(["Simple Wanderer", "Simple Bowman", "Breathing Wall"]);
+  tr.hand = make(["Patched Husk", "Simple Bowman", "Breathing Wall"]);
   tr.deck = make(["Simple Swordsman", "Simple Wanderer", "Helm", "Bow", "Simple Farmer"]);
   TUT.ids = {
     farmerA: me.hand[0].uid, barkeep: me.hand[1].uid, simplify: me.hand[2].uid,
     farmerB: me.deck[2].uid, slap: me.deck[4].uid, sword: me.deck[5].uid,
-    wanderer: tr.hand[0].uid, bowman: tr.hand[1].uid, wall: tr.hand[2].uid,
+    husk: tr.hand[0].uid, bowman: tr.hand[1].uid, wall: tr.hand[2].uid,
   };
   S.log = ["Tutorial: you (Simple) vs the Trainer"];
   TUT.on = true; TUT.i = 0;
@@ -151,13 +151,13 @@ const TUT_STEPS = [
     opp: [
       () => doDraw(),
       () => useManaToken(),
-      () => playCard(tid("wanderer")),
+      () => playCard(tid("husk")),
       () => advancePhase(), () => advancePhase(), () => endTurn(),
     ],
   },
   {
-    text: "The Trainer played <b>Simple Wanderer</b>: Attack 1, Health 2, Speed 1.<br><br>It also used its <b>+1</b> token. The player who goes second gets 1 extra mana, once per game, to make up for going second.",
-    target: () => [fieldEl("wanderer"), q('.mana[data-player="1"]')], next: true,
+    text: "The Trainer played <b>Patched Husk</b>: Attack 0, Health 1.<br><br>It also used its <b>+1</b> token. The player who goes second gets 1 extra mana, once per game, to make up for going second.",
+    target: () => [fieldEl("husk"), q('.mana[data-player="1"]')], next: true,
   },
   {
     title: "Draw",
@@ -198,10 +198,10 @@ const TUT_STEPS = [
   },
   {
     title: "How a fight works",
-    text: "Now tap the Trainer's <b>Simple Wanderer</b> to attack it.<br><br>The character with higher <b>⚡ Speed</b> hits first. Both have Speed 1, and on a tie the <b>attacker</b> hits first. Your Farmer deals 2 damage and the Wanderer has 2 Health, so it is knocked out before it can hit back.",
-    target: () => [fieldEl("wanderer"), fieldEl("farmerA")],
-    allow: (name, a, t) => name === "attack" && a === tid("farmerA") && t === tid("wanderer"),
-    done: () => !onField("wanderer"),
+    text: "Now tap the Trainer's <b>Patched Husk</b> to attack it.<br><br>In a fight, both characters hit <b>at the same time</b>. Your Farmer deals 2 damage and the Husk has 1 Health, so it is knocked out. The Husk has 0 Attack, so your Farmer takes no damage.",
+    target: () => [fieldEl("husk"), fieldEl("farmerA")],
+    allow: (name, a, t) => name === "attack" && a === tid("farmerA") && t === tid("husk"),
+    done: () => !onField("husk"),
     back: () => U.selected !== tid("farmerA") && "pick-attacker",
   },
   {
@@ -226,8 +226,8 @@ const TUT_STEPS = [
     ],
   },
   {
-    title: "Speed matters",
-    text: "The Trainer played <b>Simple Bowman</b>. It has the <b>Rush</b> skill (➜), so it could attack on the turn it was played.<br><br>Its Speed 2 beat your Farmer's Speed 1, so it struck first and knocked your Farmer out before it could hit back.",
+    title: "Swift strikes first",
+    text: "The Trainer played <b>Simple Bowman</b>. It has the <b>Rush</b> skill (➜), so it could attack on the turn it was played.<br><br>It also has <b>Swift</b> (»): a Swift character strikes <b>first</b>. Its hit knocked your Farmer out before your Farmer could hit back.",
     target: () => [fieldEl("bowman"), graveEl(0)], next: true,
   },
   {
@@ -319,7 +319,7 @@ const TUT_STEPS = [
     final: true,
     text: `<p>You now know the basics:</p><ul>
       <li>Play cards in <b>Setup</b>, paying their <b>mana</b> cost.</li>
-      <li>Characters fight in <b>Battle</b>. Higher <b>⚡ Speed</b> hits first.</li>
+      <li>Characters fight in <b>Battle</b>. Both hit at once, unless one has <b>Swift</b>.</li>
       <li><b>Equipment</b> and <b>spells</b> change the fight.</li>
       <li><b>Skills</b> like Rush, Signal and Challenge add special rules.</li>
       <li>Bring the other player to <b>0 health</b> to win.</li></ul>
@@ -534,14 +534,14 @@ function anatomyHTML(c) {
   // Points on the card (in card em units, the card is 9.5 x 13.5) and where each label sits.
   const K = 1.1, X0 = 11.8, Y0 = 0.4;
   const parts = [
-    { side: "L", y: 0.6, px: 1.25, py: 1.25, t: "Faction", d: "The family it belongs to" },
-    { side: "L", y: 3.3, px: 1.2, py: 3.1, t: "Card type", d: "Character, Spell, Equipment or Area" },
-    { side: "L", y: 9.4, px: 2.6, py: 10, t: "Skills", d: "Keywords with special rules" },
-    { side: "L", y: 12.4, px: 1.3, py: 13.15, t: "⚔ Attack", d: "Damage it deals" },
-    { side: "R", y: 0.6, px: 9.1, py: 1.3, t: "Mana cost", d: "What it costs to play" },
-    { side: "R", y: 5.2, px: 9.3, py: 6.5, t: "Rarity", d: "The edge color" },
-    { side: "R", y: 9.6, px: 4.9, py: 13.15, t: "♥ Health", d: "Damage it can take" },
-    { side: "R", y: 12.6, px: 8.5, py: 13.15, t: "⚡ Speed", d: "Higher strikes first" },
+    { side: "L", y: 0.6, px: 1.25, py: 1.25, t: "Fracture", d: "The shattered world it is from" },
+    { side: "L", y: 5.2, px: 1.45, py: 9.4, t: "Tribe", d: "What it is (round symbol)" },
+    { side: "L", y: 9.4, px: 3.2, py: 10.95, t: "Skills", d: "Keywords with special rules" },
+    { side: "L", y: 12.4, px: 1.3, py: 12.5, t: "⚔ Attack", d: "Damage it deals" },
+    { side: "R", y: 0.6, px: 8.45, py: 1.05, t: "Mana cost", d: "What it costs to play" },
+    { side: "R", y: 3.6, px: 9.3, py: 5, t: "Rarity", d: "The edge color and the gem" },
+    { side: "R", y: 6.6, px: 7.9, py: 9.4, t: "Class", d: "What it does (square symbol)" },
+    { side: "R", y: 9.6, px: 8.3, py: 12.5, t: "♥ Health", d: "Damage it can take" },
   ];
   const lines = parts.map(p => {
     const x = X0 + p.px * K, y = Y0 + p.py * K;

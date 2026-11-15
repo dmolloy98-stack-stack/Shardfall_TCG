@@ -4,8 +4,8 @@
 // see data/README.md for what each column means. This script loads them, checks them,
 // and then starts the game scripts.
 
-const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks"];
-const GAME_SCRIPTS = ["js/engine.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/intro.js", "js/ui.js"];
+const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events"];
+const GAME_SCRIPTS = ["js/engine.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/intro.js", "js/ui.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
 let DATA = null;
 
 // Parsing (port of the DATA.load* functions in main.lua)
@@ -48,6 +48,12 @@ function buildData(CSV) {
   const uiText = {};
   for (const [id, text] of csvRows(CSV.ui_text)) uiText[id] = text || "";
 
+  // Random events (data/events.csv): what each one is called and how it is described to players.
+  // What an event does is written in js/engine.js, keyed by its EventID.
+  const events = {};
+  const eventOrder = [];
+  for (const c of csvRows(CSV.events || "")) { events[c[0]] = { id: c[0], name: c[1], desc: c[2] || "" }; eventOrder.push(c[0]); }
+
   const skills = {};
   const skillOrder = [];
   for (const c of csvRows(CSV.skills)) {
@@ -59,7 +65,7 @@ function buildData(CSV) {
   const rarities = {};
   const rarityOrder = [];
   for (const c of csvRows(CSV.rarities)) {
-    rarities[c[1]] = { name: c[1], color: rgb(c[2], c[3], c[4]), attachCost: Number(c[5]) || 1, order: Number(c[6]) };
+    rarities[c[1]] = { name: c[1], color: rgb(c[2], c[3], c[4]), attachCost: c[5] !== "" && Number.isFinite(Number(c[5])) ? Number(c[5]) : 1, order: Number(c[6]), frame: c[7] || "chip" };
     rarityOrder.push(c[1]);
   }
 
@@ -69,21 +75,47 @@ function buildData(CSV) {
   }
 
   const statsOf = s => {
-    const m = (s || "").match(/(-?\d+)\+(-?\d+)\+(-?\d+)/);
-    return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0];
+    // Attack+Health. An older third number (Speed, now removed) is ignored.
+    const m = (s || "").match(/(-?\d+)\+(-?\d+)/);
+    return m ? [Number(m[1]), Number(m[2])] : [0, 0];
   };
   const skillsOf = s => (s || "").split("+").map(x => x.trim()).filter(x => x && x !== "---");
+  const namesOf = skillsOf;   // tribes and classes are written the same way: Human+Animal
+  const fracturesOf = s => { const l = namesOf(s); return l.length ? l : ["N/A"]; };
+
+  // A typing mistake in the card table stops the game with a message naming the card, the
+  // same way a mistake in a deck list or an Effect does. Without this, a misspelled skill or
+  // faction was ignored without a word and the card just played wrong.
+  const CARD_TYPES = ["Character", "Spell", "Equipment", "Area"];
+  const checkCard = card => {
+    const bad = (what, value, list) => { throw new Error(`data/cards.csv, card ${card.id}: ${what} "${value}" is not known. Use one of: ${list.join(", ")}.`); };
+    if (cardsById[card.id]) throw new Error(`data/cards.csv: the CardID ${card.id} is used twice.`);
+    if (cardsByName[card.name]) throw new Error(`data/cards.csv: two cards are named "${card.name}" (${cardsByName[card.name].id} and ${card.id}).`);
+    if (!CARD_TYPES.includes(card.type)) bad("the Type", card.type, CARD_TYPES);
+    if (!rarities[card.rarity]) bad("the Rarity", card.rarity, rarityOrder);
+    for (const g of card.groups) if (g !== "N/A" && !factions[g]) bad("the Fracture", g, [...Object.keys(factions), "N/A"]);
+    if (card.groups.length > 1 && card.groups.includes("N/A")) bad("the Fracture", card.groups.join("+"), Object.keys(factions));
+    for (const k of [...card.tribes, ...card.classes]) if (/[a-z]:/.test(k)) bad("the tribe or class", k, ["a plain name"]);
+    if (card.type !== "Character" && (card.tribes.length || card.classes.length)) throw new Error(`data/cards.csv, card ${card.id}: only characters have tribes and classes. Use --- for a ${card.type}.`);
+    for (const s of card.skills) if (!skills[s]) bad("the skill", s, skillOrder);
+  };
 
   const cardsById = {}, cardsByName = {}, cardList = [];
   for (const c of csvRows(CSV.cards)) {
     if (c.length < 8 || !c[0] || !c[2]) continue;
-    const [attack, health, speed] = statsOf(c[7]);
+    const [attack, health] = statsOf(c[7]);
     const ability = c[9] && c[9] !== "---" ? c[9] : "";
     const card = {
       id: c[0], manaCost: Number(c[1]) || 0, name: c[2], rarity: c[3] || "Basic", type: c[4],
-      race: c[5], group: c[6], attack, health, speed, skills: skillsOf(c[8]),
+      // Fracture (where it is from; a hybrid lists two, "Fighter+Monkey"; the first sets its color),
+      // tribes (species) and classes (job). The names in these three lists must not clash with a
+      // CardID, so "allies.Human" can't mean a card.
+      group: fracturesOf(c[6])[0], groups: fracturesOf(c[6]), tribes: namesOf(c[5]), classes: namesOf(c[13]),
+      attack, health, skills: skillsOf(c[8]),
       ability, description: c[10] || "", artKey: c[11] || c[0],
+      effect: (c[12] || "").trim(),   // what the card does, read by js/effects.js
     };
+    checkCard(card);
     cardsById[card.id] = card;
     cardsByName[card.name] = card;
     cardList.push(card);
@@ -114,7 +146,7 @@ function buildData(CSV) {
   }
 
   return {
-    rules, phases, uiText, skills, skillOrder, rarities, rarityOrder, factions,
+    rules, phases, uiText, events, eventOrder, skills, skillOrder, rarities, rarityOrder, factions,
     cardsById, cardsByName, cardList, decks, deckOrder,
     text: (id, fallback) => uiText[id] ?? fallback ?? id,
   };
@@ -154,7 +186,7 @@ async function loadGame() {
     showDataError(err);
     return;
   }
-  // Each script runs as soon as it is added, in order. ui.js sets shardfallStarted
+  // Each script runs as soon as it is added, in order. boot.js sets shardfallStarted
   // once everything is in place.
   for (const text of code) {
     const el = document.createElement("script");
