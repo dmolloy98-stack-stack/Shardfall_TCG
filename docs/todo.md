@@ -36,3 +36,40 @@ It applies to **cards** and to **whole decks**, to show mastery of them. The wor
 - Not paying for levels, as far as the owner has said so far. The first idea was "pay to
   upgrade" like Team Fight Tactics, but the later answers talk only about earning levels. Ask
   again before building anything that costs money.
+
+## Champion leveling (like Legends of Runeterra) — the owner chose "no champion is a real choice"
+
+**The idea.** Each champion (Unknown card) levels up when its deck meets a condition, and it
+changes into a stronger version. A deck may hold one kind of champion, or none.
+
+**Decided by the owner.**
+- A deck with **no champion gets nothing extra**. Skipping the champion is the player's choice.
+- Each champion needs its own ability and level-up condition that fits its personality and play
+  style (`docs/world.md` and `js/champions.js` hold the personalities). **The owner is working
+  these out. Claude offers options and waits.** Nothing is built.
+
+**TBD (to be decided later).**
+- **Cards that reward a no-champion deck.** The owner will design these later. They are meant
+  to make "no champion" a choice with its own upside, without any built-in bonus for it.
+
+**Notes for when this is built.**
+- Test every champion's balance on the computer players first (`tools/selftest.js`). The
+  starter decks are already uneven (Monkey wins about 41%, Simple about 58%).
+- Research said to make leveling happen often and keep it something the opponent can fight.
+
+## Random events every 5 rounds — under discussion
+
+**The idea (owner's).** Every 5 rounds a random event changes the board for both players,
+like Marvel Snap's locations. Not decided or built. See the chat for Claude's thoughts.
+
+## More area cards — an idea the owner likes, not yet designed
+
+- Areas that **change a rule for both players**, not only +stats (today only Whirlpool does).
+- A general area that gives stats or bonuses **by tribe** played, so it works in mixed decks.
+- Cards are the owner's design. Claude builds and tests them once they are written in the sheet.
+
+## Not doing for now
+
+- **A solo run mode** (a Slay the Spire style roguelike deckbuilder). The owner is wary of
+  Shardfall trying to be both a head-to-head game and a solo deckbuilder. The campaign already
+  covers solo play. Revisit only if the owner raises it again.
