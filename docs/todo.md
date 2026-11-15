@@ -57,10 +57,20 @@ changes into a stronger version. A deck may hold one kind of champion, or none.
   starter decks are already uneven (Monkey wins about 41%, Simple about 58%).
 - Research said to make leveling happen often and keep it something the opponent can fight.
 
-## Random events every 5 rounds — under discussion
+## Random events every 5 rounds — built
 
-**The idea (owner's).** Every 5 rounds a random event changes the board for both players,
-like Marvel Snap's locations. Not decided or built. See the chat for Claude's thoughts.
+Built on the owner's decisions: an event every 5 rounds (rounds 6, 11, 16 ...; a round is one
+player's turn), announced two rounds ahead with a one-line description, lasting one round.
+The four events the owner chose: Spell Surge, Tremor, Windfall, Amplified Areas (names are
+working names; the owner can rename them in `data/events.csv`). More events are the owner's
+design; each needs code in `js/engine.js`.
+
+**Open points.**
+- A one-round event is one player's turn, so Spell Surge and Amplified Areas help only the
+  player whose turn it is. Tremor and Windfall hit both sides at once. If this feels lopsided,
+  an event can last two rounds (one turn each); this is a small change.
+- The computer ignores events when it plans. It could learn to hold spells for a Spell Surge.
+- Events are not in the owner's card sheet yet (no tab for them).
 
 ## More area cards — an idea the owner likes, not yet designed
 

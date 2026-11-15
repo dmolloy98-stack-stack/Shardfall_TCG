@@ -402,13 +402,15 @@ const counterKinds = c => CARD_FX[c.id]?.counter;
 function costFromEffect(c, p) {
   const block = CARD_FX[c.id]?.cost;
   let cost = c.manaCost;
-  if (!block) return cost;
-  const ctx = { card: c, owner: p };
-  for (const s of block.steps) {
-    if (s.test && !(s.test(ctx) > 0)) continue;
-    if (s.name === "reduce") cost = Math.max(0, cost - s.args[0](ctx));
-    else if (s.name === "set") cost = s.args[0](ctx);
+  if (block) {
+    const ctx = { card: c, owner: p };
+    for (const s of block.steps) {
+      if (s.test && !(s.test(ctx) > 0)) continue;
+      if (s.name === "reduce") cost = Math.max(0, cost - s.args[0](ctx));
+      else if (s.name === "set") cost = s.args[0](ctx);
+    }
   }
+  if (c.type === "Spell" && eventNow("spell_surge")) cost = Math.max(0, cost - 1);   // the Spell Surge event
   return cost;
 }
 
@@ -420,7 +422,8 @@ function auraBonus(c, p) {
   let a = 0, h = 0;
   for (const src of auraSources(p)) {
     const ctx = { card: src, owner: p };
-    for (const st of CARD_FX[src.id].aura.steps) if (select(st.sel, ctx).includes(c)) { a += st.a(ctx); h += st.h(ctx); }
+    const k = src.type === "Area" && eventNow("amplified_areas") ? 2 : 1;   // the Amplified Areas event doubles area bonuses
+    for (const st of CARD_FX[src.id].aura.steps) if (select(st.sel, ctx).includes(c)) { a += st.a(ctx) * k; h += st.h(ctx) * k; }
   }
   return { a, h };
 }

@@ -8,3 +8,5 @@ max_copies,4,number,Most copies of one card a deck may hold
 max_unknown_copies,2,number,Most copies of one Unknown-rarity card a deck may hold
 max_unknown_kinds,1,number,"Most different Unknown-rarity cards (champions) a deck may hold"
 max_hand_size,8,number,"Most cards a hand can hold; a card drawn or returned to a full hand goes to the graveyard instead"
+event_every_rounds,5,number,"A random event hits the board every this many rounds (a round is one player's turn); 0 turns events off"
+event_warning_rounds,2,number,How many rounds ahead the next event is announced

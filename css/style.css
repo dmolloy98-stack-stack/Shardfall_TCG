@@ -1817,3 +1817,23 @@ html.intro-on .menu-inner { visibility: hidden; }
   border: 1px solid rgba(var(--ice), 0.5);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 26px rgba(110, 150, 255, 0.2);
 }
+
+/* ------------------------------------------------------------ random events
+   A small card in the middle band: when the next event hits and what it does. */
+.event-pill {
+  position: absolute; left: 985px; top: 372px; width: 225px; height: 58px; box-sizing: border-box;
+  padding: 5px 9px; border-radius: 6px; overflow: hidden;
+  display: grid; grid-template-rows: auto auto auto; align-content: center; line-height: 1.2;
+  background: rgba(20, 14, 6, 0.8); border: 1px solid rgba(255, 214, 130, 0.65);
+  color: var(--parchment); pointer-events: none;
+}
+.event-pill .event-when { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass); }
+.event-pill b { font-family: var(--font-display); font-weight: 400; font-size: 15px; letter-spacing: 0.03em; }
+.event-pill .event-desc { font-size: 11px; color: rgba(242, 231, 207, 0.8); white-space: nowrap; }
+.event-pill.now { border-color: #ffe9aa; box-shadow: 0 0 14px rgba(255, 214, 130, 0.65); animation: event-glow 1.6s ease-in-out infinite alternate; }
+@keyframes event-glow { from { box-shadow: 0 0 6px rgba(255, 214, 130, 0.4); } to { box-shadow: 0 0 18px rgba(255, 214, 130, 0.85); } }
+.skin-crystal .event-pill { background: rgba(6, 10, 26, 0.88); border-color: rgba(var(--ice), 0.6); }
+.skin-crystal .event-pill .event-when { color: rgb(150, 195, 255); }
+.skin-crystal .event-pill.now { border-color: #fff; box-shadow: 0 0 14px rgba(var(--ice), 0.7); animation-name: event-glow-ice; }
+@keyframes event-glow-ice { from { box-shadow: 0 0 6px rgba(var(--ice), 0.4); } to { box-shadow: 0 0 18px rgba(var(--ice), 0.9); } }
+@media (prefers-reduced-motion: reduce) { .event-pill.now { animation: none; } }

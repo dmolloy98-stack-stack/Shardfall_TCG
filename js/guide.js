@@ -1,6 +1,6 @@
 // Fills the parts of the How to play guide (guide.html) that come from the game
 // data, so the guide stays right when the CSV files change: rule numbers, the
-// skills glossary, rarities and the starter decks.
+// skills glossary, rarities, random events and the starter decks.
 function fillGuide(root, data) {
   const h = s => String(s ?? "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
   root.querySelectorAll("[data-rule]").forEach(el => {
@@ -20,6 +20,10 @@ function fillGuide(root, data) {
       const r = data.rarities[id];
       return `<li><span class="swatch" style="background:${r.color}"></span><b>${h(r.name)}</b> · saved equipment costs ${r.attachCost} mana to attach</li>`;
     }).join("");
+  }
+  const events = root.querySelector("[data-fill=events]");
+  if (events) {
+    events.innerHTML = data.eventOrder.map(id => `<li><b>${h(data.events[id].name)}</b>: ${h(data.events[id].desc)}</li>`).join("");
   }
   const decks = root.querySelector("[data-fill=decks]");
   if (decks) {

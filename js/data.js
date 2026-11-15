@@ -4,7 +4,7 @@
 // see data/README.md for what each column means. This script loads them, checks them,
 // and then starts the game scripts.
 
-const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks"];
+const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events"];
 const GAME_SCRIPTS = ["js/engine.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/intro.js", "js/ui.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
 let DATA = null;
 
@@ -47,6 +47,12 @@ function buildData(CSV) {
 
   const uiText = {};
   for (const [id, text] of csvRows(CSV.ui_text)) uiText[id] = text || "";
+
+  // Random events (data/events.csv): what each one is called and how it is described to players.
+  // What an event does is written in js/engine.js, keyed by its EventID.
+  const events = {};
+  const eventOrder = [];
+  for (const c of csvRows(CSV.events || "")) { events[c[0]] = { id: c[0], name: c[1], desc: c[2] || "" }; eventOrder.push(c[0]); }
 
   const skills = {};
   const skillOrder = [];
@@ -140,7 +146,7 @@ function buildData(CSV) {
   }
 
   return {
-    rules, phases, uiText, skills, skillOrder, rarities, rarityOrder, factions,
+    rules, phases, uiText, events, eventOrder, skills, skillOrder, rarities, rarityOrder, factions,
     cardsById, cardsByName, cardList, decks, deckOrder,
     text: (id, fallback) => uiText[id] ?? fallback ?? id,
   };

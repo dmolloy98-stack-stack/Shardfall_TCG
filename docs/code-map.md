@@ -132,6 +132,7 @@ their own story or coaching, then hand over to the same engine.
 | Campaign order and story | `js/campaign.js` |
 | Deck-building rules | `js/decks.js` and `data/game_rules.csv` |
 | Hint wording and settings | `js/help.js` |
+| A random event (every 5 rounds, one round long) | names and descriptions in `data/events.csv`; what each does is `EVENT_ON_START` and `eventNow()` in `js/engine.js`, with the cost and area-bonus effects in `costFromEffect` and `auraBonus` in `js/effects.js`; the warning card is `eventPill()` in `js/ui.js` |
 | The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/style.css`; the list of skins is `SKINS` in `js/ui.js`; the long cracks are redrawn by `tools/make-crystal.js` |
 | The playable single-file copy | `tools/build-single.js` |
 | Checking a rules or card change broke nothing | `node tools/selftest.js . rand 1000` |

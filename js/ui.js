@@ -315,6 +315,22 @@ function crystalSVG(cls, cracks = 0) {
 function floatText(x, y, text, color, small) {
   fxDiv("float" + (small ? " small" : ""), `left:${x}px;top:${y}px;color:${color}`, 1250).textContent = text;
 }
+// Random events (see "Random events" in js/engine.js): a small card in the middle of the table
+// that says what is coming, how soon, and what it does. During the event round it says "This round".
+function eventLine() {
+  const e = S.event || S.upcoming;
+  if (!e) return null;
+  const info = DATA.events[e.id];
+  const left = S.event ? 0 : e.round - S.round;
+  const when = S.event ? "This round" : left <= 1 ? "Next round" : `In ${left} rounds`;
+  return { when, name: info.name, desc: info.desc, now: !!S.event };
+}
+function eventPill() {
+  const e = eventLine();
+  if (!e) return "";
+  return `<div class="event-pill${e.now ? " now" : ""}" role="status"><span class="event-when">${esc(e.when)}</span><b>${esc(e.name)}</b><span class="event-desc">${esc(e.desc)}</span></div>`;
+}
+
 function banner(text) {
   const b = $("#banner");
   b.hidden = false; b.textContent = text;
@@ -472,6 +488,7 @@ onGameEvent((type, d) => {
     U.selected = null; U.armed = null;
     turnHandover(d.player);
     if (S.mode === "hotseat") U.curtain = true;
+    else if (S.event && S.event.round === S.round) banner(`Event: ${DATA.events[S.event.id].name}`);
     else banner(active().isAI ? `${active().name}'s turn` : "Your turn");
   } else if (type === "play") {
     if (U.stats) U.stats.played[d.player]++;
@@ -647,6 +664,7 @@ function render() {
   h += `<div class="turn-crystal${performance.now() - U.turnLandedAt < 700 ? " landed" : ""}" style="--pc:${turnColor}" title="Glows in the color of the player whose turn it is">${crystalSVG("big-crystal")}</div>`;
   h += `<div class="turn-info" style="top:372px"><b>Round ${S.round}</b><span style="color:${turnColor}">${esc(active().name)}'s turn</span></div>`;
   h += `<div class="phases">${DATA.phases.map((ph, i) => `<div class="phase-step${i === S.phase ? " on" : ""}">${esc(ph.name)}</div>`).join("")}</div>`;
+  h += eventPill();
   const forced = guards(them);
   // "All attack": every character that can still attack goes for the player (see attackAllFace).
   const readyN = human && S.phase === PHASE.BATTLE && !S.pending ? me.field.chars.filter(canAttack).length : 0;
@@ -671,7 +689,7 @@ function render() {
   h += `<div class="log">${S.log.slice(-6).map(m => `<div>${esc(m)}</div>`).join("")}</div>`;
 
   if (U.curtain) {
-    h += `<div class="curtain"><p>Pass the device to</p><h2>${esc(active().name)}</h2><p>${esc(active().deckLabel ?? active().faction + " deck")} · Round ${S.round}</p><button type="button" class="btn btn-primary" data-act="curtain">Start turn</button></div>`;
+    h += `<div class="curtain"><p>Pass the device to</p><h2>${esc(active().name)}</h2><p>${esc(active().deckLabel ?? active().faction + " deck")} · Round ${S.round}</p>${eventLine() ? `<p>${esc(eventLine().when)}: ${esc(eventLine().name)}. ${esc(eventLine().desc)}</p>` : ""}<button type="button" class="btn btn-primary" data-act="curtain">Start turn</button></div>`;
   } else if (U.ended && !U.tutorial) {
     const title = S.winner == null ? "A draw" : S.mode === "ai" ? (S.winner === 0 ? "Victory" : "Defeat") : `${S.players[S.winner].name} wins`;
     const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;

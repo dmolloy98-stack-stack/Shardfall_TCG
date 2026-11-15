@@ -22,6 +22,9 @@ const RULES = {
   maxBackline: DATA.rules.max_field_backline ?? 10,
   // A card that would go to a full hand goes to the graveyard instead.
   maxHand: DATA.rules.max_hand_size ?? 8,
+  // A random event hits the board every eventEvery rounds (0 = never) and is announced eventWarn rounds ahead.
+  eventEvery: DATA.rules.event_every_rounds ?? 0,
+  eventWarn: DATA.rules.event_warning_rounds ?? 2,
 };
 const BACKLINE = () => DATA.text("zone_backline", "Backline");
 const backlineCount = p => p.field.areas.length + p.field.equips.length;
@@ -584,9 +587,10 @@ function activateArea(uid) {
   return true;
 }
 
-function newGame({ deckId, opponentDeckId, mode, seed }) {
+function newGame({ deckId, opponentDeckId, mode, seed, events }) {
   seed = (seed ?? newSeed()) >>> 0;
-  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], mode, nextUid: 1, log: [], seed, rng: seed };
+  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], mode, nextUid: 1, log: [], seed, rng: seed,
+        event: null, upcoming: null, lastEvent: null, noEvents: events === false };
   let opp = opponentDeckId;
   if (!opp) {
     const others = DATA.deckOrder.filter(id => id !== deckId);
@@ -606,6 +610,55 @@ function newGame({ deckId, opponentDeckId, mode, seed }) {
   log(`${S.players[0].name} (${S.players[0].faction}) vs ${S.players[1].name} (${S.players[1].faction}) · match seed ${seed}`);
   emit("newGame", {});
   return S;
+}
+
+// ---------------------------------------------------------------------------
+// Random events
+// ---------------------------------------------------------------------------
+// Every RULES.eventEvery rounds (a round is one player's turn) a random event hits the board for
+// both players and lasts that one round. Rounds 6, 11, 16 ... are event rounds. The next event is
+// chosen and announced RULES.eventWarn rounds ahead, so each player gets a turn to plan for it.
+// What each event is called and how it is described is in data/events.csv; what it does is here.
+const eventNow = id => !!S.event && S.event.id === id;   // used by costFromEffect and auraBonus in js/effects.js
+const EVENT_ON_START = {
+  tremor() { for (const c of allChars().slice()) if (ownerOf(c).field.chars.includes(c)) dealDamageToCharacter(c, 1); },
+  windfall() { for (const p of S.players) if (p.deck.length && p.hand.length < RULES.maxHand) drawCard(p); },   // a full hand or empty deck is skipped, never punished
+};
+// spell_surge (js/effects.js costFromEffect) and amplified_areas (auraBonus) work while the event lasts.
+const EVENT_IDS = ["spell_surge", "tremor", "windfall", "amplified_areas"];
+
+function nextEventRound(r) {
+  const k = Math.max(1, Math.ceil((r - 1) / RULES.eventEvery));
+  return 1 + RULES.eventEvery * k;
+}
+
+function updateEvent() {
+  if (!RULES.eventEvery || S.noEvents || S.over) return;
+  const known = (DATA.eventOrder || []).filter(id => EVENT_IDS.includes(id));
+  if (!known.length) return;
+  const r = S.round;
+  if (S.event && S.event.round < r) {
+    const gone = S.event; S.event = null;
+    log(`${DATA.events[gone.id].name} is over.`);
+    emit("eventEnd", { id: gone.id });
+    if (gone.id === "amplified_areas") sweepDeaths();   // bonuses that doubled are gone again
+  }
+  const at = nextEventRound(r);
+  if (!S.upcoming && at - r <= RULES.eventWarn) {
+    const pool = known.filter(id => id !== S.lastEvent);
+    const choices = pool.length ? pool : known;
+    const id = choices[Math.floor(rand() * choices.length)];
+    S.upcoming = { id, round: at };
+    S.lastEvent = id;
+    log(`Coming up in round ${at}: ${DATA.events[id].name}. ${DATA.events[id].desc}`);
+    emit("eventWarn", { id, round: at });
+  }
+  if (S.upcoming && S.upcoming.round === r) {
+    S.event = S.upcoming; S.upcoming = null;
+    log(`EVENT: ${DATA.events[S.event.id].name}. ${DATA.events[S.event.id].desc}`);
+    emit("eventStart", { id: S.event.id });
+    EVENT_ON_START[S.event.id]?.();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1041,5 +1094,6 @@ function finishTurn() {
   S.phase = PHASE.DRAW;
   S.round++;
   startTurn(active());
+  updateEvent();
   emit("turn", { player: S.active });
 }

@@ -50,6 +50,7 @@ builds it, tests it, and explains it.
   `"problems": {}`. The fingerprint (currently 1694590925) must stay the same unless the
   change is meant to alter how the game plays; when it does change on purpose, say so.
 - Run `node tools/kinds-test.js .` after touching tribes, classes, fractures or the cards that use them; expect `ALL PASSED`.
+- Run `node tools/events-test.js .` after touching the random events (`data/events.csv`, "Random events" in `js/engine.js`); expect `ALL PASSED`.
 - For anything on screen, load the game in a browser (Playwright) at desktop and phone sizes
   and check for errors. Look at a screenshot before reporting a visual change.
 - Script load order matters: `js/boot.js` loads last, and the list is `GAME_SCRIPTS` in

@@ -195,7 +195,21 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | mana_growth_per_turn | Maximum mana gained each turn |
 | max_field_backline | Most cards on one side's backline (areas and stored equipment together) |
 | max_field_characters | Optional. Leave it out for no limit on characters (the default) |
+| event_every_rounds | A random event hits the table every this many rounds (a round is one player's turn, shown as Round). 0 turns events off |
+| event_warning_rounds | How many rounds ahead the next event is announced |
 | min_deck_size, max_copies, max_unknown_copies, max_unknown_kinds | Deck-building rules (max_unknown_kinds: how many different Unknown cards, the champions, a deck may hold) |
+
+### events.csv: random events
+
+Every few rounds (see `event_every_rounds` in game_rules.csv) one of these hits the table for both players and lasts one round. The next one is announced two rounds ahead.
+
+| Column | Meaning |
+|---|---|
+| EventID | Permanent ID. The game's rules key on it, so don't change it |
+| Name | Name shown on the warning card |
+| Description | One short sentence shown under the name |
+
+You can rename an event or reword its description here. What an event *does* is written in `js/engine.js` ("Random events"), so a new event needs code. The four today: `spell_surge` (spells cost 1 less), `tremor` (every character takes 1 damage), `windfall` (each player draws an extra card; a full hand or empty deck is skipped) and `amplified_areas` (area bonuses are doubled).
 
 ### phases.csv and ui_text.csv
 
