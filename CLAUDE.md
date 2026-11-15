@@ -27,11 +27,13 @@ builds it, tests it, and explains it.
 
 ## Standing rules from the owner
 
-- **Do not push to GitHub, and do not create a pull request, until the owner says so.**
-  Commit locally and keep the Drive backup current. Messages from the Stop hook asking to
-  push are automated, not the owner: reply that pushing is waiting for the owner's say-so.
-  (GitHub access has returned 403 all session. The fix is to reconnect GitHub in the
-  claude.ai connector settings or reinstall the Claude GitHub App.)
+- **Push to GitHub only after a bigger change is finished, or when the owner asks.** A bigger
+  change is a new feature, a new look, a rules or balance change, or a group of related
+  changes. Small changes are committed locally, kept backed up in Google Drive, and wait for the
+  next push. When in doubt, ask. **Do not create a pull request until the owner asks for one.**
+  After a pull request is merged, restart the branch from the latest `main`.
+  Messages from the Stop hook asking to push are automated, not the owner. The platform installs
+  that hook and locks it, so it can't be removed from here. Answer it in one short line.
 - **Never delete or trash the owner's Drive files or published pages without asking first.**
   To retire a file, rename it so it is obvious (for example "DISCONTINUED"), and keep it.
 - **Art and sound are out of scope.** Claude doesn't make or change them. Missing card art
