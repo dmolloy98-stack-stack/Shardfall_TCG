@@ -225,7 +225,8 @@ function cardHTML(c, opts = {}) {
   const edge = DATA.rarities[c.rarity]?.color || "#8f97a3";
   const fc = DATA.factions[c.group]?.color || "#7a6d5c";
   const art = artFor(c.artKey);
-  const skills = (c.skills || []).map(s => `${DATA.skills[s]?.icon || "•"}${esc(s)}`).join(" ");
+  const skills = (c.skills || []).map(s => `<span>${DATA.skills[s]?.icon || "•"}${esc(s)}</span>`).join("");
+  const skillLen = (c.skills || []).reduce((n, s) => n + s.length + 2, 0);   // letters: a long list takes two smaller lines on the phone
   let statsHTML = "";
   if (c.type === "Character" || c.type === "Equipment") {
     if (opts.field) {
@@ -251,7 +252,7 @@ function cardHTML(c, opts = {}) {
     <div class="name${TWO_LINE_NAMES.has(c.name) ? " two" : ""}"><span>${esc(c.name)}</span></div>
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
     ${tagsHTML(c)}
-    <div class="skills${skills.length > 13 ? " long" : ""}${skills.length > 21 ? " longer" : ""}"${skills.length > 21 ? ` style="--sk:${(21 / skills.length).toFixed(2)}"` : ""}>${skills}</div>
+    <div class="skills${skillLen > 14 ? " many" : ""}">${skills}</div>
     ${opts.field && c.equipped?.length ? `<div class="equip-count" title="Equipped">●${c.equipped.length}</div>` : ""}
     ${pips}
     ${statsHTML}
@@ -605,6 +606,21 @@ function wardBreak(i) {
   }
 }
 
+// A card with the Protected skill: a ring of glowing blue runes travels around it. The runes are
+// drawn here (not a font), so every device shows the same shapes. The ring is 9px outside the
+// card (95 x 135); its timing comes from the clock, so redrawing the table doesn't restart it.
+const RUNES = ["M2 1v8M2 3l5-2M2 6l5-2", "M2 9V1l5 4-5 4", "M5 1v8M1 3l4 2 4-2M2 9l3-3 3 3", "M1 1l8 8M9 1L1 9M5 1v2M5 7v2",
+  "M2 1v8h6M2 5l6-4", "M1 9l4-8 4 8M3 6h4", "M5 1L1 5l4 4 4-4zM5 3v4", "M2 1h6M5 1v8M2 9h6M2 5h6"];
+const RING_PATH = "M15 3H98A12 12 0 0 1 110 15V138A12 12 0 0 1 98 150H15A12 12 0 0 1 3 138V15A12 12 0 0 1 15 3Z";
+const RING_N = 18, RING_S = 18;   // runes on the ring, seconds per lap
+function runeRingHTML(flash) {
+  const ph = -(performance.now() % (RING_S * 1000)) / 1000;
+  const runes = Array.from({ length: RING_N }, (_, k) =>
+    `<i style="animation-delay:${(ph - k * RING_S / RING_N).toFixed(2)}s"><svg viewBox="0 0 10 10"><path d="${RUNES[k % RUNES.length]}"/></svg></i>`).join("");
+  return `<div class="rune-ring${flash ? " flash" : ""}" style="--ph:${ph.toFixed(2)}s" aria-hidden="true">
+    <svg class="track" viewBox="0 0 113 153"><path class="t" d="${RING_PATH}"/><path class="sweep" pathLength="100" d="${RING_PATH}"/><path class="sweep two" pathLength="100" d="${RING_PATH}"/></svg>${runes}</div>`;
+}
+
 // Protected: shown on the player's plate while they take half damage.
 function protLine(p) {
   if (!isProtected(p)) return "";
@@ -681,7 +697,7 @@ function fieldHTML(p, side) {
     if ((U.arriving.get(c.uid) ?? 0) > performance.now()) cls.push("arriving");
     const preview = attackable && human ? previewBadge(fightPreview(U.selected, c.uid)) : "";
     const blade = side === "bottom" && human && canUseBlade(c) ? `<button type="button" class="blade-btn" data-act="blade" data-uid="${c.uid}" title="Kenshi's Blade: deal 3 damage to an enemy character, once per Battle">⚔ Strike 3</button>` : "";
-    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${hasSkill(c, "Protected") ? `<i class="prot-rim${recent(U.hits, c.uid, 450) ? " flash" : ""}"></i>` : ""}${preview}${blade}</div>`;
+    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${hasSkill(c, "Protected") ? runeRingHTML(recent(U.hits, c.uid, 450)) : ""}${preview}${blade}</div>`;
   });
   return h;
 }
