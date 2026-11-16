@@ -98,6 +98,19 @@ design; each needs code in `js/engine.js`.
 - A general area that gives stats or bonuses **by tribe** played, so it works in mixed decks.
 - Cards are the owner's design. Claude builds and tests them once they are written in the sheet.
 
+## Protected look that hints at the Shardfall — the owner's idea, not designed yet
+
+- The runes that circle a Protected card (`RUNES` and `runeRingHTML()` in `js/ui.js`) should
+  one day hint at what made the shards fall: the big event behind the Shardfall. The owner will
+  design what that is, then it gets pulled into the runes.
+- The shell of shards on a Protected player's health gem (`WARD` and `wardHTML()` in
+  `js/ui.js`) should carry the same hint, so the two Protected looks clearly belong together
+  and nobody is confused.
+- Today the runes are placeholder shapes. The shell has no runes yet.
+- Keep the hint subtle, like the other clues; once it is designed, log it in the clue log in
+  `docs/world.md`.
+- Not now: the owner will raise it when ready.
+
 ## Not doing for now
 
 - **A solo run mode** (a Slay the Spire style roguelike deckbuilder). The owner is wary of
