@@ -165,7 +165,7 @@ function renderSideInfo() {
       <div class="si-life">${crystalSVG("life-crystal " + tier, tier === "low" ? 2 : 0)}<b>${Math.max(0, p.health)}</b></div>
       <div class="si-text"><span class="si-name">${esc(p.name)}</span>
         <span class="si-mana">${crystalSVG("mana-crystal lit")}<b>${p.mana}</b>/${p.manaMax}${tokenBtn}</span>
-        <span class="si-hand">Hand ${p.hand.length} · Deck ${p.deck.length}</span></div>
+        <span class="si-hand">Hand ${p.hand.length} · Deck ${p.deck.length}</span>${champSide(p)}</div>
     </div>`;
   };
   box.innerHTML = panel(S.players[1 - viewIdx()], "opp") + panel(S.players[viewIdx()], "me");
@@ -173,7 +173,14 @@ function renderSideInfo() {
   const w = Math.max(96, Math.min(gutter - 10, 200));
   Object.assign(box.style, { left: wr.left + Math.max(4, (gutter - w) / 2) + "px", width: w + "px", top: wr.top + 6 + "px", height: wr.height - 12 + "px" });
 }
+// A champion's ability on the phone's side panel: a short line; tap it for the details.
+function champSide(p) {
+  const c = champInfo(p);
+  return c ? `<button type="button" class="si-champ${c.ch.level >= 2 ? " lv2" : ""}" data-si="champ" data-player="${p.idx}">★ ${c.grows ? "" : "Lv " + c.ch.level + " · "}${esc(c.progress)}</button>` : "";
+}
 document.getElementById("sideinfo").addEventListener("click", e => {
+  const cb = e.target.closest('[data-si="champ"]');
+  if (cb) { e.stopPropagation(); showChampion(S.players[Number(cb.dataset.player)]); return; }
   if (e.target.closest('[data-si="token"]')) { document.querySelector('#board [data-act="token"]')?.click(); return; }
   const p = e.target.closest(".si-player");
   if (p) document.querySelector(`#board .plate[data-player="${p.dataset.player}"]`)?.click();

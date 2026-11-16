@@ -10,3 +10,4 @@ max_unknown_kinds,1,number,"Most different Unknown-rarity cards (champions) a de
 max_hand_size,8,number,"Most cards a hand can hold; a card drawn or returned to a full hand goes to the graveyard instead"
 event_every_rounds,5,number,"A random event hits the board every this many rounds (a round is one player's turn); 0 turns events off"
 event_warning_rounds,2,number,How many rounds ahead the next event is announced
+protected_min_characters,3,number,"A player with this many characters on their side is Protected: they take half damage, rounded up (Pierce ignores it); 0 turns it off"

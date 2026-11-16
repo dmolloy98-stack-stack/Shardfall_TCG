@@ -70,6 +70,12 @@ the story never fixes how many there are.
 - Champions speak during campaign matches: a line in the match log and a speech bubble by
   their health plate, at most one every 7 seconds and 8 a match. The lines, the one-line
   tag on the story card and the computer's play style are in `js/champions.js`.
+- A deck that holds a champion also gets that champion's **ability** from turn one, and it levels
+  up once in a match (The Simplistic, The Man Ape, IP Man, Boss Level), or grows (Soul Shepard).
+  The words are in `data/champion_abilities.csv`. Each fits its champion: the Man Ape remembers
+  fallen cousins, IP Man bows before a fight, Boss Level raises the level cap, Soul Shepard grows
+  with every soul that is lost. The Simplistic's is Humble Beginnings, chosen by the owner; the hidden-clue phrase "Start small,
+  then level up" was kept out of it.
 - Their art is still to come.
 
 ## Tone

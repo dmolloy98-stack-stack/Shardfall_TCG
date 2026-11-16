@@ -225,7 +225,8 @@ function cardHTML(c, opts = {}) {
   const edge = DATA.rarities[c.rarity]?.color || "#8f97a3";
   const fc = DATA.factions[c.group]?.color || "#7a6d5c";
   const art = artFor(c.artKey);
-  const skills = (c.skills || []).map(s => `${DATA.skills[s]?.icon || "•"}${esc(s)}`).join(" ");
+  const skills = (c.skills || []).map(s => `<span>${DATA.skills[s]?.icon || "•"}${esc(s)}</span>`).join("");
+  const skillLen = (c.skills || []).reduce((n, s) => n + s.length + 2, 0);   // letters: a long list takes two smaller lines on the phone
   let statsHTML = "";
   if (c.type === "Character" || c.type === "Equipment") {
     if (opts.field) {
@@ -233,7 +234,7 @@ function cardHTML(c, opts = {}) {
       const hpLow = c.currentHealth < (c.baseHealth ?? c.health);
       statsHTML = `<div class="stats"><span class="a${st.a > c.attack ? " up" : ""}">⚔${st.a}</span><span class="h${hpLow ? " low" : ""}${st.h > c.currentHealth ? " up" : ""}">♥${Math.max(0, raw.h)}</span></div>`;
     } else {
-      statsHTML = `<div class="stats"><span class="a">⚔${c.attack}</span><span class="h">♥${c.health}</span></div>`;
+      statsHTML = `<div class="stats"><span class="a">⚔${c.attack}</span><span class="h${grieveBonus(c) ? " up" : ""}">♥${c.health + grieveBonus(c)}</span></div>`;
     }
   }
   const cost = opts.costOverride ?? c.manaCost;
@@ -251,7 +252,7 @@ function cardHTML(c, opts = {}) {
     <div class="name${TWO_LINE_NAMES.has(c.name) ? " two" : ""}"><span>${esc(c.name)}</span></div>
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
     ${tagsHTML(c)}
-    <div class="skills${skills.length > 13 ? " long" : ""}">${skills}</div>
+    <div class="skills${skillLen > 14 ? " many" : ""}">${skills}</div>
     ${opts.field && c.equipped?.length ? `<div class="equip-count" title="Equipped">●${c.equipped.length}</div>` : ""}
     ${pips}
     ${statsHTML}
@@ -448,6 +449,9 @@ onGameEvent((type, d) => {
       addTrauma(tier.trauma);
       if (tier.callout) callout(tier.callout);
     });
+  } else if (type === "protected") {
+    const p = plateCenter(d.player);
+    later(delay, () => { wardHit(d.player); floatText(p.x, p.y - 46, `PROTECTED ${d.from} → ${d.to}`, "#9fe7ff"); });
   } else if (type === "playerDamage") {
     const p = plateCenter(d.player);
     countDamage(d.player, d.amount);
@@ -482,6 +486,10 @@ onGameEvent((type, d) => {
     U.lungeAt = now;
   } else if (type === "draw") {
     U.drawn.set(d.uid, now);
+  } else if (type === "champLevel") {
+    const who = S.players[d.player], info = DATA.championAbilities[d.id];
+    banner(`${info.name}: LEVEL UP`);
+    floatText(sideOf(d.player) === "bottom" ? 720 : 720, sideOf(d.player) === "bottom" ? 900 : 120, "CHAMPION LEVEL UP", "#ffd27a");
   } else if (type === "manaToken") {
     floatText(sideOf(d.player) === "bottom" ? 223 : 1203, sideOf(d.player) === "bottom" ? 470 : 250, "+1 MANA", "#ffd27a", true);
   } else if (type === "turn") {
@@ -521,6 +529,105 @@ function lifeTier(p) {
   const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
   return { ratio, cls: LIFE_TIERS.find(t => ratio >= t.min).cls };
 }
+// A champion's ability (data/champion_abilities.csv, "Champion abilities" in js/engine.js): its name,
+// level and progress toward leveling up, shown under the player's name. Tap it for the details.
+function champInfo(p) {
+  const ch = p.champ;
+  if (!ch) return null;
+  const info = DATA.championAbilities[ch.id];
+  const grows = !info.goal;   // Soul Shepard's ability has no levels: it just grows
+  const n = ch.id === "the_simplistic" ? p.manaMax : grows ? (S.died.Undead || 0) : ch.n;
+  const progress = grows ? `${n} ${info.counts.toLowerCase()}` : ch.level >= 2 ? "Leveled up" : `${Math.min(n, info.goal)}/${info.goal} ${info.counts.toLowerCase()}`;
+  return { info, ch, n, grows, progress, label: grows ? info.name : `${info.name} · Lv ${ch.level}` };
+}
+function champLine(p) {
+  const c = champInfo(p);
+  return c ? `<button type="button" class="champ-line${c.ch.level >= 2 ? " lv2" : ""}" data-act="champ" data-player="${p.idx}" title="${esc(c.info.now)}">★ ${esc(c.label)} · ${esc(c.progress)}</button>` : "";
+}
+function showChampion(p) {
+  const c = champInfo(p);
+  if (!c) return;
+  const card = DATA.cardsById[c.ch.id];
+  openModal(`<h2 id="modal-title">${esc(c.info.name)}</h2>
+    <p class="sub">${esc(p.name)}'s champion ability · ${esc(card.name)}${c.grows ? "" : ` · Level ${c.ch.level} of 2`}</p>
+    <p><b>Now:</b> ${esc(c.info.now)}</p>
+    ${c.grows ? "" : `<p><b>Levels up when:</b> ${esc(c.info.when)}</p><p><b>Then:</b> ${esc(c.info.then)}</p>
+    <p><b>Progress:</b> ${c.ch.level >= 2 ? "Leveled up" : esc(c.progress)}</p>`}
+    ${c.grows ? `<p><b>So far:</b> ${esc(c.progress)}</p>` : ""}
+    <p class="sub">It works from turn one, even before ${esc(card.name)} is drawn.</p>
+    <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
+}
+
+// Protected, seen as a shell of light-blue shards around the health gem: the shards you hold
+// guard you. The shell is 24 shards in three rings (a geode, not a tech bubble). It snaps
+// together when you become Protected, a shard chips off and grows back when a hit is halved,
+// and the shell breaks apart when you lose it.
+const WARD = (() => {
+  const J = [0.06, -0.08, 0.05, -0.04, 0.09, -0.06];   // fixed wobble so the facets look hand-cut
+  const pt = (k, r) => { const a = (-90 + 60 * k) * Math.PI / 180; return [Math.cos(a) * 34 * r, Math.sin(a) * 40 * r]; };
+  const mid = (k, r) => { const a = (-60 + 60 * k) * Math.PI / 180; return [Math.cos(a) * 34 * r, Math.sin(a) * 40 * r]; };
+  const V = k => pt(k % 6, 1), M = k => mid(k % 6, 0.93 + J[k % 6] * 0.5), I = k => pt(k % 6, 0.5 + J[(k + 2) % 6]), C = [1.5, -2];
+  const tris = [];
+  for (let k = 0; k < 6; k++) tris.push([V(k), M(k), I(k)], [M(k), V(k + 1), I(k + 1)], [M(k), I(k + 1), I(k)], [C, I(k), I(k + 1)]);
+  return tris.map(t => {
+    const cx = (t[0][0] + t[1][0] + t[2][0]) / 3, cy = (t[0][1] + t[1][1] + t[2][1]) / 3, l = Math.hypot(cx, cy) || 1;
+    return { d: "M" + t.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join("L") + "Z", fx: (cx / l * 34).toFixed(0), fy: (cy / l * 34).toFixed(0) };
+  });
+})();
+const wardState = { on: [], at: [], hitAt: [], hits: [] };
+function wardHTML(p) {
+  if (wardState.game !== S) Object.assign(wardState, { game: S, on: [], at: [], hitAt: [], hits: [] });   // a new match starts clean
+  const i = p.idx, on = isProtected(p), now = performance.now();
+  if (on && !wardState.on[i]) wardState.at[i] = now;
+  else if (!on && wardState.on[i]) wardBreak(i);
+  wardState.on[i] = on;
+  if (!on) return "";
+  const forming = now - (wardState.at[i] || 0) < 1100, hit = now - (wardState.hitAt[i] || 0) < 1100;
+  const age = forming ? now - wardState.at[i] : hit ? now - wardState.hitAt[i] : 0;
+  const chip = (wardState.hits[i] || 0) * 7 % WARD.length;
+  return `<svg class="ward${forming ? " forming" : ""}${hit ? " hit" : ""}" viewBox="-40 -46 80 92" style="--age:-${age.toFixed(0)}ms" aria-hidden="true">${WARD.map((s, k) =>
+    `<path class="s${hit && k === chip ? " chip" : ""}" d="${s.d}" style="--i:${k};--fx:${s.fx}px;--fy:${s.fy}px"/>`).join("")}</svg>`;
+}
+// A halved hit: the shell flashes and one shard chips off, then grows back.
+function wardHit(i) {
+  wardState.hitAt[i] = performance.now();
+  wardState.hits[i] = (wardState.hits[i] || 0) + 1;
+  const el = document.querySelector(`.plate[data-player="${i}"] .life`);
+  const old = el?.querySelector(".ward");
+  if (old) old.outerHTML = wardHTML(S.players[i]);
+}
+// The shell breaks: its shards fall away from the gem.
+function wardBreak(i) {
+  if (REDUCED_MOTION || !S) return;
+  const at = LIFE_CRYSTAL(i);
+  for (let k = 0; k < 14; k++) {
+    const a = (k / 14) * Math.PI * 2, r = 40 + Math.random() * 50;
+    fxDiv("life-chip", `left:${at.x + Math.cos(a) * 26}px;top:${at.y + Math.sin(a) * 30}px;--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r + 40}px;--r:${(Math.random() - 0.5) * 540}deg;--c:${k % 2 ? "#dff6ff" : "#8fd8ff"};--s:${0.5 + Math.random() * 0.6}`, 900);
+  }
+}
+
+// A card with the Protected skill: a ring of glowing blue runes travels around it. The runes are
+// drawn here (not a font), so every device shows the same shapes. The ring is 9px outside the
+// card (95 x 135); its timing comes from the clock, so redrawing the table doesn't restart it.
+const RUNES = ["M2 1v8M2 3l5-2M2 6l5-2", "M2 9V1l5 4-5 4", "M5 1v8M1 3l4 2 4-2M2 9l3-3 3 3", "M1 1l8 8M9 1L1 9M5 1v2M5 7v2",
+  "M2 1v8h6M2 5l6-4", "M1 9l4-8 4 8M3 6h4", "M5 1L1 5l4 4 4-4zM5 3v4", "M2 1h6M5 1v8M2 9h6M2 5h6"];
+const RING_PATH = "M15 3H98A12 12 0 0 1 110 15V138A12 12 0 0 1 98 150H15A12 12 0 0 1 3 138V15A12 12 0 0 1 15 3Z";
+const RING_N = 18, RING_S = 18;   // runes on the ring, seconds per lap
+function runeRingHTML(flash) {
+  const ph = -(performance.now() % (RING_S * 1000)) / 1000;
+  const runes = Array.from({ length: RING_N }, (_, k) =>
+    `<i style="animation-delay:${(ph - k * RING_S / RING_N).toFixed(2)}s"><svg viewBox="0 0 10 10"><path d="${RUNES[k % RUNES.length]}"/></svg></i>`).join("");
+  return `<div class="rune-ring${flash ? " flash" : ""}" style="--ph:${ph.toFixed(2)}s" aria-hidden="true">
+    <svg class="track" viewBox="0 0 113 153"><path class="t" d="${RING_PATH}"/><path class="sweep" pathLength="100" d="${RING_PATH}"/><path class="sweep two" pathLength="100" d="${RING_PATH}"/></svg>${runes}</div>`;
+}
+
+// Protected: shown on the player's plate while they take half damage.
+function protLine(p) {
+  if (!isProtected(p)) return "";
+  const why = p.field.chars.length >= RULES.protectAt ? `${RULES.protectAt} or more characters` : "a Protected character";
+  return `<span class="prot-line" title="${esc(p.name)} has ${why}: damage to them is halved, rounded up. Pierce ignores it.">${esc(DATA.skills.Protected?.icon || "▣")} Protected · half damage</span>`;
+}
+
 function plateHTML(p, side) {
   const { ratio, cls: tier } = lifeTier(p);
   const cracks = tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4;
@@ -529,8 +636,8 @@ function plateHTML(p, side) {
   const attackable = side === "top" && U.selected && !forcedTarget(p);
   const y = side === "top" ? 3 : 937;
   return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
-    <div class="life">${crystalSVG("life-crystal " + tier, cracks)}<b>${Math.max(0, p.health)}</b></div>
-    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em></div>
+    <div class="life">${crystalSVG("life-crystal " + tier, cracks)}${wardHTML(p)}<b>${Math.max(0, p.health)}</b></div>
+    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
     ${attackable ? previewBadge(fightPreview(U.selected, null), true) : ""}
   </div>`;
 }
@@ -590,7 +697,7 @@ function fieldHTML(p, side) {
     if ((U.arriving.get(c.uid) ?? 0) > performance.now()) cls.push("arriving");
     const preview = attackable && human ? previewBadge(fightPreview(U.selected, c.uid)) : "";
     const blade = side === "bottom" && human && canUseBlade(c) ? `<button type="button" class="blade-btn" data-act="blade" data-uid="${c.uid}" title="Kenshi's Blade: deal 3 damage to an enemy character, once per Battle">⚔ Strike 3</button>` : "";
-    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${preview}${blade}</div>`;
+    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${hasSkill(c, "Protected") ? runeRingHTML(recent(U.hits, c.uid, 450)) : ""}${preview}${blade}</div>`;
   });
   return h;
 }
@@ -1150,6 +1257,7 @@ $("#board").addEventListener("click", e => {
   if (a === "char") return clickChar(uid);
   if (a === "token") { if (human) act(useManaToken); return; }
   if (a === "grave") return showGrave(S.players[Number(el.dataset.player)]);
+  if (a === "champ") return showChampion(S.players[Number(el.dataset.player)]);
   if (a === "deck") { if (human && Number(el.dataset.player) === S.active && S.phase === PHASE.DRAW) onPhaseButton(); return; }
   if (a === "plate") {
     const idx = Number(el.dataset.player);

@@ -4,7 +4,7 @@
 // see data/README.md for what each column means. This script loads them, checks them,
 // and then starts the game scripts.
 
-const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events"];
+const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events", "champion_abilities"];
 const GAME_SCRIPTS = ["js/engine.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/intro.js", "js/ui.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
 let DATA = null;
 
@@ -53,6 +53,10 @@ function buildData(CSV) {
   const events = {};
   const eventOrder = [];
   for (const c of csvRows(CSV.events || "")) { events[c[0]] = { id: c[0], name: c[1], desc: c[2] || "" }; eventOrder.push(c[0]); }
+
+  // Champion abilities (data/champion_abilities.csv): the wording shown to players. What each one does is in js/engine.js.
+  const championAbilities = {};
+  for (const c of csvRows(CSV.champion_abilities || "")) championAbilities[c[0]] = { id: c[0], name: c[1], now: c[2] || "", when: c[3] || "", then: c[4] || "", goal: Number(c[5]) || 0, counts: c[6] || "" };
 
   const skills = {};
   const skillOrder = [];
@@ -146,7 +150,7 @@ function buildData(CSV) {
   }
 
   return {
-    rules, phases, uiText, events, eventOrder, skills, skillOrder, rarities, rarityOrder, factions,
+    rules, phases, uiText, events, eventOrder, championAbilities, skills, skillOrder, rarities, rarityOrder, factions,
     cardsById, cardsByName, cardList, decks, deckOrder,
     text: (id, fallback) => uiText[id] ?? fallback ?? id,
   };

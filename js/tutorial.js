@@ -19,7 +19,7 @@ function startTutorial() {
   clearTimeout(U.aiTimer);
   Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
-  newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai", events: false });   // lessons are scripted, so no random events
+  newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai", events: false, abilities: false });   // lessons are scripted, so no random events or champion abilities
   const [me, tr] = S.players;
   tr.name = "Trainer"; tr.faction = "Training"; tr.deckLabel = "Training deck";
   tr.health = tr.maxHealth = TUT_TRAINER_HEALTH;
@@ -283,6 +283,19 @@ const TUT_STEPS = [
     target: () => [fieldEl("wall")], next: true,
   },
   {
+    title: "Champion abilities",
+    text: "Each deck has one special card, its <b>champion</b> (the Unknown rarity). If your deck holds it, you get the champion's <b>ability</b> from the first turn, even before you draw the card.<br><br>Most abilities <b>level up</b> once in a match.",
+    next: true,
+  },
+  {
+    text: () => {
+      const a = DATA.championAbilities.the_simplistic;
+      const lower = s => s.charAt(0).toLowerCase() + s.slice(1);
+      return `The Simple deck's is <b>${a.name}</b>. ${a.now}<br><br>When ${lower(a.when).replace(/\.$/, "")}, it levels up: ${lower(a.then)}<br><br>In a real game it shows under your name, with its level. Tap it to read it.`;
+    },
+    next: true,
+  },
+  {
     text: "Press <b>Draw card</b>.",
     target: () => [actEl("phase")],
     allow: name => name === "doDraw",
@@ -322,6 +335,7 @@ const TUT_STEPS = [
       <li>Characters fight in <b>Battle</b>. Both hit at once, unless one has <b>Swift</b>.</li>
       <li><b>Equipment</b> and <b>spells</b> change the fight.</li>
       <li><b>Skills</b> like Rush, Signal and Challenge add special rules.</li>
+      <li>Your deck's <b>champion</b> gives it an <b>ability</b> from turn one, and most abilities <b>level up</b> once in a match.</li>
       <li>Bring the other player to <b>0 health</b> to win.</li></ul>
       <p>Next, try a real game against the computer with the Simple deck. Beginner hints will guide you, and you can turn them off any time.</p>`,
   },

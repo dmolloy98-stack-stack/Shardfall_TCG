@@ -299,7 +299,7 @@ button { font: inherit; color: inherit; }
 }
 /* The type and fracture line is not drawn on the card; the detail window shows it. */
 .card .art {
-  position: absolute; left: 0.6em; right: 0.6em; top: 2.8em; height: 7.5em;
+  position: absolute; left: 0.6em; right: 0.6em; top: 2.3em; height: 7em;
   border-radius: 0.45em;
   /* A jewel lit from behind: bright at the heart, deep at the lead edge. */
   background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--fc) 55%, #fff6e0), color-mix(in srgb, var(--fc) 78%, #1a1030) 115%);
@@ -311,7 +311,10 @@ button { font: inherit; color: inherit; }
 .card .art::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--cames) 0 0 / 100% 100%; opacity: 0.7; }
 .card .art img { position: relative; z-index: 0; }
 .card .art img { width: 100%; height: 100%; object-fit: cover; }
-.card .skills { position: absolute; left: 0.4em; right: 0.4em; bottom: 2.1em; text-align: center; font-size: 0.85em; font-weight: 700; line-height: 1.15; color: #3a2a1c; }
+/* Skills sit in the band between the art and the numbers (69% to 86% of the card's height), up
+   to two lines; a skill never breaks in the middle. */
+.card .skills { position: absolute; left: 0.35em; right: 0.35em; top: 69%; height: 17%; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; column-gap: 0.45em; text-align: center; font-size: 0.95em; font-weight: 800; line-height: 1.1; color: #3a2a1c; }
+.card .skills > span { white-space: nowrap; }
 .card .stats {
   position: absolute; left: 0.7em; right: 0.7em; bottom: 0.5em;
   display: flex; justify-content: space-between;
@@ -1528,8 +1531,10 @@ html.intro-on .menu-inner { visibility: hidden; }
    (see PHONE_HAND in js/ui.js), and the cards on the table use bigger name, skill and stat text. Tap any card to read all of it. */
 #stage.small .hand-card .card { font-size: 13px; }
 #stage.small .field-card .card .name { font-size: 1.25em; }
-#stage.small .field-card .card .skills { font-size: 1.05em; }
-#stage.small .field-card .card .skills.long { font-size: 0.85em; white-space: nowrap; }   /* two or three skills: keep to one line */
+/* On the phone table the numbers are drawn bigger, so the skill band is shorter: one big line,
+   or two smaller ones when there are several skills. */
+#stage.small .field-card .card .skills { top: 69%; height: 13%; font-size: 1.05em; line-height: 1.05; }
+#stage.small .field-card .card .skills.many { font-size: 0.8em; }
 #stage.small .field-card .card .stats { font-size: 1.55em; }
 #stage.small .small-card .card .name { font-size: 1.2em; }
 #stage.small .small-card .card .stats { font-size: 1.4em; }
@@ -1552,7 +1557,7 @@ html.intro-on .menu-inner { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .champ-say { animation-name: champSayStill; } @keyframes champSayStill { 0%, 85% { opacity: 1; } 100% { opacity: 0; } } }
 
 /* Tribes (round badges) and classes (square badges): placeholder symbols at the foot of the art. */
-.card .tags { position: absolute; left: 0.75em; right: 0.95em; top: 8.75em; display: flex; justify-content: space-between; pointer-events: none; }
+.card .tags { position: absolute; left: 0.75em; right: 0.95em; top: 7.75em; display: flex; justify-content: space-between; pointer-events: none; }
 .card .tags span { display: flex; gap: 0.15em; }
 .tag { width: 1.35em; height: 1.35em; padding: 0.12em; background: rgba(246, 236, 210, 0.72); box-shadow: 0 0 0 1px rgba(27, 19, 13, 0.4); }
 .tag.tribe { border-radius: 50%; }
@@ -1837,3 +1842,87 @@ html.intro-on .menu-inner { visibility: hidden; }
 .skin-crystal .event-pill.now { border-color: #fff; box-shadow: 0 0 14px rgba(var(--ice), 0.7); animation-name: event-glow-ice; }
 @keyframes event-glow-ice { from { box-shadow: 0 0 6px rgba(var(--ice), 0.4); } to { box-shadow: 0 0 18px rgba(var(--ice), 0.9); } }
 @media (prefers-reduced-motion: reduce) { .event-pill.now { animation: none; } }
+
+/* ------------------------------------------------------------ champion abilities
+   A line under the player's name: the ability, its level and progress. Tap for the details. */
+.champ-line {
+  appearance: none; border: 0; background: none; padding: 0; margin-top: 1px; text-align: left; cursor: pointer;
+  font-size: 11.5px; font-weight: 700; color: #ffd27a; text-shadow: 0 1px 2px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px;
+}
+.prot-line { font-size: 11.5px; font-weight: 700; color: #9fe7ff; text-shadow: 0 0 6px rgba(120, 200, 255, 0.6), 0 1px 2px #000; white-space: nowrap; }
+.champ-line.lv2 { color: #fff0b8; text-shadow: 0 0 8px rgba(255, 210, 122, 0.8), 0 1px 2px #000; }
+.plate .who { min-width: 0; }
+.si-champ { appearance: none; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; pointer-events: auto; font-size: 10.5px; font-weight: 700; color: #ffd27a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.si-champ.lv2 { color: #fff0b8; }
+
+/* the Almanac's Champions tab */
+.champ-intro { max-width: 75ch; margin: 0 0 18px; color: var(--parchment); }
+.champ-entry { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: var(--panel); border: 1px solid var(--brass-dim); border-left: 5px solid var(--fc); }
+.champ-card .card { font-size: 15px; }
+.champ-text h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; color: var(--brass); }
+.champ-text h3 { margin: 16px 0 6px; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.champ-text .sub { margin: 2px 0 10px; color: var(--muted); }
+.champ-text ul { margin: 0; padding-left: 1.2em; max-width: 75ch; }
+.champ-text li { margin-bottom: 4px; }
+.champ-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; max-width: 80ch; }
+.champ-facts dt { font-weight: 800; color: var(--brass); white-space: nowrap; }
+.champ-facts dd { margin: 0; }
+.champ-status { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.champ-status .champ-line { cursor: default; font-size: 13px; padding: 5px 10px; border-radius: 6px; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 210, 122, 0.4); max-width: none; }
+.champ-pairs { display: flex; flex-wrap: wrap; gap: 14px; }
+.champ-pair { margin: 0; padding: 12px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); max-width: 360px; }
+.champ-pics { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.champ-pics > div { display: grid; justify-items: center; gap: 5px; }
+.champ-pics small { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.champ-pics .card { font-size: 12.5px; }
+/* the number the ability changed is ringed in gold on the After card */
+.chg-attack .stats .a, .chg-health .stats .h { outline: 2px solid #ffd27a; outline-offset: 1px; border-radius: 4px; background: rgba(255, 210, 122, 0.35); }
+.chg-cost .cost { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 5px #ffd27a); transform: scale(1.25); }
+.champ-arrow { font-size: 1.6rem; color: var(--brass); }
+.champ-big { display: grid; place-items: center; min-width: 96px; height: 70px; padding: 0 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--brass-dim); font-size: 1.6rem; font-weight: 800; color: #ffd27a; }
+.champ-pair figcaption { margin-top: 10px; font-size: 0.92rem; }
+@media (max-width: 700px) { .champ-entry { grid-template-columns: 1fr; } .champ-card { justify-self: center; } .champ-facts { grid-template-columns: 1fr; gap: 2px; } .champ-facts dd { margin-bottom: 8px; } }
+
+/* The Protected rule box at the top of the Almanac's Skills tab */
+.rule-box { margin: 0 0 18px; padding: 14px 18px; border-radius: 10px; background: rgba(120, 200, 255, 0.07); border: 1px solid rgba(159, 231, 255, 0.35); }
+.rule-box h2 { margin: 0 0 6px; font-size: 20px; color: #9fe7ff; }
+.rule-box p, .rule-box li { line-height: 1.45; }
+.rule-box ul { margin: 8px 0 0; padding-left: 20px; }
+.rule-table { border-collapse: collapse; margin: 8px 0; font-size: 14px; }
+.rule-table th, .rule-table td { border: 1px solid rgba(159, 231, 255, 0.3); padding: 3px 9px; text-align: center; }
+.rule-table th { text-align: left; color: var(--muted); font-weight: 700; }
+@media (max-width: 520px) { .rule-table th, .rule-table td { padding: 3px 5px; } }
+
+/* Protected: a shell of light-blue shards over the health gem (wardHTML in js/ui.js) */
+.ward { position: absolute; left: -19px; top: -18px; width: 86px; height: 94px; overflow: visible; pointer-events: none; filter: drop-shadow(0 0 4px rgba(120, 205, 255, 0.95)) drop-shadow(0 0 10px rgba(110, 190, 255, 0.55)); }
+.ward .s { fill: rgba(140, 210, 255, 0.3); stroke: rgba(230, 249, 255, 0.95); stroke-width: 0.9; stroke-linejoin: round; transform-box: fill-box; transform-origin: center; animation: ward-twinkle 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * -0.13s); }
+.ward .s:nth-child(3n) { fill: rgba(195, 236, 255, 0.42); }
+.ward .s:nth-child(4n + 1) { fill: rgba(110, 185, 255, 0.2); }
+.ward .s:nth-child(4n) { fill: rgba(140, 210, 255, 0.06); }   /* the middle stays clear so the gem's health color shows */
+@keyframes ward-twinkle { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+.ward.forming .s { animation: ward-in 0.65s cubic-bezier(.2, .9, .3, 1.25) both; animation-delay: calc(var(--i) * 18ms + var(--age)); }
+@keyframes ward-in { from { transform: translate(var(--fx), var(--fy)) rotate(50deg) scale(0.3); opacity: 0; } to { transform: none; opacity: 0.9; } }
+.ward.hit { animation: ward-flash 0.55s ease-out both; animation-delay: var(--age); }
+@keyframes ward-flash { 0% { filter: brightness(2.4) drop-shadow(0 0 12px #bfeeff); } 100% { filter: drop-shadow(0 0 4px rgba(120, 205, 255, 0.95)) drop-shadow(0 0 10px rgba(110, 190, 255, 0.55)); } }
+.ward.hit .s.chip { animation: ward-chip 1.1s ease-out both; animation-delay: var(--age); fill: rgba(220, 248, 255, 0.6); }
+@keyframes ward-chip {
+  0% { transform: none; opacity: 1; }
+  30% { transform: translate(var(--fx), var(--fy)) rotate(80deg) scale(0.6); opacity: 0; }
+  65% { transform: scale(0.2); opacity: 0; }
+  100% { transform: none; opacity: 0.9; }
+}
+/* a card with the Protected skill: a ring of blue runes travels around it (runeRingHTML in js/ui.js) */
+.rune-ring { position: absolute; left: -9px; top: -9px; width: 113px; height: 153px; pointer-events: none; z-index: 2; }
+.rune-ring .track { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.rune-ring .t { fill: none; stroke: rgba(150, 220, 255, 0.45); stroke-width: 1; filter: drop-shadow(0 0 3px rgba(110, 200, 255, 0.9)); }
+.rune-ring .sweep { fill: none; stroke: #e4f8ff; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 16 84; filter: drop-shadow(0 0 4px #7fd4ff) drop-shadow(0 0 8px #4fb8ff); animation: rune-sweep 3.2s linear infinite; animation-delay: var(--ph); }
+.rune-ring .sweep.two { stroke-dasharray: 7 93; stroke-width: 1.4; opacity: 0.7; animation-duration: 5.3s; animation-direction: reverse; }
+@keyframes rune-sweep { to { stroke-dashoffset: -100; } }
+.rune-ring > i { position: absolute; left: 0; top: 0; width: 11px; height: 11px; offset-path: path("M15 3H98A12 12 0 0 1 110 15V138A12 12 0 0 1 98 150H15A12 12 0 0 1 3 138V15A12 12 0 0 1 15 3Z"); offset-rotate: auto; animation: rune-orbit 18s linear infinite; }
+.rune-ring > i svg { display: block; width: 100%; height: 100%; overflow: visible; transform: rotate(90deg); animation: rune-glow 2.4s ease-in-out infinite alternate; animation-delay: inherit; }
+.rune-ring > i path { fill: none; stroke: #c9f0ff; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 1.5px #8fdcff) drop-shadow(0 0 4px #3fa9ff); }
+@keyframes rune-orbit { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes rune-glow { from { opacity: 0.55; } to { opacity: 1; } }
+.rune-ring.flash { animation: rune-flash 0.45s ease-out; }
+@keyframes rune-flash { 0% { filter: brightness(2.2) drop-shadow(0 0 8px #bfeeff); } }
+@media (prefers-reduced-motion: reduce) { .ward .s, .ward.hit, .ward.hit .s.chip, .ward.forming .s, .rune-ring > i, .rune-ring .sweep, .rune-ring > i svg { animation: none; } }
