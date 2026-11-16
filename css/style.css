@@ -1844,6 +1844,7 @@ html.intro-on .menu-inner { visibility: hidden; }
   appearance: none; border: 0; background: none; padding: 0; margin-top: 1px; text-align: left; cursor: pointer;
   font-size: 11.5px; font-weight: 700; color: #ffd27a; text-shadow: 0 1px 2px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px;
 }
+.prot-line { font-size: 11.5px; font-weight: 700; color: #9fe7ff; text-shadow: 0 0 6px rgba(120, 200, 255, 0.6), 0 1px 2px #000; white-space: nowrap; }
 .champ-line.lv2 { color: #fff0b8; text-shadow: 0 0 8px rgba(255, 210, 122, 0.8), 0 1px 2px #000; }
 .plate .who { min-width: 0; }
 .si-champ { appearance: none; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; pointer-events: auto; font-size: 10.5px; font-weight: 700; color: #ffd27a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1876,3 +1877,13 @@ html.intro-on .menu-inner { visibility: hidden; }
 .champ-big { display: grid; place-items: center; min-width: 96px; height: 70px; padding: 0 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--brass-dim); font-size: 1.6rem; font-weight: 800; color: #ffd27a; }
 .champ-pair figcaption { margin-top: 10px; font-size: 0.92rem; }
 @media (max-width: 700px) { .champ-entry { grid-template-columns: 1fr; } .champ-card { justify-self: center; } .champ-facts { grid-template-columns: 1fr; gap: 2px; } .champ-facts dd { margin-bottom: 8px; } }
+
+/* The Protected rule box at the top of the Almanac's Skills tab */
+.rule-box { margin: 0 0 18px; padding: 14px 18px; border-radius: 10px; background: rgba(120, 200, 255, 0.07); border: 1px solid rgba(159, 231, 255, 0.35); }
+.rule-box h2 { margin: 0 0 6px; font-size: 20px; color: #9fe7ff; }
+.rule-box p, .rule-box li { line-height: 1.45; }
+.rule-box ul { margin: 8px 0 0; padding-left: 20px; }
+.rule-table { border-collapse: collapse; margin: 8px 0; font-size: 14px; }
+.rule-table th, .rule-table td { border: 1px solid rgba(159, 231, 255, 0.3); padding: 3px 9px; text-align: center; }
+.rule-table th { text-align: left; color: var(--muted); font-weight: 700; }
+@media (max-width: 520px) { .rule-table th, .rule-table td { padding: 3px 5px; } }

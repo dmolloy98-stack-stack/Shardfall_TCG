@@ -448,6 +448,9 @@ onGameEvent((type, d) => {
       addTrauma(tier.trauma);
       if (tier.callout) callout(tier.callout);
     });
+  } else if (type === "protected") {
+    const p = plateCenter(d.player);
+    later(delay, () => floatText(p.x, p.y - 46, `PROTECTED ${d.from} → ${d.to}`, "#9fe7ff"));
   } else if (type === "playerDamage") {
     const p = plateCenter(d.player);
     countDamage(d.player, d.amount);
@@ -554,6 +557,13 @@ function showChampion(p) {
     <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
 }
 
+// Protected: shown on the player's plate while they take half damage.
+function protLine(p) {
+  if (!isProtected(p)) return "";
+  const why = p.field.chars.length >= RULES.protectAt ? `${RULES.protectAt} or more characters` : "a Protected character";
+  return `<span class="prot-line" title="${esc(p.name)} has ${why}: damage to them is halved, rounded up. Pierce ignores it.">${esc(DATA.skills.Protected?.icon || "▣")} Protected · half damage</span>`;
+}
+
 function plateHTML(p, side) {
   const { ratio, cls: tier } = lifeTier(p);
   const cracks = tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4;
@@ -563,7 +573,7 @@ function plateHTML(p, side) {
   const y = side === "top" ? 3 : 937;
   return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
     <div class="life">${crystalSVG("life-crystal " + tier, cracks)}<b>${Math.max(0, p.health)}</b></div>
-    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}</div>
+    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
     ${attackable ? previewBadge(fightPreview(U.selected, null), true) : ""}
   </div>`;
 }

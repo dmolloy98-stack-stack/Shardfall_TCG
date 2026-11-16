@@ -13,3 +13,5 @@ level_up,Level Up,↑,Grows stronger and heals fully when its condition is met,1
 evolve,Evolve,✧,+3 to all stats once its condition is met,120
 transform,Transform,⇄,Changes into another card,130
 swift,Swift,»,Strikes first in a fight. If its blow knocks the other out it takes no damage back,140
+pierce,Pierce,↠,Its attacks ignore Protected and deal full damage to the player,150
+protected,Protected,▣,While it is on your side you are Protected: you take half damage (rounded up),160

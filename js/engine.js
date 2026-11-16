@@ -25,6 +25,8 @@ const RULES = {
   // A random event hits the board every eventEvery rounds (0 = never) and is announced eventWarn rounds ahead.
   eventEvery: DATA.rules.event_every_rounds ?? 0,
   eventWarn: DATA.rules.event_warning_rounds ?? 2,
+  // A player with this many characters (or one with the Protected skill) takes half damage, rounded up. 0 = off.
+  protectAt: DATA.rules.protected_min_characters ?? 0,
 };
 const BACKLINE = () => DATA.text("zone_backline", "Backline");
 const backlineCount = p => p.field.areas.length + p.field.equips.length;
@@ -301,10 +303,24 @@ function levelDown(c) {
 // ---------------------------------------------------------------------------
 // Damage and death
 // ---------------------------------------------------------------------------
-function dealDamageToPlayer(p, amount) {
+// Protected: a player with RULES.protectAt or more characters, or with a character that has the
+// Protected skill, takes half damage, rounded up. An attacker with Pierce ignores it.
+function isProtected(p) {
+  return !!RULES.protectAt && (p.field.chars.length >= RULES.protectAt || p.field.chars.some(c => hasSkill(c, "Protected")));
+}
+function dealDamageToPlayer(p, amount, source) {
   if (amount <= 0 || S.over) return;
   const ip = p.field.chars.find(x => cardRule(x, "redirect") && x.redirectRound !== S.round);
   if (ip) { redirectDamage(ip, amount); return; }
+  if (isProtected(p)) {
+    if (source && hasSkill(source, "Pierce")) emit("text", { uid: source.uid, text: "PIERCE", color: "#ff9a6b" });
+    else {
+      const half = Math.ceil(amount / 2);
+      log(`${p.name} is Protected and takes ${half} instead of ${amount}.`);
+      emit("protected", { player: p.idx, from: amount, to: half });
+      amount = half;
+    }
+  }
   p.health = Math.max(0, p.health - amount);
   emit("playerDamage", { player: p.idx, amount });
   checkHealthWin();
@@ -1040,7 +1056,7 @@ function attack(attackerUid, targetUid) {
   }
   if (!target) {
     log(`${a.name} attacks ${defender.name} for ${as.a}.`);
-    dealDamageToPlayer(defender, as.a);
+    dealDamageToPlayer(defender, as.a, a);
     return true;
   }
   log(`${a.name} attacks ${target.name}.`);
@@ -1053,7 +1069,7 @@ function attack(attackerUid, targetUid) {
   const hitTarget = () => {
     const hpBefore = rawStats(target).h + shield;
     dealDamageToCharacter(target, Math.max(0, as.a - shield));
-    if (hasSkill(a, "Overwhelm") && as.a > hpBefore) dealDamageToPlayer(defender, as.a - hpBefore);
+    if (hasSkill(a, "Overwhelm") && as.a > hpBefore) dealDamageToPlayer(defender, as.a - hpBefore, a);
   };
   const alive = c => ownerOf(c).field.chars.includes(c);
 

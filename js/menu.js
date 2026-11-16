@@ -118,6 +118,26 @@ function championsHTML() {
     ${Object.keys(DATA.championAbilities).map(one).join("")}`;
 }
 
+// The Protected rule ("Protected" in js/engine.js), explained at the top of the Skills tab.
+function protectedRuleHTML() {
+  if (!RULES.protectAt) return "";
+  const icon = k => esc(DATA.skills[k]?.icon || "");
+  const names = k => DATA.cardList.filter(c => c.skills.includes(k)).map(c => esc(c.name)).join(", ");
+  return `<section class="rule-box">
+    <h2>${icon("Protected")} Rule: Protected</h2>
+    <p>A player with <b>${RULES.protectAt} or more characters</b> on their side of the table is <b>Protected</b>. A Protected player takes <b>half</b> of any damage, rounded up.</p>
+    <table class="rule-table"><tr><th>Damage</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>
+      <tr><th>Protected takes</th><td>1</td><td>1</td><td>2</td><td>2</td><td>3</td><td>3</td><td>4</td></tr></table>
+    <ul>
+      <li>It counts every character on that side, Towers included. Drop below ${RULES.protectAt} and the protection is gone at once.</li>
+      <li>A character with the <b>${icon("Protected")} Protected</b> skill makes its player Protected on its own, however many characters there are. These cards have it: ${names("Protected")}.</li>
+      <li>It halves all damage to the player: attacks, Overwhelm and spells.</li>
+      <li>A character with <b>${icon("Pierce")} Pierce</b> ignores it: its attacks hit the player for full damage. These cards have it: ${names("Pierce")}.</li>
+      <li>The player's name plate shows <b>${icon("Protected")} Protected · half damage</b> while it is on.</li>
+    </ul>
+  </section>`;
+}
+
 function renderAlmanac() {
   document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab === U.almanacTab));
   const filters = ["All", ...Object.keys(DATA.factions), "Unbound"];
@@ -128,7 +148,7 @@ function renderAlmanac() {
   const row = (label, attr, list, cur) => `<div class="chip-line"><span class="chip-label">${label}</span>${list.map(f => `<button type="button" class="chip" data-${attr}="${esc(f)}" aria-pressed="${f === cur}">${esc(f)}</button>`).join("")}</div>`;
   $("#alm-filters").innerHTML = row("Fracture", "filter", filters, U.almanacFilter) + row("Tribe", "tribe", tribes, U.almanacTribe || "All") + row("Class", "class", classes, U.almanacClass || "All");
   if (U.almanacTab === "skills") {
-    $("#alm-content").innerHTML = `<div class="skill-list">${DATA.skillOrder.map(name => {
+    $("#alm-content").innerHTML = protectedRuleHTML() + `<div class="skill-list">${DATA.skillOrder.map(name => {
       const sk = DATA.skills[name];
       const users = DATA.cardList.filter(c => c.skills.includes(name)).length;
       return `<div class="skill-item"><span class="icon">${esc(sk.icon)}</span><strong>${esc(name)}</strong><p>${esc(sk.desc)}</p><small>${users} card${users === 1 ? "" : "s"}</small></div>`;
