@@ -251,7 +251,7 @@ function cardHTML(c, opts = {}) {
     <div class="name${TWO_LINE_NAMES.has(c.name) ? " two" : ""}"><span>${esc(c.name)}</span></div>
     <div class="art">${art ? `<img src="${esc(art)}" alt="">` : glyph(c.group)}</div>
     ${tagsHTML(c)}
-    <div class="skills${skills.length > 13 ? " long" : ""}">${skills}</div>
+    <div class="skills${skills.length > 13 ? " long" : ""}${skills.length > 21 ? " longer" : ""}"${skills.length > 21 ? ` style="--sk:${(21 / skills.length).toFixed(2)}"` : ""}>${skills}</div>
     ${opts.field && c.equipped?.length ? `<div class="equip-count" title="Equipped">●${c.equipped.length}</div>` : ""}
     ${pips}
     ${statsHTML}
@@ -450,7 +450,7 @@ onGameEvent((type, d) => {
     });
   } else if (type === "protected") {
     const p = plateCenter(d.player);
-    later(delay, () => floatText(p.x, p.y - 46, `PROTECTED ${d.from} → ${d.to}`, "#9fe7ff"));
+    later(delay, () => { wardHit(d.player); floatText(p.x, p.y - 46, `PROTECTED ${d.from} → ${d.to}`, "#9fe7ff"); });
   } else if (type === "playerDamage") {
     const p = plateCenter(d.player);
     countDamage(d.player, d.amount);
@@ -557,6 +557,54 @@ function showChampion(p) {
     <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
 }
 
+// Protected, seen as a shell of light-blue shards around the health gem: the shards you hold
+// guard you. The shell is 24 shards in three rings (a geode, not a tech bubble). It snaps
+// together when you become Protected, a shard chips off and grows back when a hit is halved,
+// and the shell breaks apart when you lose it.
+const WARD = (() => {
+  const J = [0.06, -0.08, 0.05, -0.04, 0.09, -0.06];   // fixed wobble so the facets look hand-cut
+  const pt = (k, r) => { const a = (-90 + 60 * k) * Math.PI / 180; return [Math.cos(a) * 34 * r, Math.sin(a) * 40 * r]; };
+  const mid = (k, r) => { const a = (-60 + 60 * k) * Math.PI / 180; return [Math.cos(a) * 34 * r, Math.sin(a) * 40 * r]; };
+  const V = k => pt(k % 6, 1), M = k => mid(k % 6, 0.93 + J[k % 6] * 0.5), I = k => pt(k % 6, 0.5 + J[(k + 2) % 6]), C = [1.5, -2];
+  const tris = [];
+  for (let k = 0; k < 6; k++) tris.push([V(k), M(k), I(k)], [M(k), V(k + 1), I(k + 1)], [M(k), I(k + 1), I(k)], [C, I(k), I(k + 1)]);
+  return tris.map(t => {
+    const cx = (t[0][0] + t[1][0] + t[2][0]) / 3, cy = (t[0][1] + t[1][1] + t[2][1]) / 3, l = Math.hypot(cx, cy) || 1;
+    return { d: "M" + t.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join("L") + "Z", fx: (cx / l * 34).toFixed(0), fy: (cy / l * 34).toFixed(0) };
+  });
+})();
+const wardState = { on: [], at: [], hitAt: [], hits: [] };
+function wardHTML(p) {
+  if (wardState.game !== S) Object.assign(wardState, { game: S, on: [], at: [], hitAt: [], hits: [] });   // a new match starts clean
+  const i = p.idx, on = isProtected(p), now = performance.now();
+  if (on && !wardState.on[i]) wardState.at[i] = now;
+  else if (!on && wardState.on[i]) wardBreak(i);
+  wardState.on[i] = on;
+  if (!on) return "";
+  const forming = now - (wardState.at[i] || 0) < 1100, hit = now - (wardState.hitAt[i] || 0) < 1100;
+  const age = forming ? now - wardState.at[i] : hit ? now - wardState.hitAt[i] : 0;
+  const chip = (wardState.hits[i] || 0) * 7 % WARD.length;
+  return `<svg class="ward${forming ? " forming" : ""}${hit ? " hit" : ""}" viewBox="-40 -46 80 92" style="--age:-${age.toFixed(0)}ms" aria-hidden="true">${WARD.map((s, k) =>
+    `<path class="s${hit && k === chip ? " chip" : ""}" d="${s.d}" style="--i:${k};--fx:${s.fx}px;--fy:${s.fy}px"/>`).join("")}</svg>`;
+}
+// A halved hit: the shell flashes and one shard chips off, then grows back.
+function wardHit(i) {
+  wardState.hitAt[i] = performance.now();
+  wardState.hits[i] = (wardState.hits[i] || 0) + 1;
+  const el = document.querySelector(`.plate[data-player="${i}"] .life`);
+  const old = el?.querySelector(".ward");
+  if (old) old.outerHTML = wardHTML(S.players[i]);
+}
+// The shell breaks: its shards fall away from the gem.
+function wardBreak(i) {
+  if (REDUCED_MOTION || !S) return;
+  const at = LIFE_CRYSTAL(i);
+  for (let k = 0; k < 14; k++) {
+    const a = (k / 14) * Math.PI * 2, r = 40 + Math.random() * 50;
+    fxDiv("life-chip", `left:${at.x + Math.cos(a) * 26}px;top:${at.y + Math.sin(a) * 30}px;--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r + 40}px;--r:${(Math.random() - 0.5) * 540}deg;--c:${k % 2 ? "#dff6ff" : "#8fd8ff"};--s:${0.5 + Math.random() * 0.6}`, 900);
+  }
+}
+
 // Protected: shown on the player's plate while they take half damage.
 function protLine(p) {
   if (!isProtected(p)) return "";
@@ -572,7 +620,7 @@ function plateHTML(p, side) {
   const attackable = side === "top" && U.selected && !forcedTarget(p);
   const y = side === "top" ? 3 : 937;
   return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
-    <div class="life">${crystalSVG("life-crystal " + tier, cracks)}<b>${Math.max(0, p.health)}</b></div>
+    <div class="life">${crystalSVG("life-crystal " + tier, cracks)}${wardHTML(p)}<b>${Math.max(0, p.health)}</b></div>
     <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
     ${attackable ? previewBadge(fightPreview(U.selected, null), true) : ""}
   </div>`;
@@ -633,7 +681,7 @@ function fieldHTML(p, side) {
     if ((U.arriving.get(c.uid) ?? 0) > performance.now()) cls.push("arriving");
     const preview = attackable && human ? previewBadge(fightPreview(U.selected, c.uid)) : "";
     const blade = side === "bottom" && human && canUseBlade(c) ? `<button type="button" class="blade-btn" data-act="blade" data-uid="${c.uid}" title="Kenshi's Blade: deal 3 damage to an enemy character, once per Battle">⚔ Strike 3</button>` : "";
-    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${preview}${blade}</div>`;
+    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${hasSkill(c, "Protected") ? `<i class="prot-rim${recent(U.hits, c.uid, 450) ? " flash" : ""}"></i>` : ""}${preview}${blade}</div>`;
   });
   return h;
 }
