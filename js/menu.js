@@ -39,6 +39,85 @@ $("#guide-back").addEventListener("click", () => showScreen(U.guideReturn === "g
 $("#guide-tutorial").addEventListener("click", startTutorial);
 $("#alm-back").addEventListener("click", () => showScreen(U.almanacReturn === "game" && S ? "game" : "menu"));
 
+// The Almanac's Champions tab: every champion's ability explained in full, with pictures drawn by
+// the game itself (real cards and the real status line), so they always match the current look.
+// The words come from data/champion_abilities.csv. The notes and the before-and-after examples
+// are here; keep their numbers in step with "Champion abilities" in js/engine.js.
+//   status   sample status lines, as they show under a player's name
+//   pairs    before -> after pictures: a card (pick: which card; change: what the ability changes)
+//            or two short labels (from, to), each with a caption
+const CHAMP_GUIDE = {
+  the_simplistic: {
+    notes: ["Nothing happens until it levels up.", "It levels up at the start of the turn when you have 6 mana crystals. That is the same turn for every match, so you can plan for it.", "After that, every Simple character you have gets the bonus, and so does every Simple character you play later."],
+    status: ["Lv 1 · 4/6 max mana", "Lv 2 · Leveled up"],
+    pairs: [{ caption: "When you reach 6 mana crystals: every Simple character gets +1 Attack and +1 Health.", pick: c => c.id === "simple_farmer", change: { attack: 1, health: 1 } }],
+  },
+  the_man_ape: {
+    notes: ["A Monkey \"falls\" when it is knocked out or sacrificed.", "The discount is for the next Monkey character you play. It does not add up: two Monkeys falling before you play the next one is still 1 less.", "After 4 of your Monkeys have fallen in the match, every Monkey you have, and every Monkey you play later, gets +1 Attack."],
+    status: ["Lv 1 · 2/4 monkeys fallen", "Lv 2 · Leveled up"],
+    pairs: [
+      { caption: "After one of your Monkeys falls: the next Monkey you play costs 1 less.", pick: c => c.group === "Monkey" && c.type === "Character" && c.manaCost === 2, change: { cost: -1 } },
+      { caption: "After 4 have fallen: all your Monkeys get +1 Attack.", pick: c => c.group === "Monkey" && c.type === "Character" && c.manaCost === 2, change: { attack: 1 } },
+    ],
+  },
+  ip_man: {
+    notes: ["The bow happens by itself when you press To battle. The game picks your strongest character that can attack this turn.", "The +2 Attack lasts until the end of your turn.", "A fight counts as won when your character survives and the enemy character is knocked out. Attacks on the player don't count. Fights you win while defending count too.", "After 5 won fights, your two strongest attackers get the bow each turn."],
+    status: ["Lv 1 · 3/5 fights won", "Lv 2 · Leveled up"],
+    pairs: [{ caption: "At the start of your Battle phase: your strongest ready attacker gets +2 Attack this turn.", pick: c => c.group === "Fighter" && c.type === "Character" && c.manaCost === 2, change: { attack: 2 } }],
+  },
+  boss_level: {
+    notes: ["Level Up normally works 3 times on a character. With this ability your Digital characters can do it 4 times.", "Every level any of your characters gains counts toward the 6.", "After leveling up, the first attack you make each turn deals double damage, on a character or on the player. Pick your hardest hitter first."],
+    status: ["Lv 1 · 4/6 levels gained", "Lv 2 · Leveled up"],
+    pairs: [
+      { caption: "From turn one: Digital characters can Level Up 1 more time.", from: "★★★", to: "★★★★" },
+      { caption: "After 6 levels gained: your first attack each turn deals double damage.", from: "⚔ 4", to: "⚔ 8" },
+    ],
+  },
+  soul_shepard: {
+    notes: ["This one has no levels. It makes the Soul Shepard card itself bigger.", "Every Undead character that dies counts: yours and your opponent's.", "It counts from the start of the match, wherever the card is: in your deck, in your hand or on the table. So the longer the match, the bigger Soul Shepard is when you play it.", "It gains Health only, never Attack."],
+    status: ["3 undead fallen"],
+    pairs: [{ caption: "After 3 Undead characters have died: Soul Shepard has +3 Health, even in your hand.", pick: c => c.id === "soul_shepard", change: { health: 3 } }],
+  },
+};
+function championsHTML() {
+  const pairHTML = pr => {
+    let a, b, chg = "";
+    if (pr.pick) {
+      chg = Object.keys(pr.change).map(k => " chg-" + k).join("");
+      const card = DATA.cardList.find(pr.pick);
+      if (!card) return "";
+      const after = { ...card, attack: card.attack + (pr.change.attack || 0), health: card.health + (pr.change.health || 0) };
+      a = cardHTML(card);
+      b = cardHTML(after, pr.change.cost ? { costOverride: card.manaCost + pr.change.cost } : {});
+    } else { a = `<span class="champ-big">${esc(pr.from)}</span>`; b = `<span class="champ-big">${esc(pr.to)}</span>`; }
+    return `<figure class="champ-pair"><div class="champ-pics"><div><small>Before</small>${a}</div><span class="champ-arrow" aria-hidden="true">→</span><div class="${chg.trim()}"><small>After</small>${b}</div></div><figcaption>${esc(pr.caption)}</figcaption></figure>`;
+  };
+  const one = id => {
+    const info = DATA.championAbilities[id], card = DATA.cardsById[id], g = CHAMP_GUIDE[id] || { notes: [], status: [], pairs: [] };
+    if (!card) return "";
+    const grows = !info.goal;
+    return `<article class="champ-entry" style="--fc:${DATA.factions[card.group]?.color || "#c9b48d"}">
+      <div class="champ-card">${cardHTML(card)}</div>
+      <div class="champ-text">
+        <h2>${esc(info.name)}</h2>
+        <p class="sub">${esc(card.name)} · ${esc(groupLabel(card.group))} deck</p>
+        <dl class="champ-facts">
+          <dt>${grows ? "What it does" : "At the start"}</dt><dd>${esc(info.now)}</dd>
+          ${grows ? "" : `<dt>Levels up when</dt><dd>${esc(info.when)}</dd><dt>After leveling up</dt><dd>${esc(info.then)}</dd>`}
+        </dl>
+        <h3>Good to know</h3>
+        <ul>${g.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>
+        <h3>What you see in a match</h3>
+        <p class="sub">Under your name, a line shows the ability${grows ? "" : ", its level"} and its progress. Tap it to read the ability.</p>
+        <div class="champ-status">${g.status.map((s, i) => `<span class="champ-line${i > 0 ? " lv2" : ""}">★ ${esc(grows ? info.name : info.name)} · ${esc(s)}</span>`).join("")}</div>
+        <div class="champ-pairs">${g.pairs.map(pairHTML).join("")}</div>
+      </div>
+    </article>`;
+  };
+  return `<div class="champ-intro"><p>Each deck can hold one <b>champion</b>, its Unknown card. A deck with its champion gets the champion's <b>ability</b> from the first turn, even before the champion card is drawn. A deck with no champion gets no ability. Progress starts again every match.</p></div>
+    ${Object.keys(DATA.championAbilities).map(one).join("")}`;
+}
+
 function renderAlmanac() {
   document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab === U.almanacTab));
   const filters = ["All", ...Object.keys(DATA.factions), "Unbound"];
@@ -56,6 +135,7 @@ function renderAlmanac() {
     }).join("")}</div>`;
     return;
   }
+  if (U.almanacTab === "champions") { $("#alm-content").innerHTML = championsHTML(); return; }
   const fitsKinds = c => (!U.almanacTribe || U.almanacTribe === "All" || hasTribe(c, U.almanacTribe)) && (!U.almanacClass || U.almanacClass === "All" || hasClass(c, U.almanacClass));
   const groups = [...Object.keys(DATA.factions), "N/A"];
   const want = U.almanacFilter === "Unbound" ? "N/A" : U.almanacFilter;

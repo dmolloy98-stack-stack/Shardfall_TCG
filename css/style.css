@@ -1848,3 +1848,31 @@ html.intro-on .menu-inner { visibility: hidden; }
 .plate .who { min-width: 0; }
 .si-champ { appearance: none; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; pointer-events: auto; font-size: 10.5px; font-weight: 700; color: #ffd27a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .si-champ.lv2 { color: #fff0b8; }
+
+/* the Almanac's Champions tab */
+.champ-intro { max-width: 75ch; margin: 0 0 18px; color: var(--parchment); }
+.champ-entry { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: var(--panel); border: 1px solid var(--brass-dim); border-left: 5px solid var(--fc); }
+.champ-card .card { font-size: 15px; }
+.champ-text h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; color: var(--brass); }
+.champ-text h3 { margin: 16px 0 6px; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.champ-text .sub { margin: 2px 0 10px; color: var(--muted); }
+.champ-text ul { margin: 0; padding-left: 1.2em; max-width: 75ch; }
+.champ-text li { margin-bottom: 4px; }
+.champ-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; max-width: 80ch; }
+.champ-facts dt { font-weight: 800; color: var(--brass); white-space: nowrap; }
+.champ-facts dd { margin: 0; }
+.champ-status { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.champ-status .champ-line { cursor: default; font-size: 13px; padding: 5px 10px; border-radius: 6px; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 210, 122, 0.4); max-width: none; }
+.champ-pairs { display: flex; flex-wrap: wrap; gap: 14px; }
+.champ-pair { margin: 0; padding: 12px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); max-width: 360px; }
+.champ-pics { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.champ-pics > div { display: grid; justify-items: center; gap: 5px; }
+.champ-pics small { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.champ-pics .card { font-size: 12.5px; }
+/* the number the ability changed is ringed in gold on the After card */
+.chg-attack .stats .a, .chg-health .stats .h { outline: 2px solid #ffd27a; outline-offset: 1px; border-radius: 4px; background: rgba(255, 210, 122, 0.35); }
+.chg-cost .cost { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 5px #ffd27a); transform: scale(1.25); }
+.champ-arrow { font-size: 1.6rem; color: var(--brass); }
+.champ-big { display: grid; place-items: center; min-width: 96px; height: 70px; padding: 0 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--brass-dim); font-size: 1.6rem; font-weight: 800; color: #ffd27a; }
+.champ-pair figcaption { margin-top: 10px; font-size: 0.92rem; }
+@media (max-width: 700px) { .champ-entry { grid-template-columns: 1fr; } .champ-card { justify-self: center; } .champ-facts { grid-template-columns: 1fr; gap: 2px; } .champ-facts dd { margin-bottom: 8px; } }

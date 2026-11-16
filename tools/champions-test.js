@@ -25,7 +25,7 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   const dear = find(c => c.type === 'Character' && c.group === 'Simple' && c.manaCost >= 2 && c.rarity !== 'Unknown');
   const a = put(p, cheap.id), b = put(p, dear.id);
   const plain = newCard(cheap), plainDear = newCard(dear); plain.owner = 1; plainDear.owner = 1;
-  ok('Simplistic: a Simple character costing 1 gets +1 Health', rawStats(a).h === cheap.health + 1 && rawStats(a).a === cheap.attack, rawStats(a).h + ' vs printed ' + cheap.health);
+  ok('Simplistic: nothing before it levels up, even for a cost-1 character', rawStats(a).h === cheap.health && rawStats(a).a === cheap.attack);
   ok('Simplistic: a dearer Simple character gets nothing', rawStats(b).h === dear.health && rawStats(b).a === dear.attack);
   const before = base(b);
   p.manaMax = 5; startTurn(p);

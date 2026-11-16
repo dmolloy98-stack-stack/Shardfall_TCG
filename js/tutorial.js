@@ -291,7 +291,7 @@ const TUT_STEPS = [
     text: () => {
       const a = DATA.championAbilities.the_simplistic;
       const lower = s => s.charAt(0).toLowerCase() + s.slice(1);
-      return `The Simple deck's is <b>${a.name}</b>: ${a.now}<br><br>When ${lower(a.when).replace(/\.$/, "")}, it levels up: ${lower(a.then)}<br><br>In a real game it shows under your name, with its level. Tap it to read it.`;
+      return `The Simple deck's is <b>${a.name}</b>. ${a.now}<br><br>When ${lower(a.when).replace(/\.$/, "")}, it levels up: ${lower(a.then)}<br><br>In a real game it shows under your name, with its level. Tap it to read it.`;
     },
     next: true,
   },

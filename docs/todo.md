@@ -46,6 +46,8 @@ They work from turn one without the champion on the table. The tutorial explains
 pages near its end. Words: `data/champion_abilities.csv`. Rules: `js/engine.js`.
 
 **Decided by the owner (16 Nov).**
+- Second tuning: Humble Beginnings has no starting part any more, only the level-up at 6 mana.
+  In a 1,250-game test this put Simple at about 51% (it was 65% with the starting part).
 - First tuning: Humble Beginnings only for Simple characters costing 1 (was 2 or less), and The
   Troop Remembers' level 2 gives +1 Attack (was +2). The first version made Simple win 69%.
 - The Bow picks automatically (the strongest ready attacker).

@@ -635,8 +635,8 @@ function newGame({ deckId, opponentDeckId, mode, seed, events, abilities }) {
 // champion's ability from turn one, whether or not the champion card has been drawn. Most start
 // small and level up once in a match. Progress lives in p.champ = { id, level, n, discount }.
 // The wording players read is in data/champion_abilities.csv; what each one does is here:
-//   the_simplistic  Humble Beginnings: Simple characters costing 1 get +1 Health (championBonus);
-//                   at max mana 6 every Simple character gets +1/+1 (startTurn)
+//   the_simplistic  Humble Beginnings: nothing at first; at max mana 6 every Simple character gets +1/+1
+//                   (startTurn, championBonus)
 //   the_man_ape     The Troop Remembers: a fallen Monkey makes the next Monkey cost 1 less (costFromEffect);
 //                   after 4 have fallen, Monkeys get +1 Attack (championBonus)
 //   ip_man          The Bow: at the start of Battle the strongest ready attacker gets +2 Attack (ipBow);
@@ -669,7 +669,7 @@ function championBonus(c) {
   if (c.type !== "Character") return { a, h };
   const p = S.players[c.owner], ch = p && p.champ;
   if (ch) {
-    if (ch.id === "the_simplistic" && inGroup(c, "Simple")) { if (c.manaCost === 1) h += 1; if (ch.level >= 2) { a += 1; h += 1; } }
+    if (ch.id === "the_simplistic" && ch.level >= 2 && inGroup(c, "Simple")) { a += 1; h += 1; }
     else if (ch.id === "the_man_ape" && ch.level >= 2 && inGroup(c, "Monkey")) a += 1;
   }
   a += c.bow || 0;   // The Bow, this turn
