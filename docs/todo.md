@@ -37,6 +37,24 @@ It applies to **cards** and to **whole decks**, to show mastery of them. The wor
   upgrade" like Team Fight Tactics, but the later answers talk only about earning levels. Ask
   again before building anything that costs money.
 
+## Champion abilities — built (first version)
+
+All five champions have an ability, from the owner's choices: The Simplistic (Humble Beginnings,
+working name; the owner may rename it), The Man Ape (The Troop Remembers), IP Man (The Bow),
+Boss Level (LEVEL UP), and Soul Shepard (Challenge, and +1 Health for every Undead that dies,
+either side, from turn one; no levels). They work from turn one without the champion on the table.
+Words: `data/champion_abilities.csv`. Rules: `js/engine.js`.
+
+**Open points.**
+- **The Bow picks automatically** (the strongest ready attacker). A player's own choice of
+  character would be a small addition if wanted.
+- **"Humble Beginnings"** is a working name. The phrase "Start small, then level up" is a hidden
+  clue in `docs/world.md` (the Simplistic was made by Boss Level), so it was not used as the name.
+- **The Troop Remembers** does not stack: two fallen Monkeys before the next Monkey is played
+  still means one discount.
+- A "clean fight" for IP Man: the character survives and the enemy character is knocked out.
+  Fights against the player's face don't count.
+
 ## Champion leveling (like Legends of Runeterra) — the owner chose "no champion is a real choice"
 
 **The idea.** Each champion (Unknown card) levels up when its deck meets a condition, and it

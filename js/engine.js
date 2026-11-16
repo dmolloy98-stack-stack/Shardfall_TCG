@@ -204,9 +204,10 @@ function rawStats(c) {
   // A lord's faction's equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
   const simpleGear = (c.equipped || []).reduce((n, x) => n + lordBonusOf(x), 0);
   const rally = c.rallyBonus || 0;
+  const ch = championBonus(c);   // a champion's ability, and Soul Shepard's growing health
   return {
-    a: c.attack + e.a + buff + rally + extraA + simpleGear,
-    h: c.currentHealth + buff + extraH + simpleGear,
+    a: c.attack + e.a + buff + rally + extraA + simpleGear + ch.a,
+    h: c.currentHealth + buff + extraH + simpleGear + ch.h,
     parry: hasSkill(c, "Parry") || grantsSkill(c, "Parry"),
   };
 }
@@ -250,12 +251,18 @@ function transformCharacter(c, newId) {
 // heals the character fully. "rule: levelCap none" lifts the limit (Boss Level) and
 // "rule: levelGain <attack> <health>" changes what a level gives (Pesky Programmer: 2 0).
 // A Data Collector gains +1 Health when another of your characters levels up.
-const levelCap = c => { const r = cardRule(c, "levelCap"); return !r ? 3 : r[0] === "none" ? Infinity : Number(r[0]); };
+const levelCap = c => {
+  const r = cardRule(c, "levelCap");
+  const base = !r ? 3 : r[0] === "none" ? Infinity : Number(r[0]);
+  // LEVEL UP (Boss Level's deck): the player's Digital characters can level up 1 more time.
+  return base + (c.type === "Character" && inGroup(c, "Digital") && champOf(S?.players?.[c.owner], "boss_level") ? 1 : 0);
+};
 const levelGains = c => { const r = cardRule(c, "levelGain"); return r ? [Number(r[0]), Number(r[1])] : [1, 1]; };
 function levelUp(c, times = 1) {
   for (let k = 0; k < times; k++) {
     if (!hasSkill(c, "Level Up") || (c.levelUpCount || 0) >= levelCap(c)) return;
     c.levelUpCount = (c.levelUpCount || 0) + 1;
+    if (champOf(S.players[c.owner], "boss_level")) champProgress(S.players[c.owner], 1);   // LEVEL UP counts every level gained
     const gains = levelGains(c);
     c.attack += gains[0]; c.currentHealth += gains[1];
     c.levelHealth = (c.levelHealth || 0) + gains[1];
@@ -316,6 +323,10 @@ function sendToGraveyard(p, c) {
   const i = p.field.chars.indexOf(c);
   if (i >= 0) p.field.chars.splice(i, 1);
   p.grave.push(c);
+  if (i >= 0) {
+    for (const tribe of c.tribes || []) S.died[tribe] = (S.died[tribe] || 0) + 1;   // Soul Shepard grows with each Undead that dies
+    if (champOf(p, "the_man_ape") && inGroup(c, "Monkey")) { p.champ.discount = true; champProgress(p, 1); }   // The Troop Remembers
+  }
   updateRally(p);
   emit("death", { uid: c.uid, group: c.group });
   log(`${c.name} was destroyed.`);
@@ -549,6 +560,7 @@ function startTurn(p) {
   p.manaMax += RULES.manaGrowth;
   p.mana = p.manaMax;
   p.hasDrawn = false;
+  if (champOf(p, "the_simplistic")) { p.champ.n = p.manaMax; if (p.champ.n >= DATA.championAbilities.the_simplistic.goal) champLevelUp(p); }   // Humble Beginnings
   for (const c of p.field.chars) {
     c.hasAttacked = false;
     c.attackedThisTurn = false;
@@ -587,10 +599,11 @@ function activateArea(uid) {
   return true;
 }
 
-function newGame({ deckId, opponentDeckId, mode, seed, events }) {
+function newGame({ deckId, opponentDeckId, mode, seed, events, abilities }) {
   seed = (seed ?? newSeed()) >>> 0;
   S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], mode, nextUid: 1, log: [], seed, rng: seed,
-        event: null, upcoming: null, lastEvent: null, noEvents: events === false };
+        event: null, upcoming: null, lastEvent: null, noEvents: events === false,
+        noAbilities: abilities === false, died: {} };
   let opp = opponentDeckId;
   if (!opp) {
     const others = DATA.deckOrder.filter(id => id !== deckId);
@@ -599,6 +612,9 @@ function newGame({ deckId, opponentDeckId, mode, seed, events }) {
   S.players = [makePlayer(0, deckId, false), makePlayer(1, opp, mode === "ai")];
   for (const p of S.players) {
     p.deck = buildDeck(p.deckId);
+    p.champ = null;   // champion ability, see "Champion abilities" below
+    const champion = S.noAbilities ? null : p.deck.find(c => c.rarity === "Unknown" && DATA.championAbilities[c.id]);
+    if (champion) p.champ = { id: champion.id, level: 1, n: 0, discount: false };
     for (let k = 0; k < RULES.startingHand; k++) drawCard(p);
   }
   startTurn(S.players[0]);
@@ -610,6 +626,71 @@ function newGame({ deckId, opponentDeckId, mode, seed, events }) {
   log(`${S.players[0].name} (${S.players[0].faction}) vs ${S.players[1].name} (${S.players[1].faction}) · match seed ${seed}`);
   emit("newGame", {});
   return S;
+}
+
+// ---------------------------------------------------------------------------
+// Champion abilities
+// ---------------------------------------------------------------------------
+// A deck that holds a champion (an Unknown card with a row in data/champion_abilities.csv) gets that
+// champion's ability from turn one, whether or not the champion card has been drawn. Most start
+// small and level up once in a match. Progress lives in p.champ = { id, level, n, discount }.
+// The wording players read is in data/champion_abilities.csv; what each one does is here:
+//   the_simplistic  Humble Beginnings: Simple characters costing 2 or less get +1 Health (championBonus);
+//                   at max mana 6 every Simple character gets +1/+1 (startTurn)
+//   the_man_ape     The Troop Remembers: a fallen Monkey makes the next Monkey cost 1 less (costFromEffect);
+//                   after 4 have fallen, Monkeys get +2 Attack (championBonus)
+//   ip_man          The Bow: at the start of Battle the strongest ready attacker gets +2 Attack (ipBow);
+//                   after 5 fights won, two get it
+//   boss_level      LEVEL UP: Digital characters can level up 1 more time (levelCap); after 6 levels gained,
+//                   the first attack each turn deals double damage (attack)
+//   Soul Shepard    "rule: grieve Undead" on the card: +1 Health for every Undead that dies (championBonus)
+const champOf = (p, id) => (p && p.champ && p.champ.id === id ? p.champ : null);
+
+function champLevelUp(p) {
+  const ch = p.champ;
+  if (!ch || ch.level >= 2) return;
+  ch.level = 2;
+  const info = DATA.championAbilities[ch.id];
+  log(`${p.name}'s ${info.name} levels up. ${info.then}`);
+  emit("champLevel", { player: p.idx, id: ch.id });
+}
+// Add to a champion's progress counter; at its goal the ability levels up.
+function champProgress(p, add) {
+  const ch = p.champ;
+  if (!ch || ch.level >= 2) return;
+  ch.n += add;
+  if (ch.n >= DATA.championAbilities[ch.id].goal) champLevelUp(p);
+}
+
+// Extra Attack and Health a character gets from its owner's champion ability, and from its own
+// "rule: grieve <Tribe>" (Soul Shepard).
+function championBonus(c) {
+  let a = 0, h = 0;
+  if (c.type !== "Character") return { a, h };
+  const p = S.players[c.owner], ch = p && p.champ;
+  if (ch) {
+    if (ch.id === "the_simplistic" && inGroup(c, "Simple")) { if (c.manaCost <= 2) h += 1; if (ch.level >= 2) { a += 1; h += 1; } }
+    else if (ch.id === "the_man_ape" && ch.level >= 2 && inGroup(c, "Monkey")) a += 2;
+  }
+  a += c.bow || 0;   // The Bow, this turn
+  h += grieveBonus(c);
+  return { a, h };
+}
+// "rule: grieve <Tribe>": Health gained from every character of that tribe that has died. Counted
+// from the start of the match, so it is already there when the card is still in the hand.
+function grieveBonus(c) {
+  const r = S && cardRule(c, "grieve");
+  return r ? S.died[r[0]] || 0 : 0;
+}
+
+// The Bow (IP Man): at the start of your Battle phase your strongest ready attacker, or two once
+// the ability has leveled up, gets +2 Attack until the end of the turn.
+function ipBow(p) {
+  const ch = champOf(p, "ip_man");
+  if (!ch) return;
+  const ready = p.field.chars.filter(canAttack).sort((x, y) => stats(y).a - stats(x).a || x.uid - y.uid).slice(0, ch.level >= 2 ? 2 : 1);
+  for (const c of ready) { c.bow = 2; emit("text", { uid: c.uid, text: "THE BOW +2", color: "#ffd27a" }); }
+  if (ready.length) log(`${p.name} bows: ${ready.map(c => c.name).join(" and ")} gets +2 Attack this turn.`);
 }
 
 // ---------------------------------------------------------------------------
@@ -751,6 +832,7 @@ function playCard(uid, opts = {}) {
 
   p.mana -= playCost(c, p);
   p.hand.splice(index, 1);
+  if (c.type === "Character" && inGroup(c, "Monkey") && champOf(p, "the_man_ape")) p.champ.discount = false;   // the discount was used
   emit("play", { card: c, player: p.idx });
 
   if (c.type === "Character") {
@@ -949,7 +1031,13 @@ function attack(attackerUid, targetUid) {
   a.attackedThisTurn = true;
   emit("lunge", { uid: a.uid, target: target ? target.uid : null, player: defender.idx });
   runHook(a, "attack", { owner: p });
-  const as = stats(a);
+  let as = stats(a);
+  if (champOf(p, "boss_level")?.level >= 2 && p.doubledRound !== S.round) {   // LEVEL UP, level 2: the first attack each turn deals double
+    p.doubledRound = S.round;
+    as = { ...as, a: as.a * 2 };
+    emit("text", { uid: a.uid, text: "CRITICAL HIT x2", color: "#ff8a5e" });
+    log(`${a.name}'s first attack this turn deals double damage.`);
+  }
   if (!target) {
     log(`${a.name} attacks ${defender.name} for ${as.a}.`);
     dealDamageToPlayer(defender, as.a);
@@ -986,6 +1074,9 @@ function attack(attackerUid, targetUid) {
   }
   if (first && alive(first) && !alive(first === a ? target : a)) emit("text", { uid: first.uid, text: "» NO REPLY", color: "#9fe7ff" });
   recordCombatSurvival(a); recordCombatSurvival(target);
+  // IP Man's deck counts the fights it wins: its character lives and the enemy character is knocked out.
+  if (alive(a) && !alive(target)) { if (champOf(p, "ip_man")) champProgress(p, 1); }
+  else if (alive(target) && !alive(a)) { if (champOf(defender, "ip_man")) champProgress(defender, 1); }
   return true;
 }
 
@@ -1059,6 +1150,7 @@ function advancePhase() {
   const leavingBattle = S.phase === PHASE.BATTLE;
   if (S.phase < PHASE.END) S.phase++;
   emit("phase", {});
+  if (S.phase === PHASE.BATTLE) ipBow(active());
   if (leavingBattle) afterBattle(active());
   return true;
 }
@@ -1090,6 +1182,7 @@ function endTurn() {
 
 function finishTurn() {
   endPhaseEffects(active());
+  for (const c of allChars()) c.bow = 0;   // The Bow lasts one turn
   S.active = 1 - S.active;
   S.phase = PHASE.DRAW;
   S.round++;

@@ -19,7 +19,7 @@ function startTutorial() {
   clearTimeout(U.aiTimer);
   Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
-  newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai", events: false });   // lessons are scripted, so no random events
+  newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai", events: false, abilities: false });   // lessons are scripted, so no random events or champion abilities
   const [me, tr] = S.players;
   tr.name = "Trainer"; tr.faction = "Training"; tr.deckLabel = "Training deck";
   tr.health = tr.maxHealth = TUT_TRAINER_HEALTH;

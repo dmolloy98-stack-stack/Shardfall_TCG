@@ -211,6 +211,22 @@ Every few rounds (see `event_every_rounds` in game_rules.csv) one of these hits 
 
 You can rename an event or reword its description here. What an event *does* is written in `js/engine.js` ("Random events"), so a new event needs code. The four today: `spell_surge` (spells cost 1 less), `tremor` (every character takes 1 damage), `windfall` (each player draws an extra card; a full hand or empty deck is skipped) and `amplified_areas` (area bonuses are doubled).
 
+### champion_abilities.csv: the champions' abilities
+
+A deck that holds a champion (an Unknown card) gets that champion's ability from turn one, even before the champion card is drawn. Most start small and level up once in a match.
+
+| Column | Meaning |
+|---|---|
+| ChampionID | The champion's CardID. The game's rules key on it, so don't change it |
+| AbilityName | Name shown under the player's name |
+| Now | What the ability does at the start (level 1) |
+| LevelUpWhen | What makes it level up (empty for an ability with no levels) |
+| Then | What it does after leveling up |
+| Goal | The number the progress counts up to (the code uses this number, so change it here, not in the text only) |
+| Counts | What the progress counts, in a few words ("Monkeys fallen") |
+
+You can reword the text freely. What each ability does is written in `js/engine.js` ("Champion abilities"), so a new ability needs code. Soul Shepard's growth is a `rule: grieve Undead` on its own card in cards.csv: +1 Health each time a character of that tribe dies.
+
 ### phases.csv and ui_text.csv
 
 Phase names and the one-line instructions shown on the board, plus a few button labels and the names of the two rows on each side of the table (`zone_frontline` and `zone_backline`). Change the wording freely; the order of phases is fixed by the game.

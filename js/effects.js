@@ -49,6 +49,7 @@ const RULE_WORDS = {
   activate: ": an area whose play effect can be used once in each of its owner's Setup phases",
   strike: ": equipment whose play effect its holder can use once per Battle phase",
   teach: "<Skill>: equipment that gives its holder the skill for good",
+  grieve: "<Tribe>: this card gets +1 Health each time a character of that tribe dies (either side), counted from the start of the match wherever the card is",
 };
 
 // ---------------------------------------------------------------------------
@@ -411,6 +412,7 @@ function costFromEffect(c, p) {
     }
   }
   if (c.type === "Spell" && eventNow("spell_surge")) cost = Math.max(0, cost - 1);   // the Spell Surge event
+  if (c.type === "Character" && inGroup(c, "Monkey") && p.champ?.id === "the_man_ape" && p.champ.discount) cost = Math.max(0, cost - 1);   // The Troop Remembers
   return cost;
 }
 

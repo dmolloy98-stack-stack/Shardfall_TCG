@@ -233,7 +233,7 @@ function cardHTML(c, opts = {}) {
       const hpLow = c.currentHealth < (c.baseHealth ?? c.health);
       statsHTML = `<div class="stats"><span class="a${st.a > c.attack ? " up" : ""}">⚔${st.a}</span><span class="h${hpLow ? " low" : ""}${st.h > c.currentHealth ? " up" : ""}">♥${Math.max(0, raw.h)}</span></div>`;
     } else {
-      statsHTML = `<div class="stats"><span class="a">⚔${c.attack}</span><span class="h">♥${c.health}</span></div>`;
+      statsHTML = `<div class="stats"><span class="a">⚔${c.attack}</span><span class="h${grieveBonus(c) ? " up" : ""}">♥${c.health + grieveBonus(c)}</span></div>`;
     }
   }
   const cost = opts.costOverride ?? c.manaCost;
@@ -482,6 +482,10 @@ onGameEvent((type, d) => {
     U.lungeAt = now;
   } else if (type === "draw") {
     U.drawn.set(d.uid, now);
+  } else if (type === "champLevel") {
+    const who = S.players[d.player], info = DATA.championAbilities[d.id];
+    banner(`${info.name}: LEVEL UP`);
+    floatText(sideOf(d.player) === "bottom" ? 720 : 720, sideOf(d.player) === "bottom" ? 900 : 120, "CHAMPION LEVEL UP", "#ffd27a");
   } else if (type === "manaToken") {
     floatText(sideOf(d.player) === "bottom" ? 223 : 1203, sideOf(d.player) === "bottom" ? 470 : 250, "+1 MANA", "#ffd27a", true);
   } else if (type === "turn") {
@@ -521,6 +525,35 @@ function lifeTier(p) {
   const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
   return { ratio, cls: LIFE_TIERS.find(t => ratio >= t.min).cls };
 }
+// A champion's ability (data/champion_abilities.csv, "Champion abilities" in js/engine.js): its name,
+// level and progress toward leveling up, shown under the player's name. Tap it for the details.
+function champInfo(p) {
+  const ch = p.champ;
+  if (!ch) return null;
+  const info = DATA.championAbilities[ch.id];
+  const grows = !info.goal;   // Soul Shepard's ability has no levels: it just grows
+  const n = ch.id === "the_simplistic" ? p.manaMax : grows ? (S.died.Undead || 0) : ch.n;
+  const progress = grows ? `${n} ${info.counts.toLowerCase()}` : ch.level >= 2 ? "Leveled up" : `${Math.min(n, info.goal)}/${info.goal} ${info.counts.toLowerCase()}`;
+  return { info, ch, n, grows, progress, label: grows ? info.name : `${info.name} · Lv ${ch.level}` };
+}
+function champLine(p) {
+  const c = champInfo(p);
+  return c ? `<button type="button" class="champ-line${c.ch.level >= 2 ? " lv2" : ""}" data-act="champ" data-player="${p.idx}" title="${esc(c.info.now)}">★ ${esc(c.label)} · ${esc(c.progress)}</button>` : "";
+}
+function showChampion(p) {
+  const c = champInfo(p);
+  if (!c) return;
+  const card = DATA.cardsById[c.ch.id];
+  openModal(`<h2 id="modal-title">${esc(c.info.name)}</h2>
+    <p class="sub">${esc(p.name)}'s champion ability · ${esc(card.name)}${c.grows ? "" : ` · Level ${c.ch.level} of 2`}</p>
+    <p><b>Now:</b> ${esc(c.info.now)}</p>
+    ${c.grows ? "" : `<p><b>Levels up when:</b> ${esc(c.info.when)}</p><p><b>Then:</b> ${esc(c.info.then)}</p>
+    <p><b>Progress:</b> ${c.ch.level >= 2 ? "Leveled up" : esc(c.progress)}</p>`}
+    ${c.grows ? `<p><b>So far:</b> ${esc(c.progress)}</p>` : ""}
+    <p class="sub">It works from turn one, even before ${esc(card.name)} is drawn.</p>
+    <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
+}
+
 function plateHTML(p, side) {
   const { ratio, cls: tier } = lifeTier(p);
   const cracks = tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4;
@@ -530,7 +563,7 @@ function plateHTML(p, side) {
   const y = side === "top" ? 3 : 937;
   return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
     <div class="life">${crystalSVG("life-crystal " + tier, cracks)}<b>${Math.max(0, p.health)}</b></div>
-    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em></div>
+    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}</div>
     ${attackable ? previewBadge(fightPreview(U.selected, null), true) : ""}
   </div>`;
 }
@@ -1150,6 +1183,7 @@ $("#board").addEventListener("click", e => {
   if (a === "char") return clickChar(uid);
   if (a === "token") { if (human) act(useManaToken); return; }
   if (a === "grave") return showGrave(S.players[Number(el.dataset.player)]);
+  if (a === "champ") return showChampion(S.players[Number(el.dataset.player)]);
   if (a === "deck") { if (human && Number(el.dataset.player) === S.active && S.phase === PHASE.DRAW) onPhaseButton(); return; }
   if (a === "plate") {
     const idx = Number(el.dataset.player);
