@@ -74,7 +74,8 @@ the story never fixes how many there are.
   up once in a match (The Simplistic, The Man Ape, IP Man, Boss Level), or grows (Soul Shepard).
   The words are in `data/champion_abilities.csv`. Each fits its champion: the Man Ape remembers
   fallen cousins, IP Man bows before a fight, Boss Level raises the level cap, Soul Shepard grows
-  with every soul that is lost. The Simplistic's is a working name on purpose (see `docs/todo.md`).
+  with every soul that is lost. The Simplistic's is Humble Beginnings, chosen by the owner; the hidden-clue phrase "Start small,
+  then level up" was kept out of it.
 - Their art is still to come.
 
 ## Tone

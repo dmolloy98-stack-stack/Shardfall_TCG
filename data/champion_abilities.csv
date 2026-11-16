@@ -1,6 +1,6 @@
 ChampionID,AbilityName,Now,LevelUpWhen,Then,Goal,Counts
-the_simplistic,Humble Beginnings,Your Simple characters that cost 2 or less get +1 Health.,Your maximum mana reaches 6.,All your Simple characters get +1 Attack and +1 Health.,6,Max mana
-the_man_ape,The Troop Remembers,"When one of your Monkeys is knocked out or sacrificed, the next Monkey you play costs 1 less.",4 of your Monkeys have fallen.,All your Monkeys get +2 Attack.,4,Monkeys fallen
+the_simplistic,Humble Beginnings,Your Simple characters that cost 1 get +1 Health.,Your maximum mana reaches 6.,All your Simple characters get +1 Attack and +1 Health.,6,Max mana
+the_man_ape,The Troop Remembers,"When one of your Monkeys is knocked out or sacrificed, the next Monkey you play costs 1 less.",4 of your Monkeys have fallen.,All your Monkeys get +1 Attack.,4,Monkeys fallen
 ip_man,The Bow,"At the start of your Battle phase, your strongest ready attacker gets +2 Attack this turn.","You win 5 fights: your character survives and the enemy character is knocked out.","Your two strongest ready attackers get the bonus.",5,Fights won
 boss_level,LEVEL UP,Your Digital characters can Level Up 1 more time.,Your characters have gained 6 levels in total.,The first attack you make each turn deals double damage.,6,Levels gained
 soul_shepard,Keeper of the Fallen,"This card gets +1 Health each time an Undead character dies, on either side, counted from the start of the match wherever the card is.",,,,Undead fallen

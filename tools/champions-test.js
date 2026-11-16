@@ -21,11 +21,11 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
 }
 { // The Simplistic: Humble Beginnings
   const p = game('simple_starter');
-  const cheap = find(c => c.type === 'Character' && c.group === 'Simple' && c.manaCost <= 2 && !c.rules);
-  const dear = find(c => c.type === 'Character' && c.group === 'Simple' && c.manaCost >= 3 && c.rarity !== 'Unknown');
+  const cheap = find(c => c.type === 'Character' && c.group === 'Simple' && c.manaCost === 1 && !c.rules);
+  const dear = find(c => c.type === 'Character' && c.group === 'Simple' && c.manaCost >= 2 && c.rarity !== 'Unknown');
   const a = put(p, cheap.id), b = put(p, dear.id);
   const plain = newCard(cheap), plainDear = newCard(dear); plain.owner = 1; plainDear.owner = 1;
-  ok('Simplistic: a Simple character costing 2 or less gets +1 Health', rawStats(a).h === cheap.health + 1 && rawStats(a).a === cheap.attack, rawStats(a).h + ' vs printed ' + cheap.health);
+  ok('Simplistic: a Simple character costing 1 gets +1 Health', rawStats(a).h === cheap.health + 1 && rawStats(a).a === cheap.attack, rawStats(a).h + ' vs printed ' + cheap.health);
   ok('Simplistic: a dearer Simple character gets nothing', rawStats(b).h === dear.health && rawStats(b).a === dear.attack);
   const before = base(b);
   p.manaMax = 5; startTurn(p);
@@ -45,7 +45,7 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   fall(); fall(); fall();
   ok('Man Ape: after 4 Monkeys fall it levels up', p.champ.level === 2, 'n=' + p.champ.n);
   const m = put(p, mk.id);
-  ok('Man Ape: Monkeys then get +2 Attack', rawStats(m).a === mk.attack + 2);
+  ok('Man Ape: Monkeys then get +1 Attack', rawStats(m).a === mk.attack + 1);
   const other = put(game('fighter_starter'), find(c => c.type === 'Character' && c.group === 'Fighter' && c.rarity !== 'Unknown').id);
   ok('Man Ape: a non-Monkey is not affected', rawStats(other).a === DATA.cardsById[other.id].attack);
 }
