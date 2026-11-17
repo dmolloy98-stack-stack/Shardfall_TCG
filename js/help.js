@@ -176,7 +176,7 @@ function renderSideInfo() {
 // A champion's ability on the phone's side panel: a short line; tap it for the details.
 function champSide(p) {
   const c = champInfo(p);
-  return c ? `<button type="button" class="si-champ${c.ch.level >= 2 ? " lv2" : ""}" data-si="champ" data-player="${p.idx}">★ ${c.grows ? "" : "Lv " + c.ch.level + " · "}${esc(c.progress)}</button>` : "";
+  return c ? `<button type="button" class="si-champ${c.lit ? " lv2" : ""}" data-si="champ" data-player="${p.idx}">★ ${c.grows ? "" : "Lv " + c.ch.level + " · "}${esc(c.progress)}</button>` : "";
 }
 document.getElementById("sideinfo").addEventListener("click", e => {
   const cb = e.target.closest('[data-si="champ"]');

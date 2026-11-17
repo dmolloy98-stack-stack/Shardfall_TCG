@@ -1926,3 +1926,40 @@ html.intro-on .menu-inner { visibility: hidden; }
 .rune-ring.flash { animation: rune-flash 0.45s ease-out; }
 @keyframes rune-flash { 0% { filter: brightness(2.2) drop-shadow(0 0 8px #bfeeff); } }
 @media (prefers-reduced-motion: reduce) { .ward .s, .ward.hit, .ward.hit .s.chip, .ward.forming .s, .rune-ring > i, .rune-ring .sweep, .rune-ring > i svg { animation: none; } }
+
+/* The big shard (shardHTML in js/ui.js): a tall crystal in the middle band, purple, blue and green.
+   It drops in when it lands, shakes when hit, and glows brighter when it can be attacked. */
+.shard-rock { position: absolute; width: 80px; height: 132px; padding: 0; border: 0; background: none; cursor: pointer; z-index: 6;
+  filter: drop-shadow(0 0 10px rgba(150, 110, 255, 0.85)) drop-shadow(0 0 22px rgba(70, 200, 255, 0.45)); animation: shard-bob 3.4s ease-in-out infinite alternate; }
+.shard-rock svg { display: block; width: 80px; height: 120px; overflow: visible; }
+.shard-rock .sr-body { fill: url(#shard-grad); stroke: #efe4ff; stroke-width: 1.5; animation: shard-hue 6s linear infinite; }
+.shard-rock .sr-facet { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 1; }
+.shard-rock .sr-crack { fill: none; stroke: #170a2e; stroke-width: 2; stroke-linecap: round; filter: drop-shadow(0 0 2px #e7d4ff); }
+.shard-rock .sr-hp { position: absolute; left: 50%; bottom: -4px; translate: -50% 0; min-width: 30px; padding: 1px 7px; border-radius: 10px;
+  background: rgba(14, 6, 30, 0.9); border: 1px solid #b994ff; color: #f1e8ff; font: 800 15px/1.2 var(--font-body, sans-serif); }
+.shard-rock.attackable { filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 18px #d0a8ff) drop-shadow(0 0 30px #5dffb5); }
+.shard-rock.attackable .sr-hp { border-color: var(--danger); box-shadow: 0 0 10px var(--danger); }
+.shard-rock.landing { animation: shard-land 1.3s cubic-bezier(.3, .0, .4, 1) both; animation-delay: var(--age); }
+.shard-rock.hit svg { animation: shard-hit 0.4s ease-out; }
+@keyframes shard-bob { from { translate: 0 -3px; } to { translate: 0 3px; } }
+@keyframes shard-hue { 50% { filter: hue-rotate(35deg) brightness(1.15); } }
+@keyframes shard-land { 0% { translate: 0 -520px; scale: 0.6; opacity: 0; } 55% { translate: 0 8px; scale: 1.08; opacity: 1; } 70% { translate: 0 -6px; scale: 0.97; } 100% { translate: 0 0; scale: 1; } }
+@keyframes shard-hit { 0% { transform: translateX(0) scale(1.08); filter: brightness(2.2); } 30% { transform: translateX(-5px); } 60% { transform: translateX(4px); } 100% { transform: none; filter: none; } }
+
+/* The cracked table after the big shard falls (scarHTML in js/ui.js): glowing cracks from the spot
+   it landed, purple through blue to green, slowly pulsing and shifting color for the rest of the match. */
+.shard-scar { position: absolute; left: 0; top: 0; width: 1440px; height: 1000px; pointer-events: none; overflow: visible; mix-blend-mode: screen; }
+.shard-scar .scar-tint { animation: scar-breathe 4s ease-in-out infinite alternate; }
+.shard-scar .scar-line, .shard-scar .scar-glow { fill: none; stroke: url(#scar-grad); stroke-linecap: round; stroke-linejoin: round; }
+.shard-scar .scar-line { opacity: 0.95; }
+.shard-scar .scar-glow { opacity: 0.28; filter: blur(4px); }
+.shard-scar { animation: scar-hue 9s linear infinite; }
+.shard-scar .scar-line { animation: scar-pulse 2.6s ease-in-out infinite alternate; animation-delay: calc(var(--k) * -0.37s); }
+.shard-scar.forming .scar-line, .shard-scar.forming .scar-glow { stroke-dasharray: 1; animation: scar-open 1.6s ease-out both; animation-delay: calc(var(--age) + var(--k) * 0.02s); }
+@keyframes scar-open { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes scar-pulse { from { opacity: 0.55; } to { opacity: 1; } }
+@keyframes scar-breathe { from { opacity: 0.7; } to { opacity: 1; } }
+@keyframes scar-hue { 50% { filter: hue-rotate(-30deg); } }
+.event-pill.big { border-color: #c9a6ff; box-shadow: 0 0 14px rgba(170, 120, 255, 0.7); }
+.event-pill.big .event-when { color: #d9c2ff; }
+@media (prefers-reduced-motion: reduce) { .shard-rock, .shard-rock .sr-body, .shard-scar, .shard-scar .scar-line, .shard-scar .scar-tint { animation: none; } }

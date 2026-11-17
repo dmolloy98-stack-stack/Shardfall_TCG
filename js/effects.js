@@ -412,7 +412,6 @@ function costFromEffect(c, p) {
     }
   }
   if (c.type === "Spell" && eventNow("spell_surge")) cost = Math.max(0, cost - 1);   // the Spell Surge event
-  if (c.type === "Character" && inGroup(c, "Monkey") && p.champ?.id === "the_man_ape" && p.champ.discount) cost = Math.max(0, cost - 1);   // The Troop Remembers
   return cost;
 }
 

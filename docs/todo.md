@@ -111,6 +111,20 @@ design; each needs code in `js/engine.js`.
   `docs/world.md`.
 - Not now: the owner will raise it when ready.
 
+## The big shard fall — built (17 Nov)
+
+Built from the owner's design: once a match in round 8 a 15-health shard falls into the middle of
+the table; whoever breaks it gets +5 health (+10 with no champion) and their champion's bonus. The
+random events became "mini shard falls" in rounds 4 and 12 only. The table cracks and glows after the
+big fall. Chest Thump replaced The Troop Remembers and Boss Phases replaced LEVEL UP.
+
+**Open points.**
+- The Man Ape's free 2/2 Monkey is a Chimp with +1 Attack, because no 2/2 Monkey card exists. The
+  owner could design a card for it.
+- The big shard could carry the hint about what caused the Shardfall (see the Protected item above).
+- Round 4 and round 12 are both the second player's turns, so events that help only the active
+  player (Spell Surge, Amplified Areas) always help the second player.
+
 ## Not doing for now
 
 - **A solo run mode** (a Slay the Spire style roguelike deckbuilder). The owner is wary of

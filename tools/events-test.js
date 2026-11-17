@@ -9,20 +9,22 @@ const put = (p, name) => { const c = cardByName(name); c.owner = p.idx; putOnFie
 // Play on to the start of round n: end the turn, draw the card.
 const toRound = n => { let guard = 0; while (S.round < n && guard++ < 50) { S.pending = null; S.phase = PHASE.SETUP; endTurn(); if (S.over) return; if (S.phase === PHASE.DRAW) doDraw(); } };
 
-{ // schedule: announced two rounds ahead, hits in rounds 6 and 11, lasts one round
+{ // schedule: mini shard falls in rounds 4 and 12 (game_rules.csv), announced two rounds ahead, one round long
   fresh();
   const seen = {};
-  for (let r = 1; r <= 13; r++) { toRound(r); seen[r] = { up: S.upcoming && S.upcoming.round, now: S.event && S.event.id, id: S.upcoming && S.upcoming.id }; if (S.over) break; }
-  ok('nothing announced before round 4', !seen[1].up && !seen[2].up && !seen[3].up);
-  ok('round 4 announces an event for round 6', seen[4].up === 6);
-  ok('round 5 still shows it, no event yet', seen[5].up === 6 && !seen[5].now);
-  ok('round 6 the event is on', !!seen[6].now && !seen[6].up);
-  ok('the event announced is the one that hits', seen[6].now === seen[4].id);
-  ok('round 7 the event is over', !seen[7].now);
-  ok('round 9 announces the next event for round 11', seen[9].up === 11);
-  ok('round 11 the second event is on', !!seen[11].now);
-  ok('round 12 it is over again', !seen[12].now);
-  ok('the second event is a different one', seen[11].now !== seen[6].now);
+  for (let r = 1; r <= 14; r++) { toRound(r); seen[r] = { up: S.upcoming && S.upcoming.round, now: S.event && S.event.id, id: S.upcoming && S.upcoming.id }; if (S.over) break; }
+  ok('the rule lists rounds 4 and 12', RULES.eventRounds.join() === '4,12', RULES.eventRounds.join());
+  ok('nothing announced in round 1', !seen[1].up);
+  ok('round 2 announces an event for round 4', seen[2].up === 4);
+  ok('round 3 still shows it, no event yet', seen[3].up === 4 && !seen[3].now);
+  ok('round 4 the event is on', !!seen[4].now && !seen[4].up);
+  ok('the event announced is the one that hits', seen[4].now === seen[2].id);
+  ok('round 5 the event is over', !seen[5].now);
+  ok('nothing is announced in rounds 5 to 9', [5, 6, 7, 8, 9].every(r => !seen[r].up && !seen[r].now));
+  ok('round 10 announces the next event for round 12', seen[10].up === 12);
+  ok('round 12 the second event is on', !!seen[12].now);
+  ok('round 13 it is over, and no more come', !seen[13].now && !seen[13].up && !seen[14].up);
+  ok('the second event is a different one', seen[12].now !== seen[4].now);
 }
 { // spell surge: spells cost 1 less, nothing else does
   const p = fresh(); const spell = Object.values(DATA.cardsById).find(c => c.type === 'Spell' && c.manaCost >= 2 && !CARD_FX[c.id]?.cost);
@@ -66,8 +68,8 @@ const toRound = n => { let guard = 0; while (S.round < n && guard++ < 50) { S.pe
 { // switches: events off by rule, and off for the tutorial
   fresh({ events: false }); toRound(13);
   ok('events: false means no events', !S.event && !S.upcoming && !S.lastEvent);
-  const was = RULES.eventEvery; RULES.eventEvery = 0; fresh(); toRound(13); RULES.eventEvery = was;
-  ok('event_every_rounds 0 means no events', !S.event && !S.upcoming && !S.lastEvent);
+  const was = RULES.eventRounds; RULES.eventRounds = []; fresh(); toRound(13); RULES.eventRounds = was;
+  ok('an empty event_rounds means no events', !S.event && !S.upcoming && !S.lastEvent);
 }
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');
 process.exit(fails ? 1 : 0);
