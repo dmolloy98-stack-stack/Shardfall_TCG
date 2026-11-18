@@ -59,7 +59,7 @@ if("${mode}"==="ai"){
           for(const e of p.field.equips) if(canAttachFromField(e,p)) for(const t of p.field.chars) opts.push(["attach "+e.name,()=>attachFieldEquipment(e.uid,t.uid)]);
           for(const ar of p.field.areas) if(canActivateArea(ar,p)) opts.push(["activate "+ar.name,()=>activateArea(ar.uid)]);
           if(p.manaToken) opts.push(["token",()=>useManaToken()]);
-          if(S.phase===PHASE.BATTLE){ for(const c of p.field.chars){ if(canAttack(c)){ for(const t of [null,...opponent().field.chars]) opts.push(["attack "+c.name+" -> "+(t?t.name:"face"),()=>attack(c.uid,t?t.uid:null)]); } if(canUseBlade(c)) opts.push(["blade",()=>useBlade(c.uid)]); } }
+          if(S.phase===PHASE.BATTLE){ for(const c of p.field.chars){ if(canAttack(c)){ for(const t of [null,...opponent().field.chars]) opts.push(["attack "+c.name+" -> "+(t?t.name:"face"),()=>attack(c.uid,t?t.uid:null)]); if(S.shard) opts.push(["attack "+c.name+" -> shard",()=>attack(c.uid,"shard")]); } if(canUseBlade(c)) opts.push(["blade",()=>useBlade(c.uid)]); } }
           if(opts.length&&r<0.8){ const o=pick(opts); did=o[0]; o[1](); }
           else if(r<0.93){ did="advance"; advancePhase(); } else { did="endTurn"; endTurn(); }
         } else { did="endTurn"; endTurn(); }

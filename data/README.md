@@ -195,13 +195,17 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | mana_growth_per_turn | Maximum mana gained each turn |
 | max_field_backline | Most cards on one side's backline (areas and stored equipment together) |
 | max_field_characters | Optional. Leave it out for no limit on characters (the default) |
-| event_every_rounds | A random event hits the table every this many rounds (a round is one player's turn, shown as Round). 0 turns events off |
+| event_rounds | The rounds a random event (a mini shard fall) hits the table, separated by `\|`, for example `4\|12` (a round is one player's turn, shown as Round). Empty turns events off |
 | event_warning_rounds | How many rounds ahead the next event is announced |
+| shard_round | The round the big shard falls into the middle of the table, once a match. 0 turns it off |
+| shard_health | Health of the big shard |
+| shard_draw | Cards the player who breaks the big shard draws, on top of their champion's shard bonus |
+| shard_draw_no_champion | Cards the player who breaks the big shard draws when their deck has no champion |
 | min_deck_size, max_copies, max_unknown_copies, max_unknown_kinds | Deck-building rules (max_unknown_kinds: how many different Unknown cards, the champions, a deck may hold) |
 
 ### events.csv: random events
 
-Every few rounds (see `event_every_rounds` in game_rules.csv) one of these hits the table for both players and lasts one round. The next one is announced two rounds ahead.
+In the rounds listed in `event_rounds` in game_rules.csv (4 and 12), one of these hits the table for both players and lasts one round: a mini shard fall. The next one is announced two rounds ahead. (The big shard fall in round 8 is separate; see `shard_round`.)
 
 | Column | Meaning |
 |---|---|
@@ -213,7 +217,7 @@ You can rename an event or reword its description here. What an event *does* is 
 
 ### champion_abilities.csv: the champions' abilities
 
-A deck that holds a champion (an Unknown card) gets that champion's ability from turn one, even before the champion card is drawn. Most start small and level up once in a match.
+A deck that holds a champion (an Unknown card) gets that champion's ability from turn one, even before the champion card is drawn. Every ability is always on. Some level up once in a match (they have a Goal); the others leave LevelUpWhen, Then, Goal and Counts empty.
 
 | Column | Meaning |
 |---|---|
@@ -223,9 +227,9 @@ A deck that holds a champion (an Unknown card) gets that champion's ability from
 | LevelUpWhen | What makes it level up (empty for an ability with no levels) |
 | Then | What it does after leveling up |
 | Goal | The number the progress counts up to (the code uses this number, so change it here, not in the text only) |
-| Counts | What the progress counts, in a few words ("Monkeys fallen") |
+| Counts | What the progress counts, in a few words ("Fights won") |
 
-You can reword the text freely. What each ability does is written in `js/engine.js` ("Champion abilities"), so a new ability needs code. Soul Shepard's growth is a `rule: grieve Undead` on its own card in cards.csv: +1 Health each time a character of that tribe dies.
+You can reword the text freely. What each ability does is written in `js/engine.js` ("Champion abilities"), so a new ability needs code. Each champion's bonus for breaking the big shard is `SHARD_BONUS` in `js/engine.js` ("The big shard fall"). Soul Shepard's growth is a `rule: grieve Undead` on its own card in cards.csv: +1 Health each time a character of that tribe dies.
 
 ### phases.csv and ui_text.csv
 

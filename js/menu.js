@@ -53,12 +53,9 @@ const CHAMP_GUIDE = {
     pairs: [{ caption: "When you reach 6 mana crystals: every Simple character gets +1 Attack and +1 Health.", pick: c => c.id === "simple_farmer", change: { attack: 1, health: 1 } }],
   },
   the_man_ape: {
-    notes: ["A Monkey \"falls\" when it is knocked out or sacrificed.", "The discount is for the next Monkey character you play. It does not add up: two Monkeys falling before you play the next one is still 1 less.", "After 4 of your Monkeys have fallen in the match, every Monkey you have, and every Monkey you play later, gets +1 Attack."],
-    status: ["Lv 1 · 2/4 monkeys fallen", "Lv 2 · Leveled up"],
-    pairs: [
-      { caption: "After one of your Monkeys falls: the next Monkey you play costs 1 less.", pick: c => c.group === "Monkey" && c.type === "Character" && c.manaCost === 2, change: { cost: -1 } },
-      { caption: "After 4 have fallen: all your Monkeys get +1 Attack.", pick: c => c.group === "Monkey" && c.type === "Character" && c.manaCost === 2, change: { attack: 1 } },
-    ],
+    notes: ["It counts the characters on each side. With more than your opponent, every character you have gets +1 Attack, Monkey or not.", "It only works on your turn, when you attack. Your characters don't get it while defending.", "It switches on and off by itself as characters come and go, even in the middle of your attacks."],
+    status: ["4 vs 3 characters · +1 Attack", "2 vs 3 characters"],
+    pairs: [{ caption: "With more characters than your opponent, on your turn: +1 Attack.", pick: c => c.group === "Monkey" && c.type === "Character" && c.manaCost === 2, change: { attack: 1 } }],
   },
   ip_man: {
     notes: ["The bow happens by itself when you press To battle. The game picks your strongest character that can attack this turn.", "The +2 Attack lasts until the end of your turn.", "A fight counts as won when your character survives and the enemy character is knocked out. Attacks on the player don't count. Fights you win while defending count too.", "After 5 won fights, your two strongest attackers get the bow each turn."],
@@ -66,11 +63,11 @@ const CHAMP_GUIDE = {
     pairs: [{ caption: "At the start of your Battle phase: your strongest ready attacker gets +2 Attack this turn.", pick: c => c.group === "Fighter" && c.type === "Character" && c.manaCost === 2, change: { attack: 2 } }],
   },
   boss_level: {
-    notes: ["Level Up normally works 3 times on a character. With this ability your Digital characters can do it 4 times.", "Every level any of your characters gains counts toward the 6.", "After leveling up, the first attack you make each turn deals double damage, on a character or on the player. Pick your hardest hitter first."],
-    status: ["Lv 1 · 4/6 levels gained", "Lv 2 · Leveled up"],
+    notes: ["It works from your starting health: with 25, PHASE 2 starts at 16 health or less and FINAL PHASE at 8 or less.", "In PHASE 2 you draw 2 cards in your Draw phase instead of 1.", "FINAL PHASE keeps the extra card and gives every character you have +1 Attack and +1 Health, Digital or not.", "Healing never takes you back to an earlier phase."],
+    status: ["Phase 1", "Phase 2", "Final phase"],
     pairs: [
-      { caption: "From turn one: Digital characters can Level Up 1 more time.", from: "★★★", to: "★★★★" },
-      { caption: "After 6 levels gained: your first attack each turn deals double damage.", from: "⚔ 4", to: "⚔ 8" },
+      { caption: "PHASE 2: 1 extra card each turn.", from: "🂠 1", to: "🂠 2" },
+      { caption: "FINAL PHASE: your characters also get +1 Attack and +1 Health.", pick: c => c.group === "Digital" && c.type === "Character" && c.manaCost === 2, change: { attack: 1, health: 1 } },
     ],
   },
   soul_shepard: {

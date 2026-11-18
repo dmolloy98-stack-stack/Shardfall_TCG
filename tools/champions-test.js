@@ -32,22 +32,20 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   ok('Simplistic: at max mana 6 it levels up', p.champ.level === 2);
   ok('Simplistic: then every Simple character gets +1/+1', base(b).a === before.a + 1 && base(b).h === before.h + 1);
 }
-{ // The Man Ape: The Troop Remembers
-  const p = game('monkey_starter'); const mk = find(c => c.type === 'Character' && c.group === 'Monkey' && c.manaCost >= 2 && c.rarity !== 'Unknown');
-  const fall = () => destroyCharacter(put(p, mk.id));
-  ok('Man Ape: no discount at the start', !p.champ.discount);
-  fall();
-  const card = newCard(mk); card.owner = 0;
-  ok('Man Ape: after a Monkey falls the next Monkey costs 1 less', p.champ.discount && playCost(card, p) === mk.manaCost - 1, mk.manaCost + ' -> ' + playCost(card, p));
-  p.hand.push(card); p.mana = 10; S.phase = PHASE.SETUP; S.active = 0; S.pending = null;
-  playCard(card.uid);
-  ok('Man Ape: playing a Monkey uses the discount up', !p.champ.discount);
-  fall(); fall(); fall();
-  ok('Man Ape: after 4 Monkeys fall it levels up', p.champ.level === 2, 'n=' + p.champ.n);
-  const m = put(p, mk.id);
-  ok('Man Ape: Monkeys then get +1 Attack', rawStats(m).a === mk.attack + 1);
-  const other = put(game('fighter_starter'), find(c => c.type === 'Character' && c.group === 'Fighter' && c.rarity !== 'Unknown').id);
-  ok('Man Ape: a non-Monkey is not affected', rawStats(other).a === DATA.cardsById[other.id].attack);
+{ // The Man Ape: Chest Thump
+  const p = game('monkey_starter'); const q = S.players[1]; S.active = 0;
+  const mk = find(c => c.type === 'Character' && c.group === 'Monkey' && c.manaCost >= 2 && c.rarity !== 'Unknown');
+  const other = find(c => c.type === 'Character' && c.group === 'Fighter' && c.rarity !== 'Unknown' && !c.rules);
+  const a = put(p, mk.id), b = put(p, other.id); put(q, other.id); put(q, other.id);
+  ok('Chest Thump: equal numbers, no bonus', rawStats(a).a === mk.attack && !chestThump(p));
+  const c = put(p, mk.id);
+  ok('Chest Thump: more characters, +1 Attack on your turn', chestThump(p) && rawStats(a).a === mk.attack + 1);
+  ok('Chest Thump: a non-Monkey gets it too', rawStats(b).a === other.attack + 1);
+  S.active = 1;
+  ok("Chest Thump: not on the opponent's turn", rawStats(a).a === mk.attack);
+  S.active = 0; destroyCharacter(c);
+  ok('Chest Thump: off again when the numbers even out', !chestThump(p) && rawStats(a).a === mk.attack);
+  ok('Chest Thump: no level, no cheaper Monkeys', p.champ.level === 1 && playCost(newCard(mk), p) === mk.manaCost);
 }
 { // IP Man: The Bow
   const p = game('fighter_starter');
@@ -77,27 +75,28 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   S.phase = PHASE.SETUP; S.active = 0; advancePhase();
   ok('IP Man: at level 2 two attackers get the bow', p2.field.chars.filter(x => x.bow === 2).length === 2);
 }
-{ // Boss Level: LEVEL UP
-  const p = game('digital_starter');
-  const lvl = Object.values(DATA.cardsById).filter(c => c.type === 'Character' && c.group === 'Digital' && (c.skills || []).includes('Level Up') && c.rarity !== 'Unknown' && !c.rules);
-  const x = put(p, lvl[0].id), y = put(p, lvl[1].id);
-  ok('Boss Level: a Digital character can level up 4 times, not 3', levelCap(x) === 4, 'cap ' + levelCap(x));
-  const them = game('simple_starter');   // no Digital cap for another deck
-  const sx = put(them, find(c => c.type === 'Character' && c.group === 'Simple' && c.rarity !== 'Unknown').id);
-  ok('Boss Level: another deck keeps the usual cap of 3', levelCap(sx) === 3);
-  const p2 = game('digital_starter'); const a = put(p2, lvl[0].id), b = put(p2, lvl[1].id);
-  levelUp(a, 4); levelUp(b, 1);
-  ok('Boss Level: 5 levels is not enough', p2.champ.level === 1 && p2.champ.n === 5);
-  levelUp(b, 1);
-  ok('Boss Level: 6 levels gained levels it up', p2.champ.level === 2);
-  // the first attack each turn is doubled
-  const big = put(p2, lvl[0].id); big.attack = 4; big.hasAttacked = false; big.sick = false;
-  const big2 = put(p2, lvl[1].id); big2.attack = 4; big2.hasAttacked = false; big2.sick = false;
-  for (const c of [a, b]) c.hasAttacked = true;
-  const q = S.players[1]; q.field.chars.length = 0; S.phase = PHASE.BATTLE; S.active = 0; S.pending = null;
-  const hp0 = q.health; attack(big.uid, null); const first = hp0 - q.health;
-  const hp1 = q.health; attack(big2.uid, null); const second = hp1 - q.health;
-  ok('Boss Level: the first attack of the turn deals double', first === 2 * second && first > 0, first + ' then ' + second);
+{ // Boss Level: Boss Phases
+  const p = game('digital_starter'); const q = S.players[1];
+  const lvl = Object.values(DATA.cardsById).find(c => c.type === 'Character' && c.group === 'Digital' && (c.skills || []).includes('Level Up') && c.rarity !== 'Unknown' && !c.rules);
+  const x = put(p, lvl.id);
+  ok('Boss Phases: Level Up keeps the usual cap of 3', levelCap(x) === 3);
+  ok('Boss Phases: starts in phase 1', p.champ.level === 1 && rawStats(x).a === lvl.attack);
+  dealDamageToPlayer(p, p.maxHealth - 17);   // 17 health: still phase 1
+  ok('Boss Phases: 17 of 25 health is still phase 1', p.champ.level === 1, 'health ' + p.health);
+  dealDamageToPlayer(p, 1);                  // 16
+  ok('Boss Phases: 16 of 25 is PHASE 2', p.champ.level === 2);
+  ok('Boss Phases: PHASE 2 gives no Attack yet', rawStats(x).a === lvl.attack);
+  S.active = 0; S.phase = PHASE.DRAW; const h0 = p.hand.length; doDraw();
+  ok('Boss Phases: PHASE 2 draws 2 cards', p.hand.length === h0 + 2, (p.hand.length - h0) + ' drawn');
+  healPlayer(p, 5);
+  ok('Boss Phases: healing does not go back a phase', p.champ.level === 2 && p.health === 21);
+  dealDamageToPlayer(p, 13);                 // 8
+  ok('Boss Phases: 8 of 25 is FINAL PHASE', p.champ.level === 3);
+  ok('Boss Phases: FINAL PHASE gives every character +1 Attack and +1 Health', rawStats(x).a === lvl.attack + 1 && rawStats(x).h === lvl.health + 1, rawStats(x).a + '/' + rawStats(x).h);
+  const other = put(q, lvl.id);
+  ok("Boss Phases: the opponent's characters get nothing", rawStats(other).a === lvl.attack);
+  S.phase = PHASE.DRAW; const h1 = p.hand.length; doDraw();
+  ok('Boss Phases: FINAL PHASE still draws 2', p.hand.length === Math.min(RULES.maxHand, h1 + 2));
 }
 { // Soul Shepard: Challenge, and +1 Health for every Undead that dies
   const card = DATA.cardsById.soul_shepard;

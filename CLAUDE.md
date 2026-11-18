@@ -49,11 +49,12 @@ builds it, tests it, and explains it.
 ## Before saying something works
 
 - Run `node tools/selftest.js . ai 2` and `node tools/selftest.js . rand 300`. Expect
-  `"problems": {}`. The fingerprint (currently 2092906767 for `ai 2`) must stay the same unless the
+  `"problems": {}`. The fingerprint (currently 1861231774 for `ai 2`) must stay the same unless the
   change is meant to alter how the game plays; when it does change on purpose, say so.
 - Run `node tools/kinds-test.js .` after touching tribes, classes, fractures or the cards that use them; expect `ALL PASSED`.
 - Run `node tools/events-test.js .` after touching the random events (`data/events.csv`, "Random events" in `js/engine.js`); expect `ALL PASSED`.
 - Run `node tools/protected-test.js .` after touching the Protected rule or the Pierce and Protected skills; expect `ALL PASSED`.
+- Run `node tools/shard-test.js .` after touching the big shard fall ("The big shard fall" in `js/engine.js`, the `shard_` rows in `data/game_rules.csv`) or a champion's shard bonus; expect `ALL PASSED`.
 - Run `node tools/champions-test.js .` after touching the champion abilities (`data/champion_abilities.csv`, "Champion abilities" in `js/engine.js`) or the champion cards; expect `ALL PASSED`.
 - For anything on screen, load the game in a browser (Playwright) at desktop and phone sizes
   and check for errors. Look at a screenshot before reporting a visual change.

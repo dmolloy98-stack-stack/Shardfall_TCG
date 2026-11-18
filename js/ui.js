@@ -310,6 +310,73 @@ function crystalSVG(cls, cracks = 0) {
   return `<svg class="${cls}" viewBox="0 0 40 48" aria-hidden="true"><path class="c-body" d="${CRYSTAL}"/><path class="c-shine" d="${CRYSTAL}"/><path class="c-facet" d="${CRYSTAL_FACETS}"/>${CRACKS.slice(0, cracks).map(d => `<path class="c-crack" d="${d}"/>`).join("")}</svg>`;
 }
 
+// The big shard ("The big shard fall" in js/engine.js): a tall crystal in the middle band, left of
+// the phases, glowing purple, blue and green. It cracks more as it loses health. When it lands, the
+// table cracks open from that spot and stays cracked, glowing, for the rest of the match.
+const SHARD_AT = { x: 365, y: 398 };
+const SHARD_BODY = "M40 2 L66 30 L60 92 L40 118 L20 92 L14 30 Z";
+const SHARD_FACETS = "M14 30 L40 44 L66 30 M40 44 L40 118 M20 92 L40 44 L60 92";
+const SHARD_CRACKS = ["M40 4 L35 18 L42 27 L37 38", "M64 33 L53 41 L57 53 L50 60", "M16 40 L27 49 L22 62 L30 70", "M44 70 L52 80 L45 92 L50 104", "M24 88 L31 96 L27 106"];
+function shardHTML(human) {
+  const sh = S.shard;
+  if (!sh) return "";
+  const now = performance.now(), cracks = Math.round((1 - sh.health / sh.max) * SHARD_CRACKS.length);
+  const landing = now - (U.shardFellAt || 0) < 1300, hit = now - (U.shardHitAt || 0) < 400;
+  const attackable = human && U.selected != null && S.phase === PHASE.BATTLE && !S.pending;
+  return `<button type="button" class="shard-rock${attackable ? " attackable" : ""}${landing ? " landing" : ""}${hit ? " hit" : ""}" data-act="shard"
+    style="left:${SHARD_AT.x - 40}px;top:${SHARD_AT.y - 66}px;--age:-${landing ? (now - U.shardFellAt).toFixed(0) : 0}ms" aria-label="The big shard: ${sh.health} of ${sh.max} health. Break it to claim it.">
+    <svg viewBox="0 0 80 120" aria-hidden="true"><defs><linearGradient id="shard-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c58cff"/><stop offset="0.5" stop-color="#5fb8ff"/><stop offset="1" stop-color="#5dffb5"/></linearGradient></defs>
+      <path class="sr-body" d="${SHARD_BODY}"/><path class="sr-facet" d="${SHARD_FACETS}"/>${SHARD_CRACKS.slice(0, cracks).map(d => `<path class="sr-crack" d="${d}"/>`).join("")}</svg>
+    <b class="sr-hp">${sh.health}</b></button>`;
+}
+// The cracks in the table: drawn once per match from the match seed, so they don't jump around.
+function scarPaths() {
+  if (U.scar?.game === S) return U.scar.paths;
+  let seed = (S.seed % 2147483646) + 1;
+  const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  const paths = [];
+  const crack = (x, y, ang, len, width, depth) => {
+    let d = `M${x.toFixed(0)} ${y.toFixed(0)}`, walked = 0;
+    while (walked < len && x > -20 && x < W + 20 && y > -20 && y < H + 20) {
+      ang += (rnd() - 0.5) * 0.9;
+      const step = 30 + rnd() * 50;
+      x += Math.cos(ang) * step; y += Math.sin(ang) * step * 0.8; walked += step;
+      d += ` L${x.toFixed(0)} ${y.toFixed(0)}`;
+      if (depth < 2 && rnd() < 0.22) crack(x, y, ang + (rnd() < 0.5 ? -1 : 1) * (0.6 + rnd() * 0.6), len * 0.35, width * 0.6, depth + 1);
+    }
+    paths.push({ d, w: width.toFixed(1), k: paths.length });
+  };
+  for (let i = 0; i < 11; i++) crack(SHARD_AT.x, SHARD_AT.y, (i / 11) * Math.PI * 2 + rnd() * 0.4, 700 + rnd() * 700, 3.2, 0);
+  U.scar = { game: S, paths };
+  return paths;
+}
+function scarHTML() {
+  if (!S.shardFell) return "";
+  const age = performance.now() - (U.shardFellAt || 0);
+  return `<svg class="shard-scar${age < 2200 ? " forming" : ""}" viewBox="0 0 ${W} ${H}" style="--age:-${Math.min(age, 2200).toFixed(0)}ms" aria-hidden="true">
+    <defs><linearGradient id="scar-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="${H}"><stop offset="0" stop-color="#b45cff"/><stop offset="0.45" stop-color="#4fb8ff"/><stop offset="1" stop-color="#4dffa6"/></linearGradient>
+    <radialGradient id="scar-glow" cx="${SHARD_AT.x / W}" cy="${SHARD_AT.y / H}" r="0.75"><stop offset="0" stop-color="#9a6bff" stop-opacity="0.32"/><stop offset="0.5" stop-color="#3fa0ff" stop-opacity="0.12"/><stop offset="1" stop-color="#3dffa0" stop-opacity="0.04"/></radialGradient></defs>
+    <rect class="scar-tint" width="${W}" height="${H}" fill="url(#scar-glow)"/>
+    ${scarPaths().map(p => `<path class="scar-glow" d="${p.d}" pathLength="1" style="stroke-width:${p.w * 4};--k:${p.k}"/><path class="scar-line" d="${p.d}" pathLength="1" style="stroke-width:${p.w};--k:${p.k}"/>`).join("")}</svg>`;
+}
+function showShard() {
+  const sh = S.shard;
+  if (!sh) return;
+  openModal(`<h2 id="modal-title">The big shard</h2>
+    <p class="sub">${sh.health} of ${sh.max} health</p>
+    <p>It fell into the middle of the table in round ${RULES.shardRound}. In your Battle phase, any of your characters can attack it. It never hits back, and Challenge and Tower don't protect it. Spells can't touch it.</p>
+    <p>Its health is shared. <b>Whoever deals the blow that breaks it claims it</b>: you draw ${RULES.shardDraw === 1 ? "a card" : RULES.shardDraw + " cards"} and get your champion's shard bonus. A deck with no champion draws ${RULES.shardDrawNoChamp} cards instead.</p>
+    <ul>${Object.keys(SHARD_BONUS).filter(id => DATA.cardsById[id]).map(id => `<li><b>${esc(DATA.cardsById[id].name)}</b>: ${esc(SHARD_BONUS_TEXT[id])}</li>`).join("")}</ul>
+    <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
+}
+const SHARD_BONUS_TEXT = {
+  the_simplistic: "all your characters are fully healed.",
+  the_man_ape: "a free 2/2 Monkey (a Chimp with +1 Attack).",
+  ip_man: "your strongest character gets Swift for the rest of the match.",
+  boss_level: "Boss Level jumps to its next phase.",
+  soul_shepard: "your last fallen character comes back to your hand.",
+};
+
 // ---------------------------------------------------------------------------
 // Effects
 // ---------------------------------------------------------------------------
@@ -318,18 +385,23 @@ function floatText(x, y, text, color, small) {
 }
 // Random events (see "Random events" in js/engine.js): a small card in the middle of the table
 // that says what is coming, how soon, and what it does. During the event round it says "This round".
+// The random events are the small shard falls; the big one in round 8 shows here too when it is close.
 function eventLine() {
   const e = S.event || S.upcoming;
+  const bigIn = RULES.shardRound && !S.noShard && !S.shardFell ? RULES.shardRound - S.round : Infinity;
+  if (bigIn <= RULES.eventWarn && (!e || e.round > RULES.shardRound)) {
+    return { when: `${bigIn <= 1 ? "Next round" : `In ${bigIn} rounds`} · big shard fall`, name: "The big shard", desc: `${RULES.shardHealth} health. Break it to claim it`, now: false, big: true };
+  }
   if (!e) return null;
   const info = DATA.events[e.id];
   const left = S.event ? 0 : e.round - S.round;
-  const when = S.event ? "This round" : left <= 1 ? "Next round" : `In ${left} rounds`;
+  const when = (S.event ? "This round" : left <= 1 ? "Next round" : `In ${left} rounds`) + " · mini shard fall";
   return { when, name: info.name, desc: info.desc, now: !!S.event };
 }
 function eventPill() {
   const e = eventLine();
   if (!e) return "";
-  return `<div class="event-pill${e.now ? " now" : ""}" role="status"><span class="event-when">${esc(e.when)}</span><b>${esc(e.name)}</b><span class="event-desc">${esc(e.desc)}</span></div>`;
+  return `<div class="event-pill${e.now ? " now" : ""}${e.big ? " big" : ""}" role="status"><span class="event-when">${esc(e.when)}</span><b>${esc(e.name)}</b><span class="event-desc">${esc(e.desc)}</span></div>`;
 }
 
 function banner(text) {
@@ -480,7 +552,7 @@ onGameEvent((type, d) => {
   } else if (type === "lunge") {
     // the attacker swoops most of the way to its target and springs back
     const from = charCenter(d.uid);
-    const to = d.target != null ? charCenter(d.target) : plateCenter(d.player);
+    const to = d.target === "shard" ? SHARD_AT : d.target != null ? charCenter(d.target) : plateCenter(d.player);
     U.lunges.set(d.uid, now);
     U.lungeVec.set(d.uid, { dx: (to.x - from.x) * 0.72, dy: (to.y - from.y) * 0.72 });
     U.lungeAt = now;
@@ -490,13 +562,39 @@ onGameEvent((type, d) => {
     const who = S.players[d.player], info = DATA.championAbilities[d.id];
     banner(`${info.name}: LEVEL UP`);
     floatText(sideOf(d.player) === "bottom" ? 720 : 720, sideOf(d.player) === "bottom" ? 900 : 120, "CHAMPION LEVEL UP", "#ffd27a");
+  } else if (type === "shardFall") {
+    U.shardFellAt = now;
+    later(250, () => { addTrauma(0.95); impactAt(SHARD_AT.x, SHARD_AT.y, 12); sparkle(SHARD_AT.x, SHARD_AT.y, 30); });
+  } else if (type === "shardHit") {
+    const tier = feelTier(d.amount);
+    later(delay, () => {
+      U.shardHitAt = performance.now();
+      damageNumber(SHARD_AT.x + (Math.random() - 0.5) * 30, SHARD_AT.y - 20, d.amount, 0);
+      impactAt(SHARD_AT.x, SHARD_AT.y, d.amount);
+      addTrauma(tier.trauma);
+      const el = document.querySelector(".shard-rock");
+      if (el) { el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); }
+    });
+  } else if (type === "shardClaim") {
+    const who = S.players[d.player];
+    later(delay + 120, () => {
+      addTrauma(0.85);
+      for (let k = 0; k < 3; k++) sparkle(SHARD_AT.x + (k - 1) * 30, SHARD_AT.y + (k - 1) * 20, 22);
+      impactAt(SHARD_AT.x, SHARD_AT.y, 14);
+      banner(`${who.name} claims the big shard`);
+      callout(`${d.drawn ? `+${d.drawn} card${d.drawn > 1 ? "s" : ""}` : "No card"}${d.extra ? " · " + d.extra : ""}`);
+    });
+  } else if (type === "champPhase") {
+    banner(`Boss Level: ${BOSS_PHASES[d.phase]}`);
+    floatText(720, sideOf(d.player) === "bottom" ? 900 : 120, BOSS_PHASES[d.phase], "#ff8a5e");
   } else if (type === "manaToken") {
     floatText(sideOf(d.player) === "bottom" ? 223 : 1203, sideOf(d.player) === "bottom" ? 470 : 250, "+1 MANA", "#ffd27a", true);
   } else if (type === "turn") {
     U.selected = null; U.armed = null;
     turnHandover(d.player);
     if (S.mode === "hotseat") U.curtain = true;
-    else if (S.event && S.event.round === S.round) banner(`Event: ${DATA.events[S.event.id].name}`);
+    else if (S.shard && now - (U.shardFellAt || 0) < 100) banner("The big shard falls");
+    else if (S.event && S.event.round === S.round) banner(`Mini shard fall: ${DATA.events[S.event.id].name}`);
     else banner(active().isAI ? `${active().name}'s turn` : "Your turn");
   } else if (type === "play") {
     if (U.stats) U.stats.played[d.player]++;
@@ -535,14 +633,15 @@ function champInfo(p) {
   const ch = p.champ;
   if (!ch) return null;
   const info = DATA.championAbilities[ch.id];
-  const grows = !info.goal;   // Soul Shepard's ability has no levels: it just grows
-  const n = ch.id === "the_simplistic" ? p.manaMax : grows ? (S.died.Undead || 0) : ch.n;
-  const progress = grows ? `${n} ${info.counts.toLowerCase()}` : ch.level >= 2 ? "Leveled up" : `${Math.min(n, info.goal)}/${info.goal} ${info.counts.toLowerCase()}`;
-  return { info, ch, n, grows, progress, label: grows ? info.name : `${info.name} · Lv ${ch.level}` };
+  const grows = !info.goal;   // no levels: Chest Thump, Boss Phases, Soul Shepard (see champStatus in js/engine.js)
+  if (grows) { const st = champStatus(p); return { info, ch, grows, progress: st.text, lit: st.lit, label: info.name }; }
+  const n = ch.id === "the_simplistic" ? p.manaMax : ch.n;
+  const progress = ch.level >= 2 ? "Leveled up" : `${Math.min(n, info.goal)}/${info.goal} ${info.counts.toLowerCase()}`;
+  return { info, ch, n, grows, progress, lit: ch.level >= 2, label: `${info.name} · Lv ${ch.level}` };
 }
 function champLine(p) {
   const c = champInfo(p);
-  return c ? `<button type="button" class="champ-line${c.ch.level >= 2 ? " lv2" : ""}" data-act="champ" data-player="${p.idx}" title="${esc(c.info.now)}">★ ${esc(c.label)} · ${esc(c.progress)}</button>` : "";
+  return c ? `<button type="button" class="champ-line${c.lit ? " lv2" : ""}" data-act="champ" data-player="${p.idx}" title="${esc(c.info.now)}">★ ${esc(c.label)} · ${esc(c.progress)}</button>` : "";
 }
 function showChampion(p) {
   const c = champInfo(p);
@@ -553,7 +652,7 @@ function showChampion(p) {
     <p><b>Now:</b> ${esc(c.info.now)}</p>
     ${c.grows ? "" : `<p><b>Levels up when:</b> ${esc(c.info.when)}</p><p><b>Then:</b> ${esc(c.info.then)}</p>
     <p><b>Progress:</b> ${c.ch.level >= 2 ? "Leveled up" : esc(c.progress)}</p>`}
-    ${c.grows ? `<p><b>So far:</b> ${esc(c.progress)}</p>` : ""}
+    ${c.grows ? `<p><b>Right now:</b> ${esc(c.progress)}</p>` : ""}
     <p class="sub">It works from turn one, even before ${esc(card.name)} is drawn.</p>
     <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
 }
@@ -751,7 +850,7 @@ function render() {
   // The scenery behind the table; each board skin styles these pieces its own way.
   let h = `<div class="scene"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div class="side top" data-faction="${esc(them.faction)}" style="${sideStyle(them)}"></div><div class="side bottom" data-faction="${esc(me.faction)}" style="${sideStyle(me)}"></div>
-    <div class="rift"></div>`;
+    <div class="rift"></div>${scarHTML()}`;
   for (const side of ["top", "bottom"]) {
     h += `<div class="lane back" style="left:${L.backX - 10}px;top:${L[side].backline - 8}px;width:${RULES.maxBackline * L.slot + 10}px;height:${CARD_H + 16}px"></div>`;
     h += `<div class="lane front" style="left:${720 - L.frontW / 2 - 12}px;top:${L[side].chars - 8}px;width:${L.frontW + 24}px;height:${CARD_H + 16}px"></div>`;
@@ -772,6 +871,7 @@ function render() {
   h += `<div class="turn-info" style="top:372px"><b>Round ${S.round}</b><span style="color:${turnColor}">${esc(active().name)}'s turn</span></div>`;
   h += `<div class="phases">${DATA.phases.map((ph, i) => `<div class="phase-step${i === S.phase ? " on" : ""}">${esc(ph.name)}</div>`).join("")}</div>`;
   h += eventPill();
+  h += shardHTML(human);
   const forced = guards(them);
   // "All attack": every character that can still attack goes for the player (see attackAllFace).
   const readyN = human && S.phase === PHASE.BATTLE && !S.pending ? me.field.chars.filter(canAttack).length : 0;
@@ -1258,6 +1358,11 @@ $("#board").addEventListener("click", e => {
   if (a === "token") { if (human) act(useManaToken); return; }
   if (a === "grave") return showGrave(S.players[Number(el.dataset.player)]);
   if (a === "champ") return showChampion(S.players[Number(el.dataset.player)]);
+  if (a === "shard") {
+    if (human && U.selected != null && S.phase === PHASE.BATTLE && S.shard) { const s = U.selected; U.selected = null; act(() => attack(s, "shard")); }
+    else showShard();
+    return;
+  }
   if (a === "deck") { if (human && Number(el.dataset.player) === S.active && S.phase === PHASE.DRAW) onPhaseButton(); return; }
   if (a === "plate") {
     const idx = Number(el.dataset.player);

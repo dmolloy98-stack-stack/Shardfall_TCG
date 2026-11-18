@@ -19,7 +19,7 @@ function startTutorial() {
   clearTimeout(U.aiTimer);
   Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
-  newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai", events: false, abilities: false });   // lessons are scripted, so no random events or champion abilities
+  newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai", events: false, abilities: false, shard: false });   // lessons are scripted, so no random events, champion abilities or big shard
   const [me, tr] = S.players;
   tr.name = "Trainer"; tr.faction = "Training"; tr.deckLabel = "Training deck";
   tr.health = tr.maxHealth = TUT_TRAINER_HEALTH;
@@ -284,7 +284,7 @@ const TUT_STEPS = [
   },
   {
     title: "Champion abilities",
-    text: "Each deck has one special card, its <b>champion</b> (the Unknown rarity). If your deck holds it, you get the champion's <b>ability</b> from the first turn, even before you draw the card.<br><br>Most abilities <b>level up</b> once in a match.",
+    text: "Each deck has one special card, its <b>champion</b> (the Unknown rarity). If your deck holds it, you get the champion's <b>ability</b> from the first turn, even before you draw the card.<br><br>Every ability is always on. Some <b>level up</b> once in a match.",
     next: true,
   },
   {
@@ -335,7 +335,8 @@ const TUT_STEPS = [
       <li>Characters fight in <b>Battle</b>. Both hit at once, unless one has <b>Swift</b>.</li>
       <li><b>Equipment</b> and <b>spells</b> change the fight.</li>
       <li><b>Skills</b> like Rush, Signal and Challenge add special rules.</li>
-      <li>Your deck's <b>champion</b> gives it an <b>ability</b> from turn one, and most abilities <b>level up</b> once in a match.</li>
+      <li>Your deck's <b>champion</b> gives it an <b>ability</b> from turn one, and some abilities <b>level up</b> once in a match.</li>
+      <li>In round 8 a <b>big shard</b> falls into the middle of the table. Break it to claim it.</li>
       <li>Bring the other player to <b>0 health</b> to win.</li></ul>
       <p>Next, try a real game against the computer with the Simple deck. Beginner hints will guide you, and you can turn them off any time.</p>`,
   },

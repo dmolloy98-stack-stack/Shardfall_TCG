@@ -40,6 +40,8 @@ function aiStyle(idx) {
 const PLAN_DEPTH = 2, PLAN_WIDTH = 3;
 // Battle planning: the same, for attacks.
 const BATTLE_DEPTH = 3, BATTLE_WIDTH = 3;
+const SHARD_CHIP = 1.2;   // what a point of damage on the big shard is worth to the computer
+const SHARD_CLAIM = 6;    // what claiming it is worth beyond what shows on the board (the card drawn, a phase)
 
 function charValue(c) {
   if (!c) return 0;
@@ -57,6 +59,10 @@ function evaluate(me) {
   let score = fieldValue(mine) * st.board + mine.health * 1.2
     - fieldValue(theirs) - theirs.health * 1.2 * st.face
     + mine.hand.length * st.hand;
+  // The big shard: damage dealt to it is a small step toward claiming it (see "The big shard fall"
+  // in js/engine.js), and claiming it is worth SHARD_CLAIM on top of what it changes on the board.
+  if (S.shardFell) score += (S.shardChip[me] - S.shardChip[1 - me]) * SHARD_CHIP;   // kept after the break, so breaking it never looks like a loss
+  if (S.shardBy != null) score += S.shardBy === me ? SHARD_CLAIM : -SHARD_CLAIM;
   // Danger: the other side's attackers could finish me next turn and nothing guards me.
   if (!guards(mine).length) {
     const threat = theirs.field.chars.reduce((n, c) => n + (hasSkill(c, "Tower") ? 0 : stats(c).a), 0);
@@ -210,9 +216,11 @@ function aiAttackActions() {
     if (!canAttack(a)) continue;
     const g = guards(defender);
     const targets = g.length ? g : [null, ...defender.field.chars];
+    if (S.shard) targets.push("shard");   // guards don't protect the big shard
     for (const t of targets) {
-      const score = simulate(() => { attack(a.uid, t ? t.uid : null); return evaluate(me); });
-      out.push({ attacker: a.uid, target: t ? t.uid : null, gain: score - base });
+      const tid = t === "shard" ? "shard" : t ? t.uid : null;
+      const score = simulate(() => { attack(a.uid, tid); return evaluate(me); });
+      out.push({ attacker: a.uid, target: tid, gain: score - base });
     }
   }
   // Kenshi's Blade: a free 3 damage once per Battle Phase.

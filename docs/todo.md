@@ -111,6 +111,33 @@ design; each needs code in `js/engine.js`.
   `docs/world.md`.
 - Not now: the owner will raise it when ready.
 
+## The big shard fall — built (17 Nov)
+
+Built from the owner's design: once a match in round 8 a 10-health shard (15 at first; lowered to 10 after balance tests) falls into the middle of
+the table; whoever breaks it draws a card (2 with no champion; it was +5 and +10 health at first) and gets their champion's bonus. The
+random events became "mini shard falls" in rounds 4 and 12 only. The table cracks and glows after the
+big fall. Chest Thump replaced The Troop Remembers and Boss Phases replaced LEVEL UP.
+
+**Open points.**
+- The Man Ape's free 2/2 Monkey is a Chimp with +1 Attack, because no 2/2 Monkey card exists. The
+  owner could design a card for it.
+- The big shard could carry the hint about what caused the Shardfall (see the Protected item above).
+- Round 4 and round 12 are both the second player's turns, so events that help only the active
+  player (Spell Surge, Amplified Areas) always help the second player.
+
+## Art: remind the owner about ComfyUI next time art comes up
+
+The owner put art aside for now (18 Nov) and asked to be reminded, the next time they ask about
+art, of the ComfyUI plan and its step-by-step setup. The plan: ComfyUI on the owner's PC (RTX 4060,
+8 GB) with an SDXL model, free per image. Steps: 1) download ComfyUI's Windows portable version from
+its official GitHub releases page (github.com/comfyanonymous/ComfyUI), unzip it to a drive with about
+30 GB free, run `run_nvidia_gpu.bat` (it opens at 127.0.0.1:8188); 2) download an SDXL model (SDXL 1.0
+from Stability AI on Hugging Face, or an SDXL fantasy-art model whose license allows selling) into
+`ComfyUI\models\checkpoints` and restart; 3) test with the default workflow (pick the model, type a
+prompt, press Queue, check `ComfyUI\output`); 4) then connect Claude (Claude Code desktop app on the
+PC, or Remote Control) and decide about the "art is out of scope" rule in CLAUDE.md. Nothing has been
+downloaded from GitHub; Claude needs the owner's go-ahead before installing any ComfyUI tool.
+
 ## Not doing for now
 
 - **A solo run mode** (a Slay the Spire style roguelike deckbuilder). The owner is wary of

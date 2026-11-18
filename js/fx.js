@@ -67,7 +67,7 @@ aimEl.id = "aim";
 aimEl.setAttribute("viewBox", "0 0 1440 1000");
 aimEl.innerHTML = `<path class="aim-glow"/><path class="aim-line"/><g class="aim-reticle"><circle r="22"/><circle r="6"/><path d="M-34 0h10M24 0h10M0 -34v10M0 24v10"/></g>`;
 document.getElementById("stage").insertBefore(aimEl, document.getElementById("fx-layer"));
-const AIM_TARGETS = ".field-card.attackable, .field-card.targetable, .plate.attackable, .plate.targetable, .small-card.targetable, .face-btn";
+const AIM_TARGETS = ".field-card.attackable, .field-card.targetable, .plate.attackable, .plate.targetable, .small-card.targetable, .face-btn, .shard-rock.attackable";
 
 function aimSource() {
   if (!S || U.screen !== "game" || !humanTurn()) return null;
@@ -130,10 +130,10 @@ addEventListener("pointerup", e => {
   const d = dragAtk; dragAtk = null;
   if (!d.moved) return;
   U.dragAttackAt = performance.now();   // the click that follows this release is ignored
-  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.field-card.attackable, .plate.attackable, .face-btn');
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.field-card.attackable, .plate.attackable, .face-btn, .shard-rock.attackable');
   if (!over || U.selected !== d.uid) return;
   U.selected = null;
-  act(() => attack(d.uid, over.classList.contains("field-card") ? Number(over.dataset.uid) : null));
+  act(() => attack(d.uid, over.classList.contains("shard-rock") ? "shard" : over.classList.contains("field-card") ? Number(over.dataset.uid) : null));
 });
 addEventListener("pointercancel", () => { dragAtk = null; });
 
