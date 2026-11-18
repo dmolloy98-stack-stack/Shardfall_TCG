@@ -77,7 +77,14 @@ const hasSkill = (c, n) => (c.skills || []).includes(n);
 // (classes). A card can have one or two of each. c.group is the first fracture: it sets the color.
 const groupsOf = c => c.groups || [c.group];
 const inGroup = (c, g) => groupsOf(c).includes(g);
-const hasTribe = (c, t) => (c.tribes || []).includes(t);
+// A tribe family is a wider name for several tribes ("tribe_family_<Name>" rows in data/game_rules.csv):
+// Undead is every tribe that should be dead but is living (today only Zombie). A card "has" a family
+// when it has any tribe in it, so "allies.Undead" and "rule: grieve Undead" reach all of them.
+const TRIBE_FAMILIES = Object.fromEntries(Object.entries(DATA.rules).filter(([k]) => k.startsWith("tribe_family_"))
+  .map(([k, v]) => [k.slice("tribe_family_".length), String(v).split("|").map(s => s.trim()).filter(Boolean)]));
+const hasTribe = (c, t) => (c.tribes || []).includes(t) || (TRIBE_FAMILIES[t] || []).some(x => (c.tribes || []).includes(x));
+// Every tribe a character counts as: its own, plus each family one of them belongs to.
+const tribesOf = c => [...new Set([...(c.tribes || []), ...Object.keys(TRIBE_FAMILIES).filter(f => hasTribe(c, f))])];
 const hasClass = (c, k) => (c.classes || []).includes(k);
 const removeSkill = (c, n) => { const i = (c.skills || []).indexOf(n); if (i >= 0) c.skills.splice(i, 1); };
 const active = () => S.players[S.active];
@@ -343,7 +350,7 @@ function sendToGraveyard(p, c) {
   if (i >= 0) p.field.chars.splice(i, 1);
   p.grave.push(c);
   if (i >= 0) {
-    for (const tribe of c.tribes || []) S.died[tribe] = (S.died[tribe] || 0) + 1;   // Soul Shepard grows with each Undead that dies
+    for (const tribe of tribesOf(c)) S.died[tribe] = (S.died[tribe] || 0) + 1;   // Soul Shepard grows with each Undead that dies
   }
   updateRally(p);
   emit("death", { uid: c.uid, group: c.group });
@@ -472,10 +479,11 @@ function damageEverything(n) {
 }
 
 // An infected character becomes a Zombie in full: its fracture changes to Zombie (so Zombie
-// bonuses reach it) and it gains the Undead tribe on top of the tribes it had. Its class stays.
+// bonuses reach it) and it gains the Zombie tribe on top of the tribes it had (so it counts as
+// Undead too). Its class stays.
 function makeZombie(t) {
   t.group = "Zombie"; t.groups = ["Zombie"];
-  if (!hasTribe(t, "Undead")) t.tribes = [...(t.tribes || []), "Undead"];
+  if (!(t.tribes || []).includes("Zombie")) t.tribes = [...(t.tribes || []), "Zombie"];
 }
 
 function convertToZombie(ctx, t, givesReanimate) {

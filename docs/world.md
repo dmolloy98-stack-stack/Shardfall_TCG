@@ -43,9 +43,13 @@ Every card has three kinds of label, so cards can work together in more than one
   Simple, Monkey, Zombie, Fighter and Digital. A card from none is **Unbound**. A few cards
   are from two fractures (Master Rat is Fighter and Monkey; Weapons Enthusiast is Fighter and
   Simple): a shard where two worlds fused. In the data this column was once called Faction.
-- **Tribe** is what a character is: Human, Animal, Undead, Cyber, Plant or Goblin. A character
+- **Tribe** is what a character is: Human, Animal, Zombie, Cyber, Plant or Goblin. A character
   can have two (The Man Ape is Human and Animal; The Simplistic is Cyber and Human). A Zombie
-  infection adds Undead to the tribes a character already has.
+  infection adds the Zombie tribe to the tribes a character already has.
+- **Undead** is a wider family, not a tribe written on a card: anything that should be dead but is
+  living. Today it is only the Zombie tribe; skeletons, vampires and the like will join it. Cards
+  that say Undead (Soul Shepard, Midnight Madness, Rise from the Dead) reach the whole family, so a
+  future skeleton deck and the Zombie deck can help each other.
 - **Class** is what a character does: Warrior, Mage, Scout, Guardian, Worker, Student, Master
   or Fighter. A character can have two. Fighter-fracture characters are also the Fighter class.
 - Only characters have tribes and classes. Spells, equipment and areas may care about them

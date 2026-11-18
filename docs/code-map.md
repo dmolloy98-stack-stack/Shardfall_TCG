@@ -114,6 +114,7 @@ their own story or coaching, then hand over to the same engine.
 | A new column in a table | `js/data.js` |
 | A new kind of card ability | `js/effects.js` |
 | A card's fracture, tribes or classes | the Fracture, Tribes and Classes columns of `data/cards.csv`; a bonus for a whole tribe or class is written like `allies.Student` in the Effect column |
+| A tribe family (Undead = Zombie, later Skeleton, Vampire …) | the `tribe_family_Undead` row in `data/game_rules.csv`; `TRIBE_FAMILIES`, `hasTribe` and `tribesOf` in `js/engine.js` |
 | The symbols for tribes and classes | `TAG_GLYPHS` in `js/ui.js` (placeholders, to be replaced by art) |
 | A champion that bends a core rule | its `rule:` clause in the Effect column; the rule itself is in `js/engine.js` (list: `RULE_WORDS` in `js/effects.js`) |
 | An area's bonus, or a skill an area grants | the area's `aura:` clause in the Effect column |
