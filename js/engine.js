@@ -798,7 +798,7 @@ function updateEvent() {
 // The big shard fall
 // ---------------------------------------------------------------------------
 // Once a match, at the start of round RULES.shardRound (8), a big shard crashes into the middle of
-// the table with RULES.shardHealth (15) health: S.shard = { health, max }. In Battle, characters
+// the table with RULES.shardHealth (10) health: S.shard = { health, max }. In Battle, characters
 // can attack it like a target (attack(uid, "shard")): it never hits back, Challenge and Tower don't
 // guard it, and spells can't touch it. Its health is shared, so whoever deals the blow that breaks
 // it claims it: +RULES.shardGain health (it can go above the starting health) and their champion's
@@ -831,14 +831,14 @@ const SHARD_BONUS = {
     bossPhase(p, ch.level + 1);
     return `Boss Level jumps to ${BOSS_PHASES[ch.level]}`;
   },
-  soul_shepard(p) {   // its last fallen character comes back
+  soul_shepard(p) {   // its last fallen character comes back to the hand
     const i = p.grave.map(c => c.type).lastIndexOf("Character");
     if (i < 0) return "";
     const dead = p.grave.splice(i, 1)[0];
     const c = newCard(DATA.cardsById[dead.id] || dead);
     c.owner = p.idx;
-    if (!putOnField(c, p)) { p.grave.splice(i, 0, dead); return ""; }
-    return `${c.name} comes back from the graveyard`;
+    if (!addToHand(p, c)) return "";   // a full hand: it goes back to the graveyard
+    return `${c.name} returns to its hand from the graveyard`;
   },
 };
 

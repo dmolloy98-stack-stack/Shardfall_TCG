@@ -374,7 +374,7 @@ const SHARD_BONUS_TEXT = {
   the_man_ape: "a free 2/2 Monkey (a Chimp with +1 Attack).",
   ip_man: "your strongest character gets Swift for the rest of the match.",
   boss_level: "Boss Level jumps to its next phase.",
-  soul_shepard: "your last fallen character comes back to the table.",
+  soul_shepard: "your last fallen character comes back to your hand.",
 };
 
 // ---------------------------------------------------------------------------

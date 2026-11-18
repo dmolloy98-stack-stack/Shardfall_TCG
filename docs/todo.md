@@ -113,7 +113,7 @@ design; each needs code in `js/engine.js`.
 
 ## The big shard fall — built (17 Nov)
 
-Built from the owner's design: once a match in round 8 a 15-health shard falls into the middle of
+Built from the owner's design: once a match in round 8 a 10-health shard (15 at first; lowered to 10 after balance tests) falls into the middle of
 the table; whoever breaks it gets +5 health (+10 with no champion) and their champion's bonus. The
 random events became "mini shard falls" in rounds 4 and 12 only. The table cracks and glows after the
 big fall. Chest Thump replaced The Troop Remembers and Boss Phases replaced LEVEL UP.

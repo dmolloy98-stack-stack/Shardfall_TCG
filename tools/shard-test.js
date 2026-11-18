@@ -18,7 +18,7 @@ const NOCHAMP = '__nochamp';
 DATA.decks[NOCHAMP] = { ...DATA.decks.simple_starter, cards: DATA.decks.simple_starter.cards.filter(e => DATA.cardsById[e.cardId].rarity !== 'Unknown') };
 
 { // when it falls
-  ok('the rules: round 8, 15 health, +5, +10 with no champion', RULES.shardRound === 8 && RULES.shardHealth === 15 && RULES.shardGain === 5 && RULES.shardGainNoChamp === 10);
+  ok('the rules: round 8, 10 health, +5, +10 with no champion', RULES.shardRound === 8 && RULES.shardHealth === 10 && RULES.shardGain === 5 && RULES.shardGainNoChamp === 10);
   newGame({ deckId: 'simple_starter', opponentDeckId: 'zombie_starter', mode: 'hotseat', seed: 21, events: false });
   let seen = 0;
   for (let r = 1; r <= 9 && !S.over; r++) { if (S.shard && !seen) seen = S.round; S.pending = null; S.phase = PHASE.SETUP; endTurn(); if (S.phase === PHASE.DRAW && !S.over) doDraw(); }
@@ -34,20 +34,20 @@ DATA.decks[NOCHAMP] = { ...DATA.decks.simple_starter, cards: DATA.decks.simple_s
   const p = game('simple_starter'); const q = S.players[1];
   const a = hitter(p, 4); const startHp = rawStats(a).h;
   const guard = put(q, find(c => (c.skills || []).includes('Challenge') && c.rarity !== 'Unknown').id);
-  ok('it has 15 health', S.shard.health === 15);
+  ok('it has 10 health', S.shard.health === 10);
   attack(a.uid, 'shard');
-  ok('an attack takes its Attack off the shard', S.shard.health === 11);
+  ok('an attack takes its Attack off the shard', S.shard.health === 6);
   ok('it never hits back', rawStats(a).h === startHp);
   ok('Challenge does not protect it', rawStats(guard).h === DATA.cardsById[guard.id].health);
   ok('the attacker has used its attack', a.hasAttacked && !attack(a.uid, 'shard'));
   ok('a spell cannot pick it', !validTargets({ target: 'any', intent: 'harm' }, { card: a, owner: p, spell: true }).some(t => t === 'shard' || t?.shard));
   S.phase = PHASE.SETUP; const b = hitter(p, 5);
-  ok('no attacks on it outside Battle', !attack(b.uid, 'shard') && S.shard.health === 11);
+  ok('no attacks on it outside Battle', !attack(b.uid, 'shard') && S.shard.health === 6);
 }
 { // shared health: whoever breaks it claims it
   const p = game('simple_starter', 'zombie_starter'); const q = S.players[1];
-  attack(hitter(p, 10).uid, 'shard');
-  ok('10 damage leaves 5', S.shard.health === 5 && S.shardChip[0] === 10);
+  attack(hitter(p, 5).uid, 'shard');
+  ok('5 damage leaves 5', S.shard.health === 5 && S.shardChip[0] === 5);
   S.active = 1; S.phase = PHASE.BATTLE; const z = hitter(q, 7); const h0 = q.health;
   attack(z.uid, 'shard');
   ok('the other player breaks it and claims it', !S.shard && S.shardBy === 1);
@@ -79,8 +79,9 @@ DATA.decks[NOCHAMP] = { ...DATA.decks.simple_starter, cards: DATA.decks.simple_s
   ok('Boss Level: jumps to the next phase', p.champ.level === 2);
 
   p = game('zombie_starter'); const dead = hitter(p, 2); const deadId = dead.id; destroyCharacter(dead);
+  const inHand = () => p.hand.filter(c => c.id === deadId).length, before = inHand();
   attack(hitter(p, 15).uid, 'shard');
-  ok('Soul Shepard: its last fallen character comes back', p.field.chars.some(c => c.id === deadId) && !p.grave.some(c => c.id === deadId && c.type === 'Character'));
+  ok('Soul Shepard: its last fallen character returns to the hand', inHand() === before + 1 && !p.grave.some(c => c.id === deadId && c.type === 'Character'));
 }
 { // the computer goes for it when it can break it
   const p = game('simple_starter'); S.players[0].isAI = true;
