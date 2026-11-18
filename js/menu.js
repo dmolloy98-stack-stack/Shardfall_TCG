@@ -63,11 +63,11 @@ const CHAMP_GUIDE = {
     pairs: [{ caption: "At the start of your Battle phase: your strongest ready attacker gets +2 Attack this turn.", pick: c => c.group === "Fighter" && c.type === "Character" && c.manaCost === 2, change: { attack: 2 } }],
   },
   boss_level: {
-    notes: ["It works from your starting health: with 25, PHASE 2 starts at 16 health or less and FINAL PHASE at 8 or less.", "In PHASE 2 you draw 2 cards in your Draw phase instead of 1.", "FINAL PHASE keeps the extra card and gives every character you have +1 Attack, Digital or not.", "Healing never takes you back to an earlier phase."],
+    notes: ["It works from your starting health: with 25, PHASE 2 starts at 16 health or less and FINAL PHASE at 8 or less.", "In PHASE 2 you draw 2 cards in your Draw phase instead of 1.", "FINAL PHASE keeps the extra card and gives every character you have +1 Attack and +1 Health, Digital or not.", "Healing never takes you back to an earlier phase."],
     status: ["Phase 1", "Phase 2", "Final phase"],
     pairs: [
       { caption: "PHASE 2: 1 extra card each turn.", from: "🂠 1", to: "🂠 2" },
-      { caption: "FINAL PHASE: your characters also get +1 Attack.", pick: c => c.group === "Digital" && c.type === "Character" && c.manaCost === 2, change: { attack: 1 } },
+      { caption: "FINAL PHASE: your characters also get +1 Attack and +1 Health.", pick: c => c.group === "Digital" && c.type === "Character" && c.manaCost === 2, change: { attack: 1, health: 1 } },
     ],
   },
   soul_shepard: {

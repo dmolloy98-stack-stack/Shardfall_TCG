@@ -365,7 +365,7 @@ function showShard() {
   openModal(`<h2 id="modal-title">The big shard</h2>
     <p class="sub">${sh.health} of ${sh.max} health</p>
     <p>It fell into the middle of the table in round ${RULES.shardRound}. In your Battle phase, any of your characters can attack it. It never hits back, and Challenge and Tower don't protect it. Spells can't touch it.</p>
-    <p>Its health is shared. <b>Whoever deals the blow that breaks it claims it</b>: +${RULES.shardGain} health (even above your starting health) and your champion's shard bonus. A deck with no champion gets +${RULES.shardGainNoChamp} health instead.</p>
+    <p>Its health is shared. <b>Whoever deals the blow that breaks it claims it</b>: you draw ${RULES.shardDraw === 1 ? "a card" : RULES.shardDraw + " cards"} and get your champion's shard bonus. A deck with no champion draws ${RULES.shardDrawNoChamp} cards instead.</p>
     <ul>${Object.keys(SHARD_BONUS).filter(id => DATA.cardsById[id]).map(id => `<li><b>${esc(DATA.cardsById[id].name)}</b>: ${esc(SHARD_BONUS_TEXT[id])}</li>`).join("")}</ul>
     <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
 }
@@ -582,7 +582,7 @@ onGameEvent((type, d) => {
       for (let k = 0; k < 3; k++) sparkle(SHARD_AT.x + (k - 1) * 30, SHARD_AT.y + (k - 1) * 20, 22);
       impactAt(SHARD_AT.x, SHARD_AT.y, 14);
       banner(`${who.name} claims the big shard`);
-      callout(`+${d.gain} health${d.extra ? " · " + d.extra : ""}`);
+      callout(`${d.drawn ? `+${d.drawn} card${d.drawn > 1 ? "s" : ""}` : "No card"}${d.extra ? " · " + d.extra : ""}`);
     });
   } else if (type === "champPhase") {
     banner(`Boss Level: ${BOSS_PHASES[d.phase]}`);

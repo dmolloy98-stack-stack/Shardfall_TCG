@@ -49,7 +49,7 @@ builds it, tests it, and explains it.
 ## Before saying something works
 
 - Run `node tools/selftest.js . ai 2` and `node tools/selftest.js . rand 300`. Expect
-  `"problems": {}`. The fingerprint (currently -514826555 for `ai 2`) must stay the same unless the
+  `"problems": {}`. The fingerprint (currently -480319366 for `ai 2`) must stay the same unless the
   change is meant to alter how the game plays; when it does change on purpose, say so.
 - Run `node tools/kinds-test.js .` after touching tribes, classes, fractures or the cards that use them; expect `ALL PASSED`.
 - Run `node tools/events-test.js .` after touching the random events (`data/events.csv`, "Random events" in `js/engine.js`); expect `ALL PASSED`.

@@ -28,8 +28,8 @@ const RULES = {
   // The big shard fall: the round it lands (0 = never), its health, and what breaking it gives.
   shardRound: DATA.rules.shard_round ?? 0,
   shardHealth: DATA.rules.shard_health ?? 15,
-  shardGain: DATA.rules.shard_gain ?? 5,
-  shardGainNoChamp: DATA.rules.shard_gain_no_champion ?? 10,
+  shardDraw: DATA.rules.shard_draw ?? 1,
+  shardDrawNoChamp: DATA.rules.shard_draw_no_champion ?? 2,
   // A player with this many characters (or one with the Protected skill) takes half damage, rounded up. 0 = off.
   protectAt: DATA.rules.protected_min_characters ?? 0,
 };
@@ -661,7 +661,7 @@ function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard 
 //   ip_man          The Bow: at the start of Battle the strongest ready attacker gets +2 Attack (ipBow);
 //                   after 5 fights won, two get it
 //   boss_level      Boss Phases: at 2/3 health or less PHASE 2 (draw 1 extra card each turn, doDraw); at
-//                   1/3 or less FINAL PHASE (also +1 Attack for all its characters, championBonus).
+//                   1/3 or less FINAL PHASE (also +1/+1 for all its characters, championBonus).
 //                   A phase, once reached, stays (bossPhaseCheck)
 //   Soul Shepard    "rule: grieve Undead" on the card: +1 Health for every Undead that dies (championBonus)
 // Each champion also has a bonus for claiming the big shard (SHARD_BONUS, "The big shard fall").
@@ -692,7 +692,7 @@ function championBonus(c) {
   if (ch) {
     if (ch.id === "the_simplistic" && ch.level >= 2 && inGroup(c, "Simple")) { a += 1; h += 1; }
     else if (ch.id === "the_man_ape" && S.active === c.owner && chestThump(p)) a += 1;
-    else if (ch.id === "boss_level" && ch.level >= 3) a += 1;
+    else if (ch.id === "boss_level" && ch.level >= 3) { a += 1; h += 1; }
   }
   a += c.bow || 0;   // The Bow, this turn
   h += grieveBonus(c);
@@ -732,7 +732,7 @@ function bossPhase(p, phase) {
   const ch = champOf(p, "boss_level");
   if (!ch || phase <= ch.level) return;
   ch.level = Math.min(3, phase);
-  log(`${p.name}'s Boss Level enters ${BOSS_PHASES[ch.level]}: ${ch.level >= 3 ? "its characters get +1 Attack, and it draws 1 extra card each turn" : "it draws 1 extra card each turn"}.`);
+  log(`${p.name}'s Boss Level enters ${BOSS_PHASES[ch.level]}: ${ch.level >= 3 ? "its characters get +1 Attack and +1 Health, and it draws 1 extra card each turn" : "it draws 1 extra card each turn"}.`);
   emit("champPhase", { player: p.idx, id: ch.id, phase: ch.level });
 }
 
@@ -801,8 +801,9 @@ function updateEvent() {
 // the table with RULES.shardHealth (10) health: S.shard = { health, max }. In Battle, characters
 // can attack it like a target (attack(uid, "shard")): it never hits back, Challenge and Tower don't
 // guard it, and spells can't touch it. Its health is shared, so whoever deals the blow that breaks
-// it claims it: +RULES.shardGain health (it can go above the starting health) and their champion's
-// shard bonus below, or +RULES.shardGainNoChamp health for a deck with no champion. The table
+// it claims it: they draw RULES.shardDraw card and get their champion's shard bonus below, or draw
+// RULES.shardDrawNoChamp cards with a deck that has no champion. An empty deck is never drawn
+// from here (it would lose the match), and a full hand burns the card as usual. The table
 // stays cracked for the rest of the match (S.shardFell). S.shardChip counts the damage each player
 // has dealt to it (the computer uses it, see evaluate in js/ai.js).
 const SHARD_BONUS = {
@@ -867,12 +868,13 @@ function hitShard(a, amount) {
 function claimShard(p) {
   S.shard = null;
   const bonus = p.champ ? SHARD_BONUS[p.champ.id] : null;
-  const gain = bonus ? RULES.shardGain : RULES.shardGainNoChamp;
-  p.health += gain;
-  emit("playerHeal", { player: p.idx, amount: gain });
+  const n = bonus ? RULES.shardDraw : RULES.shardDrawNoChamp;
+  let drawn = 0;
+  for (let k = 0; k < n && p.deck.length; k++) { drawCard(p); drawn++; }
   const extra = bonus ? bonus(p) : "";
-  log(`${p.name} breaks the big shard and claims it: +${gain} health${extra ? `, and ${extra}` : ""}.`);
-  emit("shardClaim", { player: p.idx, gain, extra });
+  const got = drawn ? `${drawn} card${drawn > 1 ? "s" : ""}` : "no card (the deck is empty)";
+  log(`${p.name} breaks the big shard and claims it: ${got}${extra ? `, and ${extra}` : ""}.`);
+  emit("shardClaim", { player: p.idx, drawn, extra });
   S.shardBy = p.idx;
 }
 

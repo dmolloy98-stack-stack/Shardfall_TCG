@@ -92,7 +92,7 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   ok('Boss Phases: healing does not go back a phase', p.champ.level === 2 && p.health === 21);
   dealDamageToPlayer(p, 13);                 // 8
   ok('Boss Phases: 8 of 25 is FINAL PHASE', p.champ.level === 3);
-  ok('Boss Phases: FINAL PHASE gives every character +1 Attack', rawStats(x).a === lvl.attack + 1);
+  ok('Boss Phases: FINAL PHASE gives every character +1 Attack and +1 Health', rawStats(x).a === lvl.attack + 1 && rawStats(x).h === lvl.health + 1, rawStats(x).a + '/' + rawStats(x).h);
   const other = put(q, lvl.id);
   ok("Boss Phases: the opponent's characters get nothing", rawStats(other).a === lvl.attack);
   S.phase = PHASE.DRAW; const h1 = p.hand.length; doDraw();

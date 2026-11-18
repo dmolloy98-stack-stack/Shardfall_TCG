@@ -18,7 +18,7 @@ const NOCHAMP = '__nochamp';
 DATA.decks[NOCHAMP] = { ...DATA.decks.simple_starter, cards: DATA.decks.simple_starter.cards.filter(e => DATA.cardsById[e.cardId].rarity !== 'Unknown') };
 
 { // when it falls
-  ok('the rules: round 8, 10 health, +5, +10 with no champion', RULES.shardRound === 8 && RULES.shardHealth === 10 && RULES.shardGain === 5 && RULES.shardGainNoChamp === 10);
+  ok('the rules: round 8, 10 health, 1 card, 2 with no champion', RULES.shardRound === 8 && RULES.shardHealth === 10 && RULES.shardDraw === 1 && RULES.shardDrawNoChamp === 2);
   newGame({ deckId: 'simple_starter', opponentDeckId: 'zombie_starter', mode: 'hotseat', seed: 21, events: false });
   let seen = 0;
   for (let r = 1; r <= 9 && !S.over; r++) { if (S.shard && !seen) seen = S.round; S.pending = null; S.phase = PHASE.SETUP; endTurn(); if (S.phase === PHASE.DRAW && !S.over) doDraw(); }
@@ -48,19 +48,22 @@ DATA.decks[NOCHAMP] = { ...DATA.decks.simple_starter, cards: DATA.decks.simple_s
   const p = game('simple_starter', 'zombie_starter'); const q = S.players[1];
   attack(hitter(p, 5).uid, 'shard');
   ok('5 damage leaves 5', S.shard.health === 5 && S.shardChip[0] === 5);
-  S.active = 1; S.phase = PHASE.BATTLE; const z = hitter(q, 7); const h0 = q.health;
+  S.active = 1; S.phase = PHASE.BATTLE; const z = hitter(q, 7); const h0 = q.health, c0 = q.hand.length, d0 = q.deck.length;
   attack(z.uid, 'shard');
   ok('the other player breaks it and claims it', !S.shard && S.shardBy === 1);
-  ok('the claimer gains 5 health (it has a champion)', q.health === h0 + 5);
+  ok('the claimer draws 1 card (it has a champion)', q.hand.length === c0 + 1 && q.deck.length === d0 - 1);
+  ok('no health is gained', q.health === h0);
   ok('the extra damage is not counted past its health', S.shardChip[1] === 5);
-  ok('it can go above the starting health', q.health > q.maxHealth || h0 + 5 > q.maxHealth || q.health === h0 + 5);
-  q.health = q.maxHealth + 4; healPlayer(q, 3);
-  ok('a heal never lowers health that is above the maximum', q.health === q.maxHealth + 4);
 }
 { // a deck with no champion
-  const p = game(NOCHAMP); const h0 = p.health;
+  const p = game(NOCHAMP); const c0 = p.hand.length;
   attack(hitter(p, 15).uid, 'shard');
-  ok('no champion: +10 health', p.health === h0 + 10 && p.health === p.maxHealth + 10);
+  ok('no champion: draws 2 cards', p.hand.length === c0 + 2);
+}
+{ // an empty deck is not drawn from, so breaking the shard never loses the match
+  const p = game('simple_starter'); p.deck.length = 0;
+  attack(hitter(p, 15).uid, 'shard');
+  ok('an empty deck: the shard is claimed and the match goes on', S.shardBy === 0 && !S.over);
 }
 { // each champion's bonus
   let p = game('simple_starter'); const hurt = hitter(p, 1); hurt.currentHealth = 1; const hh = hitter(p, 15);

@@ -199,8 +199,8 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | event_warning_rounds | How many rounds ahead the next event is announced |
 | shard_round | The round the big shard falls into the middle of the table, once a match. 0 turns it off |
 | shard_health | Health of the big shard |
-| shard_gain | Health the player who breaks the big shard gains, on top of their champion's shard bonus. Health can go above the starting health |
-| shard_gain_no_champion | Health the player who breaks the big shard gains when their deck has no champion |
+| shard_draw | Cards the player who breaks the big shard draws, on top of their champion's shard bonus |
+| shard_draw_no_champion | Cards the player who breaks the big shard draws when their deck has no champion |
 | min_deck_size, max_copies, max_unknown_copies, max_unknown_kinds | Deck-building rules (max_unknown_kinds: how many different Unknown cards, the champions, a deck may hold) |
 
 ### events.csv: random events
