@@ -338,8 +338,9 @@ function dealDamageToPlayer(p, amount, source) {
 
 function healPlayer(p, amount) {
   if (amount <= 0) return;
-  p.health = Math.max(p.health, Math.min(p.maxHealth, p.health + amount));   // the shard can lift health above the maximum; a heal never lowers it
-  emit("playerHeal", { player: p.idx, amount });
+  const before = p.health;
+  p.health = Math.max(p.health, Math.min(p.maxHealth, p.health + amount));   // never above the maximum; a heal never lowers it
+  if (p.health > before) emit("playerHeal", { player: p.idx, amount: p.health - before });   // shows what was really gained
 }
 
 function sendToGraveyard(p, c) {
@@ -625,11 +626,15 @@ function activateArea(uid) {
   return true;
 }
 
+// The parts of a match's state that start empty. js/boot.js also uses this to fill in anything
+// missing from a match saved by an older version of the game (the hosted page keeps a match
+// going across updates), so a newer rule never meets a match that lacks its part.
+const baseState = () => ({ players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], nextUid: 1, log: [],
+  event: null, upcoming: null, lastEvent: null, noEvents: false, noAbilities: false, noShard: false, shard: null, shardFell: false, shardChip: [0, 0], died: {} });
+
 function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard }) {
   seed = (seed ?? newSeed()) >>> 0;
-  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], mode, nextUid: 1, log: [], seed, rng: seed,
-        event: null, upcoming: null, lastEvent: null, noEvents: events === false,
-        noAbilities: abilities === false, noShard: shard === false, shard: null, shardFell: false, shardChip: [0, 0], died: {} };
+  S = { ...baseState(), mode, seed, rng: seed, noEvents: events === false, noAbilities: abilities === false, noShard: shard === false };
   let opp = opponentDeckId;
   if (!opp) {
     const others = DATA.deckOrder.filter(id => id !== deckId);
@@ -1281,6 +1286,9 @@ function afterBattle(p) {
 // ---------------------------------------------------------------------------
 function doDraw() {
   if (!allowed("doDraw")) return false;
+  return drawStep();
+}
+function drawStep() {
   const p = active();
   if (S.phase !== PHASE.DRAW || S.over) return false;
   const c = drawCard(p);
@@ -1318,6 +1326,9 @@ function endTurn() {
   if (S.over) return false;
   if (S.pending && S.pending.kind === "target" && !S.pending.required) S.pending = null;
   if (S.pending) return false;
+  // Passing in the Draw phase still draws first, so passing can't skip a full hand's burn or
+  // an empty deck's loss.
+  if (S.phase === PHASE.DRAW) { drawStep(); if (S.over) return true; }
   // Passing straight from Battle still ends the Battle phase first, which can ask The Man Ape's question.
   if (S.phase === PHASE.BATTLE) {
     S.phase = PHASE.END;
