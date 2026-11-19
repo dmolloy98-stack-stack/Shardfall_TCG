@@ -275,36 +275,43 @@ function aiPlanBattle() {
 // Perform one AI action. Returns false when the AI has nothing more to do this turn.
 // A choice can belong to the player whose turn it isn't (Soul Shepard, IP Man). The
 // computer answers its own choices at any time, and waits while a person answers theirs.
-function aiStep() {
-  if (S.over) return false;
-  if (S.pending && !S.players[S.pending.owner].isAI) return active().isAI;
-  if (!S.pending && !active().isAI) return false;
+function aiStep() { return aiDecide().run(); }
+
+// What the computer will do next, without doing it yet: { run, aim }. run() makes the move
+// (and returns what aiStep returns); aim is { from, to } when the move points at something
+// (an attack, or a target for a spell or ability), so the screen can show it aiming first.
+// from is the uid of the card acting (or null); to is a uid, "shard", or { isPlayer, idx }.
+function aiDecide() {
+  const done = v => ({ run: () => v, aim: null });
+  if (S.over) return done(false);
+  if (S.pending && !S.players[S.pending.owner].isAI) return done(active().isAI);
+  if (!S.pending && !active().isAI) return done(false);
   if (S.pending?.kind === "target") {
-    const t = aiPickTarget();
-    if (t) chooseTarget(targetRef(t)); else cancelPending();
-    return true;
+    const t = aiPickTarget(), src = S.pending.source;
+    return { aim: t ? { from: src.uid, to: t.isPlayer ? { isPlayer: true, idx: t.idx } : t.uid } : null,
+      run: () => { if (t) chooseTarget(targetRef(t)); else cancelPending(); return true; } };
   }
-  if (S.pending?.kind === "choose") { aiResolveChoice(); return true; }
+  if (S.pending?.kind === "choose") return { aim: null, run: () => { aiResolveChoice(); return true; } };
 
   if (S.phase === PHASE.DRAW) {
-    if (!active().deck.length) { deckOut(active()); return false; }
-    doDraw(); return true;
+    if (!active().deck.length) return { aim: null, run: () => { deckOut(active()); return false; } };
+    return { aim: null, run: () => { doDraw(); return true; } };
   }
   if (S.phase === PHASE.SETUP) {
     const best = aiPlanSetup();
-    if (best) { best.run(); return true; }
+    if (best) return { aim: null, run: () => { best.run(); return true; } };
     // Spend the one-time mana token only when the extra mana unlocks a good play.
-    if (active().manaToken && simulate(() => useManaToken() && aiSetupActions().length > 0)) { useManaToken(); return true; }
-    advancePhase(); return true;
+    if (active().manaToken && simulate(() => useManaToken() && aiSetupActions().length > 0)) return { aim: null, run: () => { useManaToken(); return true; } };
+    return { aim: null, run: () => { advancePhase(); return true; } };
   }
   if (S.phase === PHASE.BATTLE) {
+    const foe = { isPlayer: true, idx: 1 - S.active };
     const lethal = aiLethal();
-    if (lethal != null) { attack(lethal, null); return true; }
+    if (lethal != null) return { aim: { from: lethal, to: foe }, run: () => { attack(lethal, null); return true; } };
     const best = aiPlanBattle();
-    if (best?.blade) { useBlade(best.blade); chooseTarget({ uid: best.target }); return true; }
-    if (best) { attack(best.attacker, best.target); return true; }
-    advancePhase(); return true;
+    if (best?.blade) return { aim: { from: best.blade, to: best.target }, run: () => { useBlade(best.blade); chooseTarget({ uid: best.target }); return true; } };
+    if (best) return { aim: { from: best.attacker, to: best.target ?? foe }, run: () => { attack(best.attacker, best.target); return true; } };
+    return { aim: null, run: () => { advancePhase(); return true; } };
   }
-  endTurn();
-  return false;
+  return { aim: null, run: () => { endTurn(); return false; } };
 }

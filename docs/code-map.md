@@ -95,10 +95,11 @@ and factions.
 ```mermaid
 flowchart LR
   intro["Intro<br/>intro.js"] --> menu[["Main menu<br/>menu.js · storm.js"]]
-  menu -->|Start game| pick["Pick decks<br/>menu.js"]
-  pick -->|Create your own| builder["Deck builder<br/>decks.js"]
+  menu -->|Quick Match, Two Players, My Decks| pick["Pick decks and opponent<br/>menu.js"]
+  pick -->|Create your own / Edit| builder["Deck builder<br/>decks.js"]
   pick -->|starter or saved deck| match(["The match<br/>engine + ui + fx"])
-  menu --> campaign["Campaign<br/>campaign.js · champions.js"] --> match
+  menu -->|Campaign door| campaign["Campaign<br/>campaign.js · champions.js"] --> match
+  campaign -->|Change deck| pick
   menu --> tutorial["Tutorial<br/>tutorial.js"] --> match
   menu --> guide["How to play<br/>help.js · guide.js"]
   menu --> almanac["Almanac<br/>menu.js"]
@@ -132,6 +133,11 @@ their own story or coaching, then hand over to the same engine.
 | Where things sit on the table, and card sizes | `L`, `FIELD_W`, `BACK_W` at the top of `js/ui.js` |
 | Spots that light up while you drag a card | `setPlacing()` in `js/ui.js` (stage classes `placing-…` in `css/style.css`) |
 | Health bar and big hits (white chunk, red screen edges, fresh cracks) | `hpBarHTML()`, `bigHit()`, `BIG_HIT` in `js/ui.js`; the chunk drains in `js/motion.js` |
+| The computer aims before it acts | `aiDecide()` in `js/ai.js` picks the move without making it (`aiStep()` is decide-and-do); `scheduleAI()` in `js/ui.js` shows `aiAim()` (`js/fx.js`) first |
+| Heavy attacks wind up, bonuses add up, LETHAL, the killing blow | `windUp()`, `attackParts()`, `fightPreview()` (lethal), `finale()` in `js/fx.js` |
+| Spell previews on targets, end-of-turn hourglass, cards reacting to deaths | `targetPreview()`, `eotBadge()`, `reactToDeath()` in `js/fx.js` |
+| Draw and skip by themselves, ask before passing early, keyboard shortcuts | `autoFlow()`, `passTurn()` and the `keydown` handler in `js/ui.js`; both settings are in Settings |
+| Champions speaking in every match against the computer, the end-screen line, deck mastery titles | `championSay()`, `speakerName()`, `recallHTML()`, `MASTERY_TITLES` and `masteryHTML()` in `js/campaign.js`; the lines are in `js/champions.js` |
 | Battle log panel, computer speed | `logPanelHTML()`, `showLog()`, `AI_SPEEDS` in `js/ui.js`; both are in Settings |
 | Colours and sizes | `css/style.css` |
 | A new menu button | `index.html`, then `js/menu.js` |

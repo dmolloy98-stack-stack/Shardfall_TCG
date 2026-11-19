@@ -45,6 +45,8 @@ const U = {
   turnLandedAt: 0,
   hints: PREFS.get("hints", true),
   showLog: PREFS.get("showLog", true),     // the battle log panel on the table (Settings)
+  autoFlow: PREFS.get("autoFlow", true),   // draw automatically, skip a Battle with nothing to do (Settings)
+  passCheck: PREFS.get("passCheck", true), // ask before passing with moves left (Settings)
   aiSpeed: PREFS.get("aiSpeed", "normal"), // how fast the computer plays: slow, normal or fast (Settings)
   logAt: new Map(),      // log line -> when it was written, so new lines light up
   myTurnAt: 0,           // when your turn began, for the "your turn" moment
@@ -478,7 +480,7 @@ function slashAway(src) {  // Fighter: cut in two by a clean strike
 function shatterFrom(src, group) {
   if (DEATHS[group]) { DEATHS[group](src); sparkle(src.offsetLeft + FIELD_W / 2, src.offsetTop + FIELD_H / 2, 6); return; }
   const x = src.offsetLeft, y = src.offsetTop, cx = FIELD_W / 2, cy = FIELD_H / 2;
-  const ring = [[0, 0], [45, 0], [95, 0], [95, 50], [95, 95], [95, 135], [50, 135], [0, 135], [0, 85], [0, 40]];
+  const ring = [[0, 0], [45, 0], [95, 0], [95, 50], [95, 95], [95, 135], [50, 135], [0, 135], [0, 85], [0, 40]].map(([x, y]) => [x * FIELD_W / 95, y * FIELD_H / 135]);
   ring.forEach((p, k) => {
     const q = ring[(k + 1) % ring.length];
     const mx = (p[0] + q[0]) / 2 - cx, my = (p[1] + q[1]) / 2 - cy;
@@ -513,7 +515,7 @@ const SWIFT_GAP = 230;   // ms between a Swift blow and the reply
 onGameEvent((type, d) => {
   const now = performance.now();
   // A blow lands when the attacker reaches its target, a moment after the lunge starts.
-  const delay = now - U.lungeAt < 80 && !REDUCED_MOTION ? 190 : 0;
+  const delay = now - U.lungeAt < 80 && !REDUCED_MOTION ? 190 + (U.lungeWind || 0) : 0;   // after the swoop (and any wind-up, js/fx.js)
   if (type === "log") {
     U.logAt.set(d.msg, now);
     if (U.logAt.size > 200) U.logAt.delete(U.logAt.keys().next().value);
@@ -527,6 +529,7 @@ onGameEvent((type, d) => {
     const f = findChar(d.uid);
     const overkill = f ? -rawStats(f.c).h : 0;
     if (f) countDamage(f.p.idx, d.amount);
+    creditFight(d.uid, d.amount);
     const clash = U.clash && now - U.clash.at < 30 ? U.clash : null;
     const wait = delay + (clash?.swift != null && !REDUCED_MOTION ? clash.n++ * SWIFT_GAP : 0);
     const tier = feelTier(d.amount);
@@ -545,6 +548,7 @@ onGameEvent((type, d) => {
   } else if (type === "playerDamage") {
     const p = plateCenter(d.player);
     countDamage(d.player, d.amount);
+    creditFight(null, d.amount);
     if (U.stats) U.stats.low[d.player] = Math.min(U.stats.low[d.player], S.players[d.player].health / S.players[d.player].maxHealth);
     const tier = feelTier(d.amount);
     later(delay, () => {
@@ -572,9 +576,10 @@ onGameEvent((type, d) => {
     // the attacker swoops most of the way to its target and springs back
     const from = charCenter(d.uid);
     const to = d.target === "shard" ? SHARD_AT : d.target != null ? charCenter(d.target) : plateCenter(d.player);
+    const wind = U.multiAttack ? 0 : windUp(d.uid);   // a strong or boosted attacker winds up first
     U.lunges.set(d.uid, now);
-    U.lungeVec.set(d.uid, { dx: (to.x - from.x) * 0.72, dy: (to.y - from.y) * 0.72 });
-    U.lungeAt = now;
+    U.lungeVec.set(d.uid, { dx: (to.x - from.x) * 0.72, dy: (to.y - from.y) * 0.72, wind });
+    U.lungeAt = now; U.lungeWind = wind; U.lastAttacker = d.uid; U.lastTarget = typeof d.target === "number" ? d.target : null;
   } else if (type === "draw") {
     U.drawn.set(d.uid, now);
   } else if (type === "champLevel") {
@@ -631,6 +636,7 @@ onGameEvent((type, d) => {
     sparkle(720, 430, 22);
   } else if (type === "death") {
     shatter(d.uid, delay, d.group);
+    reactToDeath(d.uid, delay);
   } else if (type === "gameOver") {
     finale(d.winner);
   }
@@ -778,7 +784,7 @@ function plateHTML(p, side) {
   return `<div class="plate${crackFlash(p.idx) ? " crack-flash" : ""}${thinking ? " thinking" : ""}${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
     <div class="life">${crystalSVG("life-crystal " + tier, cracks)}${wardHTML(p)}<b>${Math.max(0, p.health)}</b></div>
     <div class="who"><span class="name">${esc(p.name)}${hpBarHTML(p)}${thinking ? `<i class="thinking-dots" aria-label="thinking"><b></b><b></b><b></b></i>` : ""}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
-    ${attackable ? previewBadge(fightPreview(U.selected, null), true) : ""}
+    ${attackable ? previewBadge(fightPreview(U.selected, null), true) : targetable ? targetBadge(targetPreview({ isPlayer: true, idx: p.idx })) : ""}
   </div>`;
 }
 
@@ -804,7 +810,7 @@ function fieldHTML(p, side) {
     if (c.type === "Area") {
       const tgt = humanPending && pd.kind === "target" && pd.targetType === "area";
       const usable = human && p === active() && canActivateArea(c, p);
-      h += `<div class="small-card${tgt ? " targetable" : ""}${usable ? " activatable" : ""}" data-act="area" data-uid="${c.uid}" style="left:${x}px;top:${y.backline}px">${cardHTML(c)}</div>`;
+      h += `<div class="small-card${tgt ? " targetable" : ""}${usable ? " activatable" : ""}" data-act="area" data-uid="${c.uid}" style="left:${x}px;top:${y.backline}px">${cardHTML(c)}${eotBadge(c, p.idx)}</div>`;
     } else {
       const armed = U.armed?.uid === c.uid;
       h += `<div class="small-card${armed ? " armed" : ""}" data-act="equip" data-uid="${c.uid}" data-player="${p.idx}" style="left:${x}px;top:${y.backline}px">${cardHTML(c)}${side === "bottom" ? `<div class="attach-cost">Attach: ${equipCost(c, p, null, true)} mana</div>` : ""}</div>`;
@@ -820,24 +826,29 @@ function fieldHTML(p, side) {
     if (side === "bottom" && human && canAttack(c)) cls.push("ready");
     if (c.hasAttacked && c.owner === S.active && S.phase === PHASE.BATTLE) cls.push("spent");
     if (U.selected === c.uid) cls.push("selected");
+    if (U.finalHero === c.uid) cls.push("final-hero");
     if (humanPending && pd.kind === "target" && pd.targetType !== "area" && isValidTarget({ uid: c.uid })) cls.push("targetable");
     if (U.armed && side === "bottom" && human) cls.push("targetable");
     const attackable = U.selected && side === "top" && (!guarded || isGuard(c));
     if (attackable) cls.push("attackable");
     if (recent(U.hits, c.uid, 450)) cls.push("hit");
     let vars = `--d:${((c.uid * 0.37) % 3).toFixed(2)}s`;
-    if (recent(U.lunges, c.uid, 450)) {
-      const v = U.lungeVec.get(c.uid) || { dx: 0, dy: side === "bottom" ? -34 : 34 };
+    const lv = U.lungeVec.get(c.uid);
+    if (recent(U.lunges, c.uid, 450 + (lv?.wind || 0))) {
+      const v = lv || { dx: 0, dy: side === "bottom" ? -34 : 34 };
+      const e = performance.now() - U.lunges.get(c.uid);   // a redraw mid-swoop carries on where it was
       cls.push("lunge");
-      vars += `;--dx:${v.dx.toFixed(0)}px;--dy:${v.dy.toFixed(0)}px`;
+      if (v.wind) cls.push("winding");
+      vars += `;--dx:${v.dx.toFixed(0)}px;--dy:${v.dy.toFixed(0)}px;--wind:${v.wind || 0}ms;--e:${(-e).toFixed(0)}ms;--e2:${((v.wind || 0) - e).toFixed(0)}ms`;
     }
     const sp = U.spawn.get(c.uid);
     const age = sp ? performance.now() - sp.t : -1;   // a card still flying in lands first (js/motion.js)
     if (sp && age >= 0 && age < 1000) cls.push(spawnClass(sp));
     if ((U.arriving.get(c.uid) ?? 0) > performance.now()) cls.push("arriving");
-    const preview = attackable && human ? previewBadge(fightPreview(U.selected, c.uid)) : "";
+    const tgt = humanPending && pd.kind === "target" && pd.targetType !== "area" && isValidTarget({ uid: c.uid });
+    const preview = attackable && human ? previewBadge(fightPreview(U.selected, c.uid)) : tgt ? targetBadge(targetPreview({ uid: c.uid })) : "";
     const blade = side === "bottom" && human && canUseBlade(c) ? `<button type="button" class="blade-btn" data-act="blade" data-uid="${c.uid}" title="Kenshi's Blade: deal 3 damage to an enemy character, once per Battle">⚔ Strike 3</button>` : "";
-    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${hasSkill(c, "Protected") ? runeRingHTML(recent(U.hits, c.uid, 450)) : ""}${preview}${blade}</div>`;
+    h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${hasSkill(c, "Protected") ? runeRingHTML(recent(U.hits, c.uid, 450)) : ""}${eotBadge(c, p.idx)}${preview}${blade}</div>`;
   });
   return h;
 }
@@ -916,7 +927,8 @@ function render() {
   const forced = guards(them);
   // "All attack": every character that can still attack goes for the player (see attackAllFace).
   const readyN = human && S.phase === PHASE.BATTLE && !S.pending ? me.field.chars.filter(canAttack).length : 0;
-  const allBtn = (style = "") => `<button type="button" class="face-btn all" data-act="faceall" style="${style}">⚔ All attack ${esc(them.name)} (${readyN})</button>`;
+  const allLethal = readyN > 1 && simulate(() => { const g = actionGuard; actionGuard = null; try { attackAllFace(); } finally { actionGuard = g; } return S.over && S.winner === S.active; });
+  const allBtn = (style = "") => `<button type="button" class="face-btn all${allLethal ? " lethal" : ""}" data-act="faceall" style="${style}">${allLethal ? "☠ LETHAL: all attack" : "⚔ All attack"} ${esc(them.name)} (${readyN})</button>`;
   if (U.selected && human) {
     h += forced.length
       ? `<div class="instruction">${forced.length === 1 ? `${esc(forced[0].name)} has ${guardSkill(forced[0])} and must be attacked first` : "Attack one of the Challenge or Tower characters first"}</div>`
@@ -932,8 +944,8 @@ function render() {
 
   const label = ["Draw card", "To battle →", "To end →", "Pass turn →"][S.phase];
   const canPhase = human && !S.pending && !U.armed;
-  h += `<button type="button" class="btn stage-btn${canPhase && S.phase === PHASE.DRAW ? " glow" : ""}" data-act="phase" style="left:1220px;top:372px;width:200px;height:56px" ${canPhase ? "" : "disabled"}>${label}</button>`;
-  h += `<button type="button" class="btn stage-btn" data-act="pass" style="left:1240px;top:942px;width:180px;height:48px" ${canPhase ? "" : "disabled"}>Pass turn</button>`;
+  h += `<button type="button" class="btn stage-btn${canPhase && S.phase === PHASE.DRAW ? " glow" : ""}" data-act="phase" title="Keyboard: Space" style="left:1220px;top:372px;width:200px;height:56px" ${canPhase ? "" : "disabled"}>${label}</button>`;
+  h += `<button type="button" class="btn stage-btn" data-act="pass" title="Keyboard: E" style="left:1240px;top:942px;width:180px;height:48px" ${canPhase ? "" : "disabled"}>Pass turn</button>`;
   if (U.showLog) h += logPanelHTML();
 
   if (U.curtain) {
@@ -943,7 +955,7 @@ function render() {
     const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;
     const camp = U.campaign ? campaignEndHTML(S.winner === 0) : null;
     const actions = camp ? camp.actions : `<button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button>`;
-    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
+    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${recallHTML()}${masteryHTML()}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
   }
   $("#board").innerHTML = h;
   renderHand(me);
@@ -951,6 +963,7 @@ function render() {
   renderOverlays();
   drawAim();
   motionAfterRender();   // cards glide to their new places (js/motion.js)
+  autoFlow();
 }
 
 // The battle log: the last few things that happened, in a panel at the bottom right of the
@@ -1066,9 +1079,12 @@ function scheduleAI() {
   const wait = Math.max(0, U.busyUntil - performance.now());
   U.aiTimer = setTimeout(() => {
     if (U.busyUntil > performance.now()) { scheduleAI(); return; }
-    const more = aiStep();
-    render();
-    if (more || active().isAI) scheduleAI();
+    const d = aiDecide();   // js/ai.js: what it will do, not done yet
+    const go = () => { const more = d.run(); render(); if (more || active().isAI) scheduleAI(); };
+    const ms = d.aim ? aiAim(d.aim) : 0;   // it points at its target first (js/fx.js)
+    if (!ms) { go(); return; }
+    const game = S;
+    U.aiTimer = setTimeout(() => { clearAiAim(); if (S === game && U.screen === "game") go(); }, ms);
   }, (S.phase === PHASE.DRAW ? 900 : 750) * AI_SPEEDS[U.aiSpeed].k + wait);
 }
 
@@ -1084,6 +1100,7 @@ function startGame(opts = {}) {
   opts.setup?.(S);
   showScreen("game");
   if (S.mode === "hotseat") U.curtain = true; else banner("Your turn");
+  if (!U.campaign && S.mode === "ai") championMatchStarts();   // the computer's champion speaks (js/campaign.js)
   render();
 }
 
@@ -1093,8 +1110,38 @@ function onPhaseButton() {
   if (S.phase === PHASE.DRAW) {
     if (!active().deck.length) { act(() => { deckOut(active()); }); return; }
     act(doDraw);
-  } else if (S.phase === PHASE.END) act(endTurn);
+  } else if (S.phase === PHASE.END) passTurn();
   else act(advancePhase);
+}
+
+// Passing early: with "Ask before passing early" on (Settings), passing while you could still
+// play a card or attack asks once first.
+function passTurn() {
+  const p = active();
+  const playable = S.phase === PHASE.SETUP ? p.hand.filter(c => canPlay(c, p)).length : 0;
+  const ready = S.phase <= PHASE.BATTLE ? p.field.chars.filter(c => !c.hasAttacked && !hasSkill(c, "Tower")).length : 0;
+  if (!U.passCheck || U.tutorial || (!playable && !ready)) { act(endTurn); return; }
+  const left = [playable && `${p.mana} mana and ${playable} card${playable > 1 ? "s" : ""} you can play`, ready && `${ready} character${ready > 1 ? "s" : ""} that can still attack`].filter(Boolean).join(", and ");
+  openModal(`<h2 id="modal-title">Pass your turn?</h2><p>You still have ${esc(left)}.</p>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Keep playing</button><button type="button" class="btn" data-m="passok">Pass turn</button></div>
+    <p class="modal-note"><button type="button" class="link-btn" data-m="passnever">Don't ask me again</button> (you can turn it back on in Settings)</p>`);
+}
+
+// Draw and skip by themselves (Settings): your card is drawn for you a moment after your turn
+// begins, and a Battle where nothing can attack moves on to the End step. Rechecked after every
+// redraw; any move of yours cancels the wait.
+function autoFlow() {
+  clearTimeout(U.flowTimer);
+  if (!U.autoFlow || U.tutorial || !S || S.over || U.ended || !humanTurn() || S.pending || U.armed || !$("#modal").hidden) return;
+  const p = active();
+  if (S.phase === PHASE.DRAW) U.flowTimer = setTimeout(() => { if (humanTurn() && S.phase === PHASE.DRAW && !S.pending && $("#modal").hidden) onPhaseButton(); }, 700);
+  else if (S.phase === PHASE.BATTLE && !p.field.chars.some(c => canAttack(c) || canUseBlade(c)) && !p.hand.some(c => canPlay(c, p))) {
+    U.flowTimer = setTimeout(() => {
+      if (!humanTurn() || S.phase !== PHASE.BATTLE || S.pending) return;
+      floatText(720, 345, "Nothing can attack: Battle skipped", "#cfd8ff", true);
+      act(advancePhase);
+    }, 650);
+  }
 }
 
 // With two or more guards (Challenge or Tower) the attacker's player picks which one to hit.
@@ -1107,7 +1154,8 @@ function attackAllFace() {
   if (guards(opponent()).length) return false;
   const ids = active().field.chars.filter(canAttack).map(c => c.uid);
   let any = false;
-  for (const uid of ids) { if (S.over) break; if (attack(uid, null)) any = true; }
+  U.multiAttack = true;   // no wind-ups: the blows come in one rush
+  try { for (const uid of ids) { if (S.over) break; if (attack(uid, null)) any = true; } } finally { U.multiAttack = false; }
   return any;
 }
 
@@ -1354,6 +1402,8 @@ function showSettings() {
       <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
       <button type="button" class="btn" data-set="log" aria-pressed="${U.showLog}">Battle log on the table: ${U.showLog ? "Shown" : "Hidden"}</button>
       <button type="button" class="btn" data-set="speed" title="How fast the computer plays its turn">Computer speed: ${AI_SPEEDS[U.aiSpeed].name}</button>
+      <button type="button" class="btn" data-set="flow" aria-pressed="${U.autoFlow}" title="Draw your card by itself, and skip Battle when nothing can attack">Draw and skip by themselves: ${U.autoFlow ? "On" : "Off"}</button>
+      <button type="button" class="btn" data-set="passcheck" aria-pressed="${U.passCheck}" title="Ask before you pass with mana and playable cards, or characters that can still attack">Ask before passing early: ${U.passCheck ? "On" : "Off"}</button>
       ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">Read the battle log</button>` : ""}
       ${U.screen === "menu" ? `<button type="button" class="btn" data-set="intro">Watch the intro</button>` : ""}
     </div>
@@ -1400,6 +1450,8 @@ $("#modal").addEventListener("click", e => {
     else if (set.dataset.set === "log") { U.showLog = !U.showLog; PREFS.set("showLog", U.showLog); if (U.screen === "game") render(); showSettings(); }
     else if (set.dataset.set === "speed") { const ids = Object.keys(AI_SPEEDS); U.aiSpeed = ids[(ids.indexOf(U.aiSpeed) + 1) % ids.length]; PREFS.set("aiSpeed", U.aiSpeed); showSettings(); }
     else if (set.dataset.set === "readlog") showLog();
+    else if (set.dataset.set === "flow") { U.autoFlow = !U.autoFlow; PREFS.set("autoFlow", U.autoFlow); showSettings(); }
+    else if (set.dataset.set === "passcheck") { U.passCheck = !U.passCheck; PREFS.set("passCheck", U.passCheck); showSettings(); }
     else if (set.dataset.set === "intro") { closeModal(); playIntro(); }
     else if (U.screen === "game") showGameMenu();
     else closeModal();
@@ -1416,9 +1468,11 @@ $("#modal").addEventListener("click", e => {
   else if (m === "restart") U.tutorial ? startTutorial() : U.campaign ? playCampaignMatch(U.campaign.stage) : startGame();
   else if (m === "settings") showSettings();
   else if (m === "log") showLog();
+  else if (m === "passok") act(endTurn);
+  else if (m === "passnever") { U.passCheck = false; PREFS.set("passCheck", false); act(endTurn); }
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
   else if (m === "rules") showGuide();
-  else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); showScreen("menu"); }
+  else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); U.menuView = "home"; showScreen("menu"); }
   else if (m === "undo") { if (U.undo.length) { S = U.undo.pop(); U.selected = null; U.armed = null; U.ended = S.over; render(); } }
   else if (m === "mana") act(() => { active().mana++; });
   else if (m === "qadraw") act(() => { drawCard(active()); });
@@ -1436,13 +1490,13 @@ $("#board").addEventListener("click", e => {
   const human = humanTurn();
   if (a === "menu") return showGameMenu();
   if (a === "curtain") { U.curtain = false; yourTurnMoment(); render(); const b = $("#board"); b.classList.remove("rotate-in"); void b.offsetWidth; b.classList.add("rotate-in"); banner(`${active().name}'s turn`); return; }
-  if (a === "again") return U.campaign ? playCampaignMatch(U.campaign.stage) : startGame();
+  if (a === "again") return U.campaign ? playCampaignMatch(U.campaign.stage) : startGame({ opponentDeckId: U.lastOpp });   // the same opponent as last time
   if (a === "camp-next") return campaignNext();
   if (a === "camp-map") return showCampaign();
-  if (a === "tomenu") { endTutorial(); return showScreen("menu"); }
+  if (a === "tomenu") { endTutorial(); U.menuView = "home"; return showScreen("menu"); }
   if (a === "phase") return onPhaseButton();
   if (a === "log") { showLog(); return; }
-  if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; act(endTurn); } return; }
+  if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; passTurn(); } return; }
   if (a === "faceall") { if (human && S.phase === PHASE.BATTLE) { U.selected = null; act(attackAllFace); } return; }
   if (a === "face") { if (U.selected) { const s = U.selected; U.selected = null; act(() => attack(s, null)); } return; }
   if (a === "blade") { if (human) { U.selected = null; act(() => useBlade(uid)); } return; }
@@ -1504,7 +1558,14 @@ function cancelSomething() {
   if (S?.pending?.kind === "target" && !S.players[S.pending.owner].isAI) { if (cancelPending()) { render(); return true; } }
   return false;
 }
+// Keyboard: Space for the next step (Draw card, To battle, ...), E to pass the turn, Escape to
+// cancel or close.
 document.addEventListener("keydown", e => {
+  if (U.screen === "game" && $("#modal").hidden && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !e.target.closest?.("input, textarea")) {
+    const press = act => { const b = $(`#board [data-act="${act}"]`); if (b && !b.disabled) { e.preventDefault(); b.click(); } };
+    if (e.key === " ") { press("phase"); return; }
+    if (e.key === "e" || e.key === "E") { press("pass"); return; }
+  }
   if (e.key !== "Escape") return;
   if (!$("#modal").hidden) { if ($("#modal").dataset.dismissable) closeModal(); return; }
   if (U.screen === "game") cancelSomething();

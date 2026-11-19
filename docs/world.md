@@ -123,6 +123,7 @@ the story never fixes how many there are.
 | Intro, first window ("each one was whole") | One green glass pane in the second ring is already cracked, before the worlds collide | Something was broken before the collision. Green is the Zombie color, which points suspicion their way |
 | Campaign, after beating Soul Shepard | The souls Soul Shepard gathered come from every world, not only its own, and the shards keep falling | The Zombies are victims too, and beating every champion does not end the Shardfall |
 | The Simplistic, every match | It says the same lines word for word, and repeats a line twice when hurt | It is a little robotic: made, not born |
+| The Simplistic, its reactions and end-screen lines (added Nov 2026) | Even its new lines for the shard, its champion falling, being near defeat and the end screen are its old lines, repeated word for word. Every other champion got new lines | Same clue: it has a fixed set of lines, like a program |
 | Campaign, after beating The Simplistic | "Start small, then level up." It says it exactly as it said it before | Boss Level's word "level up", in the mouth of its creation |
 | Campaign, The Man Ape's story card | The ground still hums where the jungle first appeared | The jungle was put there, not grown |
 | Campaign, IP Man's story card | He swears the sky flickered, just once, a moment before the break | The break was a glitch: it came from something like a screen |

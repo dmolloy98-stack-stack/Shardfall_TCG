@@ -1,26 +1,78 @@
 // The main menu (deck choice, game mode) and the Almanac. Loaded after js/ui.js, which
 // shows these screens (showScreen) and shares its names (U, $, esc, medal, cardHTML).
 
-// The deck choice: the starter decks, then decks the player built (js/decks.js), then
+// The start menu has two views (U.menuView):
+//   home   three big doors (Campaign, Quick Match, Two Players) and smaller buttons below
+//   setup  choosing decks: for a Quick Match (U.setupMode "ai"), Two Players ("hotseat"),
+//          the Campaign's deck ("campaign"), or just looking after your decks ("decks")
+// The deck choice lists the starter decks, then decks the player built (js/decks.js), then
 // a tile to build a new one.
+U.menuView = "home";
+U.setupMode = "ai";
+U.oppDeckId = PREFS.get("opp", "random");   // the other side's deck: "random" or a deck id
+const SETUP = {
+  ai: { title: "Quick Match", deck: "Choose your deck", opp: "The computer's deck", start: "Start match" },
+  hotseat: { title: "Two Players", deck: "Player 1's deck", opp: "Player 2's deck", start: "Start match" },
+  campaign: { title: "Your deck for the Campaign", deck: "Choose your deck", opp: null, start: "Back to the Campaign" },
+  decks: { title: "My Decks", deck: "Your decks", opp: null, start: null },
+};
 function renderMenu() {
   if (!DATA.decks[U.deckId]) U.deckId = DATA.deckOrder[0];
+  $("#menu-home").hidden = U.menuView !== "home";
+  $("#menu-setup").hidden = U.menuView !== "setup";
+  if (U.menuView === "home") renderDoors(); else renderSetup();
+}
+
+// The three doors. The Campaign shows who is next; Quick Match shows your deck and its title.
+function renderDoors() {
+  const cleared = campaignCleared(), total = CAMPAIGN.length;
+  const next = CAMPAIGN[Math.min(cleared, total - 1)];
+  const campChip = cleared >= total ? "Campaign complete" : `Next: ${next.champion} · ${cleared} of ${total} beaten`;
+  const deck = DATA.decks[U.deckId], m = masteryOf(U.deckId);
+  const door = (sym, chip, title, text, go) => `<span class="door-sym" aria-hidden="true">${sym}</span>${chip ? `<span class="door-chip">${esc(chip)}</span>` : ""}<span class="door-title">${title}</span><span class="door-text">${text}</span><span class="btn door-go">${go}</span>`;
+  $("#btn-campaign").innerHTML = door("♛", campChip, "Campaign", "Face each fracture's champion, one by one, and learn what the shards are hiding.", cleared ? "Continue" : "Begin");
+  $("#door-quick").innerHTML = door("⚔", `${deck?.name || ""}${m.title ? ` · ★ ${m.title}` : ""}`, "Quick Match", "One match against the computer. Pick your deck and theirs.", "Play");
+  $("#door-two").innerHTML = door("⇄", "", "Two Players", "Take turns on one device.", "Play");
+}
+
+function renderSetup() {
+  const mode = SETUP[U.setupMode] || SETUP.ai;
+  $("#setup-title").textContent = mode.title;
+  $("#deck-label").textContent = mode.deck;
   const tile = id => {
     const d = DATA.decks[id];
     const edit = d.custom ? `<button type="button" class="deck-edit btn btn-small" data-edit="${id}" aria-label="Edit ${esc(d.name)}">Edit</button>` : "";
-    return `<div class="deck-slot"><button type="button" class="deck-tile${d.custom ? " custom" : ""}" data-deck="${id}" aria-pressed="${id === U.deckId}" style="--fc:${DATA.factions[d.faction]?.color || "#888"}">${medal(d.faction)}<strong>${esc(d.name)}</strong><span>${esc(d.description)}</span></button>${edit}</div>`;
+    return `<div class="deck-slot"><button type="button" class="deck-tile${d.custom ? " custom" : ""}" data-deck="${id}" aria-pressed="${id === U.deckId}" style="--fc:${DATA.factions[d.faction]?.color || "#888"}">${medal(d.faction)}<strong>${esc(d.name)}</strong><span>${esc(d.description)}</span>${masteryLine(id)}</button>${edit}</div>`;
   };
   const starters = DATA.deckOrder.filter(id => DATA.decks[id].isPlayable);
   const mine = Object.keys(DATA.decks).filter(id => DATA.decks[id].custom);
   $("#deck-list").innerHTML = [...starters, ...mine].map(tile).join("")
     + `<div class="deck-slot"><button type="button" class="deck-tile create" data-create><span class="plus" aria-hidden="true">+</span><strong>Create your own</strong><span>Build a deck from any cards in the game</span></button></div>`;
-  const problem = deckProblem(U.deckId);
+  // The other side's deck: random, a starter deck, or (two players) one of your own.
+  $("#opp-block").hidden = !mode.opp;
+  if (mode.opp) {
+    $("#opp-label").textContent = mode.opp;
+    const choices = [...starters, ...(U.setupMode === "hotseat" ? mine.filter(id => !deckProblem(id)) : [])];
+    if (U.oppDeckId !== "random" && !choices.includes(U.oppDeckId)) U.oppDeckId = "random";
+    const opp = (id, name, icon, fc) => `<button type="button" class="opp-tile" data-opp="${id}" aria-pressed="${U.oppDeckId === id}" style="--fc:${fc}">${icon}<span>${esc(name)}</span></button>`;
+    $("#opp-list").innerHTML = opp("random", "Random", `<span class="opp-random" aria-hidden="true">?</span>`, "#d9a64c")
+      + choices.map(id => opp(id, DATA.decks[id].name, medal(DATA.decks[id].faction), DATA.factions[DATA.decks[id].faction]?.color || "#888")).join("");
+  }
+  const problem = mode.start && U.setupMode !== "decks" ? deckProblem(U.deckId) : null;
   $("#deck-problem").hidden = !problem;
   $("#deck-problem").textContent = problem || "";
-  $("#btn-start").disabled = !!problem;
-  $("#mode-ai").setAttribute("aria-checked", U.mode === "ai");
-  $("#mode-hotseat").setAttribute("aria-checked", U.mode === "hotseat");
+  $("#btn-start").hidden = !mode.start;
+  $("#btn-start").textContent = mode.start || "";
+  $("#btn-start").disabled = !!problem && U.setupMode !== "campaign";
 }
+function showMenuHome() { U.menuView = "home"; renderMenu(); }
+function showSetup(mode) { U.setupMode = mode; U.menuView = "setup"; renderMenu(); window.scrollTo?.(0, 0); }
+
+$("#menu").addEventListener("click", e => {
+  const s = e.target.closest("[data-setup]");
+  if (s) showSetup(s.dataset.setup);
+});
+$("#btn-back").addEventListener("click", () => (U.setupMode === "campaign" ? (showMenuHome(), showCampaign()) : showMenuHome()));
 $("#deck-list").addEventListener("click", e => {
   const edit = e.target.closest("[data-edit]");
   if (edit) { editDeck(edit.dataset.edit); return; }
@@ -28,9 +80,16 @@ $("#deck-list").addEventListener("click", e => {
   const t = e.target.closest("[data-deck]");
   if (t) { U.deckId = t.dataset.deck; PREFS.set("deck", U.deckId); renderMenu(); }
 });
-$("#mode-ai").addEventListener("click", () => { U.mode = "ai"; renderMenu(); });
-$("#mode-hotseat").addEventListener("click", () => { U.mode = "hotseat"; renderMenu(); });
-$("#btn-start").addEventListener("click", () => startGame());
+$("#opp-list").addEventListener("click", e => {
+  const t = e.target.closest("[data-opp]");
+  if (t) { U.oppDeckId = t.dataset.opp; PREFS.set("opp", U.oppDeckId); renderMenu(); }
+});
+$("#btn-start").addEventListener("click", () => {
+  if (U.setupMode === "campaign") { showMenuHome(); showCampaign(); return; }
+  U.mode = U.setupMode === "hotseat" ? "hotseat" : "ai";
+  U.lastOpp = U.oppDeckId === "random" ? undefined : U.oppDeckId;
+  startGame({ opponentDeckId: U.lastOpp });
+});
 $("#btn-almanac").addEventListener("click", () => { U.almanacReturn = "menu"; showScreen("almanac"); });
 $("#btn-rules").addEventListener("click", () => showGuide());
 $("#btn-settings").addEventListener("click", showSettings);
