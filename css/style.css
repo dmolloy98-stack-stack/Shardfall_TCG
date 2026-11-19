@@ -2143,3 +2143,29 @@ html.intro-on .menu-inner { visibility: hidden; }
 .deck-mastery .deck-record { grid-column: 1 / -1; color: rgba(242, 231, 207, 0.7); }
 .bld-avg { margin: 4px 0; font-size: 13px; color: var(--muted); }
 .bld-avg b { color: var(--parchment); }
+
+/* Card stories (js/campaign.js) */
+.lore { font-style: italic; color: #ffe7a8; margin: 6px 0; line-height: 1.4; }
+.lore.locked { font-style: normal; color: var(--muted); opacity: 0.8; }
+.lore-new { appearance: none; border: 0; background: none; cursor: pointer; font: inherit; font-size: 14px; color: rgba(242, 231, 207, 0.75); text-decoration: underline dotted; margin: 2px auto 6px; display: block; }
+.lore-new:hover { color: #ffd27a; }
+.lore-list { display: grid; gap: 12px; max-height: 60vh; overflow: auto; text-align: left; }
+.lore-item { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; }
+.lore-item .medal { width: 34px; height: 34px; }
+.lore-item p { margin: 2px 0 0; font-style: italic; color: #ffe7a8; }
+.lore-count { margin: 4px 0 12px; color: var(--muted); font-size: 14px; }
+.lore-count b { color: #ffd27a; }
+
+.camp-scene { font-style: italic; color: rgba(242, 231, 207, 0.78); margin: 10px 0 4px; }
+.camp-says { font-family: var(--font-display); font-size: 1.25rem; color: #ffe7a8; margin: 4px 0 10px; }
+
+/* The Trophy case (js/campaign.js) */
+.trophy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; max-height: 62vh; overflow: auto; text-align: left; }
+.trophy { display: grid; gap: 3px; padding: 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); opacity: 0.55; filter: grayscale(1); }
+.trophy.got { opacity: 1; filter: none; border-color: #ffc56b; background: linear-gradient(160deg, rgba(150, 90, 20, 0.35), rgba(20, 10, 4, 0.3)); }
+.trophy-cup { font-size: 26px; }
+.trophy b { font-family: var(--font-display); font-weight: 400; font-size: 1.15rem; }
+.trophy span { font-size: 13px; color: var(--muted); }
+.trophy small { color: #ffd27a; }
+.trophy em { font-size: 12px; font-style: normal; color: rgba(242, 231, 207, 0.6); }
+.trophy.got em { color: #ffd27a; }

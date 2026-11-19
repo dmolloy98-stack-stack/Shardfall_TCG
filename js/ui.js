@@ -520,11 +520,6 @@ onGameEvent((type, d) => {
     U.logAt.set(d.msg, now);
     if (U.logAt.size > 200) U.logAt.delete(U.logAt.keys().next().value);
     histLog(d.msg, now);
-  } else if (type === "play") {
-    histAdd({ kind: d.card.type === "Spell" ? "cast" : "play", id: d.card.id, player: d.player }, now);
-  } else if (type === "lunge") {
-    const f = findChar(d.uid);
-    if (f) histAdd({ kind: d.target === "shard" ? "shard" : "attack", id: f.c.id, player: f.p.idx }, now);
   } else if (type === "newGame") {
     resetMatchStats();
     U.hist = []; U.recentLog = [];
@@ -580,6 +575,8 @@ onGameEvent((type, d) => {
   } else if (type === "enter") {
     U.spawn.set(d.uid, { cost: Math.min(7, Math.max(1, d.cost)), t: now, faction: findChar(d.uid)?.c.group });
   } else if (type === "lunge") {
+    const hf = findChar(d.uid);   // the turn history (histAdd)
+    if (hf) histAdd({ kind: d.target === "shard" ? "shard" : "attack", id: hf.c.id, player: hf.p.idx }, now);
     // the attacker swoops most of the way to its target and springs back
     const from = charCenter(d.uid);
     const to = d.target === "shard" ? SHARD_AT : d.target != null ? charCenter(d.target) : plateCenter(d.player);
@@ -629,6 +626,7 @@ onGameEvent((type, d) => {
     else banner(active().isAI ? `${active().name}'s turn` : "Your turn");
     if (!active().isAI && S.mode !== "hotseat") yourTurnMoment();
   } else if (type === "play") {
+    histAdd({ kind: d.card.type === "Spell" ? "cast" : "play", id: d.card.id, player: d.player }, now);   // the turn history
     if (U.stats) U.stats.played[d.player]++;
     if (d.card.manaCost >= SHOWCASE_COST && !REDUCED_MOTION) { setTimeout(() => showcase(d.card, d.player), 0); return; }
     // after the board redraws, sparkle where the card landed
@@ -962,7 +960,7 @@ function render() {
     const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;
     const camp = U.campaign ? campaignEndHTML(S.winner === 0) : null;
     const actions = camp ? camp.actions : `<button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button>`;
-    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${recallHTML()}${masteryHTML()}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
+    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${recallHTML()}${masteryHTML()}${newTrophiesHTML()}${newLoreHTML()}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
   }
   $("#board").innerHTML = h;
   renderHand(me);
@@ -1052,7 +1050,7 @@ function renderOverlays() {
 // What a hand card says when you hold the pointer over it: its ability, then what its skills do.
 function handTip(c) {
   const parts = [];
-  const ab = c.ability || c.description;
+  const ab = c.ability;
   if (ab) parts.push(esc(ab));
   for (const k of c.skills || []) { const d = DATA.skills[k]?.desc; if (d) parts.push(`<b>${esc(k)}</b>: ${esc(d)}`); }
   return parts.length ? `<div class="hand-tip">${parts.join("<br>")}</div>` : "";
@@ -1396,7 +1394,7 @@ function showDetail(c, ctx = {}) {
     } else actions = `<div class="detail-actions"><button type="button" class="btn btn-primary" data-m="play" data-uid="${c.uid}">Play for ${playCost(c)} mana</button></div>`;
   }
   if (counterKinds(c)) extra += `<p class="reason">Counter spell: you can't play it on your own turn. When the other player plays a card it can stop, the game asks you. It costs mana you left unspent on your turn.</p>`;
-  const ability = c.ability || c.description;
+  const ability = c.ability;
   const spellFx = c.type === "Spell" && EFFECTS[c.id]?.target ? EFFECTS[c.id] : null;
   const spellKind = spellFx ? (spellFx.intent === "help" ? " · Buff spell" : " · Curse spell") : "";
   openModal(`<div class="detail">
@@ -1404,6 +1402,7 @@ function showDetail(c, ctx = {}) {
     <div class="detail-text">
       <div><h2 id="modal-title">${esc(c.name)}</h2><p class="sub">${esc(c.type)} · ${esc(c.rarity)} · ${esc(fractureLabel(c))} · ${c.manaCost} mana${spellKind}</p>${kindsLine(c)}</div>
       ${ability ? `<p class="ability">${esc(ability)}</p>` : ""}
+      ${loreHTML(c)}
       ${skillRows(c)}
       ${extra}
       ${actions}
@@ -1550,6 +1549,8 @@ $("#board").addEventListener("click", e => {
   if (a === "camp-map") return showCampaign();
   if (a === "tomenu") { endTutorial(); U.menuView = "home"; return showScreen("menu"); }
   if (a === "phase") return onPhaseButton();
+  if (a === "lore-new") { showNewLore(); return; }
+  if (a === "trophies") { showTrophies(); return; }
   if (a === "hist") { showHist(Number(el.dataset.i)); return; }
   if (a === "log") { showLog(); return; }
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; passTurn(); } return; }

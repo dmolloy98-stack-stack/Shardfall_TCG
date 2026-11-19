@@ -1,114 +1,114 @@
 CardID,Cost,Name,Rarity,Type,Tribes,Fracture,Stats,Skills,Ability,Description,ArtKey,Effect,Classes
-flame_surge,3,Flame Surge,Basic,Spell,---,N/A,---,---,Deal 1 damage to all characters and players,,flame_surge,play: damageAll 1,---
-fire_storm,5,Fire Storm,Rare,Spell,---,N/A,---,---,Deal 3 damage to all characters and players,,fire_storm,play: damageAll 3,---
-whirlpool,4,Whirlpool,Basic,Area,---,N/A,---,---,All characters take 1 damage when this enters the field,,whirlpool,play: damage everyone 1,---
-call_back,4,Call Back,Rare,Spell,---,N/A,---,---,Return target character from a graveyard to your hand,,call_back,play: script callBack,---
-nullify,4,Nullify,Rare,Spell,---,N/A,---,Flash,Counter target character or spell,,nullify,counter: character spell,---
-disable,3,Disable,Divine,Spell,---,N/A,---,---,Choose a character. That character now has no abilities,,disable,"play: target character harm, disable target",---
-nope_for_one,2,Nope for One,Basic,Spell,---,N/A,---,Flash,Counter target spell which targets a single character,,nope_for_one,counter: spellSingle,---
-nope_for_all,2,Nope for All,Basic,Spell,---,N/A,---,Flash,Counter target spell which targets more than 1 character,,nope_for_all,counter: spellMany,---
-return_to_sender,3,Return to Sender,Basic,Spell,---,N/A,---,Flash,Counter target character,,return_to_sender,counter: character,---
-try_again,3,Try Again,Basic,Spell,---,N/A,---,Flash,Counter target spell,,try_again,counter: spell,---
-mana_horder,7,Mana Horder,Exotic,Character,Goblin,N/A,2+2,Signal,Steal a mana from an opposing player and add it to your own maximum mana,,mana_horder,"play: maxMana me 1, maxMana foe -1",Scout
-area_denial,3,Area Denial,Basic,Spell,---,N/A,---,---,Destroy target Area,,area_denial,"play: target area harm, destroyArea target",---
-simple_farmer,1,Simple Farmer,Basic,Character,Human,Simple,1+1,---,"When played, search your deck for a Simple Farmer and add it to your hand. Once you control 3 Simple Farmers on the field, search your deck for a Simpler Farmer and put him on the field",,simple_farmer,"enter: fetch simple_farmer, summonFromDeck simpler_farmer if #allies.simple_farmer>=3",Worker
-simple_barkeep,1,Simple Barkeep,Basic,Character,Human,Simple,1+1,Signal,Add +1 health to target character,,simple_barkeep,"play: target character help, buff target 0 1",Worker
-simple_swordsman,2,Simple Swordsman,Basic,Character,Human,Simple,2+1,---,---,,simple_swordsman,,Warrior
-simple_bowman,2,Simple Bowman,Basic,Character,Human,Simple,1+1,Rush+Swift,---,,simple_bowman,,Scout
-simple_wanderer,2,Simple Wanderer,Basic,Character,Human,Simple,1+2,---,---,,simple_wanderer,,Scout
-sword,1,Sword,Basic,Equipment,---,Simple,1+0,---,---,,sword,,---
-bow,1,Bow,Basic,Equipment,---,Simple,0+0,---,The character holding this has Swift,,bow,grants: Swift,---
-helm,1,Helm,Basic,Equipment,---,Simple,0+1,---,---,,helm,,---
-slap,1,Slap,Basic,Spell,---,Simple,---,Signal,Target character loses 1 Health.,,slap,"play: target character harm, damage target 1+boost",---
-simple_wizard,4,Simple Wizard,Rare,Character,Human,Simple,3+1,Signal,Choose target player or character - deal 2 damage to the target,,simple_wizard,"play: target characterOrPlayer harm, damage target 2",Mage
-simple_messenger,3,Simple Messenger,Rare,Character,Human,Simple,1+2,Signal,Look at the top card of your opponent's deck - choose to place it on the top of your deck or discard it,,simple_messenger,play: script messenger,Scout
-staff,2,Staff,Rare,Equipment,---,Simple,2+1,---,---,,staff,,---
-herd,5,Herd,Rare,Spell,---,Simple,---,---,Add 3 Simple Farmers to the field under your control,,herd,play: summon simple_farmer 3,---
-simplify,3,Simplify,Rare,Spell,---,Simple,---,---,Target character's stats become 1+1,,simplify,"play: target character harm, setStats target 1 1",---
-simpler_farmer,5,Simpler Farmer,Exotic,Character,Human,Simple,2+4,Signal,Simpler Farmer gets +1 Attack for each other Simple Farmer on the field,,simpler_farmer,play: buff self #allies.simple_farmer 0,Worker
-simple_defender,5,Simple Defender,Exotic,Character,Human,Simple,1+6,Challenge+Tower+Protected,"Add +2 health to this character during your End Phase, and +1 health to your other Tower characters",,simple_defender,"endTurn: buff self 0 2, buff allies.tower.other 0 1",Guardian
-simpledom,5,Simpledom,Exotic,Area,---,Simple,---,---,Simple characters gain +2 in all stats,,simpledom,aura: buff allies.Simple 2 2,---
-sabre,4,Sabre,Divine,Equipment,---,Simple,5+0,---,---,,sabre,,---
-simplicity,7,Simplicity,Divine,Spell,---,Simple,---,---,Reduce all target player's character's stats by -2 in all categories. You gain +2 HP for each character effected,,simplicity,play: script simplicity,---
-the_simplistic,8,The Simplistic,Unknown,Character,Cyber+Human,Simple,5+5,---,"While The Simplistic is on the field, all Simple cards can't be targeted by curse spells (buff spells still can), Simple characters and equipment get +3 to each stat, and Simple spells deal or give 3 more",,the_simplistic,rule: lord Simple 3,Master
-fat_monkey,1,Fat Monkey,Basic,Character,Animal,Monkey,1+3,Rally,---,,fat_monkey,,Guardian
-smart_monkey,1,Smart Monkey,Basic,Character,Animal,Monkey,1+1,Rally+Swift,---,,smart_monkey,,Scout
-baby_monkey,0,Baby Monkey,Basic,Character,Animal,Monkey,1+1,Rally,---,,baby_monkey,,Student
-monkey_apprentice,2,Monkey Apprentice,Basic,Character,Animal,Monkey,2+1,Signal,Add a Banana from your deck to your hand. Shuffle your deck,,monkey_apprentice,"play: fetch banana, shuffle",Student
-chimp,1,Chimp,Basic,Character,Animal,Monkey,1+2,Rally,---,,chimp,,Warrior
-tree_branch,3,Tree Branch,Basic,Equipment,---,Monkey,2+1,---,If there are 3 or more monkeys on the field this costs 1,,tree_branch,cost: set 1 if #allies.Monkey>=3,---
-banana,1,Banana,Basic,Spell,---,Monkey,---,---,Target character gains +1 health. Add a Peel from your deck to your hand shuffle your deck,,banana,"play: target character help, buff target ripen 1, fetch peel, shuffle",---
-peel,1,Peel,Basic,Spell,---,Monkey,---,---,Target character loses -1 health. If you control 3 or more monkeys it loses 2 health instead,,peel,"play: target character harm, damage target 1+#allies.Monkey>=3",---
-jungle,3,Jungle,Basic,Area,---,Monkey,---,---,All Monkey cards gain +1 attack,,jungle,aura: buff allies.Monkey 1 0,---
-orangutan,5,Orangutan,Rare,Character,Animal,Monkey,1+4,Signal+Rally,Gain +1 health for each other Monkey you control on the field,,orangutan,play: buff self 0 #allies.Monkey.other,Guardian
-baboon,5,Baboon,Rare,Character,Animal,Monkey,0+2,Rush+Overwhelm,Gain +1 attack for each character on the field,,baboon,aura: buff self #everyone.other 0,Warrior
-banana_tree,5,Banana Tree,Rare,Character,Plant,Monkey,0+5,Tower,During your end phase add a Banana to your hand,,banana_tree,endTurn: fetch banana,Guardian
-ape,4,Ape,Rare,Character,Animal,Monkey,3+3,Rally,---,,ape,,Warrior
-ripen,3,Ripen,Rare,Spell,---,Monkey,---,---,For the rest of the game Banana also adds +1 attack,,ripen,play: flag ripen,---
-primate,6,Primate,Exotic,Character,Animal,Monkey,2+2,Signal+Rally,Search your deck for 2 other Monkey cards that cost 2 or less and put them on the field,,primate,play: script primate,Master
-gorilla,5,Gorilla,Exotic,Character,Animal,Monkey,3+4,Rally,Each time Gorilla survives damage gain +1 Attack,,gorilla,"hurt: buff self 1 0, say self ""+1 ATK"" #ffe066",Warrior
-arboreal_intelligence,8,Arboreal Intelligence,Exotic,Spell,---,Monkey,---,---,Give all Monkey character cards +5 to all stats,,arboreal_intelligence,play: buff allies.Monkey 5 5,---
-call_of_the_jungle,6,Call of the Jungle,Divine,Spell,---,Monkey,---,---,Select 3 or less Monkey cards from your Graveyard return them to your hand,,call_of_the_jungle,play: script callOfTheJungle,---
-primeval_forest,7,Primeval Forest,Divine,Area,---,Monkey,---,---,All Monkey character cards have +3 to all stats,,primeval_forest,aura: buff allies.Monkey 3 3,---
-the_man_ape,7,The Man Ape,Unknown,Character,Human+Animal,Monkey,4+4,Challenge+Cloak+Protected,When defending gain +10 to all stats. After each of your Battle phases you may sacrifice another Monkey you control to permanently give The Man Ape +1 to all stats and fully heal it,,the_man_ape,"rule: defend 10, sacrifice Monkey",Master
-reanimated_corpse,0,Reanimated Corpse,Basic,Character,Zombie,Zombie,0+1,Reanimate,---,,reanimated_corpse,,Warrior
-lurker,1,Lurker,Basic,Character,Zombie,Zombie,1+1,---,---,,lurker,,Scout
-patched_husk,1,Patched Husk,Basic,Character,Zombie,Zombie,0+1,---,---,,patched_husk,,Worker
-hungry_corpse,2,Hungry Corpse,Basic,Character,Zombie,Zombie,2+1,Reanimate,Gain +1 to all stats when brought from the Graveyard to the Field,,hungry_corpse,reanimate: buff self 1 1,Warrior
-extra_arm,2,Extra Arm,Basic,Equipment,---,Zombie,2+0,---,---,,extra_arm,,---
-haunt_the_living,3,Haunt the Living,Basic,Spell,---,Zombie,---,---,Target character gains Reanimate,,haunt_the_living,"play: target character help, grant target Reanimate",---
-rotten_finger,3,Rotten Finger,Basic,Spell,---,Zombie,---,---,Discard a card in your hand draw a card,,rotten_finger,play: script rottenFinger,---
-rotten_hand,5,Rotten Hand,Basic,Spell,---,Zombie,---,---,Discard all the cards in your hand draw 3 cards,,rotten_hand,"play: discardHand me, draw me 3",---
-rise_from_the_dead,4,Rise from the Dead,Basic,Spell,---,Zombie,---,---,Return target Undead character from your graveyard to the Field,,rise_from_the_dead,play: script riseFromTheDead,---
-plaguemancer,8,Plaguemancer,Rare,Character,Zombie,Zombie,2+2,Signal,Turn target character into a Zombie and gain control of it. That character gains Reanimate,,plaguemancer,"play: target character steal, convert target reanimate",Mage
-breathing_wall,2,Breathing Wall,Rare,Character,Zombie,Zombie,0+5,Tower+Challenge+Protected,---,,breathing_wall,,Guardian
-sneaky_skinbag,4,Sneaky Skinbag,Rare,Character,Zombie,Zombie,1+2,Cloak,During your End Phase create a Reanimated Corpse on your side of the field. Gain +1 health for each other Zombie on the field,,sneaky_skinbag,"endTurn: buff self 0 #allies.Zombie.other, summon reanimated_corpse 1",Scout
-midnight_madness,6,Midnight Madness,Rare,Area,---,Zombie,---,---,Undead characters gain +2 to all stats,,midnight_madness,aura: buff allies.Undead 2 2,---
-infection,5,Infection,Rare,Spell,---,Zombie,---,---,Turn target character into a Zombie and gain control of it,,infection,"play: target character steal, convert target",---
-shadow_stitched_soldier,4,Shadow-Stitched Soldier,Exotic,Character,Zombie,Zombie,3+2,Reanimate+Evolve,After returning from the Graveyard to the Field Evolve,,shadow_stitched_soldier,,Warrior
-zombombadier,7,Zombombadier,Exotic,Character,Zombie,Zombie,1+2,Reanimate+Evolve,Deal damage to all characters and players equal to this Zombombadier's stat line. After returning from the Graveyard to the Field Evolve,,zombombadier,enter: script zombombadier,Warrior
-soul_suction,6,Soul Suction,Exotic,Spell,---,Zombie,---,Flash,Destroy target character gain HP based on that character's stat-line,,soul_suction,"play: target character harm, script soulSuction",---
-they_just_keep_coming,15,They Just Keep Coming,Divine,Spell,---,Zombie,---,---,This costs 1 less for each Zombie on the field. Every Zombie gains Reanimate. If a Zombie already has Reanimate give them +3 health,,they_just_keep_coming,play: script keepComing; cost: reduce #everyone.Zombie,---
-deaths_grasp,6,Death's Grasp,Divine,Spell,---,Zombie,---,---,Destroy target character. Ignore skills and abilities,,deaths_grasp,"play: target character harm, destroy target",---
-soul_shepard,5,Soul Shepard,Unknown,Character,Zombie,Zombie,3+3,Challenge+Protected,"Each time another Zombie is sent to your graveyard, choose: gain its stats as they read, or return it to your hand. This card also gets +1 Health each time an Undead character dies, on either side, counted from the start of the match wherever it is",,soul_shepard,"rule: shepherd Zombie, grieve Undead",Master
-seasoned_monk,2,Seasoned Monk,Basic,Character,Human,Fighter,2+2,Parry+Swift,---,,seasoned_monk,,Warrior+Fighter
-white_belt_student,1,White Belt Student,Basic,Character,Human,Fighter,1+1,Level Up+Transform,Level Up whenever an equipment enters the Field. After Level Up is triggered 3 times Transform into Black Belt Student. Keep stats from Level Up,,white_belt_student,gearEnters: levelUp self 1; maxLevel: transform self black_belt_student,Student+Fighter
-weapons_enthusiast,1,Weapons Enthusiast,Basic,Character,Human,Fighter+Simple,1+1,---,Equip costs become 1 when equipping to Weapons Enthusiast,,weapons_enthusiast,rule: equipCostMax 1,Warrior+Fighter
-sensei,5,Sensei,Basic,Character,Human,Fighter,2+2,Pierce,"While Sensei is on the field all equip costs become 0, and your Students get +1 to all stats",,sensei,rule: freeEquip; aura: buff allies.class:Student 1 1,Master+Fighter
-sparring_gear,3,Sparring Gear,Basic,Equipment,---,Fighter,0+3,---,---,,sparring_gear,,---
-zippy_shoes,3,Zippy Shoes,Basic,Equipment,---,Fighter,0+2,---,The character holding this has Swift,,zippy_shoes,grants: Swift,---
-mc_knuckle_dusters,3,McKnuckle Dusters,Basic,Equipment,---,Fighter,3+0,---,---,,mc_knuckle_dusters,,---
-bite_the_ear,1,Bite the Ear,Basic,Spell,---,Fighter,---,---,Target character loses 1 health,,bite_the_ear,"play: target character harm, damage target 1",---
-sweep_the_leg,2,Sweep the Leg,Basic,Spell,---,Fighter,---,---,Target character loses Swift and 1 Attack,,sweep_the_leg,"play: target character harm, removeSkill target Swift, loseAttack target 1",---
-black_belt_student,3,Black Belt Student,Rare,Character,Human,Fighter,2+2,Parry+Transform,Transform into 5th Degree Master after surviving 3 combat phases,,black_belt_student,rule: survive 3 fifth_degree_master,Student+Fighter
-fight_choreographer,6,Fight Choreographer,Rare,Character,Human,Fighter,1+2,---,Each other Fighter character on the field gains +2 to all stats,,fight_choreographer,aura: buff allies.Fighter.other 2 2,Master+Fighter
-nunchucks,2,Nunchucks,Rare,Equipment,---,Fighter,2+0,Flash,Can be equipped anytime as long as you have the mana,,nunchucks,,---
-bo_staff,2,Bo Staff,Rare,Equipment,---,Fighter,2+2,Flash,Can be equipped anytime as long as you have the mana,,bo_staff,,---
-dojo,4,Dojo,Rare,Area,---,Fighter,---,---,Each Fighter character gains Parry and +2 to all stats,,dojo,"aura: buff allies.Fighter 2 2, grant allies.Fighter Parry",---
-fifth_degree_master,7,5th Degree Master,Exotic,Character,Human,Fighter,3+3,Parry+Pierce,Your Student Fighters have Parry,,fifth_degree_master,aura: grant allies.class:Student.class:Fighter Parry,Master+Fighter
-master_rat,10,Master Rat,Exotic,Character,Animal,Fighter+Monkey,5+5,Parry,Summon 4 1+1 turtles who each have Gain +1 to each stat for every other turtle on the field,,master_rat,enter: script masterRat,Master+Fighter
-crane_kick,5,Crane Kick,Exotic,Spell,---,Fighter,---,---,Target character loses 7 health,,crane_kick,"play: target character harm, damage target 7",---
-shaolin_warrior,20,Shaolin Warrior,Divine,Character,Human,Fighter,10+10,Challenge+Protected,Each character and equipment on the field makes this card cost 1 less,,shaolin_warrior,cost: reduce #everyone+#gear,Warrior+Fighter
-kenshis_blade,7,Kenshi's Blade,Divine,Equipment,---,Fighter,8+0,---,Once per Battle Phase on your turn choose to deal 3 damage to target character,,kenshis_blade,"play: target character.enemy harm, damage target 3; rule: strike",---
-ip_man,6,IP Man,Unknown,Character,Human,Fighter,4+6,Parry,Once per turn the first damage that would be dealt to you or IP Man goes to an enemy character or player of your choice instead,,ip_man,"play: target characterOrPlayer.enemy harm, damage target amount; rule: redirect",Master+Fighter
-noob,0,Noob,Basic,Character,Human,Digital,1+1,Level Up,---,,noob,,Student
-glitch,1,Glitch,Basic,Character,Cyber,Digital,2+1,Level Up+Rush+Swift,---,,glitch,,Scout
-spam_bot,1,Spam Bot,Basic,Character,Cyber,Digital,1+1,Signal,Trigger target character's Level Up,,spam_bot,"play: target character.leveler help, levelUp target 1",Worker
-gaming_headset,1,Gaming Headset,Basic,Equipment,---,Digital,1+0,---,---,,gaming_headset,,---
-speedrunner,2,Speedrunner,Basic,Character,Human,Digital,2+1,Rush+Swift,Gets +1 attack for each other Swift character you control,,speedrunner,aura: buff self #allies.swift.other 0,Scout
-beta_tester,2,Beta Tester,Basic,Character,Human,Digital,1+2,Level Up,Levels Up during your End Phase,,beta_tester,endTurn: levelUp self 1,Worker
-upgrade,2,Upgrade,Basic,Spell,---,Digital,---,---,Trigger target character's Level Up,,upgrade,"play: target character.leveler help, levelUp target 1",---
-digital_girlfriend,2,Digital Girlfriend,Basic,Character,Cyber,Digital,2+1,Signal,Trigger target character's Level Up,,digital_girlfriend,"play: target character.leveler help, levelUp target 1",Worker
-catfish,3,Catfish,Basic,Spell,---,Digital,---,Flash,Target character loses -1 to all stats,,catfish,"play: target character harm, shrink target 1",---
-secure_the_data,3,Secure the Data,Basic,Spell,---,Digital,---,Flash,Target character gains Cloak until the start of your next turn,,secure_the_data,"play: target character help, grant target Cloak temp, say target SECURED #6fe3ff",---
-pro_gamer,3,Pro Gamer,Rare,Character,Human,Digital,3+1,Level Up,Levels Up each time it attacks,,pro_gamer,attack: levelUp self 1,Warrior
-pesky_programmer,4,Pesky Programmer,Rare,Character,Human,Digital,2+1,Level Up,When this character Levels Up it gains +2 Attack but +0 Health,,pesky_programmer,rule: levelGain 2 0,Mage
-hacker,4,Hacker,Rare,Character,Human,Digital,3+1,Cloak+Swift+Pierce,---,,hacker,,Scout
-gymfluencer,5,Gymfluencer,Rare,Character,Human,Digital,1+2,Signal,Trigger target character's Level Up twice,,gymfluencer,"play: target character.leveler help, levelUp target 2",Master
-api_key,5,API Key,Rare,Equipment,---,Digital,1+1,---,This character gains Level Up. The character holding this Levels Up during your End Phase,,api_key,"endTurn: levelUp holder 1; rule: teach ""Level Up""",---
-overclocker,5,Overclocker,Exotic,Character,Human,Digital,7+1,Level Up+Pierce,---,,overclocker,,Warrior
-data_collector,6,Data Collector,Exotic,Character,Cyber,Digital,2+2,Level Up+Challenge+Protected,When your other characters Level Up Data Collector gains +1 Health,,data_collector,"allyLevelUp: grow self 1, say self ""+1 HP"" #6fe3ff",Guardian
-server_farm,6,Server Farm,Exotic,Character,Cyber,Digital,1+6,Tower,Your characters Level Up during your End Phase,,server_farm,endTurn: levelUp allies 1,Guardian
-data_transfer,6,Data Transfer,Divine,Area,---,Digital,---,---,Once during each of your Setup phases you may remove a Level from one of your characters to gain 2 HP. During your End Phase your strongest Level Up character Levels Up,,data_transfer,"play: target character.mine.levels help, script dataTransfer; endTurn: levelUp allies.leveler.strongest 1; rule: activate",---
-digital_drainage,9,Digital Drainage,Divine,Spell,---,Digital,---,---,Your Level Up characters Level Up 3 times. Each opposing character loses Attack equal to the number of Levels of your highest-Attack Level Up character,,digital_drainage,play: script digitalDrainage,---
-boss_level,7,Boss Level,Unknown,Character,Cyber,Digital,6+4,Level Up,This character has no limit to Level Up,,boss_level,rule: levelCap none,Master
+flame_surge,3,Flame Surge,Basic,Spell,---,N/A,---,---,Deal 1 damage to all characters and players,A shard that fell too fast and never cooled.,flame_surge,play: damageAll 1,---
+fire_storm,5,Fire Storm,Rare,Spell,---,N/A,---,---,Deal 3 damage to all characters and players,"When three burning shards land at once, nobody claims them. Everybody runs.",fire_storm,play: damageAll 3,---
+whirlpool,4,Whirlpool,Basic,Area,---,N/A,---,---,All characters take 1 damage when this enters the field,"Water from one world, a drain from another. Everything nearby gets a little wet.",whirlpool,play: damage everyone 1,---
+call_back,4,Call Back,Rare,Spell,---,N/A,---,---,Return target character from a graveyard to your hand,Some shards remember who held them last.,call_back,play: script callBack,---
+nullify,4,Nullify,Rare,Spell,---,N/A,---,Flash,Counter target character or spell,"The oldest trick a Shardkeeper learns: hold one shard against another, and both go quiet.",nullify,counter: character spell,---
+disable,3,Disable,Divine,Spell,---,N/A,---,---,Choose a character. That character now has no abilities,It doesn't hurt. It just takes away everything that made you special.,disable,"play: target character harm, disable target",---
+nope_for_one,2,Nope for One,Basic,Spell,---,N/A,---,Flash,Counter target spell which targets a single character,Nope.,nope_for_one,counter: spellSingle,---
+nope_for_all,2,Nope for All,Basic,Spell,---,N/A,---,Flash,Counter target spell which targets more than 1 character,Nope. All of you.,nope_for_all,counter: spellMany,---
+return_to_sender,3,Return to Sender,Basic,Spell,---,N/A,---,Flash,Counter target character,"No, thank you. Please take it back.",return_to_sender,counter: character,---
+try_again,3,Try Again,Basic,Spell,---,N/A,---,Flash,Counter target spell,Not this time.,try_again,counter: spell,---
+mana_horder,7,Mana Horder,Exotic,Character,Goblin,N/A,2+2,Signal,Steal a mana from an opposing player and add it to your own maximum mana,"Goblins found the shards last and decided that made them first. It keeps every crumb of mana it can grab, and some it can't.",mana_horder,"play: maxMana me 1, maxMana foe -1",Scout
+area_denial,3,Area Denial,Basic,Spell,---,N/A,---,---,Destroy target Area,"Whatever stood here, it doesn't anymore.",area_denial,"play: target area harm, destroyArea target",---
+simple_farmer,1,Simple Farmer,Basic,Character,Human,Simple,1+1,---,"When played, search your deck for a Simple Farmer and add it to your hand. Once you control 3 Simple Farmers on the field, search your deck for a Simpler Farmer and put him on the field",Plants the same row every morning. Has never wondered why.,simple_farmer,"enter: fetch simple_farmer, summonFromDeck simpler_farmer if #allies.simple_farmer>=3",Worker
+simple_barkeep,1,Simple Barkeep,Basic,Character,Human,Simple,1+1,Signal,Add +1 health to target character,Pours the same drink for everyone. Nobody has ever asked for a different one.,simple_barkeep,"play: target character help, buff target 0 1",Worker
+simple_swordsman,2,Simple Swordsman,Basic,Character,Human,Simple,2+1,---,---,Sword up. Feet planted. Simple.,simple_swordsman,,Warrior
+simple_bowman,2,Simple Bowman,Basic,Character,Human,Simple,1+1,Rush+Swift,---,"Aims straight, because straight is the only way it knows.",simple_bowman,,Scout
+simple_wanderer,2,Simple Wanderer,Basic,Character,Human,Simple,1+2,---,---,"Walks to the edge of the village every day, looks out, and walks back.",simple_wanderer,,Scout
+sword,1,Sword,Basic,Equipment,---,Simple,1+0,---,---,Pointy end first.,sword,,---
+bow,1,Bow,Basic,Equipment,---,Simple,0+0,---,The character holding this has Swift,Pull back. Let go. Done.,bow,grants: Swift,---
+helm,1,Helm,Basic,Equipment,---,Simple,0+1,---,---,It doesn't fit anyone perfectly. It fits everyone well enough.,helm,,---
+slap,1,Slap,Basic,Spell,---,Simple,---,Signal,Target character loses 1 Health.,"Rude, but effective.",slap,"play: target character harm, damage target 1+boost",---
+simple_wizard,4,Simple Wizard,Rare,Character,Human,Simple,3+1,Signal,Choose target player or character - deal 2 damage to the target,Knows exactly one spell and has never needed a second.,simple_wizard,"play: target characterOrPlayer harm, damage target 2",Mage
+simple_messenger,3,Simple Messenger,Rare,Character,Human,Simple,1+2,Signal,Look at the top card of your opponent's deck - choose to place it on the top of your deck or discard it,"Every message it carries is short. Most of them say ""All is well.""",simple_messenger,play: script messenger,Scout
+staff,2,Staff,Rare,Equipment,---,Simple,2+1,---,---,"A walking stick, until it isn't.",staff,,---
+herd,5,Herd,Rare,Spell,---,Simple,---,---,Add 3 Simple Farmers to the field under your control,"Three farmers, one field, no arguments.",herd,play: summon simple_farmer 3,---
+simplify,3,Simplify,Rare,Spell,---,Simple,---,---,Target character's stats become 1+1,"Whatever you were, you're a little less of it now. Simpler is better. That's what they say.",simplify,"play: target character harm, setStats target 1 1",---
+simpler_farmer,5,Simpler Farmer,Exotic,Character,Human,Simple,2+4,Signal,Simpler Farmer gets +1 Attack for each other Simple Farmer on the field,"Even simpler than the Simple Farmer. Somehow, it works better with friends.",simpler_farmer,play: buff self #allies.simple_farmer 0,Worker
+simple_defender,5,Simple Defender,Exotic,Character,Human,Simple,1+6,Challenge+Tower+Protected,"Add +2 health to this character during your End Phase, and +1 health to your other Tower characters",Stands at the gate every night. Has never been told what it is guarding against.,simple_defender,"endTurn: buff self 0 2, buff allies.tower.other 0 1",Guardian
+simpledom,5,Simpledom,Exotic,Area,---,Simple,---,---,Simple characters gain +2 in all stats,A village where the sun rises at the same minute every day. The villagers like it that way.,simpledom,aura: buff allies.Simple 2 2,---
+sabre,4,Sabre,Divine,Equipment,---,Simple,5+0,---,---,The fanciest thing in the village. It has never been used for anything fancy.,sabre,,---
+simplicity,7,Simplicity,Divine,Spell,---,Simple,---,---,Reduce all target player's character's stats by -2 in all categories. You gain +2 HP for each character effected,Everything was fine when it was small.,simplicity,play: script simplicity,---
+the_simplistic,8,The Simplistic,Unknown,Character,Cyber+Human,Simple,5+5,---,"While The Simplistic is on the field, all Simple cards can't be targeted by curse spells (buff spells still can), Simple characters and equipment get +3 to each stat, and Simple spells deal or give 3 more",Everything was fine before. Everything will be fine again. Everything is fine.,the_simplistic,rule: lord Simple 3,Master
+fat_monkey,1,Fat Monkey,Basic,Character,Animal,Monkey,1+3,Rally,---,Not lazy. Conserving energy.,fat_monkey,,Guardian
+smart_monkey,1,Smart Monkey,Basic,Character,Animal,Monkey,1+1,Rally+Swift,---,Figured out the shards are valuable. Hasn't figured out why.,smart_monkey,,Scout
+baby_monkey,0,Baby Monkey,Basic,Character,Animal,Monkey,1+1,Rally,---,"Small, loud, and always underfoot.",baby_monkey,,Student
+monkey_apprentice,2,Monkey Apprentice,Basic,Character,Animal,Monkey,2+1,Signal,Add a Banana from your deck to your hand. Shuffle your deck,Learning the most important skill in the troop: where the bananas are.,monkey_apprentice,"play: fetch banana, shuffle",Student
+chimp,1,Chimp,Basic,Character,Animal,Monkey,1+2,Rally,---,Hasn't figured out what the shards are for. Collects them anyway.,chimp,,Warrior
+tree_branch,3,Tree Branch,Basic,Equipment,---,Monkey,2+1,---,If there are 3 or more monkeys on the field this costs 1,Every branch is a weapon if you swing it hard enough.,tree_branch,cost: set 1 if #allies.Monkey>=3,---
+banana,1,Banana,Basic,Spell,---,Monkey,---,---,Target character gains +1 health. Add a Peel from your deck to your hand shuffle your deck,The jungle's only currency. Accepted everywhere the troop goes.,banana,"play: target character help, buff target ripen 1, fetch peel, shuffle",---
+peel,1,Peel,Basic,Spell,---,Monkey,---,---,Target character loses -1 health. If you control 3 or more monkeys it loses 2 health instead,"What goes up, slips down.",peel,"play: target character harm, damage target 1+#allies.Monkey>=3",---
+jungle,3,Jungle,Basic,Area,---,Monkey,---,---,All Monkey cards gain +1 attack,It wasn't here last week. The troop doesn't ask questions.,jungle,aura: buff allies.Monkey 1 0,---
+orangutan,5,Orangutan,Rare,Character,Animal,Monkey,1+4,Signal+Rally,Gain +1 health for each other Monkey you control on the field,"Slow to anger, slower to move, impossible to move once settled.",orangutan,play: buff self 0 #allies.Monkey.other,Guardian
+baboon,5,Baboon,Rare,Character,Animal,Monkey,0+2,Rush+Overwhelm,Gain +1 attack for each character on the field,"The louder the room, the stronger it gets.",baboon,aura: buff self #everyone.other 0,Warrior
+banana_tree,5,Banana Tree,Rare,Character,Plant,Monkey,0+5,Tower,During your end phase add a Banana to your hand,"Grows a banana every night. The troop guards it like treasure, because it is.",banana_tree,endTurn: fetch banana,Guardian
+ape,4,Ape,Rare,Character,Animal,Monkey,3+3,Rally,---,Big. Strong. Not much more to say.,ape,,Warrior
+ripen,3,Ripen,Rare,Spell,---,Monkey,---,---,For the rest of the game Banana also adds +1 attack,"Give it time, and even a banana can hit back.",ripen,play: flag ripen,---
+primate,6,Primate,Exotic,Character,Animal,Monkey,2+2,Signal+Rally,Search your deck for 2 other Monkey cards that cost 2 or less and put them on the field,"When it calls, the little ones come running.",primate,play: script primate,Master
+gorilla,5,Gorilla,Exotic,Character,Animal,Monkey,3+4,Rally,Each time Gorilla survives damage gain +1 Attack,Every hit only makes it angrier.,gorilla,"hurt: buff self 1 0, say self ""+1 ATK"" #ffe066",Warrior
+arboreal_intelligence,8,Arboreal Intelligence,Exotic,Spell,---,Monkey,---,---,Give all Monkey character cards +5 to all stats,"For one brief, terrifying moment, every monkey understands everything.",arboreal_intelligence,play: buff allies.Monkey 5 5,---
+call_of_the_jungle,6,Call of the Jungle,Divine,Spell,---,Monkey,---,---,Select 3 or less Monkey cards from your Graveyard return them to your hand,No monkey is ever truly gone. They just went to get snacks.,call_of_the_jungle,play: script callOfTheJungle,---
+primeval_forest,7,Primeval Forest,Divine,Area,---,Monkey,---,---,All Monkey character cards have +3 to all stats,"The oldest trees in the jungle, though the jungle is only a week old.",primeval_forest,aura: buff allies.Monkey 3 3,---
+the_man_ape,7,The Man Ape,Unknown,Character,Human+Animal,Monkey,4+4,Challenge+Cloak+Protected,When defending gain +10 to all stats. After each of your Battle phases you may sacrifice another Monkey you control to permanently give The Man Ape +1 to all stats and fully heal it,"Part man, part ape, all boss. It hoards shards like bananas, and bananas like shards.",the_man_ape,"rule: defend 10, sacrifice Monkey",Master
+reanimated_corpse,0,Reanimated Corpse,Basic,Character,Zombie,Zombie,0+1,Reanimate,---,It got back up. That's all anyone can ask.,reanimated_corpse,,Warrior
+lurker,1,Lurker,Basic,Character,Zombie,Zombie,1+1,---,---,It waits. It is very good at waiting.,lurker,,Scout
+patched_husk,1,Patched Husk,Basic,Character,Zombie,Zombie,0+1,---,---,"Held together with string, stubbornness, and a little hope.",patched_husk,,Worker
+hungry_corpse,2,Hungry Corpse,Basic,Character,Zombie,Zombie,2+1,Reanimate,Gain +1 to all stats when brought from the Graveyard to the Field,"It was the first thing found in the wreckage, so everyone decided it was to blame.",hungry_corpse,reanimate: buff self 1 1,Warrior
+extra_arm,2,Extra Arm,Basic,Equipment,---,Zombie,2+0,---,---,Not everyone's. Yours now.,extra_arm,,---
+haunt_the_living,3,Haunt the Living,Basic,Spell,---,Zombie,---,---,Target character gains Reanimate,Death is just a short break.,haunt_the_living,"play: target character help, grant target Reanimate",---
+rotten_finger,3,Rotten Finger,Basic,Spell,---,Zombie,---,---,Discard a card in your hand draw a card,Point at what you want. It might still fall off.,rotten_finger,play: script rottenFinger,---
+rotten_hand,5,Rotten Hand,Basic,Spell,---,Zombie,---,---,Discard all the cards in your hand draw 3 cards,"Let it all go. Something better will turn up, probably.",rotten_hand,"play: discardHand me, draw me 3",---
+rise_from_the_dead,4,Rise from the Dead,Basic,Spell,---,Zombie,---,---,Return target Undead character from your graveyard to the Field,Not yet.,rise_from_the_dead,play: script riseFromTheDead,---
+plaguemancer,8,Plaguemancer,Rare,Character,Zombie,Zombie,2+2,Signal,Turn target character into a Zombie and gain control of it. That character gains Reanimate,It does not hate the living. It just thinks they would be happier this way.,plaguemancer,"play: target character steal, convert target reanimate",Mage
+breathing_wall,2,Breathing Wall,Rare,Character,Zombie,Zombie,0+5,Tower+Challenge+Protected,---,"Every few seconds, the wall exhales. Nobody likes to lean on it.",breathing_wall,,Guardian
+sneaky_skinbag,4,Sneaky Skinbag,Rare,Character,Zombie,Zombie,1+2,Cloak,During your End Phase create a Reanimated Corpse on your side of the field. Gain +1 health for each other Zombie on the field,"Where there's one, there are always more. It makes sure of that.",sneaky_skinbag,"endTurn: buff self 0 #allies.Zombie.other, summon reanimated_corpse 1",Scout
+midnight_madness,6,Midnight Madness,Rare,Area,---,Zombie,---,---,Undead characters gain +2 to all stats,"At midnight the dead get restless, and the restless get strong.",midnight_madness,aura: buff allies.Undead 2 2,---
+infection,5,Infection,Rare,Spell,---,Zombie,---,---,Turn target character into a Zombie and gain control of it,"One bite, and the argument is over.",infection,"play: target character steal, convert target",---
+shadow_stitched_soldier,4,Shadow-Stitched Soldier,Exotic,Character,Zombie,Zombie,3+2,Reanimate+Evolve,After returning from the Graveyard to the Field Evolve,"Stitched from the shadows of a dozen soldiers. Each time it falls, it comes back with a little more of them.",shadow_stitched_soldier,,Warrior
+zombombadier,7,Zombombadier,Exotic,Character,Zombie,Zombie,1+2,Reanimate+Evolve,Deal damage to all characters and players equal to this Zombombadier's stat line. After returning from the Graveyard to the Field Evolve,Handle with care. Then run.,zombombadier,enter: script zombombadier,Warrior
+soul_suction,6,Soul Suction,Exotic,Spell,---,Zombie,---,Flash,Destroy target character gain HP based on that character's stat-line,"Everything a soul was, poured into something else.",soul_suction,"play: target character harm, script soulSuction",---
+they_just_keep_coming,15,They Just Keep Coming,Divine,Spell,---,Zombie,---,---,This costs 1 less for each Zombie on the field. Every Zombie gains Reanimate. If a Zombie already has Reanimate give them +3 health,You can win every fight and still lose the war.,they_just_keep_coming,play: script keepComing; cost: reduce #everyone.Zombie,---
+deaths_grasp,6,Death's Grasp,Divine,Spell,---,Zombie,---,---,Destroy target character. Ignore skills and abilities,No tricks. No second chances. Just the end.,deaths_grasp,"play: target character harm, destroy target",---
+soul_shepard,5,Soul Shepard,Unknown,Character,Zombie,Zombie,3+3,Challenge+Protected,"Each time another Zombie is sent to your graveyard, choose: gain its stats as they read, or return it to your hand. This card also gets +1 Health each time an Undead character dies, on either side, counted from the start of the match wherever it is","It gathers the fallen from every world, and never asks whose fault it was.",soul_shepard,"rule: shepherd Zombie, grieve Undead",Master
+seasoned_monk,2,Seasoned Monk,Basic,Character,Human,Fighter,2+2,Parry+Swift,---,Has trained every day for forty years. Still calls it practice.,seasoned_monk,,Warrior+Fighter
+white_belt_student,1,White Belt Student,Basic,Character,Human,Fighter,1+1,Level Up+Transform,Level Up whenever an equipment enters the Field. After Level Up is triggered 3 times Transform into Black Belt Student. Keep stats from Level Up,Day one. Every master had one.,white_belt_student,gearEnters: levelUp self 1; maxLevel: transform self black_belt_student,Student+Fighter
+weapons_enthusiast,1,Weapons Enthusiast,Basic,Character,Human,Fighter+Simple,1+1,---,Equip costs become 1 when equipping to Weapons Enthusiast,"Has opinions about every weapon ever made, and will share them.",weapons_enthusiast,rule: equipCostMax 1,Warrior+Fighter
+sensei,5,Sensei,Basic,Character,Human,Fighter,2+2,Pierce,"While Sensei is on the field all equip costs become 0, and your Students get +1 to all stats","The best teachers make it look easy, so their students never notice how hard it was.",sensei,rule: freeEquip; aura: buff allies.class:Student 1 1,Master+Fighter
+sparring_gear,3,Sparring Gear,Basic,Equipment,---,Fighter,0+3,---,---,Padding for the body. Nothing for the pride.,sparring_gear,,---
+zippy_shoes,3,Zippy Shoes,Basic,Equipment,---,Fighter,0+2,---,The character holding this has Swift,"Fast feet, faster fists.",zippy_shoes,grants: Swift,---
+mc_knuckle_dusters,3,McKnuckle Dusters,Basic,Equipment,---,Fighter,3+0,---,---,For when politeness has run out.,mc_knuckle_dusters,,---
+bite_the_ear,1,Bite the Ear,Basic,Spell,---,Fighter,---,---,Target character loses 1 health,Not in any rulebook. Works anyway.,bite_the_ear,"play: target character harm, damage target 1",---
+sweep_the_leg,2,Sweep the Leg,Basic,Spell,---,Fighter,---,---,Target character loses Swift and 1 Attack,"Balance is everything. Take it away, and nothing is left.",sweep_the_leg,"play: target character harm, removeSkill target Swift, loseAttack target 1",---
+black_belt_student,3,Black Belt Student,Rare,Character,Human,Fighter,2+2,Parry+Transform,Transform into 5th Degree Master after surviving 3 combat phases,Knows every move. Now it must learn when to use them.,black_belt_student,rule: survive 3 fifth_degree_master,Student+Fighter
+fight_choreographer,6,Fight Choreographer,Rare,Character,Human,Fighter,1+2,---,Each other Fighter character on the field gains +2 to all stats,Every punch is a step in a dance. It knows all the steps.,fight_choreographer,aura: buff allies.Fighter.other 2 2,Master+Fighter
+nunchucks,2,Nunchucks,Rare,Equipment,---,Fighter,2+0,Flash,Can be equipped anytime as long as you have the mana,Hard to master. Easy to bonk yourself with.,nunchucks,,---
+bo_staff,2,Bo Staff,Rare,Equipment,---,Fighter,2+2,Flash,Can be equipped anytime as long as you have the mana,"Long reach, longer tradition.",bo_staff,,---
+dojo,4,Dojo,Rare,Area,---,Fighter,---,---,Each Fighter character gains Parry and +2 to all stats,"Respect the floor, and it will respect you.",dojo,"aura: buff allies.Fighter 2 2, grant allies.Fighter Parry",---
+fifth_degree_master,7,5th Degree Master,Exotic,Character,Human,Fighter,3+3,Parry+Pierce,Your Student Fighters have Parry,"It has nothing left to prove, and still trains every morning.",fifth_degree_master,aura: grant allies.class:Student.class:Fighter Parry,Master+Fighter
+master_rat,10,Master Rat,Exotic,Character,Animal,Fighter+Monkey,5+5,Parry,Summon 4 1+1 turtles who each have Gain +1 to each stat for every other turtle on the field,"Old, wise, and very fond of its four students. They are all turtles, and nobody has asked why.",master_rat,enter: script masterRat,Master+Fighter
+crane_kick,5,Crane Kick,Exotic,Spell,---,Fighter,---,---,Target character loses 7 health,"If done right, it can't be blocked.",crane_kick,"play: target character harm, damage target 7",---
+shaolin_warrior,20,Shaolin Warrior,Divine,Character,Human,Fighter,10+10,Challenge+Protected,Each character and equipment on the field makes this card cost 1 less,Born of a lifetime of training. It only steps in when the whole world is watching.,shaolin_warrior,cost: reduce #everyone+#gear,Warrior+Fighter
+kenshis_blade,7,Kenshi's Blade,Divine,Equipment,---,Fighter,8+0,---,Once per Battle Phase on your turn choose to deal 3 damage to target character,Kenshi never missed. The blade remembers.,kenshis_blade,"play: target character.enemy harm, damage target 3; rule: strike",---
+ip_man,6,IP Man,Unknown,Character,Human,Fighter,4+6,Parry,Once per turn the first damage that would be dealt to you or IP Man goes to an enemy character or player of your choice instead,"Calm, polite, and unbeatable. He bows before every fight and expects a bow back.",ip_man,"play: target characterOrPlayer.enemy harm, damage target amount; rule: redirect",Master+Fighter
+noob,0,Noob,Basic,Character,Human,Digital,1+1,Level Up,---,Level 1. Everyone starts somewhere.,noob,,Student
+glitch,1,Glitch,Basic,Character,Cyber,Digital,2+1,Level Up+Rush+Swift,---,"There for a frame, gone the next. Some say it was here before the break.",glitch,,Scout
+spam_bot,1,Spam Bot,Basic,Character,Cyber,Digital,1+1,Signal,Trigger target character's Level Up,You have 1 new message. You have 1 new message. You have 1 new message.,spam_bot,"play: target character.leveler help, levelUp target 1",Worker
+gaming_headset,1,Gaming Headset,Basic,Equipment,---,Digital,1+0,---,---,Hears everything. Mostly people yelling.,gaming_headset,,---
+speedrunner,2,Speedrunner,Basic,Character,Human,Digital,2+1,Rush+Swift,Gets +1 attack for each other Swift character you control,Has finished this fight faster in practice.,speedrunner,aura: buff self #allies.swift.other 0,Scout
+beta_tester,2,Beta Tester,Basic,Character,Human,Digital,1+2,Level Up,Levels Up during your End Phase,"Finds every bug, reports none of them.",beta_tester,endTurn: levelUp self 1,Worker
+upgrade,2,Upgrade,Basic,Spell,---,Digital,---,---,Trigger target character's Level Up,New and improved. Mostly new.,upgrade,"play: target character.leveler help, levelUp target 1",---
+digital_girlfriend,2,Digital Girlfriend,Basic,Character,Cyber,Digital,2+1,Signal,Trigger target character's Level Up,Always online. Always supportive. Never asks about the shards.,digital_girlfriend,"play: target character.leveler help, levelUp target 1",Worker
+catfish,3,Catfish,Basic,Spell,---,Digital,---,Flash,Target character loses -1 to all stats,Looked a lot better in the picture.,catfish,"play: target character harm, shrink target 1",---
+secure_the_data,3,Secure the Data,Basic,Spell,---,Digital,---,Flash,Target character gains Cloak until the start of your next turn,"Behind three firewalls, two passwords, and one very tired admin.",secure_the_data,"play: target character help, grant target Cloak temp, say target SECURED #6fe3ff",---
+pro_gamer,3,Pro Gamer,Rare,Character,Human,Digital,3+1,Level Up,Levels Up each time it attacks,Gets better every time it attacks. Mostly at trash talk.,pro_gamer,attack: levelUp self 1,Warrior
+pesky_programmer,4,Pesky Programmer,Rare,Character,Human,Digital,2+1,Level Up,When this character Levels Up it gains +2 Attack but +0 Health,It works on its machine.,pesky_programmer,rule: levelGain 2 0,Mage
+hacker,4,Hacker,Rare,Character,Human,Digital,3+1,Cloak+Swift+Pierce,---,Already inside.,hacker,,Scout
+gymfluencer,5,Gymfluencer,Rare,Character,Human,Digital,1+2,Signal,Trigger target character's Level Up twice,Doesn't train you. Just posts about it until you level up.,gymfluencer,"play: target character.leveler help, levelUp target 2",Master
+api_key,5,API Key,Rare,Equipment,---,Digital,1+1,---,This character gains Level Up. The character holding this Levels Up during your End Phase,The key to everything. Don't share it.,api_key,"endTurn: levelUp holder 1; rule: teach ""Level Up""",---
+overclocker,5,Overclocker,Exotic,Character,Human,Digital,7+1,Level Up+Pierce,---,Pushed far past what it was built for. It runs hot. It runs fast. It does not run for long.,overclocker,,Warrior
+data_collector,6,Data Collector,Exotic,Character,Cyber,Digital,2+2,Level Up+Challenge+Protected,When your other characters Level Up Data Collector gains +1 Health,It has been collecting since long before the worlds collided. It never says for whom.,data_collector,"allyLevelUp: grow self 1, say self ""+1 HP"" #6fe3ff",Guardian
+server_farm,6,Server Farm,Exotic,Character,Cyber,Digital,1+6,Tower,Your characters Level Up during your End Phase,"Rows and rows of humming racks. From above, they look a lot like turnip fields.",server_farm,endTurn: levelUp allies 1,Guardian
+data_transfer,6,Data Transfer,Divine,Area,---,Digital,---,---,Once during each of your Setup phases you may remove a Level from one of your characters to gain 2 HP. During your End Phase your strongest Level Up character Levels Up,Moving a level from here to there. Nothing is lost. Nothing is ever really lost.,data_transfer,"play: target character.mine.levels help, script dataTransfer; endTurn: levelUp allies.leveler.strongest 1; rule: activate",---
+digital_drainage,9,Digital Drainage,Divine,Spell,---,Digital,---,---,Your Level Up characters Level Up 3 times. Each opposing character loses Attack equal to the number of Levels of your highest-Attack Level Up character,Every level gained is a level someone else lost.,digital_drainage,play: script digitalDrainage,---
+boss_level,7,Boss Level,Unknown,Character,Cyber,Digital,6+4,Level Up,This character has no limit to Level Up,Every world needs a final boss. Boss Level made sure of it.,boss_level,rule: levelCap none,Master

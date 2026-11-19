@@ -93,6 +93,7 @@ $("#btn-start").addEventListener("click", () => {
 $("#btn-almanac").addEventListener("click", () => { U.almanacReturn = "menu"; showScreen("almanac"); });
 $("#btn-rules").addEventListener("click", () => showGuide());
 $("#btn-settings").addEventListener("click", showSettings);
+$("#btn-trophies").addEventListener("click", () => showTrophies());
 $("#btn-tutorial").addEventListener("click", startTutorial);
 $("#guide-back").addEventListener("click", () => showScreen(U.guideReturn === "game" && S ? "game" : "menu"));
 $("#guide-tutorial").addEventListener("click", startTutorial);
@@ -215,7 +216,7 @@ function renderAlmanac() {
   const fitsKinds = c => (!U.almanacTribe || U.almanacTribe === "All" || hasTribe(c, U.almanacTribe)) && (!U.almanacClass || U.almanacClass === "All" || hasClass(c, U.almanacClass));
   const groups = [...Object.keys(DATA.factions), "N/A"];
   const want = U.almanacFilter === "Unbound" ? "N/A" : U.almanacFilter;
-  let h = `<div class="card-grid">`;
+  let h = `<p class="lore-count">📜 Card stories found: <b>${loreCount()}</b> of ${DATA.cardList.filter(c => c.description).length}. Play a card to unlock its story; tap any card to read it.</p><div class="card-grid">`;
   for (const g of groups) {
     if (want !== "All" && want !== g) continue;
     const cards = DATA.cardList.filter(c => (want === "All" ? c.group === g : inGroup(c, g)) && fitsKinds(c)).sort((a, b) => (DATA.rarities[a.rarity]?.order - DATA.rarities[b.rarity]?.order) || a.manaCost - b.manaCost);

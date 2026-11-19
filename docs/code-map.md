@@ -140,6 +140,9 @@ their own story or coaching, then hand over to the same engine.
 | Champions speaking in every match against the computer, the end-screen line, deck mastery titles | `championSay()`, `speakerName()`, `recallHTML()`, `MASTERY_TITLES` and `masteryHTML()` in `js/campaign.js`; the lines are in `js/champions.js` |
 | Turn history (icons along the top of the battle log) | `histAdd()`, `histHTML()`, `showHist()` in `js/ui.js` |
 | A deck's record and average cost | `deckRecord()` in `js/campaign.js` (saved with mastery); shown by `masteryLine()` and the deck builder (`js/decks.js`) |
+| Card stories (unlock on first play), the end screen's "new stories" line, the Almanac count | `loreHTML()`, `newLoreHTML()`, `loreCount()` in `js/campaign.js`; the text is the Description column of `data/cards.csv` |
+| Trophies and the Trophy case | `TROPHIES`, `earnTrophy()`, `showTrophies()` in `js/campaign.js`; the Trophies button is on the start menu |
+| Campaign story cards (scene and the champion's words) | `CAMPAIGN` in `js/campaign.js` |
 | Battle log panel, computer speed | `logPanelHTML()`, `showLog()`, `AI_SPEEDS` in `js/ui.js`; both are in Settings |
 | Colours and sizes | `css/style.css` |
 | A new menu button | `index.html`, then `js/menu.js` |

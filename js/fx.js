@@ -507,7 +507,7 @@ const targetBadge = pv => (pv ? `<div class="fight-badge spell-pv ${pv.harm ? "h
 const endsTurn = c => !!(CARD_FX[c.id]?.endTurn || (c.equipped || []).some(e => CARD_FX[e.id]?.endTurn));
 function eotBadge(c, owner) {
   if (!endsTurn(c)) return "";
-  const what = [c, ...(c.equipped || [])].filter(x => CARD_FX[x.id]?.endTurn).map(x => `${x.name}: ${x.ability || x.description || ""}`).join("  ");
+  const what = [c, ...(c.equipped || [])].filter(x => CARD_FX[x.id]?.endTurn).map(x => `${x.name}: ${x.ability || ""}`).join("  ");
   const soon = owner === S.active && S.phase >= PHASE.BATTLE && !S.over;
   return `<div class="eot-badge${soon ? " soon" : ""}" title="At the end of its owner's turn. ${esc(what)}">⏳</div>`;
 }
