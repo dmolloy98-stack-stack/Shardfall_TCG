@@ -386,12 +386,12 @@ button, .btn { touch-action: manipulation; }
   color: rgba(242, 231, 207, 0.45);
 }
 .slot {
-  position: absolute; width: 95px; height: 135px;
+  position: absolute; width: 72px; height: 102px;
   border: 1px dashed rgba(217, 166, 76, 0.35);
   border-radius: 8px;
 }
 .pile {
-  position: absolute; width: 95px; height: 135px;
+  position: absolute; width: 72px; height: 102px;
   border-radius: 8px;
   display: grid; place-items: center; text-align: center;
   font-weight: 800; font-size: 14px; letter-spacing: 0.08em;
@@ -400,9 +400,13 @@ button, .btn { touch-action: manipulation; }
 }
 .pile.deck { background: linear-gradient(rgba(28, 18, 51, 0.6), rgba(28, 18, 51, 0.6)), var(--shard-emblem) center / 62% no-repeat, radial-gradient(circle at 50% 40%, #4b2e86, #1c1233 75%); box-shadow: 3px -3px 0 #1b2336, 6px -6px 0 #141a28, 0 6px 12px rgba(0,0,0,.5); border: 2px solid var(--fc); }
 .pile.grave { background: radial-gradient(circle at 50% 40%, #2a2038, #120c1e 80%); border: 2px solid #7d6aa8; box-shadow: 0 6px 12px rgba(0,0,0,.5); }
-.pile b { display: block; font-size: 26px; }
+.pile b { display: block; font-size: 21px; }
+.pile { font-size: 11px; }
 
-.field-card { position: absolute; transition: left 0.3s ease, top 0.3s ease; cursor: pointer; }
+.field-card { position: absolute; cursor: pointer; }
+/* characters on the table are drawn bigger than cards in the hand, the back row smaller */
+.field-card .card { font-size: 12px; }
+.small-card .card { font-size: 7.6px; }
 .field-card .card { transition: transform 0.15s, filter 0.2s; }
 .field-card:hover .card { transform: translateY(-3px); }
 .field-card.spent .card { filter: brightness(0.62) saturate(0.7); }
@@ -440,7 +444,7 @@ button, .btn { touch-action: manipulation; }
 .small-card { position: absolute; cursor: pointer; }
 .small-card.targetable .card { --glow: drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 1.5px var(--target)) drop-shadow(0 0 12px var(--target)); }
 .small-card .attach-cost {
-  position: absolute; left: 0; right: 0; top: 138px;
+  position: absolute; left: -6px; right: -6px; top: 104px; white-space: nowrap;
   text-align: center; font-size: 12px; font-weight: 700; color: var(--muted);
 }
 .small-card.activatable .card { --glow: drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 8px var(--glow-play)); animation: pulse 1.4s ease-in-out infinite; }
@@ -470,13 +474,25 @@ button, .btn { touch-action: manipulation; }
   background: rgba(120, 25, 10, 0.55); color: #ffd9cc; font-weight: 800; font-size: 16px; letter-spacing: 0.06em;
   cursor: pointer;
 }
+/* the battle log: a panel at the bottom right of the table; tap it for the whole match */
 .log {
-  position: absolute; left: 1135px; top: 445px; width: 285px; height: 130px;
-  overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
-  font-size: 13px; line-height: 1.3; color: rgba(242,231,207,.6);
-  mask-image: linear-gradient(transparent, #000 40%);
+  position: absolute; left: 1036px; top: 616px; width: 388px; height: 118px; padding: 6px 10px 6px 12px;
+  display: flex; flex-direction: column; text-align: left; cursor: pointer;
+  border-radius: 10px; border: 1px solid rgba(242, 231, 207, 0.22);
+  background: rgba(6, 4, 14, 0.72); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  font: 13px/1.32 var(--font-body); color: rgba(242, 231, 207, 0.62);
 }
-.log div:last-child { color: var(--parchment); }
+.log:hover, .log:focus-visible { border-color: rgba(255, 210, 122, 0.6); outline: none; }
+.log-title { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 210, 122, 0.75); }
+.log-title::after { content: " · tap to read all"; font-weight: 600; letter-spacing: 0.04em; text-transform: none; color: rgba(242, 231, 207, 0.4); }
+.log-lines { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; mask-image: linear-gradient(transparent, #000 35%); }
+.log-lines div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log-lines div:last-child { color: var(--parchment); font-weight: 700; }
+.log-lines div.fresh { animation: log-fresh 1.6s ease-out both; }
+@keyframes log-fresh { 0% { color: #ffd27a; translate: 0 6px; opacity: 0; } 12% { opacity: 1; translate: 0 0; } 60% { color: #ffd27a; } }
+.full-log { max-height: 60vh; overflow: auto; text-align: left; font-size: 15px; line-height: 1.4; padding-right: 6px; }
+.full-log p { margin: 0 0 4px; }
+.full-log p.last { color: #ffd27a; font-weight: 700; }
 
 /* hand */
 #hand-layer { position: absolute; inset: 0; pointer-events: none; }
@@ -484,8 +500,9 @@ button, .btn { touch-action: manipulation; }
 .hand-card:hover, .hand-card.lift { transform: translateY(-34px) scale(1.13) !important; z-index: 50; }
 .hand-card.playable .card { --glow: drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 8px var(--glow-play)); }
 .hand-card.dragging { opacity: 0.25; }
-.hand-card.drawn .card { animation: drawn 0.55s cubic-bezier(.2,.7,.3,1); }
-@keyframes drawn { from { transform: translate(-560px, -150px) rotate(-20deg) scale(0.8); } }
+/* a drawn card slides out of the deck (js/motion.js) and turns face up on the way */
+.hand-card.drawn .card { animation: drawn 0.45s ease-out; }
+@keyframes drawn { from { transform: perspective(500px) rotateY(150deg); filter: brightness(0.4); } 55% { filter: brightness(1.25); } }
 .ghost { position: absolute; pointer-events: none; z-index: 100; transform: scale(1.1) rotate(-3deg); filter: drop-shadow(0 18px 24px rgba(0,0,0,.6)); }
 .drop-hint { position: absolute; border: 3px dashed var(--glow-play); border-radius: 10px; background: rgba(99,224,138,.08); pointer-events: none; }
 
@@ -500,7 +517,7 @@ button, .btn { touch-action: manipulation; }
 @keyframes float { from { opacity: 1; } to { opacity: 0; transform: translate(-50%, calc(-50% - 70px)); } }
 
 #banner {
-  position: absolute; left: 320px; top: 430px; width: 800px; height: 84px; z-index: 70;
+  position: absolute; left: 320px; top: 360px; width: 800px; height: 80px;   /* the middle strip, between the two front rows */ z-index: 70;
   display: grid; place-items: center;
   background: rgba(20, 10, 4, 0.9); border: 3px solid var(--brass); border-radius: 8px;
   font-family: var(--font-display); font-size: 40px; letter-spacing: 0.08em; color: var(--parchment);
@@ -782,6 +799,7 @@ dl.words dd { margin: 0; }
 .rift { left: 0; right: 0; top: 362px; height: 76px; }
 .lane { border-radius: 12px; }
 .zone-label.front-label { width: 110px; }
+.zone-label.back-label { writing-mode: vertical-rl; rotate: 180deg; text-align: center; font-size: 10px; width: 14px; }
 
 /* crystal icons */
 .c-facet { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 1; }
@@ -959,7 +977,6 @@ dl.words dd { margin: 0; }
 .skin-battlefield .zone-label, .skin-battlefield .slot { text-shadow: 0 1px 2px #000; }
 .skin-battlefield .zone-label { color: rgba(255, 255, 255, 0.7); }
 .skin-battlefield .slot { border-color: rgba(255, 255, 255, 0.28); background: rgba(0, 0, 0, 0.12); }
-.skin-battlefield .log { color: rgba(242, 231, 207, 0.75); text-shadow: 0 1px 2px #000; }
 
 /* ============================================================ skin: Crystal Altar
    A carved stone altar floating under the falling shards. */
@@ -1004,7 +1021,6 @@ dl.words dd { margin: 0; }
 .skin-altar .slot { border: 1px solid rgba(170, 140, 255, 0.35); background: rgba(10, 5, 25, 0.35); box-shadow: inset 0 0 10px rgba(140, 90, 255, 0.25); }
 .skin-altar .bar { background: linear-gradient(#17112a, #0c0818); border-color: #8a6cf0; }
 .skin-altar .zone-label { color: rgba(220, 205, 255, 0.65); }
-.skin-altar .log { color: rgba(225, 215, 255, 0.65); }
 
 /* ============================================================ skin: War Map
    An inked battle map spread on a table by candlelight. */
@@ -1032,8 +1048,6 @@ dl.words dd { margin: 0; }
 .skin-warmap .turn-info b { color: #7a3f12; }
 .skin-warmap .turn-info span { filter: brightness(0.6) saturate(1.4); }
 .skin-warmap .instruction { color: #3b2412; }
-.skin-warmap .log { color: rgba(60, 35, 15, 0.75); }
-.skin-warmap .log div:last-child { color: #2a1508; }
 .skin-warmap .phase-step { background: rgba(70, 40, 15, 0.14); color: rgba(60, 35, 15, 0.65); }
 .skin-warmap .phase-step.on { background: #7a3f12; color: #f6ead0; }
 
@@ -1258,7 +1272,7 @@ dl.words dd { margin: 0; }
 
 /* A short callout for big moments. */
 .callout {
-  position: absolute; left: 720px; top: 330px; z-index: 5; translate: -50% -50%; display: grid; justify-items: center;
+  position: absolute; left: 720px; top: 400px; z-index: 5; translate: -50% -50%; display: grid; justify-items: center;
   font: 400 54px var(--font-display); color: #ffd166; white-space: nowrap;
   text-shadow: 0 4px 0 #5a2200, 0 0 30px rgba(255, 150, 50, 0.8);
   animation: callout 1.5s ease-out forwards;
@@ -1270,7 +1284,7 @@ dl.words dd { margin: 0; }
 .showcase-dim { position: absolute; inset: 0; background: radial-gradient(circle at 50% 43%, rgba(30, 10, 60, 0.35), rgba(0, 0, 0, 0.6)); animation: fade-in 0.25s; }
 @keyframes fade-in { from { opacity: 0; } }
 .showcase { position: absolute; left: 720px; top: 430px; z-index: 4; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 8px; animation: showcase-in 0.35s cubic-bezier(.2,1.4,.4,1); }
-.showcase .card { font-size: 22px; --glow: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 30px rgba(180, 140, 255, 0.9)); }
+.showcase .card { font-size: 22px; /* flies down to a table card, 12px */ --glow: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 30px rgba(180, 140, 255, 0.9)); }
 .showcase p { margin: 0; font: 700 20px var(--font-body); color: #e8deff; text-shadow: 0 2px 4px #000; letter-spacing: 0.06em; }
 .showcase.burst { animation: showcase-burst 0.35s ease-in forwards; }
 @keyframes showcase-in { from { transform: translate(-50%, -50%) scale(0.2) rotate(-8deg); opacity: 0; } }
@@ -1673,7 +1687,6 @@ html.intro-on .menu-inner { visibility: hidden; }
 .skin-glass .bar.top { box-shadow: inset 0 -1px 0 rgba(190, 160, 255, 0.55); }
 .skin-glass .bar.bottom { box-shadow: inset 0 1px 0 rgba(190, 160, 255, 0.55); }
 .skin-glass .zone-label { color: rgba(225, 212, 255, 0.62); }
-.skin-glass .log { color: rgba(228, 218, 255, 0.7); text-shadow: 0 1px 2px #000; }
 .skin-preview.skin-glass { background: var(--glass-window) 0 0 / 100% 100% no-repeat, linear-gradient(#1d1238, #090614); }
 
 /* A card played from nowhere in particular assembles out of light, shard by shard. */
@@ -1775,7 +1788,6 @@ html.intro-on .menu-inner { visibility: hidden; }
 .skin-crystal .slot { border: 1px solid rgba(var(--ice), 0.3); background: rgba(8, 12, 28, 0.5); box-shadow: inset 0 0 10px rgba(120, 170, 255, 0.14); }
 .skin-crystal .bar { background: linear-gradient(#0a0f20, #05070f); border-color: rgba(var(--ice), 0.3); box-shadow: inset 0 0 0 1px rgba(var(--ice), 0.1); }
 .skin-crystal .zone-label { color: rgba(var(--ice), 0.55); }
-.skin-crystal .log { color: rgba(225, 238, 255, 0.72); text-shadow: 0 1px 2px #000; }
 .skin-preview.skin-crystal { background: var(--crystal-cracks) 0 0 / 100% 100% no-repeat, linear-gradient(#0b1024, #04050d); }
 @media (prefers-reduced-motion: reduce) { .skin-crystal .scene i, .skin-crystal .side::after { animation: none; } }
 
@@ -1912,7 +1924,7 @@ html.intro-on .menu-inner { visibility: hidden; }
   100% { transform: none; opacity: 0.9; }
 }
 /* a card with the Protected skill: a ring of blue runes travels around it (runeRingHTML in js/ui.js) */
-.rune-ring { position: absolute; left: -9px; top: -9px; width: 113px; height: 153px; pointer-events: none; z-index: 2; }
+.rune-ring { position: absolute; left: -10.8px; top: -10.8px; width: 113px; height: 153px; pointer-events: none; z-index: 2; scale: 1.2; transform-origin: 0 0; }
 .rune-ring .track { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .rune-ring .t { fill: none; stroke: rgba(150, 220, 255, 0.45); stroke-width: 1; filter: drop-shadow(0 0 3px rgba(110, 200, 255, 0.9)); }
 .rune-ring .sweep { fill: none; stroke: #e4f8ff; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 16 84; filter: drop-shadow(0 0 4px #7fd4ff) drop-shadow(0 0 8px #4fb8ff); animation: rune-sweep 3.2s linear infinite; animation-delay: var(--ph); }
@@ -1963,3 +1975,56 @@ html.intro-on .menu-inner { visibility: hidden; }
 .event-pill.big { border-color: #c9a6ff; box-shadow: 0 0 14px rgba(170, 120, 255, 0.7); }
 .event-pill.big .event-when { color: #d9c2ff; }
 @media (prefers-reduced-motion: reduce) { .shard-rock, .shard-rock .sr-body, .shard-scar, .shard-scar .scar-line, .shard-scar .scar-tint { animation: none; } }
+
+/* ------------------------------------------------------------------ */
+/* Cards that travel (js/motion.js) */
+.field-card.moving, .small-card.moving { z-index: 25; }
+.ghost-card { position: absolute; z-index: 30; width: 95px; height: 135px; margin: -67.5px 0 0 -47.5px; pointer-events: none; transform-origin: 50% 50%; }
+.ghost-card .card { --glow: drop-shadow(0 0 10px rgba(180, 140, 255, 0.55)); }
+.pile.got { animation: pile-got 0.35s ease-out; }
+@keyframes pile-got { 40% { scale: 1.1; filter: brightness(1.5); } }
+/* health counting down (red) or up (green) */
+.life b, .si-life b { transition: color 0.2s; }
+.life.counting-down b, .si-life.counting-down b { color: #ff6b5b; animation: life-thump 0.16s ease-out infinite alternate; }
+.life.counting-up b, .si-life.counting-up b { color: #8dffa6; }
+@keyframes life-thump { to { scale: 1.18; } }
+@media (prefers-reduced-motion: reduce) { .life.counting-down b, .si-life.counting-down b { animation: none; } }
+
+/* the computer is thinking: three dots after its name */
+.thinking-dots { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.thinking-dots b { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: think 1s ease-in-out infinite; }
+.thinking-dots b:nth-child(2) { animation-delay: 0.15s; } .thinking-dots b:nth-child(3) { animation-delay: 0.3s; }
+@keyframes think { 0%, 100% { opacity: 0.25; translate: 0 0; } 40% { opacity: 1; translate: 0 -3px; } }
+/* your turn: your side lights up and the hand waves */
+.my-turn-glow { position: absolute; left: 0; right: 0; top: 440px; bottom: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse 70% 60% at 50% 70%, rgba(76, 201, 240, 0.22), transparent 70%);
+  animation: my-turn 1.5s ease-out forwards; }
+@keyframes my-turn { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+.hand-card.wave .card { animation: hand-wave 0.6s ease-out both; animation-delay: var(--wave, 0ms); }
+@keyframes hand-wave { 0% { translate: 0 0; } 35% { translate: 0 -22px; } 70% { translate: 0 3px; } 100% { translate: 0 0; } }
+/* a phone with the big side buttons: the table's small copies are hidden */
+#stage.side-controls [data-act="phase"], #stage.side-controls [data-act="pass"], #stage.side-controls [data-act="menu"] { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) { .thinking-dots b, .log-lines div.fresh { animation: none; } }
+
+/* Placing a card: the spots it can go light up (setPlacing in js/ui.js) */
+#stage.placing-back .slot[data-side="bottom"] { border: 2px solid var(--glow-play); background: rgba(99, 224, 138, 0.1); box-shadow: 0 0 12px rgba(99, 224, 138, 0.55); animation: zone 1.2s ease-in-out infinite; }
+#stage.placing-char .lane.front[data-side="bottom"] { outline: 2px solid var(--glow-play); outline-offset: -1px; box-shadow: 0 0 16px rgba(99, 224, 138, 0.5) !important; animation: zone 1.2s ease-in-out infinite; }
+#stage.placing-equip .field-card[data-side="bottom"] .card { --glow: drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 10px var(--glow-play)); }
+#stage.placing-off .slot[data-side="bottom"], #stage.placing-off .lane.front[data-side="bottom"] { opacity: 0.35; }
+
+/* Health bar beside the name: the part just lost shows white, then drains (js/motion.js) */
+.hpbar { position: relative; display: inline-block; vertical-align: middle; width: 118px; height: 7px; margin-left: 9px; border-radius: 4px; overflow: hidden;
+  background: rgba(0, 0, 0, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
+.hpbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
+.hpbar .chunk { width: calc(var(--chunk) * 100%); background: #fff; box-shadow: 0 0 6px #fff; }
+.hpbar .fill { width: calc(var(--hp) * 100%); background: linear-gradient(#7dffa0, #2fbf5b); }
+.hpbar.hurt .fill { background: linear-gradient(#ffc56b, #ff8a1e); }
+.hpbar.low .fill { background: linear-gradient(#ff7a6b, #d42323); }
+.si-text .hpbar { display: block; width: 100%; height: 6px; margin: 2px 0 1px; }
+/* A big hit to you: the screen's edges flash red, the crystal shows fresh cracks */
+.edge-flash { position: fixed; inset: 0; z-index: 9000; pointer-events: none;
+  box-shadow: inset 0 0 60px 14px rgba(255, 30, 20, 0.7), inset 0 0 140px 24px rgba(160, 0, 0, 0.22);
+  animation: edge-flash 0.75s ease-out forwards; }
+@keyframes edge-flash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+.crack-flash .c-crack { stroke: #ff5a4a !important; filter: drop-shadow(0 0 2px #ff3b2b); animation: crack-glow 0.9s ease-out; }
+@keyframes crack-glow { 0% { stroke-width: 3; } 100% { stroke-width: 1; } }

@@ -59,7 +59,7 @@ const allowed = (name, ...args) => muted || !actionGuard || actionGuard(name, ..
 
 function emit(type, data) { if (!muted) for (const fn of listeners) fn(type, data || {}); }
 function onGameEvent(fn) { listeners.push(fn); }
-function log(msg) { if (!muted) { S.log.push(msg); if (S.log.length > 60) S.log.shift(); emit("log", { msg }); } }
+function log(msg) { if (!muted) { S.log.push(msg); if (S.log.length > 400) S.log.shift(); emit("log", { msg }); } }   // the whole match, for the battle log
 
 // Run fn against a cloned copy of the state without emitting events.
 function simulate(fn) {
@@ -77,7 +77,14 @@ const hasSkill = (c, n) => (c.skills || []).includes(n);
 // (classes). A card can have one or two of each. c.group is the first fracture: it sets the color.
 const groupsOf = c => c.groups || [c.group];
 const inGroup = (c, g) => groupsOf(c).includes(g);
-const hasTribe = (c, t) => (c.tribes || []).includes(t);
+// A tribe family is a wider name for several tribes ("tribe_family_<Name>" rows in data/game_rules.csv):
+// Undead is every tribe that should be dead but is living (today only Zombie). A card "has" a family
+// when it has any tribe in it, so "allies.Undead" and "rule: grieve Undead" reach all of them.
+const TRIBE_FAMILIES = Object.fromEntries(Object.entries(DATA.rules).filter(([k]) => k.startsWith("tribe_family_"))
+  .map(([k, v]) => [k.slice("tribe_family_".length), String(v).split("|").map(s => s.trim()).filter(Boolean)]));
+const hasTribe = (c, t) => (c.tribes || []).includes(t) || (TRIBE_FAMILIES[t] || []).some(x => (c.tribes || []).includes(x));
+// Every tribe a character counts as: its own, plus each family one of them belongs to.
+const tribesOf = c => [...new Set([...(c.tribes || []), ...Object.keys(TRIBE_FAMILIES).filter(f => hasTribe(c, f))])];
 const hasClass = (c, k) => (c.classes || []).includes(k);
 const removeSkill = (c, n) => { const i = (c.skills || []).indexOf(n); if (i >= 0) c.skills.splice(i, 1); };
 const active = () => S.players[S.active];
@@ -331,8 +338,9 @@ function dealDamageToPlayer(p, amount, source) {
 
 function healPlayer(p, amount) {
   if (amount <= 0) return;
-  p.health = Math.max(p.health, Math.min(p.maxHealth, p.health + amount));   // the shard can lift health above the maximum; a heal never lowers it
-  emit("playerHeal", { player: p.idx, amount });
+  const before = p.health;
+  p.health = Math.max(p.health, Math.min(p.maxHealth, p.health + amount));   // never above the maximum; a heal never lowers it
+  if (p.health > before) emit("playerHeal", { player: p.idx, amount: p.health - before });   // shows what was really gained
 }
 
 function sendToGraveyard(p, c) {
@@ -343,7 +351,7 @@ function sendToGraveyard(p, c) {
   if (i >= 0) p.field.chars.splice(i, 1);
   p.grave.push(c);
   if (i >= 0) {
-    for (const tribe of c.tribes || []) S.died[tribe] = (S.died[tribe] || 0) + 1;   // Soul Shepard grows with each Undead that dies
+    for (const tribe of tribesOf(c)) S.died[tribe] = (S.died[tribe] || 0) + 1;   // Soul Shepard grows with each Undead that dies
   }
   updateRally(p);
   emit("death", { uid: c.uid, group: c.group });
@@ -472,10 +480,11 @@ function damageEverything(n) {
 }
 
 // An infected character becomes a Zombie in full: its fracture changes to Zombie (so Zombie
-// bonuses reach it) and it gains the Undead tribe on top of the tribes it had. Its class stays.
+// bonuses reach it) and it gains the Zombie tribe on top of the tribes it had (so it counts as
+// Undead too). Its class stays.
 function makeZombie(t) {
   t.group = "Zombie"; t.groups = ["Zombie"];
-  if (!hasTribe(t, "Undead")) t.tribes = [...(t.tribes || []), "Undead"];
+  if (!(t.tribes || []).includes("Zombie")) t.tribes = [...(t.tribes || []), "Zombie"];
 }
 
 function convertToZombie(ctx, t, givesReanimate) {
@@ -617,11 +626,15 @@ function activateArea(uid) {
   return true;
 }
 
+// The parts of a match's state that start empty. js/boot.js also uses this to fill in anything
+// missing from a match saved by an older version of the game (the hosted page keeps a match
+// going across updates), so a newer rule never meets a match that lacks its part.
+const baseState = () => ({ players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], nextUid: 1, log: [],
+  event: null, upcoming: null, lastEvent: null, noEvents: false, noAbilities: false, noShard: false, shard: null, shardFell: false, shardChip: [0, 0], died: {} });
+
 function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard }) {
   seed = (seed ?? newSeed()) >>> 0;
-  S = { players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], mode, nextUid: 1, log: [], seed, rng: seed,
-        event: null, upcoming: null, lastEvent: null, noEvents: events === false,
-        noAbilities: abilities === false, noShard: shard === false, shard: null, shardFell: false, shardChip: [0, 0], died: {} };
+  S = { ...baseState(), mode, seed, rng: seed, noEvents: events === false, noAbilities: abilities === false, noShard: shard === false };
   let opp = opponentDeckId;
   if (!opp) {
     const others = DATA.deckOrder.filter(id => id !== deckId);
@@ -1273,6 +1286,9 @@ function afterBattle(p) {
 // ---------------------------------------------------------------------------
 function doDraw() {
   if (!allowed("doDraw")) return false;
+  return drawStep();
+}
+function drawStep() {
   const p = active();
   if (S.phase !== PHASE.DRAW || S.over) return false;
   const c = drawCard(p);
@@ -1310,6 +1326,9 @@ function endTurn() {
   if (S.over) return false;
   if (S.pending && S.pending.kind === "target" && !S.pending.required) S.pending = null;
   if (S.pending) return false;
+  // Passing in the Draw phase still draws first, so passing can't skip a full hand's burn or
+  // an empty deck's loss.
+  if (S.phase === PHASE.DRAW) { drawStep(); if (S.over) return true; }
   // Passing straight from Battle still ends the Battle phase first, which can ask The Man Ape's question.
   if (S.phase === PHASE.BATTLE) {
     S.phase = PHASE.END;

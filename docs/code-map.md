@@ -26,8 +26,10 @@ flowchart LR
 
   engine -->|reads S| render["Board drawing<br/>js/ui.js · render()"]
   engine -->|"emit('damage', …)"| fx["Effects<br/>js/fx.js"]
+  render -->|after each redraw| motion["Cards that travel<br/>js/motion.js"]
   render --> screen(["The screen<br/>1440×1000 board, scaled to fit"])
   fx --> screen
+  motion --> screen
 ```
 
 Because the engine never draws, the computer can copy `S`, try a move on the copy
@@ -114,6 +116,7 @@ their own story or coaching, then hand over to the same engine.
 | A new column in a table | `js/data.js` |
 | A new kind of card ability | `js/effects.js` |
 | A card's fracture, tribes or classes | the Fracture, Tribes and Classes columns of `data/cards.csv`; a bonus for a whole tribe or class is written like `allies.Student` in the Effect column |
+| A tribe family (Undead = Zombie, later Skeleton, Vampire …) | the `tribe_family_Undead` row in `data/game_rules.csv`; `TRIBE_FAMILIES`, `hasTribe` and `tribesOf` in `js/engine.js` |
 | The symbols for tribes and classes | `TAG_GLYPHS` in `js/ui.js` (placeholders, to be replaced by art) |
 | A champion that bends a core rule | its `rule:` clause in the Effect column; the rule itself is in `js/engine.js` (list: `RULE_WORDS` in `js/effects.js`) |
 | An area's bonus, or a skill an area grants | the area's `aura:` clause in the Effect column |
@@ -125,6 +128,11 @@ their own story or coaching, then hand over to the same engine.
 | The main menu, deck choice or Almanac | `js/menu.js` |
 | The falling-shards menu background | `js/storm.js` |
 | Animations and feedback | `js/fx.js` and `css/style.css` |
+| Cards moving between deck, hand, table and graveyard; health counting | `js/motion.js` (`motionAfterRender()`, called at the end of `render()`) |
+| Where things sit on the table, and card sizes | `L`, `FIELD_W`, `BACK_W` at the top of `js/ui.js` |
+| Spots that light up while you drag a card | `setPlacing()` in `js/ui.js` (stage classes `placing-…` in `css/style.css`) |
+| Health bar and big hits (white chunk, red screen edges, fresh cracks) | `hpBarHTML()`, `bigHit()`, `BIG_HIT` in `js/ui.js`; the chunk drains in `js/motion.js` |
+| Battle log panel, computer speed | `logPanelHTML()`, `showLog()`, `AI_SPEEDS` in `js/ui.js`; both are in Settings |
 | Colours and sizes | `css/style.css` |
 | A new menu button | `index.html`, then `js/menu.js` |
 | Intro wording | `js/intro.js` |
@@ -139,7 +147,7 @@ their own story or coaching, then hand over to the same engine.
 | A random event (a mini shard fall in rounds 4 and 12, one round long) | names and descriptions in `data/events.csv`; what each does is `EVENT_ON_START` and `eventNow()` in `js/engine.js`, with the cost and area-bonus effects in `costFromEffect` and `auraBonus` in `js/effects.js`; the warning card is `eventPill()` in `js/ui.js` |
 | The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/style.css`; the list of skins is `SKINS` in `js/ui.js`; the long cracks are redrawn by `tools/make-crystal.js` |
 | The playable single-file copy | `tools/build-single.js` |
-| Checking a rules or card change broke nothing | `node tools/selftest.js . rand 1000` |
+| Checking a rules or card change broke nothing | `node tools/test-all.js` (every test; GitHub runs it on each push), and `node tools/selftest.js . rand 1000` for a deeper look |
 
 ## Size and shape
 

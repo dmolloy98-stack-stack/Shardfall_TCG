@@ -7,11 +7,14 @@
 //   $    finds one element on the page, like $("#board")
 //   act  runs a player's move through the rules, saves an undo step, redraws the board
 
-const W = 1440, H = 1000, CARD_W = 95, CARD_H = 135;
+// A card in the hand is CARD_W x CARD_H. Characters on the table are drawn bigger (FIELD_W x
+// FIELD_H) and the back row (areas, equipment, deck and graveyard) smaller (BACK_W x BACK_H), so
+// the fighters are what the eye goes to.
+const W = 1440, H = 1000, CARD_W = 95, CARD_H = 135, FIELD_W = 114, FIELD_H = 162, BACK_W = 72, BACK_H = 102;
 const L = {
-  top:    { chars: 222, backline: 78 },
-  bottom: { chars: 442, backline: 592 },
-  backX: 270, deckX: 30, graveX: 140, slot: 105, charStep: 110, frontW: 1140,
+  top:    { chars: 186, backline: 74 },
+  bottom: { chars: 452, backline: 624 },
+  backX: 214, deckX: 30, graveX: 112, slot: 80, charStep: 126, frontW: 1140,
   handY: 770,
 };
 
@@ -41,6 +44,10 @@ const U = {
   stats: null, endBadges: [], dragAttackAt: 0, lungeAt: 0,
   turnLandedAt: 0,
   hints: PREFS.get("hints", true),
+  showLog: PREFS.get("showLog", true),     // the battle log panel on the table (Settings)
+  aiSpeed: PREFS.get("aiSpeed", "normal"), // how fast the computer plays: slow, normal or fast (Settings)
+  logAt: new Map(),      // log line -> when it was written, so new lines light up
+  myTurnAt: 0,           // when your turn began, for the "your turn" moment
   hintOpen: true,
   hintNoteUntil: 0,
 };
@@ -178,7 +185,9 @@ const fractureLabel = c => groupsOf(c).map(groupLabel).join(" + ");
 const TAG_GLYPHS = {
   Human: '<circle cx="12" cy="8" r="3.6" fill="currentColor"/><path d="M5 20c0-4.6 3-7 7-7s7 2.4 7 7z" fill="currentColor"/>',
   Animal: '<ellipse cx="12" cy="15.5" rx="4.6" ry="3.6" fill="currentColor"/><circle cx="6.3" cy="10.6" r="1.9" fill="currentColor"/><circle cx="10" cy="6.8" r="1.9" fill="currentColor"/><circle cx="14" cy="6.8" r="1.9" fill="currentColor"/><circle cx="17.7" cy="10.6" r="1.9" fill="currentColor"/>',
-  Undead: '<path d="M12 3.5c-4.2 0-7 2.7-7 6.4 0 2.2 1 3.7 2.6 4.6V18h2v-2h1.4v2h2v-2H15v2h2v-3.5c1.6-.9 2.6-2.4 2.6-4.6 0-3.7-2.8-6.4-7.6-6.4z" fill="currentColor"/><circle cx="9.3" cy="10.4" r="1.5" fill="var(--g-bg)"/><circle cx="14.7" cy="10.4" r="1.5" fill="var(--g-bg)"/>',
+  Undead: '<path d="M6.2 20V10.2a5.8 5.8 0 0 1 11.6 0V20z" fill="currentColor"/><path d="M11.2 8h1.6v7.5h-1.6zM9 10.2h6v1.6H9z" fill="var(--g-bg)"/><rect x="3" y="19.4" width="18" height="2" rx="1" fill="currentColor"/>',   // the family: any tribe that should be dead but is living (a gravestone)
+  Zombie: '<circle cx="12" cy="12" r="5.2" fill="currentColor"/><path d="M16.6 12.0L20.0 12.0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="20.6" cy="12.0" r="1.5" fill="currentColor"/><path d="M15.3 15.3L17.7 17.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="18.1" cy="18.1" r="1.5" fill="currentColor"/><path d="M12.0 16.6L12.0 20.0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12.0" cy="20.6" r="1.5" fill="currentColor"/><path d="M8.7 15.3L6.3 17.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="5.9" cy="18.1" r="1.5" fill="currentColor"/><path d="M7.4 12.0L4.0 12.0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="3.4" cy="12.0" r="1.5" fill="currentColor"/><path d="M8.7 8.7L6.3 6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="5.9" cy="5.9" r="1.5" fill="currentColor"/><path d="M12.0 7.4L12.0 4.0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12.0" cy="3.4" r="1.5" fill="currentColor"/><path d="M15.3 8.7L17.7 6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="18.1" cy="5.9" r="1.5" fill="currentColor"/><circle cx="10.3" cy="10.6" r="1.2" fill="var(--g-bg)"/><circle cx="13.8" cy="13" r="1.5" fill="var(--g-bg)"/><circle cx="10.9" cy="14.2" r=".8" fill="var(--g-bg)"/>',   // a germ: the infection
+  Skeleton: '<path d="M12 2.8C7.6 2.8 4.8 5.7 4.8 9.6c0 2.3 1 3.9 2.6 4.8v1.8h9.2v-1.8c1.6-.9 2.6-2.5 2.6-4.8 0-3.9-2.8-6.8-7.2-6.8z" fill="currentColor"/><path d="M7.3 9.3l3.3.6-1.2 2.9zM16.7 9.3l-3.3.6 1.2 2.9zM12 12.4l-1.1 2h2.2z" fill="var(--g-bg)"/><rect x="7.6" y="17" width="8.8" height="4" rx="1.2" fill="currentColor"/><path d="M10 17v4M12 17v4M14 17v4" stroke="var(--g-bg)" stroke-width=".9"/>',   // a bony skull with its jaw
   Cyber: '<path d="M12 3l7.5 4.3v9.4L12 21l-7.5-4.3V7.3z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/>',
   Plant: '<path d="M12 21V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 12C7 12 5 8 5 4c5 0 7 3 7 8zM12 14c4 0 7-2.5 7-7-4.500 0-7 2.500-7 7z" fill="currentColor"/>',
   Goblin: '<path d="M3 8l5 2.5h8L21 8l-2.600 6.500c-1 3.500-3.600 5.500-6.400 5.500s-5.400-2-6.400-5.500z" fill="currentColor"/><circle cx="9.500" cy="13" r="1.200" fill="var(--g-bg)"/><circle cx="14.500" cy="13" r="1.200" fill="var(--g-bg)"/>',
@@ -269,8 +278,8 @@ const humanTurn = () => S && !S.over && !active().isAI && !U.curtain;
 // A target choice a person has to make, which can come up on the other player's turn (IP Man).
 const humanTarget = () => S && !S.over && !U.curtain && S.pending?.kind === "target" && !S.players[S.pending.owner].isAI;
 // Characters are spaced out evenly and squeeze together when there are many (there is no limit).
-function charStep(n) { return Math.min(L.charStep, (L.frontW - CARD_W) / Math.max(1, n - 1)); }
-function charX(i, n) { const step = charStep(n); return 720 - ((n - 1) * step + CARD_W) / 2 + i * step; }
+function charStep(n) { return Math.min(L.charStep, (L.frontW - FIELD_W) / Math.max(1, n - 1)); }
+function charX(i, n) { const step = charStep(n); return 720 - ((n - 1) * step + FIELD_W) / 2 + i * step; }
 // On a small screen the hand is drawn bigger, since it has the room.
 const PHONE_HAND = { w: 124, h: 176, font: 13, y: 722 };
 function handPos(i, n) {
@@ -284,10 +293,10 @@ function handPos(i, n) {
 function charCenter(uid) {
   for (const p of S.players) {
     const i = p.field.chars.findIndex(c => c.uid === uid);
-    if (i >= 0) return { x: charX(i, p.field.chars.length) + CARD_W / 2, y: L[sideOf(p.idx)].chars + CARD_H / 2 };
+    if (i >= 0) return { x: charX(i, p.field.chars.length) + FIELD_W / 2, y: L[sideOf(p.idx)].chars + FIELD_H / 2 };
   }
   const el = document.querySelector(`.field-card[data-uid="${uid}"]`);
-  if (el) return { x: el.offsetLeft + CARD_W / 2, y: el.offsetTop + CARD_H / 2 };
+  if (el) return { x: el.offsetLeft + FIELD_W / 2, y: el.offsetTop + FIELD_H / 2 };
   return { x: W / 2, y: H / 2 };
 }
 // The part of the table a phone held sideways shows: everything but the top and bottom strips.
@@ -451,10 +460,10 @@ function sinkAway(src) {   // Zombie: sinks back into the ground
   deathPiece(src, "death-sink", "", 1100);
 }
 function pixelAway(src) {  // Digital: breaks up into pixels and glitches out
-  const cols = 5, rows = 7, w = CARD_W / cols, h = CARD_H / rows;
+  const cols = 5, rows = 7, w = FIELD_W / cols, h = FIELD_H / rows;
   for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
     const l = k * w, t = r * h;
-    deathPiece(src, "death-pixel", `clip-path:inset(${t}px ${CARD_W - l - w}px ${CARD_H - t - h}px ${l}px);--dx:${(Math.random() - 0.5) * 70}px;--dy:${(Math.random() - 0.3) * 60}px;animation-delay:${(Math.random() * 0.35).toFixed(2)}s`, 1200);
+    deathPiece(src, "death-pixel", `clip-path:inset(${t}px ${FIELD_W - l - w}px ${FIELD_H - t - h}px ${l}px);--dx:${(Math.random() - 0.5) * 70}px;--dy:${(Math.random() - 0.3) * 60}px;animation-delay:${(Math.random() * 0.35).toFixed(2)}s`, 1200);
   }
 }
 function tumbleAway(src) { // Monkey: knocked off the table, tumbling
@@ -464,11 +473,11 @@ function tumbleAway(src) { // Monkey: knocked off the table, tumbling
 function slashAway(src) {  // Fighter: cut in two by a clean strike
   deathPiece(src, "death-slash", `clip-path:polygon(0 0, 100% 0, 100% 35%, 0 70%);--dx:-18px;--dy:-26px;--r:-8deg`, 1000);
   deathPiece(src, "death-slash", `clip-path:polygon(0 70%, 100% 35%, 100% 100%, 0 100%);--dx:18px;--dy:34px;--r:8deg`, 1000);
-  fxDiv("death-slash-line", `left:${src.offsetLeft - 10}px;top:${src.offsetTop + CARD_H * 0.525}px`, 500);
+  fxDiv("death-slash-line", `left:${src.offsetLeft - 10}px;top:${src.offsetTop + FIELD_H * 0.525}px`, 500);
 }
 function shatterFrom(src, group) {
-  if (DEATHS[group]) { DEATHS[group](src); sparkle(src.offsetLeft + CARD_W / 2, src.offsetTop + CARD_H / 2, 6); return; }
-  const x = src.offsetLeft, y = src.offsetTop, cx = CARD_W / 2, cy = CARD_H / 2;
+  if (DEATHS[group]) { DEATHS[group](src); sparkle(src.offsetLeft + FIELD_W / 2, src.offsetTop + FIELD_H / 2, 6); return; }
+  const x = src.offsetLeft, y = src.offsetTop, cx = FIELD_W / 2, cy = FIELD_H / 2;
   const ring = [[0, 0], [45, 0], [95, 0], [95, 50], [95, 95], [95, 135], [50, 135], [0, 135], [0, 85], [0, 40]];
   ring.forEach((p, k) => {
     const q = ring[(k + 1) % ring.length];
@@ -481,6 +490,12 @@ function shatterFrom(src, group) {
 
 // The turn handover: a shard falls into the turn crystal, which then takes on the
 // color of the player whose turn it is now.
+// Your turn begins: your side of the table lights up and your hand gives a little wave.
+function yourTurnMoment() {
+  U.myTurnAt = performance.now();
+  if (REDUCED_MOTION) return;
+  fxDiv("my-turn-glow", "", 1500);
+}
 function turnHandover(player) {
   U.turnColor = 1 - player;
   const land = () => { U.turnColor = null; U.turnLandedAt = performance.now(); if (U.screen === "game") render(); };
@@ -499,7 +514,10 @@ onGameEvent((type, d) => {
   const now = performance.now();
   // A blow lands when the attacker reaches its target, a moment after the lunge starts.
   const delay = now - U.lungeAt < 80 && !REDUCED_MOTION ? 190 : 0;
-  if (type === "newGame") {
+  if (type === "log") {
+    U.logAt.set(d.msg, now);
+    if (U.logAt.size > 200) U.logAt.delete(U.logAt.keys().next().value);
+  } else if (type === "newGame") {
     resetMatchStats();
   } else if (type === "clash") {
     // A fight is about to resolve. With Swift, the first blow lands, then the reply a beat later.
@@ -533,6 +551,7 @@ onGameEvent((type, d) => {
       damageNumber(p.x + (Math.random() - 0.5) * 120, p.y - 10, d.amount, 0);
       crystalChips(d.player, 6 + Math.min(10, d.amount * 2));
       addTrauma(tier.trauma + 0.12);   // a hit to a player is felt a little more than one to a card
+      if (d.amount >= BIG_HIT && sideOf(d.player) === "bottom") bigHit(d.player);
       if (tier.callout) callout(tier.callout);
     });
   } else if (type === "burn") {
@@ -596,6 +615,7 @@ onGameEvent((type, d) => {
     else if (S.shard && now - (U.shardFellAt || 0) < 100) banner("The big shard falls");
     else if (S.event && S.event.round === S.round) banner(`Mini shard fall: ${DATA.events[S.event.id].name}`);
     else banner(active().isAI ? `${active().name}'s turn` : "Your turn");
+    if (!active().isAI && S.mode !== "hotseat") yourTurnMoment();
   } else if (type === "play") {
     if (U.stats) U.stats.played[d.player]++;
     if (d.card.manaCost >= SHOWCASE_COST && !REDUCED_MOTION) { setTimeout(() => showcase(d.card, d.player), 0); return; }
@@ -603,7 +623,7 @@ onGameEvent((type, d) => {
     setTimeout(() => {
       const el = document.querySelector(`#board [data-uid="${d.card.uid}"]`);
       const side = sideOf(d.player);
-      const at = el ? { x: el.offsetLeft + el.offsetWidth / 2, y: el.offsetTop + CARD_H / 2 } : { x: 720, y: L[side].chars + CARD_H / 2 };
+      const at = el ? { x: el.offsetLeft + el.offsetWidth / 2, y: el.offsetTop + el.offsetHeight / 2 } : { x: 720, y: L[side].chars + FIELD_H / 2 };
       sparkle(at.x, at.y, d.card.type === "Spell" ? 22 : 14);
     }, 0);
   } else if (type === "countered") {
@@ -727,16 +747,37 @@ function protLine(p) {
   return `<span class="prot-line" title="${esc(p.name)} has ${why}: damage to them is halved, rounded up. Pierce ignores it.">${esc(DATA.skills.Protected?.icon || "▣")} Protected · half damage</span>`;
 }
 
+// The health bar beside a player's name. js/motion.js shows the part just lost as a white
+// chunk that drains away a moment later.
+function hpBarHTML(p) {
+  const { ratio, cls } = lifeTier(p);
+  return `<span class="hpbar ${cls}" data-player="${p.idx}" style="--hp:${ratio.toFixed(3)};--chunk:${ratio.toFixed(3)}" aria-hidden="true"><i class="chunk"></i><i class="fill"></i></span>`;
+}
+// A big hit (BIG_HIT damage or more at once) to the player at the bottom: the screen's edges
+// flash red and their life crystal cracks a little more for a moment.
+const BIG_HIT = 5;
+U.crackAt = [0, 0];
+const crackFlash = idx => performance.now() - (U.crackAt[idx] || 0) < 900;
+function bigHit(idx) {
+  U.crackAt[idx] = performance.now();
+  const el = document.createElement("div");
+  el.className = "edge-flash";
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 750);
+  if (U.screen === "game") render();
+  later(950, () => { if (U.screen === "game") render(); });
+}
 function plateHTML(p, side) {
   const { ratio, cls: tier } = lifeTier(p);
-  const cracks = tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4;
+  const cracks = Math.min(4, (tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4) + (crackFlash(p.idx) ? 2 : 0));
   const pd = S.pending;
   const targetable = humanTarget() && pd.targetType === "charOrPlayer" && isValidTarget({ isPlayer: true, idx: p.idx });
   const attackable = side === "top" && U.selected && !forcedTarget(p);
   const y = side === "top" ? 3 : 937;
-  return `<div class="plate${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
+  const thinking = p.isAI && S.active === p.idx && !S.over && !U.ended;   // the computer is taking its turn
+  return `<div class="plate${crackFlash(p.idx) ? " crack-flash" : ""}${thinking ? " thinking" : ""}${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
     <div class="life">${crystalSVG("life-crystal " + tier, cracks)}${wardHTML(p)}<b>${Math.max(0, p.health)}</b></div>
-    <div class="who"><span class="name">${esc(p.name)}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
+    <div class="who"><span class="name">${esc(p.name)}${hpBarHTML(p)}${thinking ? `<i class="thinking-dots" aria-label="thinking"><b></b><b></b><b></b></i>` : ""}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
     ${attackable ? previewBadge(fightPreview(U.selected, null), true) : ""}
   </div>`;
 }
@@ -752,14 +793,14 @@ function fieldHTML(p, side) {
   // deck and graveyard
   const fc = DATA.factions[p.faction]?.color || "#888";
   h += `<div class="pile deck" data-act="deck" data-player="${p.idx}" style="left:${L.deckX}px;top:${y.backline}px;--fc:${fc}"><span>DECK<b>${p.deck.length}</b></span></div>`;
-  h += `<div class="pile grave" data-act="grave" data-player="${p.idx}" style="left:${L.graveX}px;top:${y.backline}px"><span>GRAVE<b>${p.grave.length}</b></span></div>`;
+  h += `<div class="pile grave" data-act="grave" data-player="${p.idx}" style="left:${L.graveX}px;top:${y.backline}px"><span>GRAVE<b>${Math.max(0, p.grave.length - (MOTION.flying[p.idx] || 0))}</b></span></div>`;
 
   // support row: areas and stored equipment together, in the order they were placed
   const support = [...p.field.areas, ...p.field.equips].sort((a, b) => (a.placed ?? 0) - (b.placed ?? 0));
   for (let i = 0; i < RULES.maxBackline; i++) {
     const c = support[i];
     const x = L.backX + i * L.slot;
-    if (!c) { h += `<div class="slot" style="left:${x}px;top:${y.backline}px"></div>`; continue; }
+    if (!c) { h += `<div class="slot" data-side="${side}" style="left:${x}px;top:${y.backline}px"></div>`; continue; }
     if (c.type === "Area") {
       const tgt = humanPending && pd.kind === "target" && pd.targetType === "area";
       const usable = human && p === active() && canActivateArea(c, p);
@@ -769,9 +810,8 @@ function fieldHTML(p, side) {
       h += `<div class="small-card${armed ? " armed" : ""}" data-act="equip" data-uid="${c.uid}" data-player="${p.idx}" style="left:${x}px;top:${y.backline}px">${cardHTML(c)}${side === "bottom" ? `<div class="attach-cost">Attach: ${equipCost(c, p, null, true)} mana</div>` : ""}</div>`;
     }
   }
-  const labelY = side === "bottom" ? y.backline - 20 : y.backline + CARD_H + 2;
-  h += `<div class="zone-label" style="left:${L.backX}px;top:${labelY}px">${esc(BACKLINE())} · areas and equipment</div>`;
-  h += `<div class="zone-label front-label" style="left:${L.deckX}px;top:${y.chars + 58}px">${esc(DATA.text("zone_frontline", "Frontline"))} ›</div>`;
+  h += `<div class="zone-label back-label" style="left:${L.backX - 22}px;top:${y.backline}px;height:${BACK_H}px" title="Areas and equipment">${esc(BACKLINE())}</div>`;
+  h += `<div class="zone-label front-label" style="left:${L.deckX}px;top:${y.chars + FIELD_H / 2 - 8}px">${esc(DATA.text("zone_frontline", "Frontline"))} ›</div>`;
 
   // characters
   const guarded = side === "top" && guards(p).length > 0;
@@ -792,7 +832,8 @@ function fieldHTML(p, side) {
       vars += `;--dx:${v.dx.toFixed(0)}px;--dy:${v.dy.toFixed(0)}px`;
     }
     const sp = U.spawn.get(c.uid);
-    if (sp && performance.now() - sp.t < 1000) cls.push(spawnClass(sp));
+    const age = sp ? performance.now() - sp.t : -1;   // a card still flying in lands first (js/motion.js)
+    if (sp && age >= 0 && age < 1000) cls.push(spawnClass(sp));
     if ((U.arriving.get(c.uid) ?? 0) > performance.now()) cls.push("arriving");
     const preview = attackable && human ? previewBadge(fightPreview(U.selected, c.uid)) : "";
     const blade = side === "bottom" && human && canUseBlade(c) ? `<button type="button" class="blade-btn" data-act="blade" data-uid="${c.uid}" title="Kenshi's Blade: deal 3 damage to an enemy character, once per Battle">⚔ Strike 3</button>` : "";
@@ -852,8 +893,8 @@ function render() {
     <div class="side top" data-faction="${esc(them.faction)}" style="${sideStyle(them)}"></div><div class="side bottom" data-faction="${esc(me.faction)}" style="${sideStyle(me)}"></div>
     <div class="rift"></div>${scarHTML()}`;
   for (const side of ["top", "bottom"]) {
-    h += `<div class="lane back" style="left:${L.backX - 10}px;top:${L[side].backline - 8}px;width:${RULES.maxBackline * L.slot + 10}px;height:${CARD_H + 16}px"></div>`;
-    h += `<div class="lane front" style="left:${720 - L.frontW / 2 - 12}px;top:${L[side].chars - 8}px;width:${L.frontW + 24}px;height:${CARD_H + 16}px"></div>`;
+    h += `<div class="lane back" data-side="${side}" style="left:${L.backX - 26}px;top:${L[side].backline - 6}px;width:${RULES.maxBackline * L.slot + 26}px;height:${BACK_H + 12}px"></div>`;
+    h += `<div class="lane front" data-side="${side}" style="left:${720 - L.frontW / 2 - 12}px;top:${L[side].chars - 8}px;width:${L.frontW + 24}px;height:${FIELD_H + 16}px"></div>`;
   }
   h += `<div class="bar top"></div><div class="bar bottom"></div>`;
   h += `<button type="button" class="btn stage-btn" data-act="menu" style="left:16px;top:11px;width:110px;height:44px" aria-label="Game menu">☰ Menu</button>`;
@@ -893,7 +934,7 @@ function render() {
   const canPhase = human && !S.pending && !U.armed;
   h += `<button type="button" class="btn stage-btn${canPhase && S.phase === PHASE.DRAW ? " glow" : ""}" data-act="phase" style="left:1220px;top:372px;width:200px;height:56px" ${canPhase ? "" : "disabled"}>${label}</button>`;
   h += `<button type="button" class="btn stage-btn" data-act="pass" style="left:1240px;top:942px;width:180px;height:48px" ${canPhase ? "" : "disabled"}>Pass turn</button>`;
-  h += `<div class="log">${S.log.slice(-6).map(m => `<div>${esc(m)}</div>`).join("")}</div>`;
+  if (U.showLog) h += logPanelHTML();
 
   if (U.curtain) {
     h += `<div class="curtain"><p>Pass the device to</p><h2>${esc(active().name)}</h2><p>${esc(active().deckLabel ?? active().faction + " deck")} · Round ${S.round}</p>${eventLine() ? `<p>${esc(eventLine().when)}: ${esc(eventLine().name)}. ${esc(eventLine().desc)}</p>` : ""}<button type="button" class="btn btn-primary" data-act="curtain">Start turn</button></div>`;
@@ -909,6 +950,25 @@ function render() {
   renderPrompt();
   renderOverlays();
   drawAim();
+  motionAfterRender();   // cards glide to their new places (js/motion.js)
+}
+
+// The battle log: the last few things that happened, in a panel at the bottom right of the
+// table. New lines light up for a moment. Tapping it opens the whole match's log.
+function logPanelHTML() {
+  const now = performance.now();
+  const lines = S.log.slice(-6).map(m => {
+    const age = now - (U.logAt.get(m) ?? -1e9);
+    return `<div${age < 1600 ? ` class="fresh" style="animation-delay:${-age.toFixed(0)}ms"` : ""}>${esc(m)}</div>`;
+  }).join("");
+  return `<button type="button" class="log" data-act="log" aria-label="Battle log: tap to read the whole match"><span class="log-title">Battle log</span><span class="log-lines">${lines}</span></button>`;
+}
+function showLog() {
+  openModal(`<h2 id="modal-title">Battle log</h2>
+    <div class="full-log">${S.log.map((m, i) => `<p${i === S.log.length - 1 ? ' class="last"' : ""}>${esc(m)}</p>`).join("") || "<p>Nothing has happened yet.</p>"}</div>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Back to the game</button></div>`);
+  const box = document.querySelector("#modal .full-log");
+  if (box) box.scrollTop = box.scrollHeight;
 }
 
 // Tutorial coach and beginner hints sit above the board in screen space, so their
@@ -940,9 +1000,12 @@ function renderHand(p) {
     const cls = ["hand-card"];
     if (human && canPlay(c, p)) cls.push("playable");
     if (recent(U.drawn, c.uid, 600)) cls.push("drawn");
+    const wave = performance.now() - U.myTurnAt - 250 - i * 70;   // the hand's wave at the start of your turn
+    const waveStyle = wave < 600 && !REDUCED_MOTION ? `;--wave:${(-wave).toFixed(0)}ms` : "";
+    if (waveStyle) cls.push("wave");
     if (S.pending?.cast && S.pending.source === c) cls.push("casting");   // a spell waiting for its target
     const costShown = playCost(c, p);
-    return `<div class="${cls.join(" ")}" data-uid="${c.uid}" style="left:${pos.x}px;top:${pos.y}px;transform:rotate(${pos.rot}rad);z-index:${i + 1}">${cardHTML(c, { costOverride: costShown })}${handTip(c)}</div>`;
+    return `<div class="${cls.join(" ")}" data-uid="${c.uid}" style="left:${pos.x}px;top:${pos.y}px;transform:rotate(${pos.rot}rad);z-index:${i + 1}${waveStyle}">${cardHTML(c, { costOverride: costShown })}${handTip(c)}</div>`;
   }).join("");
   if (U.curtain) layer.innerHTML = "";
 }
@@ -993,6 +1056,9 @@ function afterAction() {
   render();
   scheduleAI();
 }
+// How fast the computer plays (Settings). Each of its moves waits this many times the base pause.
+const AI_SPEEDS = { slow: { name: "Slow", k: 2 }, normal: { name: "Normal", k: 1.4 }, fast: { name: "Fast", k: 0.7 } };
+if (!AI_SPEEDS[U.aiSpeed]) U.aiSpeed = "normal";
 function scheduleAI() {
   clearTimeout(U.aiTimer);
   const aiChoice = S?.pending && S.players[S.pending.owner].isAI;
@@ -1003,7 +1069,7 @@ function scheduleAI() {
     const more = aiStep();
     render();
     if (more || active().isAI) scheduleAI();
-  }, (S.phase === PHASE.DRAW ? 900 : 750) + wait);
+  }, (S.phase === PHASE.DRAW ? 900 : 750) * AI_SPEEDS[U.aiSpeed].k + wait);
 }
 
 // opts.opponentDeckId and opts.setup(S) are used by the campaign (js/campaign.js).
@@ -1099,9 +1165,22 @@ function handDown(e) {
 // Where a card being dragged can go: the frontline for characters, the backline for
 // areas and equipment, anywhere on the table for spells.
 function dropZone(c) {
-  if (c.type === "Character") return { left: 720 - L.frontW / 2 - 12, top: L.bottom.chars - 8, width: L.frontW + 24, height: CARD_H + 16 };
+  if (c.type === "Character") return { left: 720 - L.frontW / 2 - 12, top: L.bottom.chars - 8, width: L.frontW + 24, height: FIELD_H + 16 };
   if (c.type === "Spell") return { left: 24, top: 70, width: 1392, height: 650 };
-  return { left: L.backX - 8, top: L.bottom.backline - 8, width: RULES.maxBackline * L.slot + 6, height: CARD_H + 16 };
+  return { left: L.backX - 8, top: L.bottom.backline - 8, width: RULES.maxBackline * L.slot + 6, height: BACK_H + 16 };
+}
+// While a card is dragged, the spots it can go light up: the border of your front row for a
+// character, your empty back-row slots for an area or equipment (and your characters, which
+// equipment can also go on). They are stage classes, so a redraw mid-drag keeps them.
+const PLACING = ["placing-char", "placing-back", "placing-equip", "placing-off"];
+function setPlacing(c) {
+  const st = $("#stage");
+  st.classList.remove(...PLACING);
+  if (!c) return;
+  const p = active();
+  if (c.type === "Character") st.classList.add("placing-char");
+  if ((c.type === "Area" || c.type === "Equipment") && backlineCount(p) < RULES.maxBackline) st.classList.add("placing-back");
+  if (c.type === "Equipment" && p.field.chars.length) st.classList.add("placing-equip");
 }
 function handMove(e) {
   if (!drag || e.pointerId !== drag.pointerId) return;
@@ -1117,10 +1196,12 @@ function handMove(e) {
     drag.ghost.className = "ghost";
     drag.ghost.innerHTML = cardHTML(c, { costOverride: playCost(c) });
     $("#stage").appendChild(drag.ghost);
-    drag.hint = document.createElement("div");
-    drag.hint.className = "drop-hint" + (c.type === "Spell" ? " spell" : "");
-    for (const [k, v] of Object.entries(dropZone(c))) drag.hint.style[k] = v + "px";
-    $("#stage").appendChild(drag.hint);
+    if (c.type === "Spell") {   // a spell can be let go of anywhere on the table
+      drag.hint = document.createElement("div");
+      drag.hint.className = "drop-hint spell";
+      for (const [k, v] of Object.entries(dropZone(c))) drag.hint.style[k] = v + "px";
+      $("#stage").appendChild(drag.hint);
+    } else setPlacing(c);   // the spots it can go light up
     drag.last = pt;
   }
   if (drag.moved) {
@@ -1133,13 +1214,14 @@ function handMove(e) {
     // back over the hand, letting go puts the card back
     const back = pt.y >= 740;
     drag.ghost.classList.toggle("invalid", back);
-    drag.hint.classList.toggle("off", back);
+    drag.hint?.classList.toggle("off", back);
+    $("#stage").classList.toggle("placing-off", back);
   }
 }
 function handUp(e) {
   if (!drag || e.pointerId !== drag.pointerId) return;
   const d = drag; drag = null;
-  d.ghost?.remove(); d.hint?.remove();
+  d.ghost?.remove(); d.hint?.remove(); setPlacing(null);
   d.el.classList.remove("dragging", "held");
   if (!d.moved) {
     const c = S.players[viewIdx()].hand.find(x => x.uid === d.uid);
@@ -1147,11 +1229,12 @@ function handUp(e) {
     return;
   }
   const pt = stagePoint(e);
+  dropSpot(d.uid, pt);
   const under = document.elementFromPoint(e.clientX, e.clientY);
   const charEl = under?.closest('.field-card[data-side="bottom"]');
   const c = d.card;
   if (c.type === "Equipment") {
-    const inEquipRow = pt.x >= L.backX - 10 && pt.x <= L.backX + RULES.maxBackline * L.slot && pt.y >= L.bottom.backline - 10 && pt.y <= L.bottom.backline + CARD_H + 10;
+    const inEquipRow = pt.x >= L.backX - 10 && pt.x <= L.backX + RULES.maxBackline * L.slot && pt.y >= L.bottom.backline - 10 && pt.y <= L.bottom.backline + BACK_H + 10;
     if (charEl) act(() => playCard(c.uid, { target: { uid: Number(charEl.dataset.uid) } }));
     else if (inEquipRow) act(() => playCard(c.uid, { toField: true }));
     else if (pt.y < 740 && active().field.chars.length) { U.armed = { uid: c.uid, from: "hand" }; render(); }
@@ -1269,6 +1352,9 @@ function showSettings() {
   openModal(`<h2 id="modal-title">Settings</h2>
     <div class="menu-list">
       <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
+      <button type="button" class="btn" data-set="log" aria-pressed="${U.showLog}">Battle log on the table: ${U.showLog ? "Shown" : "Hidden"}</button>
+      <button type="button" class="btn" data-set="speed" title="How fast the computer plays its turn">Computer speed: ${AI_SPEEDS[U.aiSpeed].name}</button>
+      ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">Read the battle log</button>` : ""}
       ${U.screen === "menu" ? `<button type="button" class="btn" data-set="intro">Watch the intro</button>` : ""}
     </div>
     <div class="menu-skins"><h3>Board</h3><div class="skin-list compact">${skinButtons("data-skin")}</div></div>
@@ -1292,6 +1378,7 @@ function showGameMenu() {
       <button type="button" class="btn" data-m="resume">Resume</button>
       <button type="button" class="btn" data-m="restart">${esc(DATA.text("button_restart", "Restart"))}</button>
       <button type="button" class="btn" data-m="settings">Settings</button>
+      <button type="button" class="btn" data-m="log">Battle log</button>
       <button type="button" class="btn" data-m="almanac">${esc(DATA.text("button_almanac", "Almanac"))}</button>
       <button type="button" class="btn" data-m="rules">How to play</button>
       <button type="button" class="btn" data-m="mainmenu">${esc(DATA.text("button_main_menu", "Main menu"))}</button>
@@ -1310,6 +1397,9 @@ $("#modal").addEventListener("click", e => {
   const set = e.target.closest("[data-set]");
   if (set) {
     if (set.dataset.set === "hints") { setHints(!U.hints); showSettings(); }
+    else if (set.dataset.set === "log") { U.showLog = !U.showLog; PREFS.set("showLog", U.showLog); if (U.screen === "game") render(); showSettings(); }
+    else if (set.dataset.set === "speed") { const ids = Object.keys(AI_SPEEDS); U.aiSpeed = ids[(ids.indexOf(U.aiSpeed) + 1) % ids.length]; PREFS.set("aiSpeed", U.aiSpeed); showSettings(); }
+    else if (set.dataset.set === "readlog") showLog();
     else if (set.dataset.set === "intro") { closeModal(); playIntro(); }
     else if (U.screen === "game") showGameMenu();
     else closeModal();
@@ -1325,6 +1415,7 @@ $("#modal").addEventListener("click", e => {
   else if (m === "tofield") act(() => playCard(uid, { toField: true }));
   else if (m === "restart") U.tutorial ? startTutorial() : U.campaign ? playCampaignMatch(U.campaign.stage) : startGame();
   else if (m === "settings") showSettings();
+  else if (m === "log") showLog();
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
   else if (m === "rules") showGuide();
   else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); showScreen("menu"); }
@@ -1344,12 +1435,13 @@ $("#board").addEventListener("click", e => {
   const uid = Number(el.dataset.uid);
   const human = humanTurn();
   if (a === "menu") return showGameMenu();
-  if (a === "curtain") { U.curtain = false; render(); const b = $("#board"); b.classList.remove("rotate-in"); void b.offsetWidth; b.classList.add("rotate-in"); banner(`${active().name}'s turn`); return; }
+  if (a === "curtain") { U.curtain = false; yourTurnMoment(); render(); const b = $("#board"); b.classList.remove("rotate-in"); void b.offsetWidth; b.classList.add("rotate-in"); banner(`${active().name}'s turn`); return; }
   if (a === "again") return U.campaign ? playCampaignMatch(U.campaign.stage) : startGame();
   if (a === "camp-next") return campaignNext();
   if (a === "camp-map") return showCampaign();
   if (a === "tomenu") { endTutorial(); return showScreen("menu"); }
   if (a === "phase") return onPhaseButton();
+  if (a === "log") { showLog(); return; }
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; act(endTurn); } return; }
   if (a === "faceall") { if (human && S.phase === PHASE.BATTLE) { U.selected = null; act(attackAllFace); } return; }
   if (a === "face") { if (U.selected) { const s = U.selected; U.selected = null; act(() => attack(s, null)); } return; }
@@ -1398,7 +1490,7 @@ const hand = $("#hand-layer");
 hand.addEventListener("pointerdown", handDown);
 hand.addEventListener("pointermove", handMove);
 hand.addEventListener("pointerup", handUp);
-hand.addEventListener("pointercancel", e => { if (drag) { drag.ghost?.remove(); drag.hint?.remove(); drag.el.classList.remove("dragging", "held"); drag = null; } });
+hand.addEventListener("pointercancel", e => { if (drag) { drag.ghost?.remove(); drag.hint?.remove(); setPlacing(null); drag.el.classList.remove("dragging", "held"); drag = null; } });
 hand.addEventListener("contextmenu", e => {
   e.preventDefault();
   const el = e.target.closest(".hand-card");

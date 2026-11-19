@@ -30,7 +30,7 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 | Name | Name shown on the card |
 | Rarity | `Basic`, `Rare`, `Exotic`, `Divine` or `Unknown` (see rarities.csv) |
 | Type | `Character`, `Spell`, `Equipment` or `Area` |
-| Tribes | A character's species, joined with `+` (`Human+Animal`): `Human`, `Animal`, `Undead`, `Cyber`, `Plant`, `Goblin`. `---` for anything that isn't a character. A new tribe only needs its name here |
+| Tribes | A character's species, joined with `+` (`Human+Animal`): `Human`, `Animal`, `Zombie`, `Cyber`, `Plant`, `Goblin`. `---` for anything that isn't a character. A new tribe only needs its name here. A tribe can also belong to a family (see `tribe_family_` in game_rules.csv): Zombie counts as Undead |
 | Fracture | Where a card is from: a FactionID from factions.csv, or `N/A` for an Unbound card. A hybrid lists two, joined with `+` (`Fighter+Monkey`); the first sets its color. (The column was called Faction; the file `factions.csv` keeps its name) |
 | Stats | `Attack+Health`, or `---` |
 | Skills | Skill names joined with `+`, or `---` |
@@ -94,7 +94,7 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 - kind: `character`, `characterOrPlayer` or `area`. Narrow it with dots: `character.enemy`, `character.mine`, `character.leveler` (has Level Up), `character.mine.levels` (has kept levels).
 - intent: `harm`, `help` or `steal`. This tells the computer player how to use it.
 
-**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). Narrow a group with dots: a fracture (`allies.Monkey`), a tribe (`allies.Undead`), a class (`allies.Student`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `swift`, `tower`, `strongest`. Add the kind in front when one name is two things: Fighter is both a fracture and a class, so `allies.Fighter` means the fracture and `allies.class:Fighter` the class (`fracture:`, `tribe:` and `class:` all work). Filters add up: `allies.class:Student.class:Fighter` is your Students who are also Fighters.
+**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). Narrow a group with dots: a fracture (`allies.Monkey`), a tribe or tribe family (`allies.Zombie` is the fracture, `allies.tribe:Zombie` the tribe, `allies.Undead` the family), a class (`allies.Student`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `swift`, `tower`, `strongest`. Add the kind in front when one name is two things: Fighter is both a fracture and a class, so `allies.Fighter` means the fracture and `allies.class:Fighter` the class (`fracture:`, `tribe:` and `class:` all work). Filters add up: `allies.class:Student.class:Fighter` is your Students who are also Fighters.
 
 **Numbers** can be whole numbers or these words, joined with `+` or `-`:
 
@@ -201,6 +201,7 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | shard_health | Health of the big shard |
 | shard_draw | Cards the player who breaks the big shard draws, on top of their champion's shard bonus |
 | shard_draw_no_champion | Cards the player who breaks the big shard draws when their deck has no champion |
+| tribe_family_Undead | The tribes that count as Undead (anything that should be dead but is living), separated by `\|`. Today `Zombie`; add `Skeleton`, `Vampire` and so on as they arrive. Cards that say Undead (Soul Shepard, Midnight Madness, Rise from the Dead) then reach them all. Another family is another `tribe_family_<Name>` row |
 | min_deck_size, max_copies, max_unknown_copies, max_unknown_kinds | Deck-building rules (max_unknown_kinds: how many different Unknown cards, the champions, a deck may hold) |
 
 ### events.csv: random events

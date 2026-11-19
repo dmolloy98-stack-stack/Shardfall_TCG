@@ -71,7 +71,7 @@ function stageRect(x, y, w, h) {
   const r = q("#stage").getBoundingClientRect();
   return new DOMRect(r.left + x * U.scale, r.top + y * U.scale, w * U.scale, h * U.scale);
 }
-const yourTable = () => stageRect(300, L.bottom.chars - 6, 840, CARD_H + 12);
+const yourTable = () => stageRect(300, L.bottom.chars - 6, 840, FIELD_H + 12);
 const targetUid = t => (t && typeof t === "object" ? t.uid : t);
 
 // Step kinds:

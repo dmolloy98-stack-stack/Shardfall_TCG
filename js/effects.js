@@ -76,6 +76,7 @@ function parseSelector(text, where) {
 }
 const ALL_TRIBES = new Set(), ALL_CLASSES = new Set();
 for (const card of DATA.cardList) { card.tribes.forEach(t => ALL_TRIBES.add(t)); card.classes.forEach(k => ALL_CLASSES.add(k)); }
+for (const f of Object.keys(TRIBE_FAMILIES)) ALL_TRIBES.add(f);   // Undead and other tribe families
 function selectorFilter(f) {
   if (f === "other") return (c, ctx) => c !== ctx.card;
   if (f === "leveler") return c => hasSkill(c, "Level Up");

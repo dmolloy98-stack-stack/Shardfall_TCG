@@ -47,8 +47,21 @@ const put = (p, name) => { const c = cardByName(name); c.owner = p.idx; putOnFie
 { // Midnight Madness reaches an infected Human Warrior as Undead; infection adds a tribe and keeps class
   const p = fresh(); const c = put(p, 'Simple Swordsman');
   makeZombie(c);
-  ok('Infection adds Undead, keeps Human and Warrior', hasTribe(c, 'Undead') && hasTribe(c, 'Human') && hasClass(c, 'Warrior') && inGroup(c, 'Zombie') && !inGroup(c, 'Simple'), JSON.stringify([c.tribes, c.classes, c.groups]));
-  ok('Template cards are not changed by infection', !DATA.cardsByName['Simple Swordsman'].tribes.includes('Undead'));
+  ok('Infection adds the Zombie tribe, keeps Human and Warrior', c.tribes.includes('Zombie') && hasTribe(c, 'Human') && hasClass(c, 'Warrior') && inGroup(c, 'Zombie') && !inGroup(c, 'Simple'), JSON.stringify([c.tribes, c.classes, c.groups]));
+  ok('An infected character counts as Undead', hasTribe(c, 'Undead'));
+  ok('Template cards are not changed by infection', !DATA.cardsByName['Simple Swordsman'].tribes.includes('Zombie'));
+}
+{ // Undead is a family: today it is the Zombie tribe
+  ok('The Undead family is the Zombie tribe', JSON.stringify(TRIBE_FAMILIES.Undead) === '["Zombie"]');
+  const zombies = DATA.cardList.filter(c => c.type === 'Character' && c.group === 'Zombie');
+  ok('Every Zombie character has the Zombie tribe, none has Undead written', zombies.every(c => c.tribes.includes('Zombie') && !c.tribes.includes('Undead')), zombies.length + ' cards');
+  ok('A Zombie counts as Undead', hasTribe(DATA.cardsByName['Hungry Corpse'], 'Undead'));
+  ok('A Human does not count as Undead', !hasTribe(DATA.cardsByName['Simple Swordsman'], 'Undead'));
+  const p = fresh(); const z = put(p, 'Hungry Corpse');
+  const mm = cardByName('Midnight Madness'); mm.owner = 0; p.field.areas.push(mm);
+  ok('Midnight Madness (Undead) reaches a Zombie', stats(z).a === DATA.cardsByName['Hungry Corpse'].attack + 2);
+  const before = S.died.Undead || 0; destroyCharacter(z);
+  ok('A Zombie dying counts as an Undead death (Soul Shepard)', (S.died.Undead || 0) === before + 1 && (S.died.Zombie || 0) >= 1);
 }
 { // Turtles: Animal Students
   const p = fresh(); const mr = cardByName('Master Rat'); mr.owner = 0; putOnField(mr, p);
