@@ -103,7 +103,7 @@ function renderControls() {
   const sr = document.getElementById("stage").getBoundingClientRect();
   const wr = document.getElementById("stage-wrap").getBoundingClientRect();
   const gutter = wr.right - sr.right;
-  if (U.screen !== "game" || !S || !U.small || U.tutorial || gutter < 88) { bar.hidden = true; return; }
+  if (U.screen !== "game" || !S || !U.small || U.tutorial || gutter < 88) { bar.hidden = true; document.getElementById("stage").classList.remove("side-controls"); return; }
   const board = document.getElementById("board");
   const btn = (act, cls = "") => {
     const b = board.querySelector(`[data-act="${act}"]`);
@@ -125,6 +125,7 @@ function renderControls() {
   }
   bar.hidden = false;
   bar.innerHTML = h;
+  document.getElementById("stage").classList.add("side-controls");   // the table's own copies are hidden
   // A slim column against the screen edge, so the buttons stay out of the board's way.
   const w = Math.max(80, Math.min(gutter - 12, 118));
   Object.assign(bar.style, { left: wr.right - w - Math.min(8, (gutter - w) / 2) + "px", width: w + "px", top: wr.top + 6 + "px", height: wr.height - 12 + "px" });

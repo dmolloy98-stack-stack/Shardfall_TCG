@@ -257,14 +257,14 @@ function showcase(card, player) {
     dim.remove();
     const field = isChar && document.querySelector(`.field-card[data-uid="${card.uid}"]`);
     if (field) {
-      const tx = field.offsetLeft + CARD_W / 2 - 720, ty = field.offsetTop + CARD_H / 2 - 430;
-      box.animate([{ transform: "translate(-50%, -50%) scale(1)" }, { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0.455)` }], { duration: 260, easing: "cubic-bezier(.6,0,.9,.5)", fill: "forwards" });
+      const tx = field.offsetLeft + FIELD_W / 2 - 720, ty = field.offsetTop + FIELD_H / 2 - 430;
+      box.animate([{ transform: "translate(-50%, -50%) scale(1)" }, { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0.545)` }], { duration: 260, easing: "cubic-bezier(.6,0,.9,.5)", fill: "forwards" });
       later(260, () => {
         box.remove();
         U.arriving.delete(card.uid);
         U.spawn.set(card.uid, { t: performance.now(), big: true });
         render();
-        const c = { x: field.offsetLeft + CARD_W / 2, y: field.offsetTop + CARD_H / 2 };
+        const c = { x: field.offsetLeft + FIELD_W / 2, y: field.offsetTop + FIELD_H / 2 };
         shockwave(c.x, c.y);
         shakeBy(10);
         sparkle(c.x, c.y, 18);

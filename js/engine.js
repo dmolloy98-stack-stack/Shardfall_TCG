@@ -59,7 +59,7 @@ const allowed = (name, ...args) => muted || !actionGuard || actionGuard(name, ..
 
 function emit(type, data) { if (!muted) for (const fn of listeners) fn(type, data || {}); }
 function onGameEvent(fn) { listeners.push(fn); }
-function log(msg) { if (!muted) { S.log.push(msg); if (S.log.length > 60) S.log.shift(); emit("log", { msg }); } }
+function log(msg) { if (!muted) { S.log.push(msg); if (S.log.length > 400) S.log.shift(); emit("log", { msg }); } }   // the whole match, for the battle log
 
 // Run fn against a cloned copy of the state without emitting events.
 function simulate(fn) {

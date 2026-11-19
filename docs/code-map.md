@@ -26,8 +26,10 @@ flowchart LR
 
   engine -->|reads S| render["Board drawing<br/>js/ui.js · render()"]
   engine -->|"emit('damage', …)"| fx["Effects<br/>js/fx.js"]
+  render -->|after each redraw| motion["Cards that travel<br/>js/motion.js"]
   render --> screen(["The screen<br/>1440×1000 board, scaled to fit"])
   fx --> screen
+  motion --> screen
 ```
 
 Because the engine never draws, the computer can copy `S`, try a move on the copy
@@ -126,6 +128,9 @@ their own story or coaching, then hand over to the same engine.
 | The main menu, deck choice or Almanac | `js/menu.js` |
 | The falling-shards menu background | `js/storm.js` |
 | Animations and feedback | `js/fx.js` and `css/style.css` |
+| Cards moving between deck, hand, table and graveyard; health counting | `js/motion.js` (`motionAfterRender()`, called at the end of `render()`) |
+| Where things sit on the table, and card sizes | `L`, `FIELD_W`, `BACK_W` at the top of `js/ui.js` |
+| Battle log panel, computer speed | `logPanelHTML()`, `showLog()`, `AI_SPEEDS` in `js/ui.js`; both are in Settings |
 | Colours and sizes | `css/style.css` |
 | A new menu button | `index.html`, then `js/menu.js` |
 | Intro wording | `js/intro.js` |
