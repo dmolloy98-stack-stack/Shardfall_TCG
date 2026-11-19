@@ -72,7 +72,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/data.js` | Loads and checks the CSV files, then starts the game |
 | `js/engine.js` | Game rules: turns, combat, skills. Shuffles come from a seed per match (shown in the game log), so a game can be replayed exactly |
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
-| `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style |
+| `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |
 | `js/ui.js` | Board rendering, input, dialogs, Settings |
 | `js/menu.js` | The main menu (deck choice, game mode) and the Almanac |
 | `js/storm.js` | The falling-shards animation behind the main menu |

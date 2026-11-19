@@ -132,6 +132,10 @@ their own story or coaching, then hand over to the same engine.
 | Where things sit on the table, and card sizes | `L`, `FIELD_W`, `BACK_W` at the top of `js/ui.js` |
 | Spots that light up while you drag a card | `setPlacing()` in `js/ui.js` (stage classes `placing-…` in `css/style.css`) |
 | Health bar and big hits (white chunk, red screen edges, fresh cracks) | `hpBarHTML()`, `bigHit()`, `BIG_HIT` in `js/ui.js`; the chunk drains in `js/motion.js` |
+| The computer aims before it acts | `aiDecide()` in `js/ai.js` picks the move without making it (`aiStep()` is decide-and-do); `scheduleAI()` in `js/ui.js` shows `aiAim()` (`js/fx.js`) first |
+| Heavy attacks wind up, bonuses add up, LETHAL, the killing blow | `windUp()`, `attackParts()`, `fightPreview()` (lethal), `finale()` in `js/fx.js` |
+| Spell previews on targets, end-of-turn hourglass, cards reacting to deaths | `targetPreview()`, `eotBadge()`, `reactToDeath()` in `js/fx.js` |
+| Draw and skip by themselves, ask before passing early, keyboard shortcuts | `autoFlow()`, `passTurn()` and the `keydown` handler in `js/ui.js`; both settings are in Settings |
 | Battle log panel, computer speed | `logPanelHTML()`, `showLog()`, `AI_SPEEDS` in `js/ui.js`; both are in Settings |
 | Colours and sizes | `css/style.css` |
 | A new menu button | `index.html`, then `js/menu.js` |
