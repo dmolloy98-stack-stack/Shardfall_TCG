@@ -517,7 +517,7 @@ button, .btn { touch-action: manipulation; }
 @keyframes float { from { opacity: 1; } to { opacity: 0; transform: translate(-50%, calc(-50% - 70px)); } }
 
 #banner {
-  position: absolute; left: 320px; top: 430px; width: 800px; height: 84px; z-index: 70;
+  position: absolute; left: 320px; top: 360px; width: 800px; height: 80px;   /* the middle strip, between the two front rows */ z-index: 70;
   display: grid; place-items: center;
   background: rgba(20, 10, 4, 0.9); border: 3px solid var(--brass); border-radius: 8px;
   font-family: var(--font-display); font-size: 40px; letter-spacing: 0.08em; color: var(--parchment);
