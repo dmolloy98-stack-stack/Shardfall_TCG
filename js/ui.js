@@ -529,6 +529,7 @@ onGameEvent((type, d) => {
     const f = findChar(d.uid);
     const overkill = f ? -rawStats(f.c).h : 0;
     if (f) countDamage(f.p.idx, d.amount);
+    creditFight(d.uid, d.amount);
     const clash = U.clash && now - U.clash.at < 30 ? U.clash : null;
     const wait = delay + (clash?.swift != null && !REDUCED_MOTION ? clash.n++ * SWIFT_GAP : 0);
     const tier = feelTier(d.amount);
@@ -547,6 +548,7 @@ onGameEvent((type, d) => {
   } else if (type === "playerDamage") {
     const p = plateCenter(d.player);
     countDamage(d.player, d.amount);
+    creditFight(null, d.amount);
     if (U.stats) U.stats.low[d.player] = Math.min(U.stats.low[d.player], S.players[d.player].health / S.players[d.player].maxHealth);
     const tier = feelTier(d.amount);
     later(delay, () => {
@@ -577,7 +579,7 @@ onGameEvent((type, d) => {
     const wind = U.multiAttack ? 0 : windUp(d.uid);   // a strong or boosted attacker winds up first
     U.lunges.set(d.uid, now);
     U.lungeVec.set(d.uid, { dx: (to.x - from.x) * 0.72, dy: (to.y - from.y) * 0.72, wind });
-    U.lungeAt = now; U.lungeWind = wind; U.lastAttacker = d.uid;
+    U.lungeAt = now; U.lungeWind = wind; U.lastAttacker = d.uid; U.lastTarget = typeof d.target === "number" ? d.target : null;
   } else if (type === "draw") {
     U.drawn.set(d.uid, now);
   } else if (type === "champLevel") {
@@ -953,7 +955,7 @@ function render() {
     const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;
     const camp = U.campaign ? campaignEndHTML(S.winner === 0) : null;
     const actions = camp ? camp.actions : `<button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button>`;
-    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
+    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${recallHTML()}${masteryHTML()}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
   }
   $("#board").innerHTML = h;
   renderHand(me);
@@ -1098,6 +1100,7 @@ function startGame(opts = {}) {
   opts.setup?.(S);
   showScreen("game");
   if (S.mode === "hotseat") U.curtain = true; else banner("Your turn");
+  if (!U.campaign && S.mode === "ai") championMatchStarts();   // the computer's champion speaks (js/campaign.js)
   render();
 }
 

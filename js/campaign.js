@@ -143,13 +143,23 @@ document.getElementById("modal-content").addEventListener("click", e => {
 
 // ---------------------------------------------------------------------------
 // Speech: the champion says a line in the match log and in a bubble by its health plate.
-// At most one line every 7 seconds, and 8 a match, so it stays a seasoning.
+// At most one line every 7 seconds, and 8 a match, so it stays a seasoning. It speaks in the
+// campaign, and in any match against the computer as the champion of the computer's deck.
 // ---------------------------------------------------------------------------
 const SAY = { at: 0, n: 0, said: new Set() };
+// The champion speaking for the computer: its campaign champion, or its deck's champion card.
+// (Only for speech: how the computer plays is unchanged, see championOf in js/champions.js.)
+function speakerName(foe) {
+  if (foe.champion && CHAMPIONS[foe.champion]) return foe.champion;
+  const name = foe.champ ? DATA.cardsById[foe.champ.id]?.name : null;
+  return name && CHAMPIONS[name] ? name : null;
+}
+const speaking = () => typeof S !== "undefined" && S && S.mode === "ai" && !U.tutorial && S.players[1].isAI;
 function championSay(key, { force = false, once = false } = {}) {
-  if (typeof S === "undefined" || !S || !U.campaign) return;
+  if (!speaking()) return;
   const foe = S.players[1];
-  const ch = championOf(foe);
+  const who = speakerName(foe);
+  const ch = who && CHAMPIONS[who];
   const lines = ch?.lines[key];
   if (!lines || !lines.length) return;
   if (once && SAY.said.has(key)) return;
@@ -157,10 +167,25 @@ function championSay(key, { force = false, once = false } = {}) {
   if (!force && (now - SAY.at < 7000 || SAY.n >= 8)) return;
   SAY.at = now; SAY.n++; SAY.said.add(key);
   const line = lines[Math.floor(Math.random() * lines.length)];
-  log(`${foe.name}: "${line}"`);
+  log(`${who}: "${line}"`);
   const p = plateCenter(1);
   const el = fxDiv("champ-say", `left:${p.x + 185}px;top:${p.y + 40}px`, 4200);
   el.textContent = line;
+}
+
+// The end screen: the champion remembers the match, naming your card that dealt the most damage.
+function recallHTML() {
+  if (!speaking() || S.winner == null) return "";
+  const who = speakerName(S.players[1]);
+  const lines = who && CHAMPIONS[who].lines[S.winner === 1 ? "recallWin" : "recallLose"];
+  if (!lines?.length) return "";
+  const best = Object.values(U.stats?.byCard || {}).sort((a, b) => b.n - a.n)[0];
+  let line = lines[0];
+  if (/\{card\}|\{n\}/.test(line)) {
+    if (!best) return "";
+    line = line.replaceAll("{card}", best.name).replaceAll("{n}", best.n);
+  }
+  return `<p class="recall">"${esc(line)}" <span>${esc(who)}</span></p>`;
 }
 
 function championMatchStarts() {
@@ -169,13 +194,21 @@ function championMatchStarts() {
 }
 
 onGameEvent((type, d) => {
-  if (!U.campaign || U.tutorial || !S) return;
+  if (!speaking()) return;
   const foe = S.players[1];
-  if (!championOf(foe)) return;
-  if (type === "play" && d.player === 1 && d.card.name === foe.champion) {
+  const who = speakerName(foe);
+  if (!who) return;
+  if (type === "play" && d.player === 1 && d.card.name === who) {
     championSay("champion", { force: true, once: true });
-  } else if (type === "playerDamage" && d.player === 1) {
-    if (foe.health / foe.maxHealth < 0.5) championSay("low", { once: true, force: true });
+  } else if (type === "shardClaim") {
+    championSay(d.player === 1 ? "shardWon" : "shardLost", { force: true, once: true });
+  } else if (type === "death" && foe.grave.some(c => c.uid === d.uid && c.name === who)) {
+    championSay("fell", { force: true, once: true });
+  } else if (type === "turn" && d.player === 1 && who === "The Man Ape" && chestThump(foe)) {
+    championSay("outnumber", { once: true });
+  } else if (type === "playerDamage" && d.player === 1 && foe.health > 0) {   // the killing blow has its own moment
+    if (foe.health <= 5) championSay("brink", { once: true, force: true });
+    else if (foe.health / foe.maxHealth < 0.5) championSay("low", { once: true, force: true });
     else if (d.amount >= 3) championSay("hurt");
   } else if (type === "playerDamage" && d.player === 0 && d.amount >= 4) {
     championSay("hit");
@@ -183,3 +216,55 @@ onGameEvent((type, d) => {
     championSay(d.winner === 1 ? "win" : "lose", { force: true });
   }
 });
+
+// ---------------------------------------------------------------------------
+// Deck mastery: each deck earns points from its matches against the computer (100 for a win,
+// 40 otherwise, 20 more for claiming the big shard). Points reach five levels, each with a
+// title. Kept on this device (PREFS "mastery": { deckId: points }).
+// ---------------------------------------------------------------------------
+const MASTERY_STEPS = [100, 300, 600, 1000, 1500];
+const MASTERY_TITLES = {
+  simple_starter: ["Turnip Picker", "Field Hand", "Village Regular", "Simple Elder", "The Simplest"],
+  monkey_starter: ["Banana Fetcher", "Troop Cousin", "Branch Swinger", "Silverback", "Jungle King"],
+  zombie_starter: ["Fresh Corpse", "Shambler", "Grave Walker", "Horde Caller", "Soul Keeper"],
+  fighter_starter: ["White Belt", "Yellow Belt", "Black Belt", "Sensei", "Grandmaster"],
+  digital_starter: ["Noob", "Casual", "Speedrunner", "Pro Gamer", "Final Boss"],
+  custom: ["Novice", "Adept", "Veteran", "Master", "Legend"],   // decks you built
+};
+const MASTERY_POINTS = { win: 100, loss: 40, shard: 20 };
+function masteryOf(deckId, pts) {
+  if (pts == null) pts = (PREFS.get("mastery", {}) || {})[deckId] || 0;
+  const level = MASTERY_STEPS.filter(s => pts >= s).length;
+  const titles = MASTERY_TITLES[deckId] || MASTERY_TITLES.custom;
+  const prev = level ? MASTERY_STEPS[level - 1] : 0, next = MASTERY_STEPS[level] ?? null;
+  return { pts, level, title: level ? titles[level - 1] : null, prev, next, frac: next ? (pts - prev) / (next - prev) : 1 };
+}
+// The line under a deck on the main menu.
+function masteryLine(deckId) {
+  const m = masteryOf(deckId);
+  const bar = `<i class="mbar"><b style="width:${(m.frac * 100).toFixed(0)}%"></b></i>`;
+  return `<em class="deck-mastery">${m.title ? `★ ${esc(m.title)}` : "No title yet"}${bar}<small>${m.next ? `${m.pts} / ${m.next}` : "Max level"}</small></em>`;
+}
+onGameEvent((type, d) => {
+  if (type === "newGame") U.masteryGain = null;
+  if (type !== "gameOver" || U.tutorial || !S || S.mode !== "ai" || S.players[0].isAI) return;
+  const id = S.players[0].deckId;
+  const all = PREFS.get("mastery", {}) || {};
+  const before = all[id] || 0;
+  const gain = (d.winner === 0 ? MASTERY_POINTS.win : MASTERY_POINTS.loss) + (S.shardBy === 0 ? MASTERY_POINTS.shard : 0);
+  all[id] = before + gain;
+  PREFS.set("mastery", all);
+  U.masteryGain = { id, before, after: before + gain, gain };
+});
+// The end screen: points earned, the bar filling, and a new title if one was reached.
+function masteryHTML() {
+  const g = U.masteryGain;
+  if (!g) return "";
+  const a = masteryOf(g.id, g.before), b = masteryOf(g.id, g.after);
+  const up = b.level > a.level;
+  const from = up ? 0 : a.frac;
+  const name = DATA.decks[g.id]?.name || "Your deck";
+  return `<div class="mastery-end${up ? " up" : ""}"><span>${esc(name)} mastery <b>+${g.gain}</b></span>
+    <i class="mbar"><b style="--from:${(from * 100).toFixed(0)}%;--to:${(b.frac * 100).toFixed(0)}%"></b></i>
+    <small>${up ? `New title: <b>★ ${esc(b.title)}</b>` : b.title ? `★ ${esc(b.title)}` : "No title yet"}${b.next ? ` · ${b.pts} / ${b.next}` : " · Max level"}</small></div>`;
+}

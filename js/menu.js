@@ -8,7 +8,7 @@ function renderMenu() {
   const tile = id => {
     const d = DATA.decks[id];
     const edit = d.custom ? `<button type="button" class="deck-edit btn btn-small" data-edit="${id}" aria-label="Edit ${esc(d.name)}">Edit</button>` : "";
-    return `<div class="deck-slot"><button type="button" class="deck-tile${d.custom ? " custom" : ""}" data-deck="${id}" aria-pressed="${id === U.deckId}" style="--fc:${DATA.factions[d.faction]?.color || "#888"}">${medal(d.faction)}<strong>${esc(d.name)}</strong><span>${esc(d.description)}</span></button>${edit}</div>`;
+    return `<div class="deck-slot"><button type="button" class="deck-tile${d.custom ? " custom" : ""}" data-deck="${id}" aria-pressed="${id === U.deckId}" style="--fc:${DATA.factions[d.faction]?.color || "#888"}">${medal(d.faction)}<strong>${esc(d.name)}</strong><span>${esc(d.description)}</span>${masteryLine(id)}</button>${edit}</div>`;
   };
   const starters = DATA.deckOrder.filter(id => DATA.decks[id].isPlayable);
   const mine = Object.keys(DATA.decks).filter(id => DATA.decks[id].custom);

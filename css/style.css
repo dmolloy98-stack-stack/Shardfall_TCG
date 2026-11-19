@@ -2080,3 +2080,19 @@ html.intro-on .menu-inner { visibility: hidden; }
 /* the pass check's small print */
 .modal-note { font-size: 13px; opacity: 0.75; margin-top: 10px; }
 @media (prefers-reduced-motion: reduce) { .field-card.ready, .eot-badge.soon, .ai-aim path { animation: none; } }
+
+/* Champion's line on the end screen, and deck mastery (js/campaign.js) */
+.recall { font-style: italic; font-size: 17px; color: #ffe7a8; margin: 6px 0 4px; }
+.recall span { display: block; font-style: normal; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.recall span::before { content: "— "; }
+.mbar { position: relative; display: block; height: 7px; border-radius: 4px; background: rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15); overflow: hidden; }
+.mbar b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: linear-gradient(90deg, #ffd27a, #ffb347); }
+.deck-mastery { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; font-style: normal; font-size: 12px; color: #ffd27a; margin-top: 6px; }
+.deck-mastery small { color: var(--muted); font-size: 11px; }
+.mastery-end { display: grid; gap: 5px; width: min(360px, 90%); margin: 8px auto; font-size: 15px; }
+.mastery-end b { color: #ffd27a; }
+.mastery-end .mbar { height: 10px; }
+.mastery-end .mbar b { width: var(--to); animation: mastery-fill 1.2s 0.4s ease-out both; }
+@keyframes mastery-fill { from { width: var(--from); } }
+.mastery-end small { color: var(--muted); }
+.mastery-end.up small b { color: #fff; text-shadow: 0 0 10px #ffb347; animation: lethal-pulse 0.6s ease-in-out 4 alternate; }

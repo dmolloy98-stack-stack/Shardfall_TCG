@@ -309,8 +309,19 @@ function spawnClass(sp) {
 // The match: running totals for the end screen, and the final blow.
 // ---------------------------------------------------------------------------
 function resetMatchStats() {
-  U.stats = { played: [0, 0], dealt: [0, 0], biggest: 0, low: [1, 1] };
+  U.stats = { played: [0, 0], dealt: [0, 0], biggest: 0, low: [1, 1], byCard: {} };
   U.endBadges = [];
+}
+// Damage from a fight is credited to the card that dealt it (the attacker, or the defender
+// hitting back), for the champion's line on the end screen.
+function creditFight(victimUid, amount) {
+  const st = U.stats;
+  if (!st || performance.now() - U.lungeAt > 80 || !U.lastAttacker) return;
+  const dealer = victimUid === U.lastAttacker ? U.lastTarget : U.lastAttacker;
+  const c = dealer != null ? findCardAnywhere(dealer) : null;
+  if (!c || c.owner !== viewIdx()) return;
+  const e = st.byCard[dealer] || (st.byCard[dealer] = { name: c.name, n: 0 });
+  e.n += amount;
 }
 function countDamage(victimIdx, amount) {
   const st = U.stats;
