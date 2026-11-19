@@ -2005,3 +2005,26 @@ html.intro-on .menu-inner { visibility: hidden; }
 /* a phone with the big side buttons: the table's small copies are hidden */
 #stage.side-controls [data-act="phase"], #stage.side-controls [data-act="pass"], #stage.side-controls [data-act="menu"] { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .thinking-dots b, .log-lines div.fresh { animation: none; } }
+
+/* Placing a card: the spots it can go light up (setPlacing in js/ui.js) */
+#stage.placing-back .slot[data-side="bottom"] { border: 2px solid var(--glow-play); background: rgba(99, 224, 138, 0.1); box-shadow: 0 0 12px rgba(99, 224, 138, 0.55); animation: zone 1.2s ease-in-out infinite; }
+#stage.placing-char .lane.front[data-side="bottom"] { outline: 2px solid var(--glow-play); outline-offset: -1px; box-shadow: 0 0 16px rgba(99, 224, 138, 0.5) !important; animation: zone 1.2s ease-in-out infinite; }
+#stage.placing-equip .field-card[data-side="bottom"] .card { --glow: drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 1.5px var(--glow-play)) drop-shadow(0 0 10px var(--glow-play)); }
+#stage.placing-off .slot[data-side="bottom"], #stage.placing-off .lane.front[data-side="bottom"] { opacity: 0.35; }
+
+/* Health bar beside the name: the part just lost shows white, then drains (js/motion.js) */
+.hpbar { position: relative; display: inline-block; vertical-align: middle; width: 118px; height: 7px; margin-left: 9px; border-radius: 4px; overflow: hidden;
+  background: rgba(0, 0, 0, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
+.hpbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
+.hpbar .chunk { width: calc(var(--chunk) * 100%); background: #fff; box-shadow: 0 0 6px #fff; }
+.hpbar .fill { width: calc(var(--hp) * 100%); background: linear-gradient(#7dffa0, #2fbf5b); }
+.hpbar.hurt .fill { background: linear-gradient(#ffc56b, #ff8a1e); }
+.hpbar.low .fill { background: linear-gradient(#ff7a6b, #d42323); }
+.si-text .hpbar { display: block; width: 100%; height: 6px; margin: 2px 0 1px; }
+/* A big hit to you: the screen's edges flash red, the crystal shows fresh cracks */
+.edge-flash { position: fixed; inset: 0; z-index: 9000; pointer-events: none;
+  box-shadow: inset 0 0 60px 14px rgba(255, 30, 20, 0.7), inset 0 0 140px 24px rgba(160, 0, 0, 0.22);
+  animation: edge-flash 0.75s ease-out forwards; }
+@keyframes edge-flash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+.crack-flash .c-crack { stroke: #ff5a4a !important; filter: drop-shadow(0 0 2px #ff3b2b); animation: crack-glow 0.9s ease-out; }
+@keyframes crack-glow { 0% { stroke-width: 3; } 100% { stroke-width: 1; } }

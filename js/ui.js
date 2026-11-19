@@ -551,6 +551,7 @@ onGameEvent((type, d) => {
       damageNumber(p.x + (Math.random() - 0.5) * 120, p.y - 10, d.amount, 0);
       crystalChips(d.player, 6 + Math.min(10, d.amount * 2));
       addTrauma(tier.trauma + 0.12);   // a hit to a player is felt a little more than one to a card
+      if (d.amount >= BIG_HIT && sideOf(d.player) === "bottom") bigHit(d.player);
       if (tier.callout) callout(tier.callout);
     });
   } else if (type === "burn") {
@@ -746,17 +747,37 @@ function protLine(p) {
   return `<span class="prot-line" title="${esc(p.name)} has ${why}: damage to them is halved, rounded up. Pierce ignores it.">${esc(DATA.skills.Protected?.icon || "▣")} Protected · half damage</span>`;
 }
 
+// The health bar beside a player's name. js/motion.js shows the part just lost as a white
+// chunk that drains away a moment later.
+function hpBarHTML(p) {
+  const { ratio, cls } = lifeTier(p);
+  return `<span class="hpbar ${cls}" data-player="${p.idx}" style="--hp:${ratio.toFixed(3)};--chunk:${ratio.toFixed(3)}" aria-hidden="true"><i class="chunk"></i><i class="fill"></i></span>`;
+}
+// A big hit (BIG_HIT damage or more at once) to the player at the bottom: the screen's edges
+// flash red and their life crystal cracks a little more for a moment.
+const BIG_HIT = 5;
+U.crackAt = [0, 0];
+const crackFlash = idx => performance.now() - (U.crackAt[idx] || 0) < 900;
+function bigHit(idx) {
+  U.crackAt[idx] = performance.now();
+  const el = document.createElement("div");
+  el.className = "edge-flash";
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 750);
+  if (U.screen === "game") render();
+  later(950, () => { if (U.screen === "game") render(); });
+}
 function plateHTML(p, side) {
   const { ratio, cls: tier } = lifeTier(p);
-  const cracks = tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4;
+  const cracks = Math.min(4, (tier !== "low" ? 0 : ratio >= 0.15 ? 2 : 4) + (crackFlash(p.idx) ? 2 : 0));
   const pd = S.pending;
   const targetable = humanTarget() && pd.targetType === "charOrPlayer" && isValidTarget({ isPlayer: true, idx: p.idx });
   const attackable = side === "top" && U.selected && !forcedTarget(p);
   const y = side === "top" ? 3 : 937;
   const thinking = p.isAI && S.active === p.idx && !S.over && !U.ended;   // the computer is taking its turn
-  return `<div class="plate${thinking ? " thinking" : ""}${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
+  return `<div class="plate${crackFlash(p.idx) ? " crack-flash" : ""}${thinking ? " thinking" : ""}${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
     <div class="life">${crystalSVG("life-crystal " + tier, cracks)}${wardHTML(p)}<b>${Math.max(0, p.health)}</b></div>
-    <div class="who"><span class="name">${esc(p.name)}${thinking ? `<i class="thinking-dots" aria-label="thinking"><b></b><b></b><b></b></i>` : ""}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
+    <div class="who"><span class="name">${esc(p.name)}${hpBarHTML(p)}${thinking ? `<i class="thinking-dots" aria-label="thinking"><b></b><b></b><b></b></i>` : ""}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
     ${attackable ? previewBadge(fightPreview(U.selected, null), true) : ""}
   </div>`;
 }
@@ -779,7 +800,7 @@ function fieldHTML(p, side) {
   for (let i = 0; i < RULES.maxBackline; i++) {
     const c = support[i];
     const x = L.backX + i * L.slot;
-    if (!c) { h += `<div class="slot" style="left:${x}px;top:${y.backline}px"></div>`; continue; }
+    if (!c) { h += `<div class="slot" data-side="${side}" style="left:${x}px;top:${y.backline}px"></div>`; continue; }
     if (c.type === "Area") {
       const tgt = humanPending && pd.kind === "target" && pd.targetType === "area";
       const usable = human && p === active() && canActivateArea(c, p);
@@ -872,8 +893,8 @@ function render() {
     <div class="side top" data-faction="${esc(them.faction)}" style="${sideStyle(them)}"></div><div class="side bottom" data-faction="${esc(me.faction)}" style="${sideStyle(me)}"></div>
     <div class="rift"></div>${scarHTML()}`;
   for (const side of ["top", "bottom"]) {
-    h += `<div class="lane back" style="left:${L.backX - 26}px;top:${L[side].backline - 6}px;width:${RULES.maxBackline * L.slot + 26}px;height:${BACK_H + 12}px"></div>`;
-    h += `<div class="lane front" style="left:${720 - L.frontW / 2 - 12}px;top:${L[side].chars - 8}px;width:${L.frontW + 24}px;height:${FIELD_H + 16}px"></div>`;
+    h += `<div class="lane back" data-side="${side}" style="left:${L.backX - 26}px;top:${L[side].backline - 6}px;width:${RULES.maxBackline * L.slot + 26}px;height:${BACK_H + 12}px"></div>`;
+    h += `<div class="lane front" data-side="${side}" style="left:${720 - L.frontW / 2 - 12}px;top:${L[side].chars - 8}px;width:${L.frontW + 24}px;height:${FIELD_H + 16}px"></div>`;
   }
   h += `<div class="bar top"></div><div class="bar bottom"></div>`;
   h += `<button type="button" class="btn stage-btn" data-act="menu" style="left:16px;top:11px;width:110px;height:44px" aria-label="Game menu">☰ Menu</button>`;
@@ -1148,6 +1169,19 @@ function dropZone(c) {
   if (c.type === "Spell") return { left: 24, top: 70, width: 1392, height: 650 };
   return { left: L.backX - 8, top: L.bottom.backline - 8, width: RULES.maxBackline * L.slot + 6, height: BACK_H + 16 };
 }
+// While a card is dragged, the spots it can go light up: the border of your front row for a
+// character, your empty back-row slots for an area or equipment (and your characters, which
+// equipment can also go on). They are stage classes, so a redraw mid-drag keeps them.
+const PLACING = ["placing-char", "placing-back", "placing-equip", "placing-off"];
+function setPlacing(c) {
+  const st = $("#stage");
+  st.classList.remove(...PLACING);
+  if (!c) return;
+  const p = active();
+  if (c.type === "Character") st.classList.add("placing-char");
+  if ((c.type === "Area" || c.type === "Equipment") && backlineCount(p) < RULES.maxBackline) st.classList.add("placing-back");
+  if (c.type === "Equipment" && p.field.chars.length) st.classList.add("placing-equip");
+}
 function handMove(e) {
   if (!drag || e.pointerId !== drag.pointerId) return;
   const pt = stagePoint(e);
@@ -1162,10 +1196,12 @@ function handMove(e) {
     drag.ghost.className = "ghost";
     drag.ghost.innerHTML = cardHTML(c, { costOverride: playCost(c) });
     $("#stage").appendChild(drag.ghost);
-    drag.hint = document.createElement("div");
-    drag.hint.className = "drop-hint" + (c.type === "Spell" ? " spell" : "");
-    for (const [k, v] of Object.entries(dropZone(c))) drag.hint.style[k] = v + "px";
-    $("#stage").appendChild(drag.hint);
+    if (c.type === "Spell") {   // a spell can be let go of anywhere on the table
+      drag.hint = document.createElement("div");
+      drag.hint.className = "drop-hint spell";
+      for (const [k, v] of Object.entries(dropZone(c))) drag.hint.style[k] = v + "px";
+      $("#stage").appendChild(drag.hint);
+    } else setPlacing(c);   // the spots it can go light up
     drag.last = pt;
   }
   if (drag.moved) {
@@ -1178,13 +1214,14 @@ function handMove(e) {
     // back over the hand, letting go puts the card back
     const back = pt.y >= 740;
     drag.ghost.classList.toggle("invalid", back);
-    drag.hint.classList.toggle("off", back);
+    drag.hint?.classList.toggle("off", back);
+    $("#stage").classList.toggle("placing-off", back);
   }
 }
 function handUp(e) {
   if (!drag || e.pointerId !== drag.pointerId) return;
   const d = drag; drag = null;
-  d.ghost?.remove(); d.hint?.remove();
+  d.ghost?.remove(); d.hint?.remove(); setPlacing(null);
   d.el.classList.remove("dragging", "held");
   if (!d.moved) {
     const c = S.players[viewIdx()].hand.find(x => x.uid === d.uid);
@@ -1453,7 +1490,7 @@ const hand = $("#hand-layer");
 hand.addEventListener("pointerdown", handDown);
 hand.addEventListener("pointermove", handMove);
 hand.addEventListener("pointerup", handUp);
-hand.addEventListener("pointercancel", e => { if (drag) { drag.ghost?.remove(); drag.hint?.remove(); drag.el.classList.remove("dragging", "held"); drag = null; } });
+hand.addEventListener("pointercancel", e => { if (drag) { drag.ghost?.remove(); drag.hint?.remove(); setPlacing(null); drag.el.classList.remove("dragging", "held"); drag = null; } });
 hand.addEventListener("contextmenu", e => {
   e.preventDefault();
   const el = e.target.closest(".hand-card");

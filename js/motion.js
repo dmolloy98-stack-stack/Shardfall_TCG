@@ -200,14 +200,19 @@ function showGraveCounts(only) {
 }
 
 // ---------------------------------------------------------------------------
-// Health counts down (or up) instead of jumping, so a big hit reads as a big hit.
+// Health counts down (or up) instead of jumping, so a big hit reads as a big hit. The health
+// bar beside the name drops at once, and the part just lost stays as a white chunk for a
+// moment (CHUNK_HOLD), then drains away (CHUNK_DRAIN).
 // ---------------------------------------------------------------------------
+const CHUNK_HOLD = 380, CHUNK_DRAIN = 520;
+const hpRatio = (i, v) => Math.max(0, Math.min(1, v / (S.players[i].maxHealth || 1)));
 function lifeAfterRender(fresh) {
   S.players.forEach((p, i) => {
     const real = Math.max(0, p.health);
     const L0 = MOTION.life[i];
-    if (fresh || !L0) { MOTION.life[i] = { shown: real, target: real, raf: 0 }; return; }
+    if (fresh || !L0) { MOTION.life[i] = { shown: real, target: real, raf: 0, chunk: null }; return; }
     if (L0.target !== real) {
+      if (real < L0.target) L0.chunk = { from: Math.max(chunkNow(L0, i), hpRatio(i, L0.target)), t: performance.now() };   // the part just lost
       L0.target = real;
       L0.from = L0.shown; L0.t = performance.now();
       L0.ms = Math.min(900, 220 + Math.abs(real - L0.shown) * 70);
@@ -223,11 +228,26 @@ function lifeTick(i) {
   const p = Math.min(1, (performance.now() - L0.t) / L0.ms);
   L0.shown = Math.round(L0.from + (L0.target - L0.from) * eased(p));
   paintLife(i);
-  if (p < 1) L0.raf = requestAnimationFrame(() => lifeTick(i));
+  const chunkLeft = L0.chunk && performance.now() - L0.chunk.t < CHUNK_HOLD + CHUNK_DRAIN;
+  if (!chunkLeft) L0.chunk = null;
+  if (p < 1 || chunkLeft) L0.raf = requestAnimationFrame(() => lifeTick(i));
   else document.querySelectorAll(`.plate[data-player="${i}"] .life, .si-player[data-player="${i}"] .si-life`).forEach(el => el.classList.remove("counting-down", "counting-up"));
+}
+// How much of the bar the white chunk covers right now (it ends where the health is).
+function chunkNow(L0, i) {
+  const to = hpRatio(i, L0.target);
+  if (!L0.chunk) return to;
+  const p = (performance.now() - L0.chunk.t - CHUNK_HOLD) / CHUNK_DRAIN;
+  return p <= 0 ? L0.chunk.from : L0.chunk.from + (to - L0.chunk.from) * eased(p);
 }
 function paintLife(i) {
   const L0 = MOTION.life[i];
+  // a heal fills the bar as the number counts up; damage drops it at once, behind the chunk
+  const fill = L0.target >= L0.shown ? hpRatio(i, L0.shown) : hpRatio(i, L0.target);
+  for (const bar of document.querySelectorAll(`.hpbar[data-player="${i}"]`)) {
+    bar.style.setProperty("--hp", fill.toFixed(3));
+    bar.style.setProperty("--chunk", Math.max(fill, chunkNow(L0, i)).toFixed(3));
+  }
   const going = L0.shown !== L0.target ? (L0.target < L0.shown ? "counting-down" : "counting-up") : "";
   for (const el of document.querySelectorAll(`.plate[data-player="${i}"] .life, .si-player[data-player="${i}"] .si-life`)) {
     const b = el.querySelector("b");

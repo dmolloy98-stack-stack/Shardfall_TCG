@@ -163,8 +163,8 @@ function renderSideInfo() {
     const token = cls === "me" ? board.querySelector('[data-act="token"]') : null;
     const tokenBtn = token ? `<button type="button" class="mana-token si-token" data-si="token" ${token.disabled ? "disabled" : ""} title="${esc(token.title)}">+1</button>` : "";
     return `<div class="si-player ${cls} ${state}" data-player="${p.idx}" style="--pc:${PLAYER_COLORS[p.idx]}" role="button" tabindex="0" aria-label="${esc(p.name)}: ${p.health} health, ${p.mana} of ${p.manaMax} mana, ${p.hand.length} cards in hand">
-      <div class="si-life">${crystalSVG("life-crystal " + tier, tier === "low" ? 2 : 0)}<b>${Math.max(0, p.health)}</b></div>
-      <div class="si-text"><span class="si-name">${esc(p.name)}</span>
+      <div class="si-life${crackFlash(p.idx) ? " crack-flash" : ""}">${crystalSVG("life-crystal " + tier, Math.min(4, (tier === "low" ? 2 : 0) + (crackFlash(p.idx) ? 2 : 0)))}<b>${Math.max(0, p.health)}</b></div>
+      <div class="si-text"><span class="si-name">${esc(p.name)}</span>${hpBarHTML(p)}
         <span class="si-mana">${crystalSVG("mana-crystal lit")}<b>${p.mana}</b>/${p.manaMax}${tokenBtn}</span>
         <span class="si-hand">Hand ${p.hand.length} · Deck ${p.deck.length}</span>${champSide(p)}</div>
     </div>`;

@@ -130,6 +130,8 @@ their own story or coaching, then hand over to the same engine.
 | Animations and feedback | `js/fx.js` and `css/style.css` |
 | Cards moving between deck, hand, table and graveyard; health counting | `js/motion.js` (`motionAfterRender()`, called at the end of `render()`) |
 | Where things sit on the table, and card sizes | `L`, `FIELD_W`, `BACK_W` at the top of `js/ui.js` |
+| Spots that light up while you drag a card | `setPlacing()` in `js/ui.js` (stage classes `placing-…` in `css/style.css`) |
+| Health bar and big hits (white chunk, red screen edges, fresh cracks) | `hpBarHTML()`, `bigHit()`, `BIG_HIT` in `js/ui.js`; the chunk drains in `js/motion.js` |
 | Battle log panel, computer speed | `logPanelHTML()`, `showLog()`, `AI_SPEEDS` in `js/ui.js`; both are in Settings |
 | Colours and sizes | `css/style.css` |
 | A new menu button | `index.html`, then `js/menu.js` |
