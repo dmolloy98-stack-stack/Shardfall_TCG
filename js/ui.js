@@ -19,6 +19,9 @@ const L = {
 };
 
 const $ = sel => document.querySelector(sel);
+// Heavy effects off (Settings): the html element gets "light-fx", and css/style.css stops the
+// looping background effects. js/storm.js holds the menu's falling shards still too.
+const applyHeavyFx = () => document.documentElement.classList.toggle("light-fx", !U.heavyFx);
 
 // The board is drawn in regions (the scenery, each player's plate, each side of the table, the
 // middle band, the buttons, the log, the end screen). render() marks where each region starts
@@ -96,12 +99,14 @@ const U = {
   showLog: PREFS.get("showLog", true),     // the battle log panel on the table (Settings)
   autoFlow: PREFS.get("autoFlow", true),   // draw automatically, skip a Battle with nothing to do (Settings)
   passCheck: PREFS.get("passCheck", true), // ask before passing with moves left (Settings)
+  heavyFx: PREFS.get("heavyFx", true),     // the always-on looping effects (Settings); off for slower devices
   aiSpeed: PREFS.get("aiSpeed", "normal"), // how fast the computer plays: slow, normal or fast (Settings)
   logAt: new Map(),      // log line -> when it was written, so new lines light up
   myTurnAt: 0,           // when your turn began, for the "your turn" moment
   hintOpen: true,
   hintNoteUntil: 0,
 };
+applyHeavyFx();
 
 // ---------------------------------------------------------------------------
 // Faction medallions (port of drawFactionMedallion) and card art
@@ -1508,6 +1513,7 @@ function showSettings() {
       <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
       <button type="button" class="btn" data-set="log" aria-pressed="${U.showLog}">Battle log on the table: ${U.showLog ? "Shown" : "Hidden"}</button>
       <button type="button" class="btn" data-set="speed" title="How fast the computer plays its turn">Computer speed: ${AI_SPEEDS[U.aiSpeed].name}</button>
+      <button type="button" class="btn" data-set="fx" aria-pressed="${U.heavyFx}" title="The always-on glows, shimmers and falling shards. Turn off if the game feels slow on this device">Heavy effects: ${U.heavyFx ? "On" : "Off"}</button>
       <button type="button" class="btn" data-set="flow" aria-pressed="${U.autoFlow}" title="Draw your card by itself, and skip Battle when nothing can attack">Draw and skip by themselves: ${U.autoFlow ? "On" : "Off"}</button>
       <button type="button" class="btn" data-set="passcheck" aria-pressed="${U.passCheck}" title="Ask before you pass with mana and playable cards, or characters that can still attack">Ask before passing early: ${U.passCheck ? "On" : "Off"}</button>
       ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">Read the battle log</button>` : ""}
@@ -1556,6 +1562,7 @@ $("#modal").addEventListener("click", e => {
     else if (set.dataset.set === "log") { U.showLog = !U.showLog; PREFS.set("showLog", U.showLog); if (U.screen === "game") render(); showSettings(); }
     else if (set.dataset.set === "speed") { const ids = Object.keys(AI_SPEEDS); U.aiSpeed = ids[(ids.indexOf(U.aiSpeed) + 1) % ids.length]; PREFS.set("aiSpeed", U.aiSpeed); showSettings(); }
     else if (set.dataset.set === "readlog") showLog();
+    else if (set.dataset.set === "fx") { U.heavyFx = !U.heavyFx; PREFS.set("heavyFx", U.heavyFx); applyHeavyFx(); if (U.screen === "menu") { storm.stop(); storm.start(); } showSettings(); }
     else if (set.dataset.set === "flow") { U.autoFlow = !U.autoFlow; PREFS.set("autoFlow", U.autoFlow); showSettings(); }
     else if (set.dataset.set === "passcheck") { U.passCheck = !U.passCheck; PREFS.set("passCheck", U.passCheck); showSettings(); }
     else if (set.dataset.set === "intro") { closeModal(); playIntro(); }

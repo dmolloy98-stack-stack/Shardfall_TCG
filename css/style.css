@@ -2172,3 +2172,12 @@ html.intro-on .menu-inner { visibility: hidden; }
 
 /* the board's regions (renderRegions in js/ui.js) take no space of their own */
 #board > .rg { display: contents; }
+
+/* Heavy effects off (Settings, applyHeavyFx in js/ui.js): the always-on looping effects stop.
+   Background and glow loops are switched off; any other loop plays once and rests. Short
+   effects (hits, card travel, wind-ups, banners) are not loops, so they still play. */
+html.light-fx *, html.light-fx *::before, html.light-fx *::after { animation-iteration-count: 1 !important; }
+html.light-fx .scene, html.light-fx .scene *, html.light-fx .scene::before, html.light-fx .scene::after,
+html.light-fx .side::before, html.light-fx .side::after, html.light-fx .rift, html.light-fx .rift::before, html.light-fx .rift::after,
+html.light-fx .shard-scar, html.light-fx .shard-scar .scar-tint, html.light-fx .ward:not(.forming) .s, html.light-fx .rune-ring .sweep, html.light-fx .rune-ring > i svg,
+html.light-fx .field-card.ready, html.light-fx #stage.tense #fx-layer::before { animation: none !important; }
