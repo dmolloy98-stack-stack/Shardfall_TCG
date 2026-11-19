@@ -35,7 +35,7 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 | Stats | `Attack+Health`, or `---` |
 | Skills | Skill names joined with `+`, or `---` |
 | Ability | The card's rules text |
-| Description | Optional flavor text |
+| Description | The card's story (flavor text, a few words to a few sentences). Hidden until the player has played the card once (see "Card stories" in docs/world.md). "Flavor text" in the card sheet |
 | ArtKey | Picture name: the game shows `assets/cards/<ArtKey>.png` if that file exists |
 | Effect | What the card does, written with the actions below. Leave empty for a card with no ability |
 | Classes | A character's job, joined with `+` (`Master+Fighter`): `Warrior`, `Mage`, `Scout`, `Guardian`, `Worker`, `Student`, `Master`, `Fighter`. `---` for anything that isn't a character |

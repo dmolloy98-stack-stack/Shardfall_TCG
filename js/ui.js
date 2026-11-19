@@ -19,6 +19,58 @@ const L = {
 };
 
 const $ = sel => document.querySelector(sel);
+// Heavy effects off (Settings): the html element gets "light-fx", and css/style.css stops the
+// looping background effects. js/storm.js holds the menu's falling shards still too.
+const applyHeavyFx = () => document.documentElement.classList.toggle("light-fx", !U.heavyFx);
+
+// The board is drawn in regions (the scenery, each player's plate, each side of the table, the
+// middle band, the buttons, the log, the end screen). render() marks where each region starts
+// with RG(name); a region whose HTML is the same as last time is not touched at all. Each region
+// is a wrapper that takes no space of its own (display: contents), so the pieces inside are laid
+// out on the board exactly as before.
+const RG = name => `\u0000${name}\u0000`;
+function renderRegions(board, h) {
+  const parts = h.split("\u0000");   // [scenery, name, html, name, html, ...]
+  const regions = [["scenery", parts[0]]];
+  for (let i = 1; i < parts.length; i += 2) regions.push([parts[i], parts[i + 1] || ""]);
+  if (board.dataset.regions !== regions.map(r => r[0]).join(",")) {
+    board.innerHTML = regions.map(([name]) => `<div class="rg" data-rg="${name}"></div>`).join("");
+    board.dataset.regions = regions.map(r => r[0]).join(",");
+  }
+  for (const [name, html] of regions) {
+    const box = board.querySelector(`:scope > [data-rg="${name}"]`);
+    if (box.__src === html) continue;
+    box.__src = html;
+    patchChildren(box, html);
+  }
+}
+
+// Redraws a container from new HTML, but keeps every piece that hasn't changed. The board is
+// described from scratch after every move; rebuilding all of it made the browser restyle and
+// lay out every card each time, which was slow on phones. Each top-level piece is matched by
+// its card (data-uid) or its kind and order, and is only replaced when its HTML differs.
+// A kept piece also keeps any animation it is in the middle of.
+function patchChildren(box, html) {
+  const tpl = document.createElement("template");
+  tpl.innerHTML = html;
+  const keyOf = (el, seen) => {
+    const base = (el.className && typeof el.className === "string" ? el.className.split(" ")[0] : el.tagName) + (el.dataset?.uid ? ":" + el.dataset.uid : el.dataset?.player ? ":p" + el.dataset.player : "");
+    const n = seen.get(base) || 0;
+    seen.set(base, n + 1);
+    return base + "#" + n;
+  };
+  const old = new Map();
+  { const seen = new Map(); for (const el of box.children) old.set(keyOf(el, seen), el); }
+  const seen = new Map(), keep = new Set();
+  const want = [...tpl.content.children].map(el => {
+    const html = el.outerHTML, o = old.get(keyOf(el, seen));
+    if (o && o.__html === html && !keep.has(o)) { keep.add(o); return o; }
+    el.__html = html;
+    return el;
+  });
+  for (const el of [...box.children]) if (!keep.has(el)) el.remove();
+  want.forEach((el, i) => { if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null); });
+}
 const esc = s => String(s ?? "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 
 const U = {
@@ -47,12 +99,14 @@ const U = {
   showLog: PREFS.get("showLog", true),     // the battle log panel on the table (Settings)
   autoFlow: PREFS.get("autoFlow", true),   // draw automatically, skip a Battle with nothing to do (Settings)
   passCheck: PREFS.get("passCheck", true), // ask before passing with moves left (Settings)
+  heavyFx: PREFS.get("heavyFx", true),     // the always-on looping effects (Settings); off for slower devices
   aiSpeed: PREFS.get("aiSpeed", "normal"), // how fast the computer plays: slow, normal or fast (Settings)
   logAt: new Map(),      // log line -> when it was written, so new lines light up
   myTurnAt: 0,           // when your turn began, for the "your turn" moment
   hintOpen: true,
   hintNoteUntil: 0,
 };
+applyHeavyFx();
 
 // ---------------------------------------------------------------------------
 // Faction medallions (port of drawFactionMedallion) and card art
@@ -519,8 +573,10 @@ onGameEvent((type, d) => {
   if (type === "log") {
     U.logAt.set(d.msg, now);
     if (U.logAt.size > 200) U.logAt.delete(U.logAt.keys().next().value);
+    histLog(d.msg, now);
   } else if (type === "newGame") {
     resetMatchStats();
+    U.hist = []; U.recentLog = [];
   } else if (type === "clash") {
     // A fight is about to resolve. With Swift, the first blow lands, then the reply a beat later.
     U.clash = { at: now, swift: d.swift, n: 0, uids: [d.attacker, d.target] };
@@ -573,6 +629,8 @@ onGameEvent((type, d) => {
   } else if (type === "enter") {
     U.spawn.set(d.uid, { cost: Math.min(7, Math.max(1, d.cost)), t: now, faction: findChar(d.uid)?.c.group });
   } else if (type === "lunge") {
+    const hf = findChar(d.uid);   // the turn history (histAdd)
+    if (hf) histAdd({ kind: d.target === "shard" ? "shard" : "attack", id: hf.c.id, player: hf.p.idx }, now);
     // the attacker swoops most of the way to its target and springs back
     const from = charCenter(d.uid);
     const to = d.target === "shard" ? SHARD_AT : d.target != null ? charCenter(d.target) : plateCenter(d.player);
@@ -622,6 +680,7 @@ onGameEvent((type, d) => {
     else banner(active().isAI ? `${active().name}'s turn` : "Your turn");
     if (!active().isAI && S.mode !== "hotseat") yourTurnMoment();
   } else if (type === "play") {
+    histAdd({ kind: d.card.type === "Spell" ? "cast" : "play", id: d.card.id, player: d.player }, now);   // the turn history
     if (U.stats) U.stats.played[d.player]++;
     if (d.card.manaCost >= SHOWCASE_COST && !REDUCED_MOTION) { setTimeout(() => showcase(d.card, d.player), 0); return; }
     // after the board redraws, sparkle where the card landed
@@ -909,13 +968,14 @@ function render() {
   }
   h += `<div class="bar top"></div><div class="bar bottom"></div>`;
   h += `<button type="button" class="btn stage-btn" data-act="menu" style="left:16px;top:11px;width:110px;height:44px" aria-label="Game menu">☰ Menu</button>`;
-  h += plateHTML(them, "top") + plateHTML(me, "bottom");
+  h += RG("players") + plateHTML(them, "top") + plateHTML(me, "bottom");
 
   // opponent hand, face down
   const oh = them.hand.map(() => `<div class="card back"></div>`).join("");
   h += `<div class="opp-hand" style="left:${960}px;top:7px" title="${them.hand.length} cards in hand">${oh}</div>`;
-  h += fieldHTML(them, "top") + fieldHTML(me, "bottom");
-  h += manaHTML(them, "top") + manaHTML(me, "bottom");
+  h += RG("top") + fieldHTML(them, "top") + RG("bottom") + fieldHTML(me, "bottom");
+  h += RG("mana") + manaHTML(them, "top") + manaHTML(me, "bottom");
+  h += RG("middle");
 
   // middle band
   const turnColor = PLAYER_COLORS[U.turnColor ?? S.active];
@@ -942,11 +1002,14 @@ function render() {
     h += `<div class="instruction">${esc(instr)}</div>`;
   }
 
+  h += RG("buttons");
   const label = ["Draw card", "To battle →", "To end →", "Pass turn →"][S.phase];
   const canPhase = human && !S.pending && !U.armed;
   h += `<button type="button" class="btn stage-btn${canPhase && S.phase === PHASE.DRAW ? " glow" : ""}" data-act="phase" title="Keyboard: Space" style="left:1220px;top:372px;width:200px;height:56px" ${canPhase ? "" : "disabled"}>${label}</button>`;
   h += `<button type="button" class="btn stage-btn" data-act="pass" title="Keyboard: E" style="left:1240px;top:942px;width:180px;height:48px" ${canPhase ? "" : "disabled"}>Pass turn</button>`;
+  h += RG("log");
   if (U.showLog) h += logPanelHTML();
+  h += RG("over");
 
   if (U.curtain) {
     h += `<div class="curtain"><p>Pass the device to</p><h2>${esc(active().name)}</h2><p>${esc(active().deckLabel ?? active().faction + " deck")} · Round ${S.round}</p>${eventLine() ? `<p>${esc(eventLine().when)}: ${esc(eventLine().name)}. ${esc(eventLine().desc)}</p>` : ""}<button type="button" class="btn btn-primary" data-act="curtain">Start turn</button></div>`;
@@ -955,9 +1018,9 @@ function render() {
     const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;
     const camp = U.campaign ? campaignEndHTML(S.winner === 0) : null;
     const actions = camp ? camp.actions : `<button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button>`;
-    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${recallHTML()}${masteryHTML()}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
+    h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${recallHTML()}${masteryHTML()}${newTrophiesHTML()}${newLoreHTML()}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
   }
-  $("#board").innerHTML = h;
+  renderRegions($("#board"), h);
   renderHand(me);
   renderPrompt();
   renderOverlays();
@@ -966,15 +1029,62 @@ function render() {
   autoFlow();
 }
 
+// Turn history: every card played and every attack becomes a small icon in a row along the top
+// of the battle log panel (newest on the right), so it takes no extra room on the table. Tap
+// one to see the card and what happened. The log lines written with a move are kept with it.
+const HIST_SHOWN = 9;
+const HIST_KIND = { play: { glyph: "✦" }, cast: { glyph: "✧" }, attack: { glyph: "⚔" }, shard: { glyph: "◆" } };
+// "Computer played Chimp", "Player 1's Gorilla attacked"
+function histTitle(e, c) {
+  const who = S.players[e.player]?.name || "";
+  return e.kind === "play" ? `${who} played ${c.name}` : e.kind === "cast" ? `${who} cast ${c.name}`
+    : e.kind === "attack" ? `${who}'s ${c.name} attacked` : `${who}'s ${c.name} hit the big shard`;
+}
+U.hist = []; U.recentLog = [];
+function histAdd(e, now) {
+  if (!S) return;
+  e.t = now;
+  e.lines = U.recentLog.filter(l => now - l.t < 40).map(l => l.msg);   // written just before, in the same move
+  U.hist.push(e);
+  if (U.hist.length > 60) U.hist.shift();
+}
+function histLog(msg, now) {
+  U.recentLog.push({ msg, t: now });
+  if (U.recentLog.length > 6) U.recentLog.shift();
+  const last = U.hist[U.hist.length - 1];
+  if (last && now - last.t < 450 && !last.lines.includes(msg)) last.lines.push(msg);   // written by the same move
+}
+function histHTML() {
+  const start = Math.max(0, U.hist.length - HIST_SHOWN);
+  const now = performance.now();
+  return U.hist.slice(start).map((e, k) => {
+    const c = DATA.cardsById[e.id];
+    if (!c) return "";
+    const i = start + k;
+    const fresh = now - e.t < 700 ? " fresh" : "";
+    return `<span class="hist-i ${sideOf(e.player)}${fresh}" data-act="hist" data-i="${i}" title="${esc(histTitle(e, c))}" style="--pc:${PLAYER_COLORS[e.player]}">${medal(c.group, "hist-medal")}<i>${HIST_KIND[e.kind].glyph}</i></span>`;
+  }).join("");
+}
+function showHist(i) {
+  const e = U.hist[i];
+  const c = e && DATA.cardsById[e.id];
+  if (!c) return;
+  openModal(`<h2 id="modal-title">${esc(histTitle(e, c))}</h2>
+    <div class="hist-detail"><div class="hist-card">${cardHTML(c)}</div>
+      <div class="hist-lines">${(e.lines.length ? e.lines : ["Nothing else happened."]).map(l => `<p>${esc(l)}</p>`).join("")}</div></div>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Back to the game</button></div>`);
+}
+
 // The battle log: the last few things that happened, in a panel at the bottom right of the
 // table. New lines light up for a moment. Tapping it opens the whole match's log.
 function logPanelHTML() {
   const now = performance.now();
-  const lines = S.log.slice(-6).map(m => {
+  const lines = S.log.slice(U.hist.length ? -4 : -6).map(m => {   // fewer lines once the history row is showing
     const age = now - (U.logAt.get(m) ?? -1e9);
     return `<div${age < 1600 ? ` class="fresh" style="animation-delay:${-age.toFixed(0)}ms"` : ""}>${esc(m)}</div>`;
   }).join("");
-  return `<button type="button" class="log" data-act="log" aria-label="Battle log: tap to read the whole match"><span class="log-title">Battle log</span><span class="log-lines">${lines}</span></button>`;
+  const hist = histHTML();
+  return `<div class="log" data-act="log" role="button" tabindex="0" aria-label="Battle log: tap to read the whole match">${hist ? `<span class="hist">${hist}</span>` : `<span class="log-title">Battle log</span>`}<span class="log-lines">${lines}</span></div>`;
 }
 function showLog() {
   openModal(`<h2 id="modal-title">Battle log</h2>
@@ -998,7 +1108,7 @@ function renderOverlays() {
 // What a hand card says when you hold the pointer over it: its ability, then what its skills do.
 function handTip(c) {
   const parts = [];
-  const ab = c.ability || c.description;
+  const ab = c.ability;
   if (ab) parts.push(esc(ab));
   for (const k of c.skills || []) { const d = DATA.skills[k]?.desc; if (d) parts.push(`<b>${esc(k)}</b>: ${esc(d)}`); }
   return parts.length ? `<div class="hand-tip">${parts.join("<br>")}</div>` : "";
@@ -1008,7 +1118,7 @@ function renderHand(p) {
   const layer = $("#hand-layer");
   const human = humanTurn() && p === active();
   const n = p.hand.length;
-  layer.innerHTML = p.hand.map((c, i) => {
+  patchChildren(layer, U.curtain ? "" : p.hand.map((c, i) => {
     const pos = handPos(i, n);
     const cls = ["hand-card"];
     if (human && canPlay(c, p)) cls.push("playable");
@@ -1019,8 +1129,7 @@ function renderHand(p) {
     if (S.pending?.cast && S.pending.source === c) cls.push("casting");   // a spell waiting for its target
     const costShown = playCost(c, p);
     return `<div class="${cls.join(" ")}" data-uid="${c.uid}" style="left:${pos.x}px;top:${pos.y}px;transform:rotate(${pos.rot}rad);z-index:${i + 1}${waveStyle}">${cardHTML(c, { costOverride: costShown })}${handTip(c)}</div>`;
-  }).join("");
-  if (U.curtain) layer.innerHTML = "";
+  }).join(""));
 }
 
 function renderPrompt() {
@@ -1060,6 +1169,7 @@ function findCardAnywhere(uid) {
 // ---------------------------------------------------------------------------
 function act(fn) {
   const snap = structuredClone(S);
+  snap.histLen = U.hist.length;   // an undo also takes back the turn history after this point
   const ok = fn();
   if (ok !== false) { U.undo.push(snap); if (U.undo.length > 25) U.undo.shift(); }
   afterAction();
@@ -1341,7 +1451,7 @@ function showDetail(c, ctx = {}) {
     } else actions = `<div class="detail-actions"><button type="button" class="btn btn-primary" data-m="play" data-uid="${c.uid}">Play for ${playCost(c)} mana</button></div>`;
   }
   if (counterKinds(c)) extra += `<p class="reason">Counter spell: you can't play it on your own turn. When the other player plays a card it can stop, the game asks you. It costs mana you left unspent on your turn.</p>`;
-  const ability = c.ability || c.description;
+  const ability = c.ability;
   const spellFx = c.type === "Spell" && EFFECTS[c.id]?.target ? EFFECTS[c.id] : null;
   const spellKind = spellFx ? (spellFx.intent === "help" ? " · Buff spell" : " · Curse spell") : "";
   openModal(`<div class="detail">
@@ -1349,6 +1459,7 @@ function showDetail(c, ctx = {}) {
     <div class="detail-text">
       <div><h2 id="modal-title">${esc(c.name)}</h2><p class="sub">${esc(c.type)} · ${esc(c.rarity)} · ${esc(fractureLabel(c))} · ${c.manaCost} mana${spellKind}</p>${kindsLine(c)}</div>
       ${ability ? `<p class="ability">${esc(ability)}</p>` : ""}
+      ${loreHTML(c)}
       ${skillRows(c)}
       ${extra}
       ${actions}
@@ -1402,6 +1513,7 @@ function showSettings() {
       <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
       <button type="button" class="btn" data-set="log" aria-pressed="${U.showLog}">Battle log on the table: ${U.showLog ? "Shown" : "Hidden"}</button>
       <button type="button" class="btn" data-set="speed" title="How fast the computer plays its turn">Computer speed: ${AI_SPEEDS[U.aiSpeed].name}</button>
+      <button type="button" class="btn" data-set="fx" aria-pressed="${U.heavyFx}" title="The always-on glows, shimmers and falling shards. Turn off if the game feels slow on this device">Heavy effects: ${U.heavyFx ? "On" : "Off"}</button>
       <button type="button" class="btn" data-set="flow" aria-pressed="${U.autoFlow}" title="Draw your card by itself, and skip Battle when nothing can attack">Draw and skip by themselves: ${U.autoFlow ? "On" : "Off"}</button>
       <button type="button" class="btn" data-set="passcheck" aria-pressed="${U.passCheck}" title="Ask before you pass with mana and playable cards, or characters that can still attack">Ask before passing early: ${U.passCheck ? "On" : "Off"}</button>
       ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">Read the battle log</button>` : ""}
@@ -1450,6 +1562,7 @@ $("#modal").addEventListener("click", e => {
     else if (set.dataset.set === "log") { U.showLog = !U.showLog; PREFS.set("showLog", U.showLog); if (U.screen === "game") render(); showSettings(); }
     else if (set.dataset.set === "speed") { const ids = Object.keys(AI_SPEEDS); U.aiSpeed = ids[(ids.indexOf(U.aiSpeed) + 1) % ids.length]; PREFS.set("aiSpeed", U.aiSpeed); showSettings(); }
     else if (set.dataset.set === "readlog") showLog();
+    else if (set.dataset.set === "fx") { U.heavyFx = !U.heavyFx; PREFS.set("heavyFx", U.heavyFx); applyHeavyFx(); if (U.screen === "menu") { storm.stop(); storm.start(); } showSettings(); }
     else if (set.dataset.set === "flow") { U.autoFlow = !U.autoFlow; PREFS.set("autoFlow", U.autoFlow); showSettings(); }
     else if (set.dataset.set === "passcheck") { U.passCheck = !U.passCheck; PREFS.set("passCheck", U.passCheck); showSettings(); }
     else if (set.dataset.set === "intro") { closeModal(); playIntro(); }
@@ -1473,7 +1586,7 @@ $("#modal").addEventListener("click", e => {
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
   else if (m === "rules") showGuide();
   else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); U.menuView = "home"; showScreen("menu"); }
-  else if (m === "undo") { if (U.undo.length) { S = U.undo.pop(); U.selected = null; U.armed = null; U.ended = S.over; render(); } }
+  else if (m === "undo") { if (U.undo.length) { S = U.undo.pop(); if (S.histLen != null) U.hist.length = Math.min(U.hist.length, S.histLen); U.selected = null; U.armed = null; U.ended = S.over; render(); } }
   else if (m === "mana") act(() => { active().mana++; });
   else if (m === "qadraw") act(() => { drawCard(active()); });
 });
@@ -1495,6 +1608,9 @@ $("#board").addEventListener("click", e => {
   if (a === "camp-map") return showCampaign();
   if (a === "tomenu") { endTutorial(); U.menuView = "home"; return showScreen("menu"); }
   if (a === "phase") return onPhaseButton();
+  if (a === "lore-new") { showNewLore(); return; }
+  if (a === "trophies") { showTrophies(); return; }
+  if (a === "hist") { showHist(Number(el.dataset.i)); return; }
   if (a === "log") { showLog(); return; }
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; passTurn(); } return; }
   if (a === "faceall") { if (human && S.phase === PHASE.BATTLE) { U.selected = null; act(attackAllFace); } return; }

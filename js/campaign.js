@@ -4,29 +4,41 @@
 // in a match and how the computer plays them is in js/champions.js; the story is docs/world.md.
 // Adding a champion: add a stage here, an entry in CHAMPIONS, and a starter deck for its faction.
 
+// Each stage: the champion's fracture and name, the story card before the match (intro, then a
+// short scene and the champion's words to the Shardkeeper), and the line after a win.
 const CAMPAIGN = [
   {
     faction: "Simple", champion: "The Simplistic",
+    scene: "The turnip rows are perfectly straight, every one exactly the same.",
+    says: "Nice turnips. Nice day. Why fight?",
     intro: "A shard comes down in a quiet turnip field. The Simplistic is already standing over it, insisting everything was fine before all this.",
     win: "The Simplistic shrugs and steps aside. \"Keep it simple,\" it says. \"Start small, then level up.\" It says it exactly as it said it before.",
   },
   {
     faction: "Monkey", champion: "The Man Ape",
+    scene: "The Man Ape peels a banana on top of its shard pile.",
+    says: "My jungle. My shards. You want some? Earn them.",
     intro: "Deep in a jungle that wasn't there last week, The Man Ape sits on a pile of shards like a hoard of bananas. The troop watches from the trees. The ground still hums where the jungle first appeared.",
     win: "The troop scatters. The Man Ape lets the shard go, but keeps one eye on it.",
   },
   {
     faction: "Fighter", champion: "IP Man",
+    scene: "He is sweeping the courtyard. One stone is cracked in a perfect square.",
+    says: "*bows* Every fight is a lesson. Shall we study?",
     intro: "Since his world broke, IP Man has trained on a cliff edge above the falling shards. He bows before every fight and expects a bow back. He swears the sky flickered, just once, a moment before the break.",
     win: "IP Man bows once more. \"Again tomorrow,\" he says, and he means it.",
   },
   {
     faction: "Digital", champion: "Boss Level",
+    scene: "The air hums like a computer fan. For a blink, a progress bar hangs at 99%.",
+    says: "PLAYER 2 HAS ENTERED. Difficulty: adjusting…",
     intro: "A shard has landed in a server room humming in the middle of nowhere. Boss Level loads in with a health bar nobody has seen the end of. Its desktop wallpaper is a quiet turnip field.",
     win: "Boss Level flickers. GAME OVER, the screens read, though nobody is sure for whom. Somewhere in the code, a turnip field keeps loading.",
   },
   {
     faction: "Zombie", champion: "Soul Shepard",
+    scene: "Grey stones, quiet. Soul Shepard walks among them, humming.",
+    says: "They say I started all this. I only tend what's left.",
     intro: "The other champions all say the Zombies caused the Shardfall. Soul Shepard waits among the graves, gathering the fallen, and does not argue.",
     win: "Soul Shepard lowers its crook. Among the souls it gathered are faces from every world, not only its own. The shards keep falling.",
   },
@@ -73,6 +85,8 @@ function playCampaignMatch(i) {
       <h2 id="modal-title">${esc(st.champion)}</h2>
       ${CHAMPIONS[st.champion] ? `<p class="camp-tag">${esc(CHAMPIONS[st.champion].tag)}</p>` : ""}
       <p class="camp-story">${esc(st.intro)}</p>
+      ${st.scene ? `<p class="camp-scene">${esc(st.scene)}</p>` : ""}
+      ${st.says ? `<p class="camp-says">“${esc(st.says)}”</p>` : ""}
       <div class="detail-actions"><button type="button" class="btn btn-primary" data-camp-go="${i}">Begin</button><button type="button" class="btn" data-camp-back>Back</button></div>
     </div>`, { dismissable: true });
 }
@@ -240,11 +254,15 @@ function masteryOf(deckId, pts) {
   const prev = level ? MASTERY_STEPS[level - 1] : 0, next = MASTERY_STEPS[level] ?? null;
   return { pts, level, title: level ? titles[level - 1] : null, prev, next, frac: next ? (pts - prev) / (next - prev) : 1 };
 }
+// A deck's wins and losses against the computer: { w, l }.
+const deckRecord = deckId => (PREFS.get("record", {}) || {})[deckId] || { w: 0, l: 0 };
+const recordText = deckId => { const r = deckRecord(deckId); return r.w + r.l ? `${r.w} won · ${r.l} lost` : ""; };
 // The line under a deck on the main menu.
 function masteryLine(deckId) {
   const m = masteryOf(deckId);
+  const rec = recordText(deckId);
   const bar = `<i class="mbar"><b style="width:${(m.frac * 100).toFixed(0)}%"></b></i>`;
-  return `<em class="deck-mastery">${m.title ? `★ ${esc(m.title)}` : "No title yet"}${bar}<small>${m.next ? `${m.pts} / ${m.next}` : "Max level"}</small></em>`;
+  return `<em class="deck-mastery">${m.title ? `★ ${esc(m.title)}` : "No title yet"}${bar}<small>${m.next ? `${m.pts} / ${m.next}` : "Max level"}</small>${rec ? `<small class="deck-record">${rec}</small>` : ""}</em>`;
 }
 onGameEvent((type, d) => {
   if (type === "newGame") U.masteryGain = null;
@@ -255,6 +273,11 @@ onGameEvent((type, d) => {
   const gain = (d.winner === 0 ? MASTERY_POINTS.win : MASTERY_POINTS.loss) + (S.shardBy === 0 ? MASTERY_POINTS.shard : 0);
   all[id] = before + gain;
   PREFS.set("mastery", all);
+  // the deck's record against the computer (shown on the menu and in the deck builder)
+  const rec = PREFS.get("record", {}) || {};
+  const r = rec[id] || (rec[id] = { w: 0, l: 0 });
+  if (d.winner === 0) r.w++; else r.l++;
+  PREFS.set("record", rec);
   U.masteryGain = { id, before, after: before + gain, gain };
 });
 // The end screen: points earned, the bar filling, and a new title if one was reached.
@@ -268,4 +291,126 @@ function masteryHTML() {
   return `<div class="mastery-end${up ? " up" : ""}"><span>${esc(name)} mastery <b>+${g.gain}</b></span>
     <i class="mbar"><b style="--from:${(from * 100).toFixed(0)}%;--to:${(b.frac * 100).toFixed(0)}%"></b></i>
     <small>${up ? `New title: <b>★ ${esc(b.title)}</b>` : b.title ? `★ ${esc(b.title)}` : "No title yet"}${b.next ? ` · ${b.pts} / ${b.next}` : " · Max level"}</small></div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Card stories: every card has a short description (the Description column of data/cards.csv,
+// "Flavor text" in the card sheet). It stays hidden until you play that card once; then it
+// shows when you read the card (in a match, the Almanac or the deck builder). Kept on this
+// device (PREFS "lore": the CardIDs unlocked). The end screen lists the ones a match unlocked.
+// ---------------------------------------------------------------------------
+const loreKnown = id => (PREFS.get("lore", []) || []).includes(id);
+function loreHTML(c) {
+  if (!c.description) return "";
+  return loreKnown(c.id) ? `<p class="lore">“${esc(c.description)}”</p>` : `<p class="lore locked">??? Play this card to unlock its story.</p>`;
+}
+onGameEvent((type, d) => {
+  if (type === "newGame") U.newLore = [];
+  if (type !== "play" || !S || S.players[d.player]?.isAI) return;
+  const id = d.card.id;
+  if (!DATA.cardsById[id]?.description || loreKnown(id)) return;
+  PREFS.set("lore", [...(PREFS.get("lore", []) || []), id]);
+  (U.newLore || (U.newLore = [])).push(id);
+});
+// The end screen: one quiet line naming the stories this match unlocked; tap it to read them.
+function newLoreHTML() {
+  const ids = U.newLore || [];
+  if (!ids.length) return "";
+  const names = ids.slice(0, 3).map(id => DATA.cardsById[id]?.name).filter(Boolean);
+  const more = ids.length > 3 ? ` and ${ids.length - 3} more` : "";
+  return `<button type="button" class="lore-new" data-act="lore-new">📜 New card ${ids.length === 1 ? "story" : "stories"}: ${esc(names.join(", "))}${more} · read</button>`;
+}
+function showNewLore() {
+  const ids = U.newLore || [];
+  openModal(`<h2 id="modal-title">New card stories</h2>
+    <div class="lore-list">${ids.map(id => { const c = DATA.cardsById[id]; return c ? `<div class="lore-item">${medal(c.group)}<div><b>${esc(c.name)}</b><p>“${esc(c.description)}”</p></div></div>` : ""; }).join("")}</div>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Close</button></div>`);
+}
+const loreCount = () => DATA.cardList.filter(c => c.description && loreKnown(c.id)).length;
+
+// ---------------------------------------------------------------------------
+// Trophies: things to achieve, earned in matches against the computer (campaign included) and
+// kept on this device. PREFS "trophies": { id: date earned }; PREFS "tcount": running totals
+// for the ones that build up over many matches. The Trophies button on the start menu shows
+// them all; the end screen names any a match just earned.
+// ---------------------------------------------------------------------------
+const STARTERS = () => DATA.deckOrder.filter(id => DATA.decks[id].isPlayable);
+const TROPHIES = [
+  { id: "troop_night", name: "Troop Night", how: "Win with 5 or more Monkeys on your side" },
+  { id: "shardbreaker", name: "Shardbreaker", how: "Break the big shard 3 times", count: "shards", goal: 3 },
+  { id: "untouchable", name: "Untouchable", how: "Win without taking any damage" },
+  { id: "brink", name: "Back from the Brink", how: "Win after dropping to 5 health or less" },
+  { id: "overkill", name: "Overkill", how: "Deal 10 or more damage in one hit" },
+  { id: "spell_slinger", name: "Spell Slinger", how: "Cast 5 spells in one match" },
+  { id: "full_house", name: "Full House", how: "Have 7 characters on your side at once" },
+  { id: "maxed_out", name: "Maxed Out", how: "Get a character to Level 3" },
+  { id: "grave_robber", name: "Grave Robber", how: "Bring 5 characters back from the graveyard", count: "revived", goal: 5 },
+  { id: "five_worlds", name: "Five Worlds", how: "Win at least once with each starter deck" },
+  { id: "shardkeeper", name: "Shardkeeper", how: "Beat the Campaign" },
+  // one for each starter deck's top mastery title
+  ...Object.entries(MASTERY_TITLES).filter(([id]) => id !== "custom").map(([id, titles]) => ({ id: "top_" + id, deck: id, name: titles[titles.length - 1], how: `Reach the top mastery title with the ${DATA.decks[id]?.name || id}` })),
+];
+const trophiesWon = () => PREFS.get("trophies", {}) || {};
+const tcount = () => PREFS.get("tcount", {}) || {};
+function earnTrophy(id) {
+  const won = trophiesWon();
+  if (won[id]) return;
+  won[id] = new Date().toISOString().slice(0, 10);
+  PREFS.set("trophies", won);
+  (U.newTrophies || (U.newTrophies = [])).push(id);
+}
+function bumpCount(key, n = 1) {
+  const c = tcount(); c[key] = (c[key] || 0) + n; PREFS.set("tcount", c);
+  for (const t of TROPHIES) if (t.count === key && c[key] >= t.goal) earnTrophy(t.id);
+}
+// What one match tracks for the trophies (the player at the bottom against the computer).
+const trophyMatch = () => S && S.mode === "ai" && !U.tutorial && !S.players[0].isAI;
+let TM = null;
+onGameEvent((type, d) => {
+  if (type === "newGame") { U.newTrophies = []; TM = { hurt: false, low: Infinity, spells: 0, grave: new Set() }; return; }
+  if (!trophyMatch() || !TM) return;
+  const me = S.players[0];
+  if (type === "playerDamage" && d.player === 0) { TM.hurt = true; TM.low = Math.min(TM.low, me.health); }
+  if ((type === "playerDamage" && d.player === 1 && d.amount >= 10) || (type === "charDamage" && d.amount >= 10 && findChar(d.uid)?.p.idx === 1)) earnTrophy("overkill");
+  if (type === "play" && d.player === 0 && d.card.type === "Spell" && ++TM.spells >= 5) earnTrophy("spell_slinger");
+  if (type === "shardClaim" && d.player === 0) bumpCount("shards");
+  if (type === "text" && d.text === "REANIMATE" && findChar(d.uid)?.p.idx === 0) bumpCount("revived");
+  if (me.field.chars.length >= 7) earnTrophy("full_house");
+  if (me.field.chars.some(c => (c.levelUpCount || 0) >= 3)) earnTrophy("maxed_out");
+  // a character leaving your graveyard (back to your hand or the table) was brought back
+  const now = new Set(me.grave.filter(c => c.type === "Character").map(c => c.uid));
+  let back = 0;
+  for (const uid of TM.grave) if (!now.has(uid) && (me.hand.some(c => c.uid === uid) || me.field.chars.some(c => c.uid === uid))) back++;
+  TM.grave = now;
+  if (back) bumpCount("revived", back);
+  if (type === "gameOver") {
+    if (d.winner === 0) {
+      if (me.field.chars.filter(c => inGroup(c, "Monkey")).length >= 5) earnTrophy("troop_night");
+      if (!TM.hurt) earnTrophy("untouchable");
+      if (TM.low <= 5) earnTrophy("brink");
+      const rec = PREFS.get("record", {}) || {};
+      if (STARTERS().every(id => rec[id]?.w > 0)) earnTrophy("five_worlds");
+    }
+    if (campaignCleared() >= CAMPAIGN.length) earnTrophy("shardkeeper");
+    for (const t of TROPHIES) if (t.deck && masteryOf(t.deck).level >= MASTERY_STEPS.length) earnTrophy(t.id);
+  }
+});
+// The end screen: one quiet line for trophies this match earned.
+function newTrophiesHTML() {
+  const ids = U.newTrophies || [];
+  if (!ids.length) return "";
+  const names = ids.map(id => TROPHIES.find(t => t.id === id)?.name).filter(Boolean);
+  return `<button type="button" class="lore-new trophy-new" data-act="trophies">🏆 New ${names.length > 1 ? "trophies" : "trophy"}: ${esc(names.join(", "))}</button>`;
+}
+// The Trophy case.
+function showTrophies() {
+  const won = trophiesWon(), counts = tcount();
+  const n = TROPHIES.filter(t => won[t.id]).length;
+  openModal(`<h2 id="modal-title">Trophies</h2><p class="sub">${n} of ${TROPHIES.length} earned. Trophies are earned in matches against the computer.</p>
+    <div class="trophy-grid">${TROPHIES.map(t => {
+      const got = won[t.id];
+      const prog = t.count && !got ? ` <small>${Math.min(counts[t.count] || 0, t.goal)} / ${t.goal}</small>` : "";
+      return `<div class="trophy${got ? " got" : ""}"><span class="trophy-cup" aria-hidden="true">🏆</span><b>${esc(t.name)}</b><span>${esc(t.how)}${prog}</span>${got ? `<em>Earned ${esc(got)}</em>` : `<em>Not earned yet</em>`}</div>`;
+    }).join("")}</div>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Close</button></div>`);
 }

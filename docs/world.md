@@ -130,6 +130,26 @@ the story never fixes how many there are.
 | Campaign, Boss Level's story card | Its desktop wallpaper is a quiet turnip field | Boss Level made the Simplistic's world |
 | Campaign, after beating Boss Level | Somewhere in the code, a turnip field keeps loading | The same, a little louder |
 | Boss Level, when it loses | "CONTINUE? 3... 2... I only wanted to level up. All of it." | Its motive |
+| Card stories (Nov 2026): Simple Farmer, Simple Barkeep, Simple Defender, Simpledom | The same row every morning and never wondering why; the same drink for everyone; guarding without being told against what; the sun rising at the same minute every day | The Simple world runs like a program: made, not grown |
+| Card story: The Simplistic | "Everything was fine before. Everything will be fine again. Everything is fine." | It repeats itself, like the rest of its lines |
+| Card stories: Jungle, Primeval Forest | The jungle "wasn't here last week"; the oldest trees in a jungle "only a week old" | The jungle was put there (matches The Man Ape's story card) |
+| Card stories: Hungry Corpse, Soul Shepard | The first thing found in the wreckage, so everyone decided it was to blame; it gathers the fallen and never asks whose fault it was | The Zombies are victims, blamed for being found first |
+| Card story: Glitch | "Some say it was here before the break." | Digital was involved before the Shardfall |
+| Card story: Data Collector | Collecting since long before the worlds collided, and never says for whom | Boss Level was preparing |
+| Card story: Server Farm | From above, its racks look a lot like turnip fields | Boss Level made the Simplistic's world |
+| Card story: Boss Level | "Every world needs a final boss. Boss Level made sure of it." | Bolder, as befits fight four: it shaped the worlds |
+| Campaign, The Simplistic's scene | The turnip rows are perfectly straight, every one exactly the same | Made, not grown |
+| Campaign, IP Man's scene | One stone in the courtyard is cracked in a perfect square | A pixel: the break came from something digital |
+| Campaign, Boss Level's scene | For a blink, a progress bar hangs at 99% | The "level up" it was attempting |
+| Campaign, Soul Shepard's scene | "They say I started all this. I only tend what's left." | The Zombies are blamed, and are victims |
+
+## Card stories
+
+- Every card has a short story (flavor text): the Description column of `data/cards.csv`, which
+  is "Flavor text" in the card sheet. A card's story stays hidden until the player plays it once;
+  the end screen lists the stories a match unlocked, and the Almanac counts them.
+- Stories carry many of the hidden clues (see the clue log). Keep them short: a few words to a
+  few sentences.
 
 ## The intro (cold open)
 
@@ -144,8 +164,9 @@ the story never fixes how many there are.
 
 - One match per champion, in this order: The Simplistic, The Man Ape, IP Man, Boss Level,
   Soul Shepard. Zombie comes last because the other champions blame it.
-- Each match has a short story card before it (with the champion's one-line tag) and a line
-  after a win, in `js/campaign.js` (`CAMPAIGN`). The champions' in-match lines and play
+- Each match has a short story card before it (with the champion's one-line tag, a short scene
+  and the champion's words to the Shardkeeper) and a line after a win, in `js/campaign.js`
+  (`CAMPAIGN`). Gifts after a win were discussed and are on hold. The champions' in-match lines and play
   styles are in `js/champions.js`. Narration stays at a distance (no "you").
 - Nothing in the code assumes five champions. To add one, add a stage to `CAMPAIGN`, an entry
   to `CHAMPIONS` and a starter deck for its faction.

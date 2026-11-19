@@ -17,7 +17,8 @@ const storm = (() => {
   const SHAPE = [[0, -1.7], [0.55, -0.55], [0.45, 0.85], [0, 1.25], [-0.5, 0.75], [-0.58, -0.6]];
   const DIR = { x: -0.34, y: 0.94 };   // falling down and slightly to the left
   let raf = 0, last = 0, w = 0, h = 0, shards = [], stars = [], nextStar = 3;
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const motionOff = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let reduce = motionOff;   // still: reduced motion, or Heavy effects turned off in Settings
 
   function shard(anywhere, big) {
     const z = big ? 1 : Math.random() ** 1.6;                 // depth: most shards are far away
@@ -118,7 +119,7 @@ const storm = (() => {
   }
   addEventListener("resize", () => { if (raf || reduce) { size(); if (reduce) frame(performance.now()); } });
   return {
-    start() { if (!raf) { size(); last = performance.now(); if (reduce) frame(last); else raf = requestAnimationFrame(frame); } },
+    start() { reduce = motionOff || document.documentElement.classList.contains("light-fx"); if (!raf) { size(); last = performance.now(); if (reduce) frame(last); else raf = requestAnimationFrame(frame); } },
     stop() { cancelAnimationFrame(raf); raf = 0; },
   };
 })();
