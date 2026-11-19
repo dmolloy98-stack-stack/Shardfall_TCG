@@ -87,6 +87,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
 | `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
+| `tools/test-all.js` | Runs every test below in one go and says whether all passed: `node tools/test-all.js`. GitHub runs it on every push and pull request (`.github/workflows/tests.yml`) |
 | `tools/selftest.js` | Plays many automatic games and reports anything broken: `node tools/selftest.js . ai 4` and `node tools/selftest.js . rand 1000` (needs Node.js). Run it after changing rules or cards |
 | `tools/kinds-test.js` | Checks the fracture, tribe and class rules and the cards built on them (Sensei, Speedrunner, hybrids, infection): `node tools/kinds-test.js .` |
 | `tools/events-test.js` | Checks the random events: `node tools/events-test.js .` |

@@ -48,6 +48,10 @@ builds it, tests it, and explains it.
 
 ## Before saying something works
 
+- `node tools/test-all.js` runs every check below except the browser one, and must end with
+  `EVERYTHING PASSED`. GitHub runs it on every push and pull request (`.github/workflows/tests.yml`).
+  When a change is meant to alter how the game plays, update the fingerprints in `EXPECTED` at the
+  top of `tools/test-all.js` and the one here.
 - Run `node tools/selftest.js . ai 2` and `node tools/selftest.js . rand 300`. Expect
   `"problems": {}`. The fingerprint (currently 1861231774 for `ai 2`) must stay the same unless the
   change is meant to alter how the game plays; when it does change on purpose, say so.
