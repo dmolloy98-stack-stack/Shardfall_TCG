@@ -38,28 +38,37 @@
         <p class="tagline">A trading card game for people who want to have fun, not spend money.</p>
       </header>
 
-      <div class="menu-panel">
-        <h2 class="panel-label">Choose your deck</h2>
-        <div id="deck-list" class="deck-list"></div>
-        <p id="deck-problem" class="deck-problem" hidden></p>
-
-        <h2 class="panel-label">Opponent</h2>
-        <div class="mode-toggle" role="radiogroup" aria-label="Opponent">
-          <button type="button" id="mode-ai" class="mode-btn" role="radio" aria-checked="true">
-            <strong>Computer</strong><span>Play against the AI</span>
-          </button>
-          <button type="button" id="mode-hotseat" class="mode-btn" role="radio" aria-checked="false">
-            <strong>Two players</strong><span>Take turns on one device</span>
-          </button>
+      <!-- The start menu's home: three ways to play, then the rest (js/menu.js renders the doors) -->
+      <div id="menu-home" class="menu-home">
+        <div class="doors">
+          <button type="button" id="btn-campaign" class="door door-main"></button>
+          <button type="button" id="door-quick" class="door" data-setup="ai"></button>
+          <button type="button" id="door-two" class="door" data-setup="hotseat"></button>
         </div>
-
-        <div class="menu-actions">
-          <button type="button" id="btn-start" class="btn btn-primary">Start game</button>
-          <button type="button" id="btn-campaign" class="btn">Campaign</button>
+        <div class="menu-actions minor">
+          <button type="button" id="btn-decks" class="btn" data-setup="decks">My Decks</button>
           <button type="button" id="btn-tutorial" class="btn">Tutorial</button>
           <button type="button" id="btn-rules" class="btn">How to play</button>
           <button type="button" id="btn-almanac" class="btn">Almanac</button>
           <button type="button" id="btn-settings" class="btn">Settings</button>
+        </div>
+      </div>
+
+      <!-- Choosing decks before a match (Quick Match, Two Players), or just looking after them (My Decks) -->
+      <div id="menu-setup" class="menu-panel" hidden>
+        <div class="setup-head">
+          <button type="button" id="btn-back" class="btn btn-small">← Back</button>
+          <h2 id="setup-title" class="setup-title"></h2>
+        </div>
+        <h2 id="deck-label" class="panel-label">Choose your deck</h2>
+        <div id="deck-list" class="deck-list"></div>
+        <p id="deck-problem" class="deck-problem" hidden></p>
+        <div id="opp-block">
+          <h2 id="opp-label" class="panel-label">The computer's deck</h2>
+          <div id="opp-list" class="opp-list"></div>
+        </div>
+        <div class="menu-actions">
+          <button type="button" id="btn-start" class="btn btn-primary">Start match</button>
         </div>
       </div>
     </div>

@@ -54,7 +54,7 @@ function showCampaign() {
     ? `<p class="camp-done">All ${NUMBER_WORDS[CAMPAIGN.length] || CAMPAIGN.length} champions beaten. The shards are still falling, though.</p>` : "";
   openModal(`<h2 id="modal-title">Campaign</h2>
     <p class="sub">Beat each fracture's champion in turn. Each one plays its fracture's deck and starts with its champion in hand.</p>
-    <p class="camp-deck">Your deck: <b>${esc(deck?.name || "none")}</b> <span>(change it on the main menu)</span></p>
+    <p class="camp-deck">Your deck: <b>${esc(deck?.name || "none")}</b> <button type="button" class="btn btn-small" data-camp-deck>Change deck</button></p>
     ${problem ? `<p class="deck-problem">${esc(problem)}</p>` : ""}
     <ol class="camp-list">${rows}</ol>${done}
     <div class="detail-actions">
@@ -133,6 +133,7 @@ document.getElementById("modal-content").addEventListener("click", e => {
   else if (t.closest("[data-camp-go]")) beginCampaignMatch(Number(t.closest("[data-camp-go]").dataset.campGo));
   else if (t.closest("[data-camp-back]")) showCampaign();
   else if (t.closest("[data-camp-close]")) closeModal();
+  else if (t.closest("[data-camp-deck]")) { closeModal(); showScreen("menu"); showSetup("campaign"); }
   else if (t.closest("[data-camp-reset]")) {
     // Ask once more on the button itself before wiping progress.
     const b = t.closest("[data-camp-reset]");

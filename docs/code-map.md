@@ -95,10 +95,11 @@ and factions.
 ```mermaid
 flowchart LR
   intro["Intro<br/>intro.js"] --> menu[["Main menu<br/>menu.js · storm.js"]]
-  menu -->|Start game| pick["Pick decks<br/>menu.js"]
-  pick -->|Create your own| builder["Deck builder<br/>decks.js"]
+  menu -->|Quick Match, Two Players, My Decks| pick["Pick decks and opponent<br/>menu.js"]
+  pick -->|Create your own / Edit| builder["Deck builder<br/>decks.js"]
   pick -->|starter or saved deck| match(["The match<br/>engine + ui + fx"])
-  menu --> campaign["Campaign<br/>campaign.js · champions.js"] --> match
+  menu -->|Campaign door| campaign["Campaign<br/>campaign.js · champions.js"] --> match
+  campaign -->|Change deck| pick
   menu --> tutorial["Tutorial<br/>tutorial.js"] --> match
   menu --> guide["How to play<br/>help.js · guide.js"]
   menu --> almanac["Almanac<br/>menu.js"]

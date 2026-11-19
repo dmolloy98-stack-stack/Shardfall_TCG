@@ -1472,7 +1472,7 @@ $("#modal").addEventListener("click", e => {
   else if (m === "passnever") { U.passCheck = false; PREFS.set("passCheck", false); act(endTurn); }
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
   else if (m === "rules") showGuide();
-  else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); showScreen("menu"); }
+  else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); U.menuView = "home"; showScreen("menu"); }
   else if (m === "undo") { if (U.undo.length) { S = U.undo.pop(); U.selected = null; U.armed = null; U.ended = S.over; render(); } }
   else if (m === "mana") act(() => { active().mana++; });
   else if (m === "qadraw") act(() => { drawCard(active()); });
@@ -1490,10 +1490,10 @@ $("#board").addEventListener("click", e => {
   const human = humanTurn();
   if (a === "menu") return showGameMenu();
   if (a === "curtain") { U.curtain = false; yourTurnMoment(); render(); const b = $("#board"); b.classList.remove("rotate-in"); void b.offsetWidth; b.classList.add("rotate-in"); banner(`${active().name}'s turn`); return; }
-  if (a === "again") return U.campaign ? playCampaignMatch(U.campaign.stage) : startGame();
+  if (a === "again") return U.campaign ? playCampaignMatch(U.campaign.stage) : startGame({ opponentDeckId: U.lastOpp });   // the same opponent as last time
   if (a === "camp-next") return campaignNext();
   if (a === "camp-map") return showCampaign();
-  if (a === "tomenu") { endTutorial(); return showScreen("menu"); }
+  if (a === "tomenu") { endTutorial(); U.menuView = "home"; return showScreen("menu"); }
   if (a === "phase") return onPhaseButton();
   if (a === "log") { showLog(); return; }
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; passTurn(); } return; }
