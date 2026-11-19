@@ -160,6 +160,7 @@ function renderDeckPanel() {
         <p class="bld-caption">Mana curve: cards at each cost</p>
       </div>
       <div class="bld-types">${TYPES.map(t => `<span><b>${types[t]}</b> ${t === "Character" ? "characters" : t.toLowerCase() + (types[t] === 1 ? "" : "s")}</span>`).join("")}</div>
+      ${size ? `<p class="bld-avg">Average cost <b>${(entries.reduce((n, e) => n + e.card.manaCost * e.n, 0) / size).toFixed(1)}</b> mana${B.id && recordText(B.id) ? ` · Record against the computer: <b>${recordText(B.id)}</b>` : ""}</p>` : ""}
       ${tips.map(t => `<p class="bld-tip">💡 ${esc(t)}</p>`).join("")}
       ${entries.length ? `<ul class="bld-list">${entries.map(({ card, n }) => `
         <li style="--fc:${DATA.factions[card.group]?.color || "#8a7a63"};--edge:${DATA.rarities[card.rarity]?.color || "#888"}">

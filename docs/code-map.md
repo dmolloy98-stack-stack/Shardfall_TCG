@@ -138,6 +138,8 @@ their own story or coaching, then hand over to the same engine.
 | Spell previews on targets, end-of-turn hourglass, cards reacting to deaths | `targetPreview()`, `eotBadge()`, `reactToDeath()` in `js/fx.js` |
 | Draw and skip by themselves, ask before passing early, keyboard shortcuts | `autoFlow()`, `passTurn()` and the `keydown` handler in `js/ui.js`; both settings are in Settings |
 | Champions speaking in every match against the computer, the end-screen line, deck mastery titles | `championSay()`, `speakerName()`, `recallHTML()`, `MASTERY_TITLES` and `masteryHTML()` in `js/campaign.js`; the lines are in `js/champions.js` |
+| Turn history (icons along the top of the battle log) | `histAdd()`, `histHTML()`, `showHist()` in `js/ui.js` |
+| A deck's record and average cost | `deckRecord()` in `js/campaign.js` (saved with mastery); shown by `masteryLine()` and the deck builder (`js/decks.js`) |
 | Battle log panel, computer speed | `logPanelHTML()`, `showLog()`, `AI_SPEEDS` in `js/ui.js`; both are in Settings |
 | Colours and sizes | `css/style.css` |
 | A new menu button | `index.html`, then `js/menu.js` |

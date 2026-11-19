@@ -505,7 +505,7 @@ button, .btn { touch-action: manipulation; }
 }
 /* the battle log: a panel at the bottom right of the table; tap it for the whole match */
 .log {
-  position: absolute; left: 1036px; top: 616px; width: 388px; height: 118px; padding: 6px 10px 6px 12px;
+  position: absolute; left: 1036px; top: 616px; width: 388px; height: 118px; padding: 6px 10px 6px 12px; box-sizing: border-box; overflow: hidden;
   display: flex; flex-direction: column; text-align: left; cursor: pointer;
   border-radius: 10px; border: 1px solid rgba(242, 231, 207, 0.22);
   background: rgba(6, 4, 14, 0.72); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
@@ -2125,3 +2125,21 @@ html.intro-on .menu-inner { visibility: hidden; }
 @keyframes mastery-fill { from { width: var(--from); } }
 .mastery-end small { color: var(--muted); }
 .mastery-end.up small b { color: #fff; text-shadow: 0 0 10px #ffb347; animation: lethal-pulse 0.6s ease-in-out 4 alternate; }
+
+/* Turn history: icons along the top of the battle log panel (newest on the right) */
+.hist { display: flex; gap: 5px; justify-content: flex-end; align-items: center; height: 32px; flex: none; padding-right: 6px; }
+.hist-i { position: relative; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 0 0 2px var(--pc), 0 2px 4px rgba(0, 0, 0, 0.6); background: #120c1e; }
+.hist-i .hist-medal { width: 24px; height: 24px; }
+.hist-i i { position: absolute; right: -5px; bottom: -4px; font-style: normal; font-size: 11px; line-height: 1; padding: 1px 2px; border-radius: 6px; background: #1c1530; color: #ffd27a; }
+.hist-i:hover { transform: translateY(-2px) scale(1.12); }
+.hist-i.fresh { animation: hist-in 0.5s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes hist-in { from { scale: 0.2; opacity: 0; } }
+.hist-detail { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; text-align: left; }
+.hist-card .card { font-size: 13px; }
+.hist-lines p { margin: 0 0 6px; }
+@media (max-width: 560px) { .hist-detail { grid-template-columns: 1fr; justify-items: center; } }
+
+.deck-mastery .deck-record { grid-column: 1 / -1; color: rgba(242, 231, 207, 0.7); }
+.bld-avg { margin: 4px 0; font-size: 13px; color: var(--muted); }
+.bld-avg b { color: var(--parchment); }

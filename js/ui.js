@@ -519,8 +519,15 @@ onGameEvent((type, d) => {
   if (type === "log") {
     U.logAt.set(d.msg, now);
     if (U.logAt.size > 200) U.logAt.delete(U.logAt.keys().next().value);
+    histLog(d.msg, now);
+  } else if (type === "play") {
+    histAdd({ kind: d.card.type === "Spell" ? "cast" : "play", id: d.card.id, player: d.player }, now);
+  } else if (type === "lunge") {
+    const f = findChar(d.uid);
+    if (f) histAdd({ kind: d.target === "shard" ? "shard" : "attack", id: f.c.id, player: f.p.idx }, now);
   } else if (type === "newGame") {
     resetMatchStats();
+    U.hist = []; U.recentLog = [];
   } else if (type === "clash") {
     // A fight is about to resolve. With Swift, the first blow lands, then the reply a beat later.
     U.clash = { at: now, swift: d.swift, n: 0, uids: [d.attacker, d.target] };
@@ -966,15 +973,62 @@ function render() {
   autoFlow();
 }
 
+// Turn history: every card played and every attack becomes a small icon in a row along the top
+// of the battle log panel (newest on the right), so it takes no extra room on the table. Tap
+// one to see the card and what happened. The log lines written with a move are kept with it.
+const HIST_SHOWN = 9;
+const HIST_KIND = { play: { glyph: "✦" }, cast: { glyph: "✧" }, attack: { glyph: "⚔" }, shard: { glyph: "◆" } };
+// "Computer played Chimp", "Player 1's Gorilla attacked"
+function histTitle(e, c) {
+  const who = S.players[e.player]?.name || "";
+  return e.kind === "play" ? `${who} played ${c.name}` : e.kind === "cast" ? `${who} cast ${c.name}`
+    : e.kind === "attack" ? `${who}'s ${c.name} attacked` : `${who}'s ${c.name} hit the big shard`;
+}
+U.hist = []; U.recentLog = [];
+function histAdd(e, now) {
+  if (!S) return;
+  e.t = now;
+  e.lines = U.recentLog.filter(l => now - l.t < 40).map(l => l.msg);   // written just before, in the same move
+  U.hist.push(e);
+  if (U.hist.length > 60) U.hist.shift();
+}
+function histLog(msg, now) {
+  U.recentLog.push({ msg, t: now });
+  if (U.recentLog.length > 6) U.recentLog.shift();
+  const last = U.hist[U.hist.length - 1];
+  if (last && now - last.t < 450 && !last.lines.includes(msg)) last.lines.push(msg);   // written by the same move
+}
+function histHTML() {
+  const start = Math.max(0, U.hist.length - HIST_SHOWN);
+  const now = performance.now();
+  return U.hist.slice(start).map((e, k) => {
+    const c = DATA.cardsById[e.id];
+    if (!c) return "";
+    const i = start + k;
+    const fresh = now - e.t < 700 ? " fresh" : "";
+    return `<span class="hist-i ${sideOf(e.player)}${fresh}" data-act="hist" data-i="${i}" title="${esc(histTitle(e, c))}" style="--pc:${PLAYER_COLORS[e.player]}">${medal(c.group, "hist-medal")}<i>${HIST_KIND[e.kind].glyph}</i></span>`;
+  }).join("");
+}
+function showHist(i) {
+  const e = U.hist[i];
+  const c = e && DATA.cardsById[e.id];
+  if (!c) return;
+  openModal(`<h2 id="modal-title">${esc(histTitle(e, c))}</h2>
+    <div class="hist-detail"><div class="hist-card">${cardHTML(c)}</div>
+      <div class="hist-lines">${(e.lines.length ? e.lines : ["Nothing else happened."]).map(l => `<p>${esc(l)}</p>`).join("")}</div></div>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Back to the game</button></div>`);
+}
+
 // The battle log: the last few things that happened, in a panel at the bottom right of the
 // table. New lines light up for a moment. Tapping it opens the whole match's log.
 function logPanelHTML() {
   const now = performance.now();
-  const lines = S.log.slice(-6).map(m => {
+  const lines = S.log.slice(U.hist.length ? -4 : -6).map(m => {   // fewer lines once the history row is showing
     const age = now - (U.logAt.get(m) ?? -1e9);
     return `<div${age < 1600 ? ` class="fresh" style="animation-delay:${-age.toFixed(0)}ms"` : ""}>${esc(m)}</div>`;
   }).join("");
-  return `<button type="button" class="log" data-act="log" aria-label="Battle log: tap to read the whole match"><span class="log-title">Battle log</span><span class="log-lines">${lines}</span></button>`;
+  const hist = histHTML();
+  return `<div class="log" data-act="log" role="button" tabindex="0" aria-label="Battle log: tap to read the whole match">${hist ? `<span class="hist">${hist}</span>` : `<span class="log-title">Battle log</span>`}<span class="log-lines">${lines}</span></div>`;
 }
 function showLog() {
   openModal(`<h2 id="modal-title">Battle log</h2>
@@ -1060,6 +1114,7 @@ function findCardAnywhere(uid) {
 // ---------------------------------------------------------------------------
 function act(fn) {
   const snap = structuredClone(S);
+  snap.histLen = U.hist.length;   // an undo also takes back the turn history after this point
   const ok = fn();
   if (ok !== false) { U.undo.push(snap); if (U.undo.length > 25) U.undo.shift(); }
   afterAction();
@@ -1473,7 +1528,7 @@ $("#modal").addEventListener("click", e => {
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
   else if (m === "rules") showGuide();
   else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); U.menuView = "home"; showScreen("menu"); }
-  else if (m === "undo") { if (U.undo.length) { S = U.undo.pop(); U.selected = null; U.armed = null; U.ended = S.over; render(); } }
+  else if (m === "undo") { if (U.undo.length) { S = U.undo.pop(); if (S.histLen != null) U.hist.length = Math.min(U.hist.length, S.histLen); U.selected = null; U.armed = null; U.ended = S.over; render(); } }
   else if (m === "mana") act(() => { active().mana++; });
   else if (m === "qadraw") act(() => { drawCard(active()); });
 });
@@ -1495,6 +1550,7 @@ $("#board").addEventListener("click", e => {
   if (a === "camp-map") return showCampaign();
   if (a === "tomenu") { endTutorial(); U.menuView = "home"; return showScreen("menu"); }
   if (a === "phase") return onPhaseButton();
+  if (a === "hist") { showHist(Number(el.dataset.i)); return; }
   if (a === "log") { showLog(); return; }
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; passTurn(); } return; }
   if (a === "faceall") { if (human && S.phase === PHASE.BATTLE) { U.selected = null; act(attackAllFace); } return; }

@@ -240,11 +240,15 @@ function masteryOf(deckId, pts) {
   const prev = level ? MASTERY_STEPS[level - 1] : 0, next = MASTERY_STEPS[level] ?? null;
   return { pts, level, title: level ? titles[level - 1] : null, prev, next, frac: next ? (pts - prev) / (next - prev) : 1 };
 }
+// A deck's wins and losses against the computer: { w, l }.
+const deckRecord = deckId => (PREFS.get("record", {}) || {})[deckId] || { w: 0, l: 0 };
+const recordText = deckId => { const r = deckRecord(deckId); return r.w + r.l ? `${r.w} won · ${r.l} lost` : ""; };
 // The line under a deck on the main menu.
 function masteryLine(deckId) {
   const m = masteryOf(deckId);
+  const rec = recordText(deckId);
   const bar = `<i class="mbar"><b style="width:${(m.frac * 100).toFixed(0)}%"></b></i>`;
-  return `<em class="deck-mastery">${m.title ? `★ ${esc(m.title)}` : "No title yet"}${bar}<small>${m.next ? `${m.pts} / ${m.next}` : "Max level"}</small></em>`;
+  return `<em class="deck-mastery">${m.title ? `★ ${esc(m.title)}` : "No title yet"}${bar}<small>${m.next ? `${m.pts} / ${m.next}` : "Max level"}</small>${rec ? `<small class="deck-record">${rec}</small>` : ""}</em>`;
 }
 onGameEvent((type, d) => {
   if (type === "newGame") U.masteryGain = null;
@@ -255,6 +259,11 @@ onGameEvent((type, d) => {
   const gain = (d.winner === 0 ? MASTERY_POINTS.win : MASTERY_POINTS.loss) + (S.shardBy === 0 ? MASTERY_POINTS.shard : 0);
   all[id] = before + gain;
   PREFS.set("mastery", all);
+  // the deck's record against the computer (shown on the menu and in the deck builder)
+  const rec = PREFS.get("record", {}) || {};
+  const r = rec[id] || (rec[id] = { w: 0, l: 0 });
+  if (d.winner === 0) r.w++; else r.l++;
+  PREFS.set("record", rec);
   U.masteryGain = { id, before, after: before + gain, gain };
 });
 // The end screen: points earned, the bar filling, and a new title if one was reached.
