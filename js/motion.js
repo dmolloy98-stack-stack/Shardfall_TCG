@@ -58,7 +58,8 @@ function visualSpot(uid, now) {
 // Starts (or carries on, after a redraw) the glide of one element.
 function glide(el, mv, now) {
   const left = Math.max(0, MOVE_MS - (now - mv.t));
-  if (!left) return;
+  if (!left || el.__mv === mv) return;   // a piece kept from the last redraw is already gliding
+  el.__mv = mv;
   const a = el.animate([{ translate: `${mv.dx}px ${mv.dy}px`, scale: mv.s }, { translate: "0px 0px", scale: 1 }],
     { duration: MOVE_MS, easing: MOVE_EASE, fill: "backwards" });
   a.currentTime = MOVE_MS - left;

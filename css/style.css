@@ -2077,7 +2077,7 @@ html.intro-on .menu-inner { visibility: hidden; }
   box-shadow: 0 0 14px rgba(255, 50, 30, 0.9); animation: lethal-pulse 0.7s ease-in-out infinite alternate; }
 .face-btn.lethal { background: linear-gradient(#e0301f, #7a0d08) !important; color: #fff !important; box-shadow: 0 0 18px rgba(255, 50, 30, 0.9); animation: lethal-pulse 0.7s ease-in-out infinite alternate; }
 @keyframes lethal-pulse { to { filter: brightness(1.3); } }
-#stage.final-blow #board > *:not(.final-hero), #stage.final-blow #hand-layer { filter: grayscale(1) brightness(0.55); transition: filter 0.25s; }
+#stage.final-blow #board > .rg > *:not(.final-hero), #stage.final-blow #hand-layer { filter: grayscale(1) brightness(0.55); transition: filter 0.25s; }
 #stage.final-blow .field-card.final-hero { z-index: 30; filter: drop-shadow(0 0 18px #fff); }
 @media (prefers-reduced-motion: reduce) { .heavy-focus, .bonus-pop { animation: none; opacity: 0; } }
 
@@ -2169,3 +2169,6 @@ html.intro-on .menu-inner { visibility: hidden; }
 .trophy small { color: #ffd27a; }
 .trophy em { font-size: 12px; font-style: normal; color: rgba(242, 231, 207, 0.6); }
 .trophy.got em { color: #ffd27a; }
+
+/* the board's regions (renderRegions in js/ui.js) take no space of their own */
+#board > .rg { display: contents; }

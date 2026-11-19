@@ -19,6 +19,55 @@ const L = {
 };
 
 const $ = sel => document.querySelector(sel);
+
+// The board is drawn in regions (the scenery, each player's plate, each side of the table, the
+// middle band, the buttons, the log, the end screen). render() marks where each region starts
+// with RG(name); a region whose HTML is the same as last time is not touched at all. Each region
+// is a wrapper that takes no space of its own (display: contents), so the pieces inside are laid
+// out on the board exactly as before.
+const RG = name => `\u0000${name}\u0000`;
+function renderRegions(board, h) {
+  const parts = h.split("\u0000");   // [scenery, name, html, name, html, ...]
+  const regions = [["scenery", parts[0]]];
+  for (let i = 1; i < parts.length; i += 2) regions.push([parts[i], parts[i + 1] || ""]);
+  if (board.dataset.regions !== regions.map(r => r[0]).join(",")) {
+    board.innerHTML = regions.map(([name]) => `<div class="rg" data-rg="${name}"></div>`).join("");
+    board.dataset.regions = regions.map(r => r[0]).join(",");
+  }
+  for (const [name, html] of regions) {
+    const box = board.querySelector(`:scope > [data-rg="${name}"]`);
+    if (box.__src === html) continue;
+    box.__src = html;
+    patchChildren(box, html);
+  }
+}
+
+// Redraws a container from new HTML, but keeps every piece that hasn't changed. The board is
+// described from scratch after every move; rebuilding all of it made the browser restyle and
+// lay out every card each time, which was slow on phones. Each top-level piece is matched by
+// its card (data-uid) or its kind and order, and is only replaced when its HTML differs.
+// A kept piece also keeps any animation it is in the middle of.
+function patchChildren(box, html) {
+  const tpl = document.createElement("template");
+  tpl.innerHTML = html;
+  const keyOf = (el, seen) => {
+    const base = (el.className && typeof el.className === "string" ? el.className.split(" ")[0] : el.tagName) + (el.dataset?.uid ? ":" + el.dataset.uid : el.dataset?.player ? ":p" + el.dataset.player : "");
+    const n = seen.get(base) || 0;
+    seen.set(base, n + 1);
+    return base + "#" + n;
+  };
+  const old = new Map();
+  { const seen = new Map(); for (const el of box.children) old.set(keyOf(el, seen), el); }
+  const seen = new Map(), keep = new Set();
+  const want = [...tpl.content.children].map(el => {
+    const html = el.outerHTML, o = old.get(keyOf(el, seen));
+    if (o && o.__html === html && !keep.has(o)) { keep.add(o); return o; }
+    el.__html = html;
+    return el;
+  });
+  for (const el of [...box.children]) if (!keep.has(el)) el.remove();
+  want.forEach((el, i) => { if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null); });
+}
 const esc = s => String(s ?? "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 
 const U = {
@@ -914,13 +963,14 @@ function render() {
   }
   h += `<div class="bar top"></div><div class="bar bottom"></div>`;
   h += `<button type="button" class="btn stage-btn" data-act="menu" style="left:16px;top:11px;width:110px;height:44px" aria-label="Game menu">☰ Menu</button>`;
-  h += plateHTML(them, "top") + plateHTML(me, "bottom");
+  h += RG("players") + plateHTML(them, "top") + plateHTML(me, "bottom");
 
   // opponent hand, face down
   const oh = them.hand.map(() => `<div class="card back"></div>`).join("");
   h += `<div class="opp-hand" style="left:${960}px;top:7px" title="${them.hand.length} cards in hand">${oh}</div>`;
-  h += fieldHTML(them, "top") + fieldHTML(me, "bottom");
-  h += manaHTML(them, "top") + manaHTML(me, "bottom");
+  h += RG("top") + fieldHTML(them, "top") + RG("bottom") + fieldHTML(me, "bottom");
+  h += RG("mana") + manaHTML(them, "top") + manaHTML(me, "bottom");
+  h += RG("middle");
 
   // middle band
   const turnColor = PLAYER_COLORS[U.turnColor ?? S.active];
@@ -947,11 +997,14 @@ function render() {
     h += `<div class="instruction">${esc(instr)}</div>`;
   }
 
+  h += RG("buttons");
   const label = ["Draw card", "To battle →", "To end →", "Pass turn →"][S.phase];
   const canPhase = human && !S.pending && !U.armed;
   h += `<button type="button" class="btn stage-btn${canPhase && S.phase === PHASE.DRAW ? " glow" : ""}" data-act="phase" title="Keyboard: Space" style="left:1220px;top:372px;width:200px;height:56px" ${canPhase ? "" : "disabled"}>${label}</button>`;
   h += `<button type="button" class="btn stage-btn" data-act="pass" title="Keyboard: E" style="left:1240px;top:942px;width:180px;height:48px" ${canPhase ? "" : "disabled"}>Pass turn</button>`;
+  h += RG("log");
   if (U.showLog) h += logPanelHTML();
+  h += RG("over");
 
   if (U.curtain) {
     h += `<div class="curtain"><p>Pass the device to</p><h2>${esc(active().name)}</h2><p>${esc(active().deckLabel ?? active().faction + " deck")} · Round ${S.round}</p>${eventLine() ? `<p>${esc(eventLine().when)}: ${esc(eventLine().name)}. ${esc(eventLine().desc)}</p>` : ""}<button type="button" class="btn btn-primary" data-act="curtain">Start turn</button></div>`;
@@ -962,7 +1015,7 @@ function render() {
     const actions = camp ? camp.actions : `<button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button>`;
     h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${recallHTML()}${masteryHTML()}${newTrophiesHTML()}${newLoreHTML()}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
   }
-  $("#board").innerHTML = h;
+  renderRegions($("#board"), h);
   renderHand(me);
   renderPrompt();
   renderOverlays();
@@ -1060,7 +1113,7 @@ function renderHand(p) {
   const layer = $("#hand-layer");
   const human = humanTurn() && p === active();
   const n = p.hand.length;
-  layer.innerHTML = p.hand.map((c, i) => {
+  patchChildren(layer, U.curtain ? "" : p.hand.map((c, i) => {
     const pos = handPos(i, n);
     const cls = ["hand-card"];
     if (human && canPlay(c, p)) cls.push("playable");
@@ -1071,8 +1124,7 @@ function renderHand(p) {
     if (S.pending?.cast && S.pending.source === c) cls.push("casting");   // a spell waiting for its target
     const costShown = playCost(c, p);
     return `<div class="${cls.join(" ")}" data-uid="${c.uid}" style="left:${pos.x}px;top:${pos.y}px;transform:rotate(${pos.rot}rad);z-index:${i + 1}${waveStyle}">${cardHTML(c, { costOverride: costShown })}${handTip(c)}</div>`;
-  }).join("");
-  if (U.curtain) layer.innerHTML = "";
+  }).join(""));
 }
 
 function renderPrompt() {

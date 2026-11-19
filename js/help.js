@@ -100,10 +100,12 @@ function renderHint() {
 // ---------------------------------------------------------------------------
 function renderControls() {
   const bar = document.getElementById("controls");
-  const sr = document.getElementById("stage").getBoundingClientRect();
-  const wr = document.getElementById("stage-wrap").getBoundingClientRect();
-  const gutter = wr.right - sr.right;
-  if (U.screen !== "game" || !S || !U.small || U.tutorial || gutter < 88) { bar.hidden = true; document.getElementById("stage").classList.remove("side-controls"); return; }
+  // measure the screen only when the side buttons might show (measuring forces a full layout)
+  const can = U.screen === "game" && S && U.small && !U.tutorial;
+  const sr = can ? document.getElementById("stage").getBoundingClientRect() : null;
+  const wr = can ? document.getElementById("stage-wrap").getBoundingClientRect() : null;
+  const gutter = can ? wr.right - sr.right : 0;
+  if (!can || gutter < 88) { bar.hidden = true; document.getElementById("stage").classList.remove("side-controls"); return; }
   const board = document.getElementById("board");
   const btn = (act, cls = "") => {
     const b = board.querySelector(`[data-act="${act}"]`);

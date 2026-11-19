@@ -143,6 +143,7 @@ their own story or coaching, then hand over to the same engine.
 | Card stories (unlock on first play), the end screen's "new stories" line, the Almanac count | `loreHTML()`, `newLoreHTML()`, `loreCount()` in `js/campaign.js`; the text is the Description column of `data/cards.csv` |
 | Trophies and the Trophy case | `TROPHIES`, `earnTrophy()`, `showTrophies()` in `js/campaign.js`; the Trophies button is on the start menu |
 | Campaign story cards (scene and the champion's words) | `CAMPAIGN` in `js/campaign.js` |
+| Drawing the board quickly (only changed pieces are replaced) | `renderRegions()` and `patchChildren()` in `js/ui.js`; render() marks regions with `RG(name)` |
 | Battle log panel, computer speed | `logPanelHTML()`, `showLog()`, `AI_SPEEDS` in `js/ui.js`; both are in Settings |
 | Colours and sizes | `css/style.css` |
 | A new menu button | `index.html`, then `js/menu.js` |
