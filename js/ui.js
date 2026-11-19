@@ -23,6 +23,26 @@ const $ = sel => document.querySelector(sel);
 // looping background effects. js/storm.js holds the menu's falling shards still too.
 const applyHeavyFx = () => document.documentElement.classList.toggle("light-fx", !U.heavyFx);
 
+// Dozing: after DOZE_MS with no input and nothing happening, every looping effect pauses
+// (html.doze in css/style.css; js/storm.js stops the menu's falling shards), so a device can
+// rest while the player thinks. Any input, or any game event (the computer's moves), wakes it.
+const DOZE_MS = 20000;
+let dozeTimer = 0;
+function wake() {
+  if (document.documentElement.classList.contains("doze")) {
+    document.documentElement.classList.remove("doze");
+    if (U.screen === "menu") storm.start();
+  }
+  clearTimeout(dozeTimer);
+  dozeTimer = setTimeout(() => {
+    document.documentElement.classList.add("doze");
+    storm.stop();
+  }, DOZE_MS);
+}
+for (const ev of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"]) addEventListener(ev, wake, { passive: true });
+onGameEvent(() => wake());
+setTimeout(wake, 0);   // start counting once every script has loaded
+
 // The board is drawn in regions (the scenery, each player's plate, each side of the table, the
 // middle band, the buttons, the log, the end screen). render() marks where each region starts
 // with RG(name); a region whose HTML is the same as last time is not touched at all. Each region
@@ -99,7 +119,9 @@ const U = {
   showLog: PREFS.get("showLog", true),     // the battle log panel on the table (Settings)
   autoFlow: PREFS.get("autoFlow", true),   // draw automatically, skip a Battle with nothing to do (Settings)
   passCheck: PREFS.get("passCheck", true), // ask before passing with moves left (Settings)
-  heavyFx: PREFS.get("heavyFx", true),     // the always-on looping effects (Settings); off for slower devices
+  // the always-on looping effects (Settings). Phones and tablets start with them off: they make
+  // a phone redraw the screen all the time, which warms it up. A player's own choice is kept.
+  heavyFx: PREFS.get("heavyFx", !matchMedia("(pointer: coarse)").matches),
   aiSpeed: PREFS.get("aiSpeed", "normal"), // how fast the computer plays: slow, normal or fast (Settings)
   logAt: new Map(),      // log line -> when it was written, so new lines light up
   myTurnAt: 0,           // when your turn began, for the "your turn" moment

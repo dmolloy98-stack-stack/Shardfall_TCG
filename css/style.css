@@ -2181,3 +2181,9 @@ html.light-fx .scene, html.light-fx .scene *, html.light-fx .scene::before, html
 html.light-fx .side::before, html.light-fx .side::after, html.light-fx .rift, html.light-fx .rift::before, html.light-fx .rift::after,
 html.light-fx .shard-scar, html.light-fx .shard-scar .scar-tint, html.light-fx .ward:not(.forming) .s, html.light-fx .rune-ring .sweep, html.light-fx .rune-ring > i svg,
 html.light-fx .field-card.ready, html.light-fx #stage.tense #fx-layer::before { animation: none !important; }
+
+/* Dozing (wake() in js/ui.js): nothing has happened for a while, so every animation pauses
+   until the next tap, key or move. */
+html.doze *, html.doze *::before, html.doze *::after { animation-play-state: paused !important; }
+/* with Heavy effects off the Protected runes stay frozen where they are, spread around the ring */
+html.light-fx .rune-ring > i { animation-play-state: paused !important; }
