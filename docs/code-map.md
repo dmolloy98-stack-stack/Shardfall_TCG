@@ -64,7 +64,7 @@ thing, the fix is in `engine.js` or the card's Effect text. If it looks wrong, t
 
 **The counter stop.** If the other player holds a counter spell that can stop the card and has
 the unspent mana, the game pauses with a "Respond?" choice (`S.pending`, kind `choose`,
-`resolve: "counter"`). A person answers in the modal in `ui.js`; the computer answers in
+`resolve: "counter"`). A person answers in the modal in `panels.js`; the computer answers in
 `aiResolveChoice()` in `ai.js`. A spell with a target asks for its target first, then opens the
 window. The computer's look-ahead never opens the window, so it can't learn what you hold.
 
@@ -103,7 +103,7 @@ flowchart LR
   menu --> tutorial["Tutorial<br/>tutorial.js"] --> match
   menu --> guide["How to play<br/>help.js · guide.js"]
   menu --> almanac["Almanac<br/>menu.js"]
-  menu --> settings["Settings<br/>ui.js · help.js"]
+  menu --> settings["Settings<br/>panels.js · help.js"]
 ```
 
 The campaign and the tutorial are wrappers around a normal match. They pick the decks and add
@@ -118,14 +118,17 @@ their own story or coaching, then hand over to the same engine.
 | A new kind of card ability | `js/effects.js` |
 | A card's fracture, tribes or classes | the Fracture, Tribes and Classes columns of `data/cards.csv`; a bonus for a whole tribe or class is written like `allies.Student` in the Effect column |
 | A tribe family (none in use; Undead is now a fracture) | a `tribe_family_<Name>` row in `data/game_rules.csv`; `TRIBE_FAMILIES`, `hasTribe` and `tribesOf` in `js/engine.js`. Rules that name a kind of card (`rule: shepherd Undead`, `rule: sacrifice Monkey`) check it with `isKind` (fracture, then tribe, then class) |
-| The symbols for tribes and classes | `TAG_GLYPHS` in `js/ui.js` (placeholders, to be replaced by art) |
+| The symbols for tribes and classes | `TAG_GLYPHS` in `js/cards.js` (placeholders, to be replaced by art) |
 | A champion that bends a core rule | its `rule:` clause in the Effect column; the rule itself is in `js/engine.js` (list: `RULE_WORDS` in `js/effects.js`) |
 | An area's bonus, or a skill an area grants | the area's `aura:` clause in the Effect column |
 | A counter spell | its `counter:` clause in the Effect column; the window is `offerCounter()` in `js/engine.js` |
 | How the game plays: turns, phases, combat, winning | `js/engine.js` |
 | How smart the computer is, or how each world's deck plays | `js/ai.js` (`PLAN_DEPTH`, `BATTLE_DEPTH`, `AI_STYLES`) |
 | What a champion says, or how the computer plays it | `js/champions.js` (`CHAMPIONS`); the speech bubbles are in `js/campaign.js` |
-| Layout, card look, phone layout | `js/ui.js` |
+| Layout, phone layout | `js/ui.js` |
+| How a card looks (frames, art, badges, name fitting) | `cardHTML()` and the rest of `js/cards.js` |
+| Pop-up windows: card details, game menu, choices, full log, Settings | `js/panels.js` (`openModal()`, `showDetail()`, `showSettings()`) |
+| Deaths, hits and other table reactions to game events | `js/table-effects.js` (`DEATHS`: each world dies its own way) |
 | The main menu, deck choice or Almanac | `js/menu.js` |
 | The falling-shards menu background | `js/storm.js` |
 | Animations and feedback | `js/fx.js` and `css/style.css` |
@@ -168,9 +171,11 @@ their own story or coaching, then hand over to the same engine.
 
 ## Size and shape
 
-About 5,400 lines of JavaScript in 16 files (November 2026). The largest are `js/engine.js` at
-about 1,030 and `js/ui.js` at about 1,200. The menu, the Almanac, the menu background and the
-start-up code used to live in `ui.js`; they are now `menu.js`, `storm.js` and `boot.js`. The scripts
+About 7,200 lines of JavaScript in 20 files (November 2026). The largest are `js/engine.js` at
+about 1,350 and `js/ui.js` at about 1,130. The menu, the Almanac, the menu background and the
+start-up code used to live in `ui.js`; they are now `menu.js`, `storm.js` and `boot.js`. In
+November 2026 the card drawing (`cards.js`), the table effects (`table-effects.js`) and the pop-up
+windows and Settings (`panels.js`) moved out of it too. The scripts
 load in the order listed in `GAME_SCRIPTS` in `js/data.js`, with `boot.js` last.
 
 An automatic tool, [Graphify](https://github.com/Graphify-Labs/graphify), found the same

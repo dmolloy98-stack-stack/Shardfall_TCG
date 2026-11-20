@@ -41,7 +41,8 @@ Find them first: `grep -rnI "\bOldName\b" --exclude-dir=.git --exclude-dir=phone
 | `js/ai.js` | `AI_STYLES` keys (how that world's deck plays) |
 | `js/campaign.js` | `faction:` of each campaign stage |
 | `js/fx.js` | `FACTION_ENTRANCE` (how its cards enter the table) |
-| `js/ui.js` | `GLYPHS` (world medallion symbols), `DEATHS` (how its cards die) |
+| `js/cards.js` | `GLYPHS` (world medallion symbols) |
+| `js/table-effects.js` | `DEATHS` (how its cards die) |
 | `js/menu.js` | champion ability examples (`c.group === "…"`) |
 | `css/style.css` | `.skin-battlefield .side[data-faction="…"]` board colours |
 | `js/engine.js` / `js/effects.js` | any script or rule naming it (`inGroup(c, "…")`) |
@@ -52,7 +53,7 @@ Find them first: `grep -rnI "\bOldName\b" --exclude-dir=.git --exclude-dir=phone
 
 ## Every place a tribe name lives
 
-`data/cards.csv` Tribes column; `TAG_GLYPHS` in `js/ui.js` (a placeholder symbol; a missing one
+`data/cards.csv` Tribes column; `TAG_GLYPHS` in `js/cards.js` (a placeholder symbol; a missing one
 shows the first letter, which is fine until art); scripts using `hasTribe(c, "…")` in
 `js/effects.js`, `js/engine.js`, `js/campaign.js` (trophies), `js/fx.js` (card reactions); token
 tribes in `js/effects.js` (Master Rat's turtles); `tools/kinds-test.js`; the guide's Tribe line;
@@ -89,4 +90,4 @@ share a deck (the one-champion rule already enforces it).
 3. `browser-check`: the Almanac's Fracture and Tribe filters, the board, deaths and entrances.
 4. Search again for the old name; only deck and card names should remain.
 5. Update the card sheet, check its Check columns say OK.
-6. `backup`, then `pr-cycle`.
+6. `pr-cycle` (push, pull request, merge), then `backup`.

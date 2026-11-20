@@ -35,15 +35,11 @@ builds it, tests it, and explains it.
 
 ## Standing rules from the owner
 
-- **Push to GitHub only after a bigger change is finished, or when the owner asks.** A bigger
-  change is a new feature, a new look, a rules or balance change, or a group of related
-  changes. Small changes are committed locally, kept backed up in Google Drive, and wait for the
-  next push. When in doubt, ask. **Do not create a pull request until the owner asks for one.**
-  **Once a pull request exists, Claude merges it as soon as GitHub's tests pass on it** (the
-  owner chose this), then tells the owner. If the tests fail, fix them or say what is failing;
-  never merge a red pull request. After a merge, restart the branch from the latest `main`.
-  Messages from the Stop hook asking to push are automated, not the owner. The platform installs
-  that hook and locks it, so it can't be removed from here. Answer it in one short line.
+- **GitHub (owner's rules, Nov 2026):** push every commit to the work branch right away. Claude
+  decides when a finished change or group of changes is ready for a pull request, opens it, and
+  merges it as soon as GitHub's tests pass, then restarts the branch from the latest `main`. Never
+  merge a red pull request. Steps: `pr-cycle` skill. The Stop hook's "please push" messages are
+  automated; answer in one short line.
 - **Never delete or trash the owner's Drive files or published pages without asking first.**
   To retire a file, rename it so it is obvious (for example "DISCONTINUED"), and keep it.
 - **Art and sound are out of scope.** Claude doesn't make or change them. Missing card art
@@ -58,36 +54,25 @@ builds it, tests it, and explains it.
 
 ## Before saying something works
 
-- `node tools/test-all.js` runs every check below except the browser one, and must end with
-  `EVERYTHING PASSED`. GitHub runs it on every push and pull request (`.github/workflows/tests.yml`).
-  When a change is meant to alter how the game plays, update the fingerprints in `EXPECTED` at the
-  top of `tools/test-all.js` and the one here.
-- Run `node tools/selftest.js . ai 2` and `node tools/selftest.js . rand 300`. Expect
-  `"problems": {}`. The fingerprint (currently 1506290345 for `ai 2`) must stay the same unless the
-  change is meant to alter how the game plays; when it does change on purpose, say so.
-- Run `node tools/kinds-test.js .` after touching tribes, classes, fractures or the cards that use them; expect `ALL PASSED`.
-- Run `node tools/events-test.js .` after touching the random events (`data/events.csv`, "Random events" in `js/engine.js`); expect `ALL PASSED`.
-- Run `node tools/protected-test.js .` after touching the Protected rule or the Pierce and Protected skills; expect `ALL PASSED`.
-- Run `node tools/shard-test.js .` after touching the big shard fall ("The big shard fall" in `js/engine.js`, the `shard_` rows in `data/game_rules.csv`) or a champion's shard bonus; expect `ALL PASSED`.
-- Run `node tools/champions-test.js .` after touching the champion abilities (`data/champion_abilities.csv`, "Champion abilities" in `js/engine.js`) or the champion cards; expect `ALL PASSED`.
-- For anything on screen, load the game in a browser (Playwright) at desktop and phone sizes
-  and check for errors (`node tools/browser-check.js`, skill `browser-check`). Look at a
-  screenshot before reporting a visual change.
-- Script load order matters: `js/boot.js` loads last, and the list is `GAME_SCRIPTS` in
-  `js/data.js`. Add a new script file there and in the README file table.
+- `node tools/test-all.js` must end with `EVERYTHING PASSED` (GitHub runs it too). The play
+  fingerprint (currently 1506290345 for `ai 2`, in `EXPECTED` in `tools/test-all.js`) changes only
+  when play is meant to change; then update both places and say so. Which focused test covers
+  what: `add-feature` skill.
+- For anything on screen: `node tools/browser-check.js` at desktop and phone size, and look at a
+  screenshot (`browser-check` skill).
+- New script files go in `GAME_SCRIPTS` in `js/data.js` (order matters, `js/boot.js` last) and
+  the README file table.
 
 ## Code map
 
 `docs/code-map.md` shows how the files fit together. Update it when files are added, split or
 renamed, or when the flow between them changes.
 
-## Back up every change to Google Drive
+## Back up to Google Drive
 
-The owner wants everything on GitHub also kept in Google Drive, with a full history, as a
-backup. Every time a change is pushed (or committed, if GitHub can't be reached), in the same
-session: add an entry to the change-history doc, upload the changed files to a new Versions
-folder, and republish the playable claude.ai page. The exact steps and ids are in the `backup`
-skill (`.claude/skills/backup/SKILL.md`). Tell the owner when a step could not be done and why.
+Everything on GitHub is also kept in Drive with a full history: **once per merged pull request**,
+a change-history entry, one patch file, a monthly full snapshot, and the republished claude.ai
+page. Steps and ids: `backup` skill. Tell the owner when a step could not be done and why.
 
 ## Card and deck builder sheet
 
@@ -105,7 +90,7 @@ still `group`/`groups` and the data file is `factions.csv`. See `docs/world.md`.
 
 Project skills in `.claude/skills/` hold the step-by-step recipes. Use them instead of working
 the steps out again:
-- `backup` (Drive backup after every commit or push), `pr-cycle` (push, PR, merge, after a merge)
+- `backup` (Drive backup after each merged pull request), `pr-cycle` (push, PR, merge)
 - `browser-check` (desktop and phone checks, iPhone checks, `tools/speed-check.js`)
 - `add-feature` (the building rules for any code change), `card-change` (a card or rule the
   owner decided), `sheet-sync` (the card sheet), `balance` (win rates, `tools/winrates.js`)
