@@ -97,6 +97,9 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/shard-test.js` | Checks the big shard fall: when it lands, attacking it, who claims it and each champion's shard bonus: `node tools/shard-test.js .` |
 | `tools/make-glass.js` | Redraws the stained-glass window behind the Stained Glass board into `css/style.css`: `node tools/make-glass.js` |
 | `tools/make-crystal.js` | Redraws the long glowing cracks across the Shattered Crystal board into `css/style.css`: `node tools/make-crystal.js` |
+| `tools/browser-check.js` | Opens the game in a test browser at desktop and phone size, plays a few rounds and saves screenshots: `node tools/browser-check.js <folder>` (needs Node.js and Playwright) |
+| `tools/serve.js` | Lets a test browser load the game straight from this folder, without a web server |
+| `.claude/skills/` | Step-by-step recipes Claude follows for routine jobs (Drive backup, pull requests, browser checks, the card sheet) |
 | `tools/guide-shots.js` | Retakes the annotated guide pictures: `node tools/guide-shots.js` (needs Node.js and Playwright) |
 | `original-lua/main.lua` | The LÖVE2D source this was ported from |
 
