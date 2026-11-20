@@ -8,7 +8,7 @@ Edit this file whenever the story changes. Open questions are listed at the end.
 - Once there were many separate worlds, each one whole.
 - The worlds collided. The universe shattered, and its pieces, the **shards**, now fall
   everywhere. That is why the factions, which come from different worlds, meet at all.
-- **What caused it is a mystery.** The other champions believe the Zombie faction had
+- **What caused it is a mystery.** The other champions believe the Zombies had
   something to do with it. In truth the Zombies are just another victim (see "The hidden
   story").
 
@@ -39,19 +39,28 @@ Edit this file whenever the story changes. Open questions are listed at the end.
 
 Every card has three kinds of label, so cards can work together in more than one way.
 
-- **Fracture** is where a card is from: the shattered world it came out of. Today's five are
-  Simple, Monkey, Zombie, Fighter and Digital. A card from none is **Unbound**. A few cards
-  are from two fractures (Master Rat is Fighter and Monkey; Weapons Enthusiast is Fighter and
-  Simple): a shard where two worlds fused. In the data this column was once called Faction.
-- **Tribe** is what a character is: Human, Animal, Zombie, Cyber, Plant or Goblin. A character
-  can have two (The Man Ape is Human and Animal; The Simplistic is Cyber and Human). A Zombie
-  infection adds the Zombie tribe to the tribes a character already has.
-- **Undead** is a wider family, not a tribe written on a card: anything that should be dead but is
-  living. Today it is only the Zombie tribe; skeletons, vampires and the like will join it. Cards
-  that say Undead (Soul Shepard, Midnight Madness, Rise from the Dead) reach the whole family, so a
-  future skeleton deck and the Zombie deck can help each other.
+- **Fracture** is where a card is from: the shattered world it came out of. **A fracture is broad,
+  a whole world where many tribes and classes live**; tribes and classes are what tell cards apart.
+  Today's five are **Simple** (the quiet village world), **Wild** (beasts and jungles), **Undead**
+  (anything that should be dead but is living), **Mortal** (people who train past human limits)
+  and **Cyber** (hackers, gamers and living software). Card art will be what sets Mortal apart from
+  Simple. A card from none is **Unbound**. A few cards are from two fractures (Master Rat is Mortal
+  and Wild; Weapons Enthusiast is Mortal and Simple): a shard where two worlds fused. In the data
+  this column was once called Faction. (Renamed Nov 2026: Monkey became Wild, Zombie became
+  Undead, Fighter became Mortal, Digital became Cyber.)
+- **Tribe** is what a character is: Villager, Human, Monkey, Zombie, Martial Artist, Program,
+  Rat, Plant or Goblin (Turtle for Master Rat's tokens). A character can have two (The Man Ape is
+  Human and Monkey; The Simplistic is Program and Villager). Future tribes slot into a world: a
+  Skeleton or Vampire tribe in Undead, a Cat or Dog tribe in Wild.
+- **Infection** (Infection, Plaguemancer) adds the Zombie tribe to the tribes a character already
+  has. The character keeps its own world: it becomes a Zombie, but not Undead.
+- Cards that say **Undead** (Soul Shepard, Midnight Madness, Rise from the Dead) mean the Undead
+  world, so a future Skeleton deck and the Zombie deck help each other. Cards that say **Zombie**
+  (Sneaky Skinbag, They Just Keep Coming) mean the Zombie tribe only, and cards that say
+  **Monkey** mean the Monkey tribe only.
 - **Class** is what a character does: Warrior, Mage, Scout, Guardian, Worker, Student, Master
-  or Fighter. A character can have two. Fighter-fracture characters are also the Fighter class.
+  or Fighter. A character can have two. The Mortal world's martial artists are also the Fighter
+  class, so "Fighter" cards (Dojo, Fight Choreographer) reach them by class.
 - Only characters have tribes and classes. Spells, equipment and areas may care about them
   ("your Students", "Humans") but don't have their own.
 - Big bonuses stay tied to a fracture (Jungle, Simpledom, Primeval Forest, Arboreal
@@ -59,18 +68,22 @@ Every card has three kinds of label, so cards can work together in more than one
 - The labels are in `data/cards.csv` (Tribes, Fracture, Classes) and shown on the card with
   placeholder symbols, until the art is made. The owner reviews them in the card sheet.
 
-## The factions
+## The champions and their worlds
 
-Each faction comes from a different world (a fracture). More factions can join at any time, so
-the story never fixes how many there are.
+Each starter deck comes from a different world (a fracture). More worlds can join at any time,
+so the story never fixes how many there are.
 
-| Faction | Champion (Unknown card) | Personality | How the computer plays it |
+**A champion is the strongest of its tribe**, recognized across every fracture and throughout
+the Shardfall. A tribe can have more than one champion (a second Villager champion could come
+later), but **a deck holds only one champion card** (one kind, at most 2 copies).
+
+| World (deck) | Champion (Unknown card), and the tribe it leads | Personality | How the computer plays it |
 |---|---|---|---|
-| Simple | The Simplistic | A cheerful, stubborn homebody who insists everything was fine before the Shardfall. Short, calm sentences, and it repeats itself word for word | Steady: plans one play at a time and does not chase the player |
-| Monkey | The Man Ape | A loud, boasting troop boss who hoards shards like bananas. Loyal to the troop, yet sacrifices cousins without guilt | Territorial: keeps a big board, sacrifices readily, and attacks harder once below half health |
-| Zombie | Soul Shepard | A gentle, sad keeper of the fallen who never argues. Kind first, unsettling second | Patient collector: builds a swarm, takes fallen Zombies back into hand, strikes late |
-| Fighter | IP Man | A calm, polite master who bows before and after every fight. Treats a loss as a lesson. Grieving under the calm | Patient: waits for a clean exchange and keeps IP Man at home for his redirect |
-| Digital | Boss Level | A smug final boss that narrates its own phases ("LEVEL UP", "CRITICAL HIT") | Confident early (grows its team), dangerous late (goes for the player from round 5) |
+| Simple | The Simplistic (Villager) | A cheerful, stubborn homebody who insists everything was fine before the Shardfall. Short, calm sentences, and it repeats itself word for word | Steady: plans one play at a time and does not chase the player |
+| Wild (Monkey deck) | The Man Ape (Monkey) | A loud, boasting troop boss who hoards shards like bananas. Loyal to the troop, yet sacrifices cousins without guilt | Territorial: keeps a big board, sacrifices readily, and attacks harder once below half health |
+| Undead (Zombie deck) | Soul Shepard (Zombie) | A gentle, sad keeper of the fallen who never argues. Kind first, unsettling second | Patient collector: builds a swarm, takes fallen Zombies back into hand, strikes late |
+| Mortal (Fighter deck) | IP Man (Martial Artist) | A calm, polite master who bows before and after every fight. Treats a loss as a lesson. Grieving under the calm | Patient: waits for a clean exchange and keeps IP Man at home for his redirect |
+| Cyber (Digital deck) | Boss Level (Program) | A smug final boss that narrates its own phases ("LEVEL UP", "CRITICAL HIT") | Confident early (grows its team), dangerous late (goes for the player from round 5) |
 
 - The champion is each faction's "top dog" card, of Unknown rarity.
 - **Deck rule:** a deck holds only one kind of Unknown card (its champion), with up to
@@ -119,7 +132,7 @@ the story never fixes how many there are.
 
 | Where | Clue | What it hints at |
 |---|---|---|
-| Cards, The Simplistic's tribes | It is Cyber and Human. Cyber is the tribe of Boss Level, Glitch, Spam Bot, Data Collector, Server Farm and Digital Girlfriend, and no other Simple card has it | Boss Level made the Simple world. Nothing in the game says so |
+| Cards, The Simplistic's tribes | It is Program and Villager. Program is the tribe of Boss Level, Glitch, Spam Bot, Data Collector, Server Farm and Digital Girlfriend, and no other Simple card has it | Boss Level made the Simple world. Nothing in the game says so |
 | Intro, first window ("each one was whole") | One green glass pane in the second ring is already cracked, before the worlds collide | Something was broken before the collision. Green is the Zombie color, which points suspicion their way |
 | Campaign, after beating Soul Shepard | The souls Soul Shepard gathered come from every world, not only its own, and the shards keep falling | The Zombies are victims too, and beating every champion does not end the Shardfall |
 | The Simplistic, every match | It says the same lines word for word, and repeats a line twice when hurt | It is a little robotic: made, not born |
@@ -134,7 +147,7 @@ the story never fixes how many there are.
 | Card story: The Simplistic | "Everything was fine before. Everything will be fine again. Everything is fine." | It repeats itself, like the rest of its lines |
 | Card stories: Jungle, Primeval Forest | The jungle "wasn't here last week"; the oldest trees in a jungle "only a week old" | The jungle was put there (matches The Man Ape's story card) |
 | Card stories: Hungry Corpse, Soul Shepard | The first thing found in the wreckage, so everyone decided it was to blame; it gathers the fallen and never asks whose fault it was | The Zombies are victims, blamed for being found first |
-| Card story: Glitch | "Some say it was here before the break." | Digital was involved before the Shardfall |
+| Card story: Glitch | "Some say it was here before the break." | Cyber was involved before the Shardfall |
 | Card story: Data Collector | Collecting since long before the worlds collided, and never says for whom | Boss Level was preparing |
 | Card story: Server Farm | From above, its racks look a lot like turnip fields | Boss Level made the Simplistic's world |
 | Card story: Boss Level | "Every world needs a final boss. Boss Level made sure of it." | Bolder, as befits fight four: it shaped the worlds |

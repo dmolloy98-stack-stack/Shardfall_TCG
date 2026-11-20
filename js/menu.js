@@ -30,7 +30,7 @@ function renderDoors() {
   const campChip = cleared >= total ? "Campaign complete" : `Next: ${next.champion} · ${cleared} of ${total} beaten`;
   const deck = DATA.decks[U.deckId], m = masteryOf(U.deckId);
   const door = (sym, chip, title, text, go) => `<span class="door-sym" aria-hidden="true">${sym}</span>${chip ? `<span class="door-chip">${esc(chip)}</span>` : ""}<span class="door-title">${title}</span><span class="door-text">${text}</span><span class="btn door-go">${go}</span>`;
-  $("#btn-campaign").innerHTML = door("♛", campChip, "Campaign", "Face each fracture's champion, one by one, and learn what the shards are hiding.", cleared ? "Continue" : "Begin");
+  $("#btn-campaign").innerHTML = door("♛", campChip, "Campaign", "Face each champion, one by one, and learn what the shards are hiding.", cleared ? "Continue" : "Begin");
   $("#door-quick").innerHTML = door("⚔", `${deck?.name || ""}${m.title ? ` · ★ ${m.title}` : ""}`, "Quick Match", "One match against the computer. Pick your deck and theirs.", "Play");
   $("#door-two").innerHTML = door("⇄", "", "Two Players", "Take turns on one device.", "Play");
 }
@@ -115,19 +115,19 @@ const CHAMP_GUIDE = {
   the_man_ape: {
     notes: ["It counts the characters on each side. With more than your opponent, every character you have gets +1 Attack, Monkey or not.", "It only works on your turn, when you attack. Your characters don't get it while defending.", "It switches on and off by itself as characters come and go, even in the middle of your attacks."],
     status: ["4 vs 3 characters · +1 Attack", "2 vs 3 characters"],
-    pairs: [{ caption: "With more characters than your opponent, on your turn: +1 Attack.", pick: c => c.group === "Monkey" && c.type === "Character" && c.manaCost === 2, change: { attack: 1 } }],
+    pairs: [{ caption: "With more characters than your opponent, on your turn: +1 Attack.", pick: c => c.group === "Wild" && c.type === "Character" && c.manaCost === 2, change: { attack: 1 } }],
   },
   ip_man: {
     notes: ["The bow happens by itself when you press To battle. The game picks your strongest character that can attack this turn.", "The +2 Attack lasts until the end of your turn.", "A fight counts as won when your character survives and the enemy character is knocked out. Attacks on the player don't count. Fights you win while defending count too.", "After 5 won fights, your two strongest attackers get the bow each turn."],
     status: ["Lv 1 · 3/5 fights won", "Lv 2 · Leveled up"],
-    pairs: [{ caption: "At the start of your Battle phase: your strongest ready attacker gets +2 Attack this turn.", pick: c => c.group === "Fighter" && c.type === "Character" && c.manaCost === 2, change: { attack: 2 } }],
+    pairs: [{ caption: "At the start of your Battle phase: your strongest ready attacker gets +2 Attack this turn.", pick: c => c.group === "Mortal" && c.type === "Character" && c.manaCost === 2, change: { attack: 2 } }],
   },
   boss_level: {
     notes: ["It works from your starting health: with 25, PHASE 2 starts at 16 health or less and FINAL PHASE at 8 or less.", "In PHASE 2 you draw 2 cards in your Draw phase instead of 1.", "FINAL PHASE keeps the extra card and gives every character you have +1 Attack and +1 Health, Digital or not.", "Healing never takes you back to an earlier phase."],
     status: ["Phase 1", "Phase 2", "Final phase"],
     pairs: [
       { caption: "PHASE 2: 1 extra card each turn.", from: "🂠 1", to: "🂠 2" },
-      { caption: "FINAL PHASE: your characters also get +1 Attack and +1 Health.", pick: c => c.group === "Digital" && c.type === "Character" && c.manaCost === 2, change: { attack: 1, health: 1 } },
+      { caption: "FINAL PHASE: your characters also get +1 Attack and +1 Health.", pick: c => c.group === "Cyber" && c.type === "Character" && c.manaCost === 2, change: { attack: 1, health: 1 } },
     ],
   },
   soul_shepard: {

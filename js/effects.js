@@ -76,7 +76,7 @@ function parseSelector(text, where) {
 }
 const ALL_TRIBES = new Set(), ALL_CLASSES = new Set();
 for (const card of DATA.cardList) { card.tribes.forEach(t => ALL_TRIBES.add(t)); card.classes.forEach(k => ALL_CLASSES.add(k)); }
-for (const f of Object.keys(TRIBE_FAMILIES)) ALL_TRIBES.add(f);   // Undead and other tribe families
+for (const f of Object.keys(TRIBE_FAMILIES)) ALL_TRIBES.add(f);   // tribe families, if game_rules.csv defines any
 function selectorFilter(f) {
   if (f === "other") return (c, ctx) => c !== ctx.card;
   if (f === "leveler") return c => hasSkill(c, "Level Up");
@@ -86,9 +86,9 @@ function selectorFilter(f) {
   if (f === "strongest") return null;   // handled after filtering
   if (f === "swift") return c => isSwift(c);
   if (f === "tower") return c => hasSkill(c, "Tower");
-  // Fracture, tribe or class, written plainly (allies.Monkey, allies.Undead, allies.Student) or with
-  // its kind in front (allies.class:Fighter). Use the kind when one name is two things: Fighter is
-  // both a fracture and a class, and the plain word means the fracture.
+  // Fracture, tribe or class, written plainly (allies.Undead, allies.Monkey, allies.Student) or with
+  // its kind in front (allies.class:Fighter). Use the kind if a name is ever two things; the plain
+  // word means the fracture first, then the tribe, then the class.
   const kind = f.match(/^(fracture|tribe|class):(.+)$/);
   if (kind) return { fracture: c => inGroup(c, kind[2]), tribe: c => hasTribe(c, kind[2]), class: c => hasClass(c, kind[2]) }[kind[1]];
   if (DATA.factions[f]) return c => inGroup(c, f);
@@ -300,7 +300,7 @@ const SCRIPTS = {
     for (const c of hit) { emit("charDamage", { uid: c.uid, amount: n }); checkDeath(c); }
   },
   primate(ctx) {
-    const picks = ctx.owner.deck.filter(n => inGroup(n, "Monkey") && n.type === "Character" && n.name !== "Primate" && n.manaCost <= 2).slice(-2);
+    const picks = ctx.owner.deck.filter(n => hasTribe(n, "Monkey") && n.type === "Character" && n.name !== "Primate" && n.manaCost <= 2).slice(-2);
     for (const n of picks) {
       if (ctx.owner.field.chars.length >= RULES.maxChars) break;
       ctx.owner.deck.splice(ctx.owner.deck.indexOf(n), 1);
@@ -308,8 +308,8 @@ const SCRIPTS = {
     }
   },
   callOfTheJungle(ctx) {
-    const cards = ctx.owner.grave.filter(c => inGroup(c, "Monkey") && !c.token);
-    if (cards.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call of the Jungle", prompt: "Pick up to 3 Monkey cards to return to your hand.", cards, pick: 3, resolve: "toHand" });
+    const cards = ctx.owner.grave.filter(c => hasTribe(c, "Monkey") && c.type === "Character" && !c.token);
+    if (cards.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call of the Jungle", prompt: "Pick up to 3 Monkey characters to return to your hand.", cards, pick: 3, resolve: "toHand" });
   },
   soulSuction(ctx) {
     const st = stats(ctx.target);
@@ -320,12 +320,12 @@ const SCRIPTS = {
     if (ctx.owner.hand.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rotten Finger", prompt: "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" });
   },
   riseFromTheDead(ctx) {
-    const cards = ctx.owner.grave.filter(c => hasTribe(c, "Undead") && c.type === "Character");
+    const cards = ctx.owner.grave.filter(c => inGroup(c, "Undead") && c.type === "Character");
     if (!cards.length || ctx.owner.field.chars.length >= RULES.maxChars) return;
     ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rise from the Dead", prompt: "Pick an Undead character from your graveyard to bring back to the field.", cards, pick: 1, options: [{ id: "field", label: "Bring it back to the field" }], resolve: "rise" });
   },
   keepComing() {
-    for (const c of allChars()) if (inGroup(c, "Zombie")) {
+    for (const c of allChars()) if (hasTribe(c, "Zombie")) {
       if (hasSkill(c, "Reanimate")) c.currentHealth += 3;
       else { c.skills.push("Reanimate"); c.reanimated = false; }
     }
@@ -354,7 +354,7 @@ const SCRIPTS = {
   masterRat(ctx) {
     for (let k = 0; k < 4; k++) {
       const turtle = {
-        uid: S.nextUid++, id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", tribes: ["Animal"], classes: ["Student"], group: "Fighter", groups: ["Fighter"],
+        uid: S.nextUid++, id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", tribes: ["Turtle"], classes: ["Student"], group: "Mortal", groups: ["Mortal"],
         manaCost: 0, attack: 1, health: 1, skills: [], ability: "Gain +1 to each stat for every other Turtle on the field",
         description: "", artKey: "turtle", token: true,
       };
@@ -431,7 +431,7 @@ function auraBonus(c, p) {
 }
 
 // A skill a character has without it being printed on the card: from equipment it holds
-// ("grants: Swift") or from an aura on its side ("aura: grant allies.Fighter Parry").
+// ("grants: Swift") or from an aura on its side ("aura: grant allies.Fighter Parry", Fighter being a class).
 // The rules look here for Swift and Parry.
 function grantsSkill(c, skill) {
   if ((c.equipped || []).some(e => !e.disabled && CARD_FX[e.id]?.grants?.includes(skill))) return true;

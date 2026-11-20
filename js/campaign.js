@@ -1,5 +1,5 @@
-// The campaign: one match against the computer for each faction's champion.
-// Each champion plays its faction's starter deck and starts with its champion card in hand.
+// The campaign: one match against the computer for each champion (the strongest of a tribe).
+// Each champion plays its fracture's starter deck and starts with its champion card in hand.
 // Progress is saved in the browser (PREFS "campaign"). Who the champions are, what they say
 // in a match and how the computer plays them is in js/champions.js; the story is docs/world.md.
 // Adding a champion: add a stage here, an entry in CHAMPIONS, and a starter deck for its faction.
@@ -15,28 +15,28 @@ const CAMPAIGN = [
     win: "The Simplistic shrugs and steps aside. \"Keep it simple,\" it says. \"Start small, then level up.\" It says it exactly as it said it before.",
   },
   {
-    faction: "Monkey", champion: "The Man Ape",
+    faction: "Wild", champion: "The Man Ape",
     scene: "The Man Ape peels a banana on top of its shard pile.",
     says: "My jungle. My shards. You want some? Earn them.",
     intro: "Deep in a jungle that wasn't there last week, The Man Ape sits on a pile of shards like a hoard of bananas. The troop watches from the trees. The ground still hums where the jungle first appeared.",
     win: "The troop scatters. The Man Ape lets the shard go, but keeps one eye on it.",
   },
   {
-    faction: "Fighter", champion: "IP Man",
+    faction: "Mortal", champion: "IP Man",
     scene: "He is sweeping the courtyard. One stone is cracked in a perfect square.",
     says: "*bows* Every fight is a lesson. Shall we study?",
     intro: "Since his world broke, IP Man has trained on a cliff edge above the falling shards. He bows before every fight and expects a bow back. He swears the sky flickered, just once, a moment before the break.",
     win: "IP Man bows once more. \"Again tomorrow,\" he says, and he means it.",
   },
   {
-    faction: "Digital", champion: "Boss Level",
+    faction: "Cyber", champion: "Boss Level",
     scene: "The air hums like a computer fan. For a blink, a progress bar hangs at 99%.",
     says: "PLAYER 2 HAS ENTERED. Difficulty: adjusting…",
     intro: "A shard has landed in a server room humming in the middle of nowhere. Boss Level loads in with a health bar nobody has seen the end of. Its desktop wallpaper is a quiet turnip field.",
     win: "Boss Level flickers. GAME OVER, the screens read, though nobody is sure for whom. Somewhere in the code, a turnip field keeps loading.",
   },
   {
-    faction: "Zombie", champion: "Soul Shepard",
+    faction: "Undead", champion: "Soul Shepard",
     scene: "Grey stones, quiet. Soul Shepard walks among them, humming.",
     says: "They say I started all this. I only tend what's left.",
     intro: "The other champions all say the Zombies caused the Shardfall. Soul Shepard waits among the graves, gathering the fallen, and does not argue.",
@@ -65,7 +65,7 @@ function showCampaign() {
   const done = cleared >= CAMPAIGN.length
     ? `<p class="camp-done">All ${NUMBER_WORDS[CAMPAIGN.length] || CAMPAIGN.length} champions beaten. The shards are still falling, though.</p>` : "";
   openModal(`<h2 id="modal-title">Campaign</h2>
-    <p class="sub">Beat each fracture's champion in turn. Each one plays its fracture's deck and starts with its champion in hand.</p>
+    <p class="sub">Beat each champion in turn. Each one plays its own starter deck and starts with its champion in hand.</p>
     <p class="camp-deck">Your deck: <b>${esc(deck?.name || "none")}</b> <button type="button" class="btn btn-small" data-camp-deck>Change deck</button></p>
     ${problem ? `<p class="deck-problem">${esc(problem)}</p>` : ""}
     <ol class="camp-list">${rows}</ol>${done}
@@ -385,7 +385,7 @@ onGameEvent((type, d) => {
   if (back) bumpCount("revived", back);
   if (type === "gameOver") {
     if (d.winner === 0) {
-      if (me.field.chars.filter(c => inGroup(c, "Monkey")).length >= 5) earnTrophy("troop_night");
+      if (me.field.chars.filter(c => hasTribe(c, "Monkey")).length >= 5) earnTrophy("troop_night");
       if (!TM.hurt) earnTrophy("untouchable");
       if (TM.low <= 5) earnTrophy("brink");
       const rec = PREFS.get("record", {}) || {};

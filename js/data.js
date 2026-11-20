@@ -84,7 +84,7 @@ function buildData(CSV) {
     return m ? [Number(m[1]), Number(m[2])] : [0, 0];
   };
   const skillsOf = s => (s || "").split("+").map(x => x.trim()).filter(x => x && x !== "---");
-  const namesOf = skillsOf;   // tribes and classes are written the same way: Human+Animal
+  const namesOf = skillsOf;   // tribes and classes are written the same way: Human+Monkey
   const fracturesOf = s => { const l = namesOf(s); return l.length ? l : ["N/A"]; };
 
   // A typing mistake in the card table stops the game with a message naming the card, the
@@ -111,7 +111,7 @@ function buildData(CSV) {
     const ability = c[9] && c[9] !== "---" ? c[9] : "";
     const card = {
       id: c[0], manaCost: Number(c[1]) || 0, name: c[2], rarity: c[3] || "Basic", type: c[4],
-      // Fracture (where it is from; a hybrid lists two, "Fighter+Monkey"; the first sets its color),
+      // Fracture (where it is from; a hybrid lists two, "Mortal+Wild"; the first sets its color),
       // tribes (species) and classes (job). The names in these three lists must not clash with a
       // CardID, so "allies.Human" can't mean a card.
       group: fracturesOf(c[6])[0], groups: fracturesOf(c[6]), tribes: namesOf(c[5]), classes: namesOf(c[13]),

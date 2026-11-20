@@ -117,7 +117,7 @@ their own story or coaching, then hand over to the same engine.
 | A new column in a table | `js/data.js` |
 | A new kind of card ability | `js/effects.js` |
 | A card's fracture, tribes or classes | the Fracture, Tribes and Classes columns of `data/cards.csv`; a bonus for a whole tribe or class is written like `allies.Student` in the Effect column |
-| A tribe family (Undead = Zombie, later Skeleton, Vampire …) | the `tribe_family_Undead` row in `data/game_rules.csv`; `TRIBE_FAMILIES`, `hasTribe` and `tribesOf` in `js/engine.js` |
+| A tribe family (none in use; Undead is now a fracture) | a `tribe_family_<Name>` row in `data/game_rules.csv`; `TRIBE_FAMILIES`, `hasTribe` and `tribesOf` in `js/engine.js`. Rules that name a kind of card (`rule: shepherd Undead`, `rule: sacrifice Monkey`) check it with `isKind` (fracture, then tribe, then class) |
 | The symbols for tribes and classes | `TAG_GLYPHS` in `js/ui.js` (placeholders, to be replaced by art) |
 | A champion that bends a core rule | its `rule:` clause in the Effect column; the rule itself is in `js/engine.js` (list: `RULE_WORDS` in `js/effects.js`) |
 | An area's bonus, or a skill an area grants | the area's `aura:` clause in the Effect column |
@@ -162,7 +162,7 @@ their own story or coaching, then hand over to the same engine.
 | The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/style.css`; the list of skins is `SKINS` in `js/ui.js`; the long cracks are redrawn by `tools/make-crystal.js` |
 | The playable single-file copy | `tools/build-single.js` |
 | Checking a rules or card change broke nothing | `node tools/test-all.js` (every test; GitHub runs it on each push), and `node tools/selftest.js . rand 1000` for a deeper look |
-| Checking a screen change in a browser | `node tools/browser-check.js` (uses `tools/serve.js` to load the game from disk); the `browser-check` skill in `.claude/skills/` |
+| Checking a screen change in a browser | `node tools/browser-check.js` (uses `tools/serve.js` to load the game from disk and `tools/readability.js` for the "can you read it?" check); the `browser-check` skill in `.claude/skills/` |
 | Deck win rates and game length | `node tools/winrates.js` (plays `tools/selftest.js` games and sums them up) |
 | How smoothly the game runs | `node tools/speed-check.js` |
 

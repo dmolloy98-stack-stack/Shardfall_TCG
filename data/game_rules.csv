@@ -15,4 +15,3 @@ shard_round,8,number,"The round the big shard falls into the middle of the table
 shard_health,10,number,Health of the big shard
 shard_draw,1,number,"Cards the player who breaks the big shard draws, on top of their champion's shard bonus"
 shard_draw_no_champion,2,number,Cards the player who breaks the big shard draws when their deck has no champion
-tribe_family_Undead,Zombie,text,"Tribes that count as Undead (anything that should be dead but is living), separated by |. Add Skeleton, Vampire and so on here as they arrive"

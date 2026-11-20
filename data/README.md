@@ -30,8 +30,8 @@ If a file has a mistake the game can't read (for example, a deck lists a CardID 
 | Name | Name shown on the card |
 | Rarity | `Basic`, `Rare`, `Exotic`, `Divine` or `Unknown` (see rarities.csv) |
 | Type | `Character`, `Spell`, `Equipment` or `Area` |
-| Tribes | A character's species, joined with `+` (`Human+Animal`): `Human`, `Animal`, `Zombie`, `Cyber`, `Plant`, `Goblin`. `---` for anything that isn't a character. A new tribe only needs its name here. A tribe can also belong to a family (see `tribe_family_` in game_rules.csv): Zombie counts as Undead |
-| Fracture | Where a card is from: a FactionID from factions.csv, or `N/A` for an Unbound card. A hybrid lists two, joined with `+` (`Fighter+Monkey`); the first sets its color. (The column was called Faction; the file `factions.csv` keeps its name) |
+| Tribes | A character's species, joined with `+` (`Human+Monkey`): `Villager`, `Human`, `Monkey`, `Zombie`, `Martial Artist`, `Program`, `Rat`, `Plant`, `Goblin`. `---` for anything that isn't a character. A new tribe only needs its name here. A tribe can also belong to a family (see `tribe_family_` in game_rules.csv): Zombie counts as Undead |
+| Fracture | Where a card is from: a FactionID from factions.csv, or `N/A` for an Unbound card. A hybrid lists two, joined with `+` (`Mortal+Wild`); the first sets its color. (The column was called Faction; the file `factions.csv` keeps its name) |
 | Stats | `Attack+Health`, or `---` |
 | Skills | Skill names joined with `+`, or `---` |
 | Ability | The card's rules text |
@@ -201,7 +201,7 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | shard_health | Health of the big shard |
 | shard_draw | Cards the player who breaks the big shard draws, on top of their champion's shard bonus |
 | shard_draw_no_champion | Cards the player who breaks the big shard draws when their deck has no champion |
-| tribe_family_Undead | The tribes that count as Undead (anything that should be dead but is living), separated by `\|`. Today `Zombie`; add `Skeleton`, `Vampire` and so on as they arrive. Cards that say Undead (Soul Shepard, Midnight Madness, Rise from the Dead) then reach them all. Another family is another `tribe_family_<Name>` row |
+| tribe_family_<Name> | (None in use.) A wider name for several tribes, separated by `\|`. Undead used to be one; it is now a fracture. Cards that say Undead (Soul Shepard, Midnight Madness, Rise from the Dead) then reach them all. Another family is another `tribe_family_<Name>` row |
 | min_deck_size, max_copies, max_unknown_copies, max_unknown_kinds | Deck-building rules (max_unknown_kinds: how many different Unknown cards, the champions, a deck may hold) |
 
 ### events.csv: random events

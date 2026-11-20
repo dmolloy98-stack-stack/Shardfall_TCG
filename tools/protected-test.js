@@ -43,7 +43,7 @@ ok('the rule is on at 3 characters', RULES.protectAt === 3, 'protectAt=' + RULES
 }
 ok('every Challenge character has the Protected skill', all.filter(c => (c.skills || []).includes('Challenge')).every(c => c.skills.includes('Protected')));
 const pierceCards = all.filter(c => (c.skills || []).includes('Pierce'));
-ok('Pierce is rare: only Digital and Fighter cards have it', pierceCards.length > 0 && pierceCards.length <= 6 && pierceCards.every(c => ['Digital', 'Fighter'].includes(c.group)), pierceCards.map(c => c.name).join(', '));
+ok('Pierce is rare: only Cyber and Mortal cards have it', pierceCards.length > 0 && pierceCards.length <= 6 && pierceCards.every(c => ['Cyber', 'Mortal'].includes(c.group)), pierceCards.map(c => c.name).join(', '));
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');
 process.exit(fails ? 1 : 0);
 `);

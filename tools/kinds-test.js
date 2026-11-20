@@ -33,49 +33,52 @@ const put = (p, name) => { const c = cardByName(name); c.owner = p.idx; putOnFie
   const ha = [sd, bw, ch].map(c => stats(c).h);
   ok('Simple Defender: self +2, other Tower +1, others 0', ha[0] === hb[0] + 2 && ha[1] === hb[1] + 1 && ha[2] === hb[2], JSON.stringify([hb, ha]));
 }
-{ // Hybrid: Master Rat counts as Monkey (Jungle) and Fighter (Dojo)
-  const p = fresh(); const mr = put(p, 'Master Rat'); const base = stats(mr).a;
+{ // Hybrid: Master Rat is from the Mortal and Wild worlds, but a Rat, so Jungle (Monkeys only) skips it
+  const p = fresh(); const mr = put(p, 'Master Rat'); const ch = put(p, 'Chimp'); const base = stats(mr).a, cbase = stats(ch).a;
   const j = cardByName('Jungle'); j.owner = 0; p.field.areas.push(j);
-  ok('Master Rat gets Jungle (Monkey)', stats(mr).a === base + 1, 'base ' + base + ' now ' + stats(mr).a);
-  ok('Master Rat is both fractures', inGroup(mr, 'Fighter') && inGroup(mr, 'Monkey') && !inGroup(mr, 'Zombie'));
+  ok('Jungle reaches the Monkey tribe only', stats(mr).a === base && stats(ch).a === cbase + 1, 'rat ' + base + '->' + stats(mr).a + ', chimp ' + cbase + '->' + stats(ch).a);
+  ok('Master Rat is both fractures, and a Rat', inGroup(mr, 'Mortal') && inGroup(mr, 'Wild') && !inGroup(mr, 'Undead') && hasTribe(mr, 'Rat'));
 }
 { // Weapons Enthusiast: Fighter and Simple, gets Simpledom
   const p = fresh(); const we = put(p, 'Weapons Enthusiast'); const base = stats(we).a;
   const d = cardByName('Simpledom'); d.owner = 0; p.field.areas.push(d);
   ok('Weapons Enthusiast gets Simpledom', stats(we).a === base + 2, 'base ' + base + ' now ' + stats(we).a);
 }
-{ // Midnight Madness reaches an infected Human Warrior as Undead; infection adds a tribe and keeps class
+{ // Infection adds the Zombie tribe and keeps the character's own fracture, tribes and class
   const p = fresh(); const c = put(p, 'Simple Swordsman');
   makeZombie(c);
-  ok('Infection adds the Zombie tribe, keeps Human and Warrior', c.tribes.includes('Zombie') && hasTribe(c, 'Human') && hasClass(c, 'Warrior') && inGroup(c, 'Zombie') && !inGroup(c, 'Simple'), JSON.stringify([c.tribes, c.classes, c.groups]));
-  ok('An infected character counts as Undead', hasTribe(c, 'Undead'));
+  ok('Infection adds the Zombie tribe, keeps Villager, Warrior and Simple', c.tribes.includes('Zombie') && hasTribe(c, 'Villager') && hasClass(c, 'Warrior') && inGroup(c, 'Simple') && !inGroup(c, 'Undead'), JSON.stringify([c.tribes, c.classes, c.groups]));
+  const mm = cardByName('Midnight Madness'); mm.owner = 0; p.field.areas.push(mm);
+  ok('Midnight Madness (the Undead world) skips an infected Villager', stats(c).a === DATA.cardsByName['Simple Swordsman'].attack);
   ok('Template cards are not changed by infection', !DATA.cardsByName['Simple Swordsman'].tribes.includes('Zombie'));
 }
-{ // Undead is a family: today it is the Zombie tribe
-  ok('The Undead family is the Zombie tribe', JSON.stringify(TRIBE_FAMILIES.Undead) === '["Zombie"]');
-  const zombies = DATA.cardList.filter(c => c.type === 'Character' && c.group === 'Zombie');
-  ok('Every Zombie character has the Zombie tribe, none has Undead written', zombies.every(c => c.tribes.includes('Zombie') && !c.tribes.includes('Undead')), zombies.length + ' cards');
-  ok('A Zombie counts as Undead', hasTribe(DATA.cardsByName['Hungry Corpse'], 'Undead'));
-  ok('A Human does not count as Undead', !hasTribe(DATA.cardsByName['Simple Swordsman'], 'Undead'));
+{ // Undead is a fracture (a world); Zombie is a tribe in it
+  ok('No tribe families are in use', Object.keys(TRIBE_FAMILIES).length === 0);
+  const undead = DATA.cardList.filter(c => c.type === 'Character' && c.group === 'Undead');
+  ok('Every Undead character is a Zombie, none has Undead as a tribe', undead.every(c => c.tribes.includes('Zombie') && !c.tribes.includes('Undead')), undead.length + ' cards');
+  ok('A Zombie is from the Undead world', inGroup(DATA.cardsByName['Hungry Corpse'], 'Undead'));
+  ok('A Villager is not Undead', !inGroup(DATA.cardsByName['Simple Swordsman'], 'Undead'));
   const p = fresh(); const z = put(p, 'Hungry Corpse');
   const mm = cardByName('Midnight Madness'); mm.owner = 0; p.field.areas.push(mm);
   ok('Midnight Madness (Undead) reaches a Zombie', stats(z).a === DATA.cardsByName['Hungry Corpse'].attack + 2);
   const before = S.died.Undead || 0; destroyCharacter(z);
   ok('A Zombie dying counts as an Undead death (Soul Shepard)', (S.died.Undead || 0) === before + 1 && (S.died.Zombie || 0) >= 1);
 }
-{ // Turtles: Animal Students
+{ // Turtles: Turtle-tribe Students from the Mortal world
   const p = fresh(); const mr = cardByName('Master Rat'); mr.owner = 0; putOnField(mr, p);
   const t = p.field.chars.filter(c => c.token);
-  ok('Master Rat summons 4 Animal Student Turtles', t.length === 4 && t.every(x => hasTribe(x, 'Animal') && hasClass(x, 'Student')), t.length + ' tokens');
+  ok('Master Rat summons 4 Turtle Student Turtles', t.length === 4 && t.every(x => hasTribe(x, 'Turtle') && hasClass(x, 'Student') && inGroup(x, 'Mortal')), t.length + ' tokens');
 }
 { // Filters
   const p = fresh(); put(p, 'Seasoned Monk'); put(p, 'White Belt Student'); put(p, 'Noob');
   const sel = t => select(parseSelector(t, 'test'), { card: p.field.chars[0], owner: p }).length;
-  ok('allies.Fighter (fracture)', sel('allies.Fighter') === 2, sel('allies.Fighter'));
+  ok('allies.Mortal (fracture)', sel('allies.Mortal') === 2, sel('allies.Mortal'));
+  ok('allies.Fighter (class, now that no world is called Fighter)', sel('allies.Fighter') === 2, sel('allies.Fighter'));
   ok('allies.class:Fighter', sel('allies.class:Fighter') === 2, sel('allies.class:Fighter'));
   ok('allies.Student', sel('allies.Student') === 2, sel('allies.Student'));
   ok('allies.Student.class:Fighter', sel('allies.Student.class:Fighter') === 1, sel('allies.Student.class:Fighter'));
-  ok('allies.Human', sel('allies.Human') === 3, sel('allies.Human'));
+  ok('allies.Martial Artist', sel('allies.Martial Artist') === 2, sel('allies.Martial Artist'));
+  ok('allies.Human', sel('allies.Human') === 1, sel('allies.Human'));
 }
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');
 `);

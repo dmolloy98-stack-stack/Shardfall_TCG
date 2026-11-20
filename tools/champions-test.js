@@ -34,8 +34,8 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
 }
 { // The Man Ape: Chest Thump
   const p = game('monkey_starter'); const q = S.players[1]; S.active = 0;
-  const mk = find(c => c.type === 'Character' && c.group === 'Monkey' && c.manaCost >= 2 && c.rarity !== 'Unknown');
-  const other = find(c => c.type === 'Character' && c.group === 'Fighter' && c.rarity !== 'Unknown' && !c.rules);
+  const mk = find(c => c.type === 'Character' && c.group === 'Wild' && c.manaCost >= 2 && c.rarity !== 'Unknown');
+  const other = find(c => c.type === 'Character' && c.group === 'Mortal' && c.rarity !== 'Unknown' && !c.rules);
   const a = put(p, mk.id), b = put(p, other.id); put(q, other.id); put(q, other.id);
   ok('Chest Thump: equal numbers, no bonus', rawStats(a).a === mk.attack && !chestThump(p));
   const c = put(p, mk.id);
@@ -49,7 +49,7 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
 }
 { // IP Man: The Bow
   const p = game('fighter_starter');
-  const fighters = Object.values(DATA.cardsById).filter(c => c.type === 'Character' && c.group === 'Fighter' && c.rarity !== 'Unknown').sort((x, y) => y.attack - x.attack);
+  const fighters = Object.values(DATA.cardsById).filter(c => c.type === 'Character' && c.group === 'Mortal' && c.rarity !== 'Unknown').sort((x, y) => y.attack - x.attack);
   const strong = put(p, fighters[0].id), weak = put(p, fighters[fighters.length - 1].id);
   for (const c of [strong, weak]) { c.hasAttacked = false; c.sick = false; c.summoningSick = false; }
   S.phase = PHASE.SETUP; S.active = 0; S.pending = null;
@@ -63,7 +63,7 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   // five fights won
   const p2 = game('fighter_starter'); const big = put(p2, fighters[0].id); big.currentHealth = 99; big.baseHealth = 99; big.attack = 9;
   for (let k = 0; k < 5; k++) {
-    const foe = put(S.players[1], find(c => c.type === 'Character' && c.rarity === 'Basic' && c.health <= 2 && c.attack <= 1 && c.group !== 'Fighter').id);
+    const foe = put(S.players[1], find(c => c.type === 'Character' && c.rarity === 'Basic' && c.health <= 2 && c.attack <= 1 && c.group !== 'Mortal').id);
     foe.currentHealth = 1; big.hasAttacked = false; big.sick = false; S.phase = PHASE.BATTLE; S.active = 0; S.pending = null;
     attack(big.uid, foe.uid);
     if (k === 3) ok('IP Man: 4 fights won is not enough yet', p2.champ.level === 1 && p2.champ.n === 4, 'n=' + p2.champ.n);
@@ -77,7 +77,7 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
 }
 { // Boss Level: Boss Phases
   const p = game('digital_starter'); const q = S.players[1];
-  const lvl = Object.values(DATA.cardsById).find(c => c.type === 'Character' && c.group === 'Digital' && (c.skills || []).includes('Level Up') && c.rarity !== 'Unknown' && !c.rules);
+  const lvl = Object.values(DATA.cardsById).find(c => c.type === 'Character' && c.group === 'Cyber' && (c.skills || []).includes('Level Up') && c.rarity !== 'Unknown' && !c.rules);
   const x = put(p, lvl.id);
   ok('Boss Phases: Level Up keeps the usual cap of 3', levelCap(x) === 3);
   ok('Boss Phases: starts in phase 1', p.champ.level === 1 && rawStats(x).a === lvl.attack);
@@ -102,8 +102,8 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   const card = DATA.cardsById.soul_shepard;
   ok('Soul Shepard has Challenge', card.skills.includes('Challenge'));
   const p = game('zombie_starter', 'simple_starter'); const q = S.players[1];
-  const undead = find(c => c.type === 'Character' && hasTribe(c, 'Undead') && c.rarity !== 'Unknown');
-  const living = find(c => c.type === 'Character' && !hasTribe(c, 'Undead') && c.rarity !== 'Unknown' && c.group === 'Simple');
+  const undead = find(c => c.type === 'Character' && inGroup(c, 'Undead') && c.rarity !== 'Unknown');
+  const living = find(c => c.type === 'Character' && !inGroup(c, 'Undead') && c.rarity !== 'Unknown' && c.group === 'Simple');
   const inHand = newCard(card); inHand.owner = 0; p.hand.push(inHand);
   const onField = put(p, 'soul_shepard'); const h0 = rawStats(onField).h;
   destroyCharacter(put(p, undead.id));

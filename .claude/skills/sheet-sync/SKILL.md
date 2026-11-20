@@ -16,7 +16,9 @@ The game files are the master copy: if cards change in code, update the sheet to
 ## Tab → file mapping
 
 - **Cards → `data/cards.csv`.** A card's sheet row number is its line number in cards.csv.
-  - Attack and Health become `Attack+Health` in Stats; ArtKey is the CardID.
+  - Attack and Health become `Attack+Health` in Stats; ArtKey is the CardID. **Characters and
+    Equipment both have Attack and Health** (equipment adds them to its holder; 0 means none);
+    Spells and Areas leave them empty and get `---`.
   - Tribes, Classes and Fracture hold names separated by ", " and become `+`-joined lists,
     `---` when empty for a non-character. A card from no fracture is `N/A` (shown as Unbound).
   - Column O, Flavor text = the Description column (the card's story; see docs/world.md).
@@ -26,6 +28,18 @@ The game files are the master copy: if cards change in code, update the sheet to
   0–1 RGB.
 - **Skills → `data/skills.csv`.**
 - The three "DRAFT …" tabs are the owner's review notes, not game data.
+
+- **Lists** holds the dropdown choices and deck rules (cells H2–H5, read by the Decks check),
+  plus reference lists of the tribes and classes in use. Keep those two lists current when a
+  card adds a new tribe or class.
+- **Start here** and **Effects guide** explain the sheet; update them when the rules for writing
+  cards or the effect words change (`js/effects.js`: `WHEN`, `ACTIONS`, the narrowing words).
+
+## Checking the whole sheet ("is it up to date?")
+
+Compare every tab with the game files: Cards (all columns, row = cards.csv line), Decks and Deck
+cards (0-copy rows are deliberate), Fractures (hex vs 0–1 colours), Skills, Lists, and the two
+guide tabs. The game files win. The sheet's Check columns must all say OK afterwards.
 
 ## Card vocabulary
 

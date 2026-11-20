@@ -299,7 +299,7 @@ function skillSpotlight(uid, text) {
 }
 
 // Each faction enters the table its own way (cheaper cards; big ones get a showcase).
-const FACTION_ENTRANCE = { Simple: "enter-sprout", Monkey: "enter-bounce", Zombie: "enter-rise", Fighter: "enter-stance", Digital: "enter-glitch" };
+const FACTION_ENTRANCE = { Simple: "enter-sprout", Wild: "enter-bounce", Undead: "enter-rise", Mortal: "enter-stance", Cyber: "enter-glitch" };
 function spawnClass(sp) {
   if (sp.big) return "spawn-7";
   return FACTION_ENTRANCE[sp.faction] || "enter-assemble";
@@ -519,6 +519,6 @@ function reactToDeath(uid, delay) {
   if (!c || REDUCED_MOTION) return;
   later(delay + 120, () => {
     for (const ally of S.players[c.owner]?.field.chars || []) flashCard(ally.uid, "flinch");
-    for (const foe of S.players[1 - c.owner]?.field.chars || []) if (inGroup(foe, "Zombie")) flashCard(foe.uid, sideOf(foe.owner) === "top" ? "hunger-down" : "hunger-up");
+    for (const foe of S.players[1 - c.owner]?.field.chars || []) if (hasTribe(foe, "Zombie")) flashCard(foe.uid, sideOf(foe.owner) === "top" ? "hunger-down" : "hunger-up");
   });
 }
