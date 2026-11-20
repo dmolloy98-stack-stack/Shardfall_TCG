@@ -95,7 +95,20 @@ still `group`/`groups` and the data file is `factions.csv`. See `docs/world.md`.
 
 ## Skills for routine jobs
 
-Project skills in `.claude/skills/` hold the step-by-step recipes: `backup` (Drive backup),
-`pr-cycle` (push, open a PR, after a merge), `browser-check` (Playwright at desktop and phone
-size; `node tools/browser-check.js`), `sheet-sync` (the card sheet). Use them instead of
-working the steps out again.
+Project skills in `.claude/skills/` hold the step-by-step recipes. Use them instead of working
+the steps out again:
+- `backup` (Drive backup after every commit or push), `pr-cycle` (push, PR, merge, after a merge)
+- `browser-check` (desktop and phone checks, iPhone checks, `tools/speed-check.js`)
+- `add-feature` (the building rules for any code change), `card-change` (a card or rule the
+  owner decided), `sheet-sync` (the card sheet), `balance` (win rates, `tools/winrates.js`)
+- `story-writing` (champion voices, card stories, clues), `ideas-menu` ("what's next?"),
+  `code-map` (the written map and the two claude.ai map pages), `tool-check` ("is this useful?")
+
+## Links
+
+- Play (GitHub Pages): https://dmolloy98-stack-stack.github.io/Shardfall_TCG/ (`#menu` skips the
+  intro, `#tutorial` starts the tutorial; the guide is `guide.html`)
+- Playable claude.ai copy: https://claude.ai/artifact/5hWErf72EZxcunSyP4CXX1
+- Code Map page: https://claude.ai/artifact/WUQA9uzWYC6oLPL4XnWebz; Code Graph page:
+  https://claude.ai/artifact/SGGy6xeiMFn14Kob6mknCg
+- Card sheet: https://docs.google.com/spreadsheets/d/1RzePfEgUN4QJsLTDGnhU7xaTa0_snq2lVswEUy5JNX0
