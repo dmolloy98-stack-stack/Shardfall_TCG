@@ -154,7 +154,7 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
 7. **Built (20 Nov).** **A version number on saved progress**, with an upgrade step for old saves.
 8. **Built (20 Nov).** **Save code: export and import progress** (copy a code, paste it on another device).
 9. **Built (20 Nov).** **Recorded test matches** (needs 1), replayed in every test run.
-10. **"Copy bug report" button** when the game hits an error (seed and moves).
+10. **Built (20 Nov).** **"Copy bug report" button** when the game hits an error (seed and moves).
 11. **Balance check on every pull request** (warn if a starter deck leaves about 40–60% wins).
 12. **Quicker loading and offline play** (one bundled file; add to home screen).
 
