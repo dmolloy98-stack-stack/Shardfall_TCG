@@ -61,7 +61,8 @@ builds it, tests it, and explains it.
 - Run `node tools/shard-test.js .` after touching the big shard fall ("The big shard fall" in `js/engine.js`, the `shard_` rows in `data/game_rules.csv`) or a champion's shard bonus; expect `ALL PASSED`.
 - Run `node tools/champions-test.js .` after touching the champion abilities (`data/champion_abilities.csv`, "Champion abilities" in `js/engine.js`) or the champion cards; expect `ALL PASSED`.
 - For anything on screen, load the game in a browser (Playwright) at desktop and phone sizes
-  and check for errors. Look at a screenshot before reporting a visual change.
+  and check for errors (`node tools/browser-check.js`, skill `browser-check`). Look at a
+  screenshot before reporting a visual change.
 - Script load order matters: `js/boot.js` loads last, and the list is `GAME_SCRIPTS` in
   `js/data.js`. Add a new script file there and in the README file table.
 
@@ -72,49 +73,27 @@ renamed, or when the flow between them changes.
 
 ## Back up every change to Google Drive
 
-The owner wants everything on GitHub also kept in Google Drive, with a full history,
-as a backup. Every time a change is pushed to this repository (or committed, if GitHub
-can't be reached), in the same session:
-
-1. **Change history.** Add an entry at the top of the Google Doc
-   "Shardfall – change history" (Drive folder "Shardfall _ CardGame" → "GitHub mirror"):
-   date, PR number and commit ids, what changed in plain words, and the files touched.
-   Doc id: `1VgEvb0g2XFoKijpIuHbUGW3qd4rwSltwpoT-HX3rNyc`.
-2. **Changed files.** Upload the new version of every text file the change touched to a
-   new folder in "GitHub mirror" → "Versions", named `YYYY-MM-DD · <short title>`, keeping
-   each file's repository path in its name (for example `js__engine.js`). Older versions
-   stay in their earlier folders, so the folders are the file history.
-   Folder ids: "GitHub mirror" `1wGnqPjK3m_GWr2FIwBJ8dd1sKn0-tubD`,
-   "Versions" `1l1zWvI4KZCiJUaEmxoQcwoSO2TP-TlX6`.
-3. **Playable copy.** Rebuild the page with `node tools/build-single.js --page <file>` and
-   republish it to the claude.ai page https://claude.ai/artifact/5hWErf72EZxcunSyP4CXX1.
-
-Tell the owner when a backup step could not be done and why. Binary files (images) and
-the git history file can't be uploaded through the Drive connector; say so rather than
-skipping them silently.
+The owner wants everything on GitHub also kept in Google Drive, with a full history, as a
+backup. Every time a change is pushed (or committed, if GitHub can't be reached), in the same
+session: add an entry to the change-history doc, upload the changed files to a new Versions
+folder, and republish the playable claude.ai page. The exact steps and ids are in the `backup`
+skill (`.claude/skills/backup/SKILL.md`). Tell the owner when a step could not be done and why.
 
 ## Card and deck builder sheet
 
 The owner designs cards and decks in the Google Sheet "Shardfall – card and deck builder"
-(id `1RzePfEgUN4QJsLTDGnhU7xaTa0_snq2lVswEUy5JNX0`, in the "Shardfall _ CardGame" folder).
-Its tabs mirror the data files: Cards → `data/cards.csv` (Attack and Health become
-`Attack+Health` in Stats; ArtKey is the CardID; the sheet's Tribes, Classes and Fracture
-columns hold names separated by ", " and become `+`-joined lists, `---` when empty for a
-non-character; a card from no fracture is `N/A`, shown as Unbound), Decks plus Deck cards → `data/decks.csv`
-(one row per card becomes the `CardID:copies|…` CardList; skip rows with 0 copies, which mark a card taken out of a deck), Fractures → `data/factions.csv`
-(the tab was called Factions; Color is hex; convert to 0–1 RGB), Skills → `data/skills.csv`.
-The three draft tabs ("DRAFT …") are the owner's review notes and are not game data.
+(id `1RzePfEgUN4QJsLTDGnhU7xaTa0_snq2lVswEUy5JNX0`). How its tabs map to the data files, and how
+to bring Ready rows into the game, is in the `sheet-sync` skill. The game files are the master
+copy: if cards change in code, update the sheet to match.
 
 Card vocabulary: a card has a **Fracture** (where it is from; a hybrid has two), and a
 character also has **Tribes** (what it is) and **Classes** (what it does), one or two of each.
 The owner chose these names, so use them in anything players see. In code the fracture is
 still `group`/`groups` and the data file is `factions.csv`. See `docs/world.md`.
 
-When asked to add the sheet's rows to the game:
-1. Read only rows whose Status is `Ready`. A Ready row with an existing ID replaces that row.
-2. If Effect is empty but Ability describes something, write the Effect (or a `script` in
-   `js/effects.js`). Read Notes for Claude. New skills and factions need code.
-3. Load the game data and effects to check every card, run balance simulations, and run the
-   browser tests, as for any other change.
-4. After committing, set those rows' Status to `In game`. If cards change in code later,
-   update the sheet to match: the game files are the master copy.
+## Skills for routine jobs
+
+Project skills in `.claude/skills/` hold the step-by-step recipes: `backup` (Drive backup),
+`pr-cycle` (push, open a PR, after a merge), `browser-check` (Playwright at desktop and phone
+size; `node tools/browser-check.js`), `sheet-sync` (the card sheet). Use them instead of
+working the steps out again.

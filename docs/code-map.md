@@ -162,6 +162,7 @@ their own story or coaching, then hand over to the same engine.
 | The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/style.css`; the list of skins is `SKINS` in `js/ui.js`; the long cracks are redrawn by `tools/make-crystal.js` |
 | The playable single-file copy | `tools/build-single.js` |
 | Checking a rules or card change broke nothing | `node tools/test-all.js` (every test; GitHub runs it on each push), and `node tools/selftest.js . rand 1000` for a deeper look |
+| Checking a screen change in a browser | `node tools/browser-check.js` (uses `tools/serve.js` to load the game from disk); the `browser-check` skill in `.claude/skills/` |
 
 ## Size and shape
 
