@@ -1,11 +1,13 @@
 // Quick browser check: opens the game at desktop and phone size, plays a computer-vs-computer
-// match for a few rounds, and saves screenshots. Prints any page errors.
+// match for a few rounds, and saves screenshots. Prints any page errors, and "can you read
+// it?" warnings (tools/readability.js): text too small, text overlapping, text cut off.
 //   node tools/browser-check.js [output folder] [rounds]
 // Screenshots: <folder>/desk-menu.png, desk-table.png, phone-menu.png, phone-table.png.
 // Missing card art (assets/cards/*.png) is expected and not counted as an error.
 const { chromium, devices } = require('playwright');
 const path = require('path'), fs = require('fs');
 const serve = require('./serve');
+const { readability } = require('./readability');
 const outDir = path.resolve(process.argv[2] || 'shots');
 const rounds = Number(process.argv[3] || 4);
 fs.mkdirSync(outDir, { recursive: true });
@@ -24,6 +26,7 @@ fs.mkdirSync(outDir, { recursive: true });
     await pg.evaluate(() => PREFS.set('welcomed', true));
     await pg.keyboard.press('Escape'); await pg.waitForTimeout(400);
     await pg.screenshot({ path: path.join(outDir, `${label}-menu.png`) });
+    const readMenu = await readability(pg);
     const res = await pg.evaluate(r => {
       PREFS.set('hints', false); U.hints = false; U.deckId = 'zombie_starter'; U.mode = 'ai';
       startGame({ opponentDeckId: 'fighter_starter' });
@@ -34,10 +37,17 @@ fs.mkdirSync(outDir, { recursive: true });
     }, rounds);
     await pg.waitForTimeout(1500);
     await pg.screenshot({ path: path.join(outDir, `${label}-table.png`) });
-    report[label] = { ...res, errors: errs };
+    const readTable = await readability(pg);
+    const warn = [];
+    for (const [where, r] of [['menu', readMenu], ['table', readTable]]) {
+      for (const k of ['small', 'overlap', 'offscreen']) for (const x of r[k]) warn.push(`${where}, ${k === 'small' ? 'small text' : k === 'overlap' ? 'overlapping text' : 'cut off'}: ${x}`);
+    }
+    report[label] = { ...res, boardScale: readTable.boardScale, handSmallestText: readTable.handSmallest, errors: errs, readability: warn };
     await ctx.close();
   }
   await browser.close();
   console.log(JSON.stringify(report, null, 1));
   console.log(Object.values(report).some(r => r.errors.length) ? 'PAGE ERRORS FOUND' : 'NO PAGE ERRORS');
+  const nWarn = Object.values(report).reduce((n, r) => n + r.readability.length, 0);
+  console.log(nWarn ? `${nWarn} READABILITY WARNING${nWarn > 1 ? 'S' : ''} (see "readability" above)` : 'NO READABILITY WARNINGS');
 })();

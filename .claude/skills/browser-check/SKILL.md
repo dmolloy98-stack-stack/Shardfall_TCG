@@ -25,6 +25,19 @@ plays a computer-vs-computer match to round 4, saves `desk-menu.png`, `desk-tabl
 **Look at the screenshots** (Read the png) before saying a visual change works. Missing card art
 (404s for `assets/cards/*.png`) is expected and filtered out.
 
+It also runs the **"can you read it?" check** (`tools/readability.js`) on the menu and the table:
+- **small text:** board text under 10 px as designed (the board is 1440x1000 and shrinks to fit;
+  `boardScale` says how much, 0.38 on a landscape iPhone), other text under 9 px on screen;
+- **overlapping text:** the words of two separate pieces drawn on top of each other;
+- **cut off:** text past the screen's edge that can't be scrolled to.
+Decorations (`aria-hidden`), passing effects and moving pieces are left out. Hand cards are
+summed up as `handSmallestText` instead, because they grow when hovered or tapped.
+It ends `NO READABILITY WARNINGS` or a count. Compare with the count before the change: fix any
+new warning, or tell the owner why it stays. Known today (Nov 2026): a card with two skills
+(White Belt Student) shrinks its skill labels to 9.5 px; long names shrink to fit one line.
+For any page, `const { readability } = require('/home/user/Shardfall_TCG/tools/readability')`
+then `await readability(page)`.
+
 Screenshots and test scripts go in the session scratchpad, never in the repo.
 
 ## A custom check

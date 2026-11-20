@@ -24,6 +24,14 @@ builds it, tests it, and explains it.
   test or a skipped step.
 - If a question is ambiguous (for example "delete the old artifacts"), ask which ones before
   doing anything that can't be undone.
+- **End finished work with a short wrap-up note**, in plain words, in this order:
+  - **Tested and passed:** which checks ran (rules tests, browser check at which sizes, win rates…).
+  - **Still broken or not checked:** anything failing, skipped or impossible to check here
+    (for example real phone heat, GPU speed, sound). Say "nothing" if nothing.
+  - **Guessed:** choices Claude made without the owner's word, so the owner can overrule them.
+  - **Not yet played by a person** whenever the change affects play or the screen, since Claude's
+    checks aren't the same as playing it.
+  Keep it to a few lines; leave out a heading that has nothing under it except "Not yet played".
 
 ## Standing rules from the owner
 
