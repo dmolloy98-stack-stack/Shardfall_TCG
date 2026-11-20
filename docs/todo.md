@@ -143,3 +143,17 @@ downloaded from GitHub; Claude needs the owner's go-ahead before installing any 
 - **A solo run mode** (a Slay the Spire style roguelike deckbuilder). The owner is wary of
   Shardfall trying to be both a head-to-head game and a solo deckbuilder. The campaign already
   covers solo play. Revisit only if the owner raises it again.
+
+## Turned down or on hold
+
+A short record so the same ideas aren't offered again (see the `ideas-menu` skill). On hold
+means "not now"; the owner may pick it up later.
+
+- **Sound and music:** on hold; the owner will handle sound later.
+- **Art:** out of scope for Claude; the owner plans to make it with ComfyUI (see "Art: remind the owner about ComfyUI" above).
+- **Campaign gifts** (a reward after each campaign win): on hold (Nov 2026).
+- **Challenges** (special goals for a match): on hold (Nov 2026).
+- **Phone-only table layout:** discontinued; the current phone layout is good enough. Kept as a reference in `docs/phone-table/`.
+- **Card-sheet "card lab" and other early tools** (options 2 and 3 when the data moved to CSV files): on hold since the start; the My Decks builder exists now.
+- **Champion leveling:** waiting on the owner's designs (see "Champion leveling" above).
+- **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project.

@@ -64,10 +64,31 @@ Handy things inside `pg.evaluate`:
 
 ## Speed tests
 
-Slow the CPU 4x to imitate a phone:
-`const cdp = await ctx.newCDPSession(pg); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });`
-Measure frames with a `requestAnimationFrame` counter over 3 seconds. The test machine has no
-graphics card, so GPU-only changes (for example `will-change`) can't be judged here: say so.
+```bash
+node tools/speed-check.js
+```
+
+It slows the processor 4x to imitate a phone and prints frames per second on the menu and on a
+settled table, with Heavy effects on and off, plus how long a table redraw takes (ms). Run it
+before and after anything heavy and compare. Last reading (Nov 2026): menu 35 fps on / 60 off,
+table about 15–23 on / 60 off, redraw 7–15 ms. The test machine has no graphics card, so
+GPU-only changes (for example `will-change`) can't be judged here: say so.
+
+## iPhone checks (problems the owner actually hit)
+
+The owner plays on an iPhone 16 Pro Max, in Safari and in Chrome. For anything touching layout,
+touch or the tutorial, check with `devices['iPhone 15 Pro Max landscape']` **and** the portrait
+preset (`devices['iPhone 15 Pro Max']`, which should show the "turn your phone sideways" screen
+with a "Play upright anyway" button):
+- **Your own side of the board is visible** (once it was cut off at the bottom in Chrome).
+- **Buttons can be reached while the tutorial coach box is open** (once dragging the screen
+  didn't work, so buttons couldn't be pressed). Tap each button the tutorial points at.
+- **Tap targets** are at least 44 px on screen; side buttons not oversized.
+- **Text is readable** at phone size (card text was too small once).
+- Nothing hides behind the notch or the home bar.
+- Phones start with Heavy effects off; the game should not redraw constantly when idle
+  (count running animations; it should drop to 0 once dozing).
+Use `pg.tap()` / `pg.touchscreen.tap()` on phone presets (they have touch).
 
 ## Screenshot sizes
 

@@ -2,7 +2,8 @@
 name: pr-cycle
 description: >
   Shardfall pull-request routine: pushing the work branch, opening a PR when the owner asks,
-  and what to do when the owner says "I merged it" (restart the branch from main, log the merge).
+  merging it once GitHub's tests pass, and what to do after a merge (restart the branch from
+  main, log the merge).
   Use when the owner asks to push, open a PR, or says a PR was merged.
 ---
 
@@ -10,7 +11,8 @@ description: >
 
 Work branch: the one the session names (so far `claude/peaceful-dirac-7u4ysi`). Repo
 `dmolloy98-stack-stack/Shardfall_TCG`. Owner rules: push only after a bigger change or when asked;
-**open a PR only when the owner asks**; the owner merges, never Claude.
+**open a PR only when the owner asks**. Once a PR is open, **Claude merges it as soon as GitHub's
+tests pass** (the owner chose this), without waiting to be asked.
 
 ## Before any push
 
@@ -37,7 +39,16 @@ https://claude.ai/code/session_<this session's id>
    and one line on what the owner will see once merged (GitHub Pages updates in a few minutes:
    https://dmolloy98-stack-stack.github.io/Shardfall_TCG/).
 
-## "I merged it"
+## Merging
+
+1. Wait for the tests: `mcp__github__pull_request_read` with `method: "get_check_runs"`. While
+   they are still running, check again in a few minutes (`send_later`), not with `sleep`.
+2. All `success` → `mcp__github__merge_pull_request`, `merge_method: "merge"`.
+   Any failure → fix it and push, or tell the owner what is failing. Never merge a red PR.
+3. Tell the owner in one or two lines that it is merged and live on GitHub Pages in a few minutes.
+4. Then do the after-merge steps below.
+
+## After a merge (by Claude or the owner)
 
 ```bash
 git fetch origin main && git checkout -B <branch> origin/main && git push --force-with-lease -u origin <branch>
