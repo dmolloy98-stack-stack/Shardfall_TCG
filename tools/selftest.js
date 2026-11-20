@@ -8,6 +8,8 @@
 // The same seeds always replay the same games, so add a file name as a last argument to
 // save one line per game, run it again after a change, and compare the two files: if they
 // match, the change did not alter how the game plays.
+// SELFTEST_DECK=<DeckID> plays only the games where that deck goes first (tools/winrates.js uses it
+// to play the decks side by side); each game is still the same game.
 const fs=require('fs');const dir=process.argv[2];const mode=process.argv[3]||'ai';const N=+process.argv[4]||6;
 eval(fs.readFileSync(dir+'/js/data.js','utf8')+';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));'+['engine','rules-champions','rules-events','rules-shard','effects','champions','ai'].map(f=>fs.readFileSync(dir+'/js/'+f+'.js','utf8')).join('\n')+`
 const decks=DATA.deckOrder.filter(id=>DATA.decks[id].isPlayable);
@@ -39,7 +41,7 @@ function replayCheck(tag){
   S=saved; listeners=keep;
 }
 if("${mode}"==="ai"){
-  for(const a of decks)for(const b of decks)for(let g=0;g<${N};g++){
+  for(const a of decks)for(const b of decks)for(let g=0;g<${N};g++){ if(${JSON.stringify(process.env.SELFTEST_DECK||'')}&&a!==${JSON.stringify(process.env.SELFTEST_DECK||'')}) continue;
     const seed=1000+g*7+decks.indexOf(a)*100+decks.indexOf(b)*10;
     const fullLog=[]; listeners=[]; onGameEvent((t,d)=>{ if(t==="log") fullLog.push(d.msg); });
     newGame({deckId:a,opponentDeckId:b,mode:'ai',seed}); S.players[0].isAI=true;

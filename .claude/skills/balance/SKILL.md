@@ -12,8 +12,9 @@ description: >
 ## The tool
 
 ```bash
-node tools/winrates.js 10            # quick read (about 2 minutes)
-node tools/winrates.js 50            # solid read (about 11 minutes; run in the background)
+node tools/winrates.js 10            # quick read (under a minute: the decks play side by side)
+node tools/winrates.js 50            # solid read (about 4 minutes; run in the background)
+node tools/winrates.js 20 --check    # what GitHub runs on every pull request: warns outside 40-60%
 node tools/winrates.js 50 --pairs    # also every pairing
 ```
 

@@ -109,7 +109,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/make-glass.js` | Redraws the stained-glass window behind the Stained Glass board into `css/style.css`: `node tools/make-glass.js` |
 | `tools/make-crystal.js` | Redraws the long glowing cracks across the Shattered Crystal board into `css/style.css`: `node tools/make-crystal.js` |
 | `tools/browser-check.js` | Opens the game in a test browser at desktop and phone size, plays a few rounds, saves screenshots and checks the text is readable: `node tools/browser-check.js <folder>` (needs Node.js and Playwright) |
-| `tools/winrates.js` | Plays every starter deck against every other and prints win rates and game length: `node tools/winrates.js 50` |
+| `tools/winrates.js` | Plays every starter deck against every other (the decks side by side, using every processor) and prints win rates and game length: `node tools/winrates.js 50`. With `--check` it warns about a deck outside 40–60%; GitHub runs that on every pull request |
 | `tools/speed-check.js` | Measures how smoothly the game runs on a slowed-down computer (like a phone), with Heavy effects on and off: `node tools/speed-check.js` |
 | `tools/readability.js` | Used by the browser check: finds text that is too small, overlapping or cut off |
 | `tools/drive-bundle.js` | Makes the one-file Google Drive backups: the changes of a pull request, or a full snapshot |

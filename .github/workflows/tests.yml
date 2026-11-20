@@ -16,3 +16,19 @@ jobs:
         with:
           node-version: 22
       - run: node tools/test-all.js
+
+  # Balance check on pull requests: the computer plays every starter deck against every other and
+  # a warning appears on the pull request if a deck wins less than 40% or more than 60%. A warning
+  # never turns the pull request red; the win rates are on the run's summary page.
+  balance:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: |
+          node tools/winrates.js 20 --check | tee winrates.txt
+          { echo '### Balance (20 games per pairing)'; echo '```'; cat winrates.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
