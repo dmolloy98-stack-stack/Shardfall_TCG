@@ -59,8 +59,7 @@ function evaluate(me) {
   let score = fieldValue(mine) * st.board + mine.health * 1.2
     - fieldValue(theirs) - theirs.health * 1.2 * st.face
     + mine.hand.length * st.hand;
-  // The big shard: damage dealt to it is a small step toward claiming it (see "The big shard fall"
-  // in js/engine.js), and claiming it is worth SHARD_CLAIM on top of what it changes on the board.
+  // The big shard: damage dealt to it is a small step toward claiming it (see js/rules-shard.js), and claiming it is worth SHARD_CLAIM on top of what it changes on the board.
   if (S.shardFell) score += (S.shardChip[me] - S.shardChip[1 - me]) * SHARD_CHIP;   // kept after the break, so breaking it never looks like a loss
   if (S.shardBy != null) score += S.shardBy === me ? SHARD_CLAIM : -SHARD_CLAIM;
   // Danger: the other side's attackers could finish me next turn and nothing guards me.

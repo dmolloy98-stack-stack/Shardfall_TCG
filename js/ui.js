@@ -180,7 +180,7 @@ function crystalSVG(cls, cracks = 0) {
   return `<svg class="${cls}" viewBox="0 0 40 48" aria-hidden="true"><path class="c-body" d="${CRYSTAL}"/><path class="c-shine" d="${CRYSTAL}"/><path class="c-facet" d="${CRYSTAL_FACETS}"/>${CRACKS.slice(0, cracks).map(d => `<path class="c-crack" d="${d}"/>`).join("")}</svg>`;
 }
 
-// The big shard ("The big shard fall" in js/engine.js): a tall crystal in the middle band, left of
+// The big shard (js/rules-shard.js): a tall crystal in the middle band, left of
 // the phases, glowing purple, blue and green. It cracks more as it loses health. When it lands, the
 // table cracks open from that spot and stays cracked, glowing, for the rest of the match.
 const SHARD_AT = { x: 365, y: 398 };
@@ -236,16 +236,9 @@ function showShard() {
     <p class="sub">${sh.health} of ${sh.max} health</p>
     <p>It fell into the middle of the table in round ${RULES.shardRound}. In your Battle phase, any of your characters can attack it. It never hits back, and Challenge and Tower don't protect it. Spells can't touch it.</p>
     <p>Its health is shared. <b>Whoever deals the blow that breaks it claims it</b>: you draw ${RULES.shardDraw === 1 ? "a card" : RULES.shardDraw + " cards"} and get your champion's shard bonus. A deck with no champion draws ${RULES.shardDrawNoChamp} cards instead.</p>
-    <ul>${Object.keys(SHARD_BONUS).filter(id => DATA.cardsById[id]).map(id => `<li><b>${esc(DATA.cardsById[id].name)}</b>: ${esc(SHARD_BONUS_TEXT[id])}</li>`).join("")}</ul>
+    <ul>${Object.keys(CHAMPION_RULES).filter(id => DATA.cardsById[id] && CHAMPION_RULES[id].shardText).map(id => `<li><b>${esc(DATA.cardsById[id].name)}</b>: ${esc(CHAMPION_RULES[id].shardText)}</li>`).join("")}</ul>
     <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
 }
-const SHARD_BONUS_TEXT = {
-  the_simplistic: "all your characters are fully healed.",
-  the_man_ape: "a free 2/2 Monkey (a Chimp with +1 Attack).",
-  ip_man: "your strongest character gets Swift for the rest of the match.",
-  boss_level: "Boss Level jumps to its next phase.",
-  soul_shepard: "your last fallen character comes back to your hand.",
-};
 
 // ---------------------------------------------------------------------------
 // Board rendering
@@ -257,15 +250,15 @@ function lifeTier(p) {
   const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
   return { ratio, cls: LIFE_TIERS.find(t => ratio >= t.min).cls };
 }
-// A champion's ability (data/champion_abilities.csv, "Champion abilities" in js/engine.js): its name,
+// A champion's ability (data/champion_abilities.csv, js/rules-champions.js): its name,
 // level and progress toward leveling up, shown under the player's name. Tap it for the details.
 function champInfo(p) {
   const ch = p.champ;
   if (!ch) return null;
   const info = DATA.championAbilities[ch.id];
-  const grows = !info.goal;   // no levels: Chest Thump, Boss Phases, Soul Shepard (see champStatus in js/engine.js)
+  const grows = !info.goal;   // no levels: Chest Thump, Boss Phases, Soul Shepard (see champStatus in js/rules-champions.js)
   if (grows) { const st = champStatus(p); return { info, ch, grows, progress: st.text, lit: st.lit, label: info.name }; }
-  const n = ch.id === "the_simplistic" ? p.manaMax : ch.n;
+  const n = champCount(p);
   const progress = ch.level >= 2 ? "Leveled up" : `${Math.min(n, info.goal)}/${info.goal} ${info.counts.toLowerCase()}`;
   return { info, ch, n, grows, progress, lit: ch.level >= 2, label: `${info.name} · Lv ${ch.level}` };
 }

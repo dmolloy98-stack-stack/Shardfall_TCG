@@ -148,7 +148,7 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
 2. **Built (20 Nov).** **One front door for moves.** Taps, the computer and the tutorial all send moves through one
    entrance into the rules; a friend's moves online will use it too.
 3. **A written plan for hidden cards online**, so a browser can't peek at the other hand.
-4. **Champions, events and shard bonuses in their own files**, so a new one is "add a file".
+4. **Built (20 Nov).** **Champions, events and shard bonuses in their own files**, so a new one is "add a file".
 5. **More words in the card ability language**, so fewer future cards need custom code.
 6. **Built (20 Nov).** **A test that plays every card at least once.**
 7. **Built (20 Nov).** **A version number on saved progress**, with an upgrade step for old saves.

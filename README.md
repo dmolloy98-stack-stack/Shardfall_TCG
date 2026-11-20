@@ -71,6 +71,9 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `data/*.csv` | Cards, decks, skills and rules (see above) |
 | `js/data.js` | Loads and checks the CSV files, then starts the game |
 | `js/saves.js` | Everything saved in the browser: the list of saved items, the save version and its upgrade steps, and the save code (Settings → Save code) that copies progress to another device. Loaded first |
+| `js/rules-champions.js` | Champion abilities: one entry per champion saying what it does at each moment (turn start, battle, fights, damage, the big shard). A new champion is a new entry |
+| `js/rules-events.js` | The random events (mini shard falls): when they come and what each does |
+| `js/rules-shard.js` | The big shard fall in round 8: attacking it and claiming it |
 | `js/engine.js` | Game rules: turns, combat, skills. Every move comes in through one front door and is written down as a short note; with the match seed (shown in the game log) the notes replay a match exactly |
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
 | `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |

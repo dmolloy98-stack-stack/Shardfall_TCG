@@ -32,6 +32,11 @@ flowchart LR
   motion --> screen
 ```
 
+The rules are split over four files: `js/engine.js` (the core), and beside it
+`js/rules-champions.js` (one entry per champion), `js/rules-events.js` (the mini shard falls) and
+`js/rules-shard.js` (the big shard). The core never names a champion: it asks the player's
+champion whether it does something at this moment (`champHook()`).
+
 Because the engine never draws, the computer can copy `S`, try a move on the copy
 (`simulate()`), and throw the copy away. It does this to plan a whole turn: it tries its best
 few plays, then the best few follow-ups to each, and takes the first step of the best line.
@@ -192,10 +197,10 @@ their own story or coaching, then hand over to the same engine.
 | Deck-building rules | `js/decks.js` and `data/game_rules.csv` |
 | Hint wording and settings | `js/help.js` |
 | The Protected rule (half damage to a player with 3+ characters) or the Pierce and Protected skills | `protected_min_characters` in `data/game_rules.csv`; `isProtected()` and `dealDamageToPlayer()` in `js/engine.js`; the plate line `protLine()`, the shard shell on the health gem (`WARD`, `wardHTML()`, `wardHit()`, `wardBreak()`) and the rune ring on Protected cards (`RUNES`, `runeRingHTML()`, `.rune-ring`) in `js/ui.js` and `css/style.css`; the Almanac box `protectedRuleHTML()` in `js/menu.js` |
-| A champion's ability or when it levels up | the words and the goal number in `data/champion_abilities.csv`; what each does is the "Champion abilities" section of `js/engine.js` (`championBonus`, `chestThump`, `bossPhaseCheck`); the line under the player's name is `champLine()` in `js/ui.js`, with the text for abilities without levels from `champStatus()` in `js/engine.js` |
-| The Almanac's Champions tab (the full explanation and pictures of each ability) | `CHAMP_GUIDE` and `championsHTML()` in `js/menu.js`; keep its notes and numbers in step with the rules in `js/engine.js` |
-| The big shard fall (round 8, once a match) | the numbers in `data/game_rules.csv` (`shard_round`, `shard_health`, `shard_draw`, `shard_draw_no_champion`); the rules, including each champion's `SHARD_BONUS`, are "The big shard fall" in `js/engine.js` (`shardFall`, `hitShard`, `claimShard`; an attack on it is `attack(uid, "shard")`); the computer's interest in it is `SHARD_CHIP` in `js/ai.js`; the crystal, the cracked table and the info window are `shardHTML()`, `scarHTML()` and `showShard()` in `js/ui.js`, styled at the end of `css/style.css`; test: `tools/shard-test.js` |
-| A random event (a mini shard fall in rounds 4 and 12, one round long) | names and descriptions in `data/events.csv`; what each does is `EVENT_ON_START` and `eventNow()` in `js/engine.js`, with the cost and area-bonus effects in `costFromEffect` and `auraBonus` in `js/effects.js`; the warning card is `eventPill()` in `js/ui.js` |
+| A champion's ability or when it levels up | the words and the goal number in `data/champion_abilities.csv`; what each does is its entry in `CHAMPION_RULES` in `js/rules-champions.js` (one entry per champion; the top of that file lists the moments an entry can use, and the engine asks for them with `champHook()`); the line under the player's name is `champLine()` in `js/ui.js`, with the text from each entry's `status` or `count` |
+| The Almanac's Champions tab (the full explanation and pictures of each ability) | `CHAMP_GUIDE` and `championsHTML()` in `js/menu.js`; keep its notes and numbers in step with the rules in `js/rules-champions.js` |
+| The big shard fall (round 8, once a match) | the numbers in `data/game_rules.csv` (`shard_round`, `shard_health`, `shard_draw`, `shard_draw_no_champion`); the rules are `js/rules-shard.js` (`shardFall`, `hitShard`, `claimShard`; each champion's bonus is the `shard` and `shardText` of its entry in `js/rules-champions.js`; an attack on it is `attack(uid, "shard")`); the computer's interest in it is `SHARD_CHIP` in `js/ai.js`; the crystal, the cracked table and the info window are `shardHTML()`, `scarHTML()` and `showShard()` in `js/ui.js`, styled at the end of `css/style.css`; test: `tools/shard-test.js` |
+| A random event (a mini shard fall in rounds 4 and 12, one round long) | names and descriptions in `data/events.csv`; what each does is `EVENT_ON_START` and `eventNow()` in `js/rules-events.js` (the top of the file says how to add one), with the cost and area-bonus effects in `costFromEffect` and `auraBonus` in `js/effects.js`; the warning card is `eventPill()` in `js/ui.js` |
 | The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/style.css`; the list of skins is `SKINS` in `js/ui.js`; the long cracks are redrawn by `tools/make-crystal.js` |
 | The playable single-file copy | `tools/build-single.js` |
 | The "Something went wrong" window and its bug report | `showBugReport()` and `bugReport()` in `js/panels.js` (any uncaught error opens it once per visit); replay a report with `node tools/replay-report.js <file>` |
@@ -210,8 +215,8 @@ their own story or coaching, then hand over to the same engine.
 
 ## Size and shape
 
-About 7,400 lines of JavaScript in 21 files (November 2026). The largest are `js/engine.js` at
-about 1,350 and `js/ui.js` at about 1,130. The menu, the Almanac, the menu background and the
+About 7,500 lines of JavaScript in 24 files (November 2026). The largest are `js/engine.js` at
+about 1,230 and `js/ui.js` at about 1,110. The menu, the Almanac, the menu background and the
 start-up code used to live in `ui.js`; they are now `menu.js`, `storm.js` and `boot.js`. In
 November 2026 the card drawing (`cards.js`), the table effects (`table-effects.js`) and the pop-up
 windows and Settings (`panels.js`) moved out of it too. The scripts

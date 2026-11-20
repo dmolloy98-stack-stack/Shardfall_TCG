@@ -5,7 +5,7 @@
 // and then starts the game scripts.
 
 const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events", "champion_abilities"];
-const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
+const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/rules-champions.js", "js/rules-events.js", "js/rules-shard.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
 let DATA = null;
 
 // Parsing (port of the DATA.load* functions in main.lua)
@@ -49,12 +49,12 @@ function buildData(CSV) {
   for (const [id, text] of csvRows(CSV.ui_text)) uiText[id] = text || "";
 
   // Random events (data/events.csv): what each one is called and how it is described to players.
-  // What an event does is written in js/engine.js, keyed by its EventID.
+  // What an event does is written in js/rules-events.js, keyed by its EventID.
   const events = {};
   const eventOrder = [];
   for (const c of csvRows(CSV.events || "")) { events[c[0]] = { id: c[0], name: c[1], desc: c[2] || "" }; eventOrder.push(c[0]); }
 
-  // Champion abilities (data/champion_abilities.csv): the wording shown to players. What each one does is in js/engine.js.
+  // Champion abilities (data/champion_abilities.csv): the wording shown to players. What each one does is in js/rules-champions.js.
   const championAbilities = {};
   for (const c of csvRows(CSV.champion_abilities || "")) championAbilities[c[0]] = { id: c[0], name: c[1], now: c[2] || "", when: c[3] || "", then: c[4] || "", goal: Number(c[5]) || 0, counts: c[6] || "" };
 

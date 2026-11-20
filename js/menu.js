@@ -102,7 +102,7 @@ $("#alm-back").addEventListener("click", () => showScreen(U.almanacReturn === "g
 // The Almanac's Champions tab: every champion's ability explained in full, with pictures drawn by
 // the game itself (real cards and the real status line), so they always match the current look.
 // The words come from data/champion_abilities.csv. The notes and the before-and-after examples
-// are here; keep their numbers in step with "Champion abilities" in js/engine.js.
+// are here; keep their numbers in step with js/rules-champions.js.
 //   status   sample status lines, as they show under a player's name
 //   pairs    before -> after pictures: a card (pick: which card; change: what the ability changes)
 //            or two short labels (from, to), each with a caption

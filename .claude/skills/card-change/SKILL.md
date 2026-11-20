@@ -20,7 +20,7 @@ ask or offer options first.
   non-character, `N/A` for no fracture.
 - **Ability** is the text players read; **Effect** names the code that makes it work: an entry
   in `EFFECTS` in `js/effects.js` (target, intent, filter, apply). Champion abilities are in
-  `data/champion_abilities.csv` and "Champion abilities" in `js/engine.js`. Skills (Rush,
+  `data/champion_abilities.csv` and `CHAMPION_RULES` in `js/rules-champions.js`. Skills (Rush,
   Swift, Rally, Protected, Pierce…) are in `data/skills.csv` and the engine.
 - Decks: `data/decks.csv` (`CardID:copies|…`). Deck rules: `data/game_rules.csv`.
 - If the computer needs to understand a new effect (to use it well), check `js/ai.js`; the

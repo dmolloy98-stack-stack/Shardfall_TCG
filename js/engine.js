@@ -416,7 +416,7 @@ function dealDamageToPlayer(p, amount, source) {
   p.health = Math.max(0, p.health - amount);
   emit("playerDamage", { player: p.idx, amount });
   checkHealthWin();
-  bossPhaseCheck(p);
+  champHook(p, "hurt");   // e.g. Boss Phases
 }
 
 function healPlayer(p, amount) {
@@ -671,7 +671,7 @@ function startTurn(p) {
   p.manaMax += RULES.manaGrowth;
   p.mana = p.manaMax;
   p.hasDrawn = false;
-  if (champOf(p, "the_simplistic")) { p.champ.n = p.manaMax; if (p.champ.n >= DATA.championAbilities.the_simplistic.goal) champLevelUp(p); }   // Humble Beginnings
+  champHook(p, "turnStart");   // e.g. Humble Beginnings (js/rules-champions.js)
   for (const c of p.field.chars) {
     c.hasAttacked = false;
     c.attackedThisTurn = false;
@@ -766,238 +766,6 @@ function campaignChampion(foe, name) {
     shuffle(foe.deck);
   }
   S.log.push(`${name} challenges ${S.players[0].name}.`);
-}
-
-// ---------------------------------------------------------------------------
-// Champion abilities
-// ---------------------------------------------------------------------------
-// A deck that holds a champion (an Unknown card with a row in data/champion_abilities.csv) gets that
-// champion's ability from turn one, whether or not the champion card has been drawn. Every ability
-// is always on. Two level up once in a match (a Goal in the csv); Boss Level moves through phases.
-// Progress lives in p.champ = { id, level, n } (for Boss Level, level is the phase: 1, 2 or 3).
-// The wording players read is in data/champion_abilities.csv; what each one does is here:
-//   the_simplistic  Humble Beginnings: nothing at first; at max mana 6 every Simple character gets +1/+1
-//                   (startTurn, championBonus)
-//   the_man_ape     Chest Thump: while you have more characters than your opponent, your characters
-//                   get +1 Attack on your turn (championBonus, chestThump)
-//   ip_man          The Bow: at the start of Battle the strongest ready attacker gets +2 Attack (ipBow);
-//                   after 5 fights won, two get it
-//   boss_level      Boss Phases: at 2/3 health or less PHASE 2 (draw 1 extra card each turn, doDraw); at
-//                   1/3 or less FINAL PHASE (also +1/+1 for all its characters, championBonus).
-//                   A phase, once reached, stays (bossPhaseCheck)
-//   Soul Shepard    "rule: grieve Undead" on the card: +1 Health for every Undead that dies (championBonus)
-// Each champion also has a bonus for claiming the big shard (SHARD_BONUS, "The big shard fall").
-const champOf = (p, id) => (p && p.champ && p.champ.id === id ? p.champ : null);
-
-function champLevelUp(p) {
-  const ch = p.champ;
-  if (!ch || ch.level >= 2) return;
-  ch.level = 2;
-  const info = DATA.championAbilities[ch.id];
-  log(`${p.name}'s ${info.name} levels up. ${info.then}`);
-  emit("champLevel", { player: p.idx, id: ch.id });
-}
-// Add to a champion's progress counter; at its goal the ability levels up.
-function champProgress(p, add) {
-  const ch = p.champ;
-  if (!ch || ch.level >= 2) return;
-  ch.n += add;
-  if (ch.n >= DATA.championAbilities[ch.id].goal) champLevelUp(p);
-}
-
-// Extra Attack and Health a character gets from its owner's champion ability, and from its own
-// "rule: grieve <Kind>" (Soul Shepard: Undead, a fracture).
-function championBonus(c) {
-  let a = 0, h = 0;
-  if (c.type !== "Character") return { a, h };
-  const p = S.players[c.owner], ch = p && p.champ;
-  if (ch) {
-    if (ch.id === "the_simplistic" && ch.level >= 2 && inGroup(c, "Simple")) { a += 1; h += 1; }
-    else if (ch.id === "the_man_ape" && S.active === c.owner && chestThump(p)) a += 1;
-    else if (ch.id === "boss_level" && ch.level >= 3) { a += 1; h += 1; }
-  }
-  a += c.bow || 0;   // The Bow, this turn
-  h += grieveBonus(c);
-  return { a, h };
-}
-// "rule: grieve <Kind>": Health gained from every character of that fracture or tribe that has died. Counted
-// from the start of the match, so it is already there when the card is still in the hand.
-function grieveBonus(c) {
-  const r = S && cardRule(c, "grieve");
-  return r ? S.died[r[0]] || 0 : 0;
-}
-
-// Chest Thump (The Man Ape): on, while this player has more characters than the opponent.
-function chestThump(p) {
-  return !!champOf(p, "the_man_ape") && p.field.chars.length > S.players[1 - p.idx].field.chars.length;
-}
-
-// What an ability with no levels shows under the player's name, and whether it is "lit" (working
-// right now, or in a later phase).
-function champStatus(p) {
-  const ch = p.champ, foe = S.players[1 - p.idx];
-  if (ch.id === "the_man_ape") return { text: `${p.field.chars.length} vs ${foe.field.chars.length} characters${chestThump(p) ? " · +1 Attack" : ""}`, lit: chestThump(p) };
-  if (ch.id === "boss_level") return { text: ch.level >= 3 ? "Final phase" : `Phase ${ch.level}`, lit: ch.level >= 2 };
-  return { text: `${S.died.Undead || 0} undead fallen`, lit: false };   // Soul Shepard
-}
-
-// Boss Phases (Boss Level): the phase this player's health has reached. 2/3 of the starting
-// health or less is PHASE 2, 1/3 or less is FINAL PHASE. Phases never go back down.
-const BOSS_PHASES = ["", "PHASE 1", "PHASE 2", "FINAL PHASE"];
-function bossPhaseCheck(p) {
-  const ch = champOf(p, "boss_level");
-  if (!ch || S.over) return;
-  const want = p.health <= p.maxHealth / 3 ? 3 : p.health <= p.maxHealth * 2 / 3 ? 2 : 1;
-  if (want > ch.level) bossPhase(p, want);
-}
-function bossPhase(p, phase) {
-  const ch = champOf(p, "boss_level");
-  if (!ch || phase <= ch.level) return;
-  ch.level = Math.min(3, phase);
-  log(`${p.name}'s Boss Level enters ${BOSS_PHASES[ch.level]}: ${ch.level >= 3 ? "its characters get +1 Attack and +1 Health, and it draws 1 extra card each turn" : "it draws 1 extra card each turn"}.`);
-  emit("champPhase", { player: p.idx, id: ch.id, phase: ch.level });
-}
-
-// The Bow (IP Man): at the start of your Battle phase your strongest ready attacker, or two once
-// the ability has leveled up, gets +2 Attack until the end of the turn.
-function ipBow(p) {
-  const ch = champOf(p, "ip_man");
-  if (!ch) return;
-  const ready = p.field.chars.filter(canAttack).sort((x, y) => stats(y).a - stats(x).a || x.uid - y.uid).slice(0, ch.level >= 2 ? 2 : 1);
-  for (const c of ready) { c.bow = 2; emit("text", { uid: c.uid, text: "THE BOW +2", color: "#ffd27a" }); }
-  if (ready.length) log(`${p.name} bows: ${ready.map(c => c.name).join(" and ")} gets +2 Attack this turn.`);
-}
-
-// ---------------------------------------------------------------------------
-// Random events
-// ---------------------------------------------------------------------------
-// On the rounds in RULES.eventRounds (4 and 12; a round is one player's turn) a random event, a small
-// shard fall, hits the board for both players and lasts that one round. The next event is chosen and
-// announced RULES.eventWarn rounds ahead, so each player gets a turn to plan for it. The big shard
-// fall in round 8 is separate: see "The big shard fall" below.
-// What each event is called and how it is described is in data/events.csv; what it does is here.
-const eventNow = id => !!S.event && S.event.id === id;   // used by costFromEffect and auraBonus in js/effects.js
-const EVENT_ON_START = {
-  tremor() { for (const c of allChars().slice()) if (ownerOf(c).field.chars.includes(c)) dealDamageToCharacter(c, 1); },
-  windfall() { for (const p of S.players) if (p.deck.length && p.hand.length < RULES.maxHand) drawCard(p); },   // a full hand or empty deck is skipped, never punished
-};
-// spell_surge (js/effects.js costFromEffect) and amplified_areas (auraBonus) work while the event lasts.
-const EVENT_IDS = ["spell_surge", "tremor", "windfall", "amplified_areas"];
-
-// The next event round from round r on (r itself counts), or Infinity when none is left.
-const nextEventRound = r => RULES.eventRounds.find(x => x >= r) ?? Infinity;
-
-function updateEvent() {
-  if (!RULES.eventRounds.length || S.noEvents || S.over) return;
-  const known = (DATA.eventOrder || []).filter(id => EVENT_IDS.includes(id));
-  if (!known.length) return;
-  const r = S.round;
-  if (S.event && S.event.round < r) {
-    const gone = S.event; S.event = null;
-    log(`${DATA.events[gone.id].name} is over.`);
-    emit("eventEnd", { id: gone.id });
-    if (gone.id === "amplified_areas") sweepDeaths();   // bonuses that doubled are gone again
-  }
-  const at = nextEventRound(r + (S.event ? 1 : 0));
-  if (!S.upcoming && at - r <= RULES.eventWarn) {
-    const pool = known.filter(id => id !== S.lastEvent);
-    const choices = pool.length ? pool : known;
-    const id = choices[Math.floor(rand() * choices.length)];
-    S.upcoming = { id, round: at };
-    S.lastEvent = id;
-    log(`A mini shard fall is coming in round ${at}: ${DATA.events[id].name}. ${DATA.events[id].desc}`);
-    emit("eventWarn", { id, round: at });
-  }
-  if (S.upcoming && S.upcoming.round === r) {
-    S.event = S.upcoming; S.upcoming = null;
-    log(`MINI SHARD FALL: ${DATA.events[S.event.id].name}. ${DATA.events[S.event.id].desc}`);
-    emit("eventStart", { id: S.event.id });
-    EVENT_ON_START[S.event.id]?.();
-  }
-}
-
-// ---------------------------------------------------------------------------
-// The big shard fall
-// ---------------------------------------------------------------------------
-// Once a match, at the start of round RULES.shardRound (8), a big shard crashes into the middle of
-// the table with RULES.shardHealth (10) health: S.shard = { health, max }. In Battle, characters
-// can attack it like a target (attack(uid, "shard")): it never hits back, Challenge and Tower don't
-// guard it, and spells can't touch it. Its health is shared, so whoever deals the blow that breaks
-// it claims it: they draw RULES.shardDraw card and get their champion's shard bonus below, or draw
-// RULES.shardDrawNoChamp cards with a deck that has no champion. An empty deck is never drawn
-// from here (it would lose the match), and a full hand burns the card as usual. The table
-// stays cracked for the rest of the match (S.shardFell). S.shardChip counts the damage each player
-// has dealt to it (the computer uses it, see evaluate in js/ai.js).
-const SHARD_BONUS = {
-  the_simplistic(p) {   // back to how it was: every character is fully healed
-    for (const c of p.field.chars) healFully(c);
-    return "all its characters are fully healed";
-  },
-  the_man_ape(p) {   // a free 2/2 Monkey: a Chimp (1/2) with +1 Attack
-    const c = newCard(DATA.cardsById.chimp);
-    c.owner = p.idx;
-    if (!putOnField(c, p)) return "";
-    c.attack += 1; c.baseAttack += 1;
-    emit("text", { uid: c.uid, text: "+1 ATTACK", color: "#ffd27a" });
-    return `a 2/2 ${c.name} joins its side`;
-  },
-  ip_man(p) {   // its strongest character gets Swift for the rest of the match
-    const c = p.field.chars.slice().sort((x, y) => stats(y).a - stats(x).a || x.uid - y.uid)[0];
-    if (!c) return "";
-    if (!hasSkill(c, "Swift")) c.skills.push("Swift");
-    emit("text", { uid: c.uid, text: "» SWIFT", color: "#9fe7ff" });
-    return `${c.name} gets Swift for the rest of the match`;
-  },
-  boss_level(p) {   // straight to the next phase
-    const ch = p.champ;
-    if (ch.level >= 3) return "";
-    bossPhase(p, ch.level + 1);
-    return `Boss Level jumps to ${BOSS_PHASES[ch.level]}`;
-  },
-  soul_shepard(p) {   // its last fallen character comes back to the hand
-    const i = p.grave.map(c => c.type).lastIndexOf("Character");
-    if (i < 0) return "";
-    const dead = p.grave.splice(i, 1)[0];
-    const c = newCard(DATA.cardsById[dead.id] || dead);
-    c.owner = p.idx;
-    if (!addToHand(p, c)) return "";   // a full hand: it goes back to the graveyard
-    return `${c.name} returns to its hand from the graveyard`;
-  },
-};
-
-function shardFall() {
-  if (!RULES.shardRound || S.noShard || S.over || S.shardFell || S.round !== RULES.shardRound) return;
-  S.shardFell = true;
-  S.shard = { health: RULES.shardHealth, max: RULES.shardHealth };
-  S.shardChip = [0, 0];
-  log(`THE BIG SHARD FALLS. It crashes into the middle of the table with ${RULES.shardHealth} health. Whoever breaks it claims it.`);
-  emit("shardFall", {});
-}
-
-// A character hits the shard. Returns true if that blow broke it.
-function hitShard(a, amount) {
-  const p = ownerOf(a);
-  const dealt = Math.min(amount, S.shard.health);
-  S.shard.health -= dealt;
-  S.shardChip[p.idx] += dealt;
-  emit("shardHit", { uid: a.uid, amount: dealt });
-  log(`${a.name} hits the big shard for ${dealt}${S.shard.health > 0 ? ` (${S.shard.health} left)` : ""}.`);
-  if (S.shard.health > 0) return false;
-  claimShard(p);
-  return true;
-}
-
-function claimShard(p) {
-  S.shard = null;
-  const bonus = p.champ ? SHARD_BONUS[p.champ.id] : null;
-  const n = bonus ? RULES.shardDraw : RULES.shardDrawNoChamp;
-  let drawn = 0;
-  for (let k = 0; k < n && p.deck.length; k++) { drawCard(p); drawn++; }
-  const extra = bonus ? bonus(p) : "";
-  const got = drawn ? `${drawn} card${drawn > 1 ? "s" : ""}` : "no card (the deck is empty)";
-  log(`${p.name} breaks the big shard and claims it: ${got}${extra ? `, and ${extra}` : ""}.`);
-  emit("shardClaim", { player: p.idx, drawn, extra });
-  S.shardBy = p.idx;
 }
 
 // ---------------------------------------------------------------------------
@@ -1298,7 +1066,7 @@ function attack(attackerUid, targetUid) {
   emit("lunge", { uid: a.uid, target: target ? target.uid : null, player: defender.idx });
   runHook(a, "attack", { owner: p });
   const as = stats(a);
-  if (chestThump(p)) emit("text", { uid: a.uid, text: "CHEST THUMP +1", color: "#ffd27a" });
+  champHook(p, "attacking", a);   // e.g. Chest Thump shows its +1
   if (!target) {
     log(`${a.name} attacks ${defender.name} for ${as.a}.`);
     dealDamageToPlayer(defender, as.a, a);
@@ -1335,9 +1103,9 @@ function attack(attackerUid, targetUid) {
   }
   if (first && alive(first) && !alive(first === a ? target : a)) emit("text", { uid: first.uid, text: "» NO REPLY", color: "#9fe7ff" });
   recordCombatSurvival(a); recordCombatSurvival(target);
-  // IP Man's deck counts the fights it wins: its character lives and the enemy character is knocked out.
-  if (alive(a) && !alive(target)) { if (champOf(p, "ip_man")) champProgress(p, 1); }
-  else if (alive(target) && !alive(a)) { if (champOf(defender, "ip_man")) champProgress(defender, 1); }
+  // A fight won: its character lives and the enemy character is knocked out (IP Man counts these).
+  if (alive(a) && !alive(target)) champHook(p, "fightWon");
+  else if (alive(target) && !alive(a)) champHook(defender, "fightWon");
   return true;
 }
 
@@ -1402,7 +1170,7 @@ function drawStep() {
   if (S.phase !== PHASE.DRAW || S.over) return false;
   const c = drawCard(p);
   if (!c) return true;   // an empty deck: the draw happened, and its player lost (deckOut)
-  if (champOf(p, "boss_level")?.level >= 2 && !S.over) drawCard(p);   // Boss Phases: 1 extra card
+  for (let k = champHook(p, "extraDraws") || 0; k > 0 && !S.over; k--) drawCard(p);   // e.g. Boss Phases: 1 extra card
   p.hasDrawn = true;
   S.phase = PHASE.SETUP;
   emit("phase", {});
@@ -1415,7 +1183,7 @@ function advancePhase() {
   const leavingBattle = S.phase === PHASE.BATTLE;
   if (S.phase < PHASE.END) S.phase++;
   emit("phase", {});
-  if (S.phase === PHASE.BATTLE) ipBow(active());
+  if (S.phase === PHASE.BATTLE) champHook(active(), "battleStart");   // e.g. The Bow
   if (leavingBattle) afterBattle(active());
   return true;
 }

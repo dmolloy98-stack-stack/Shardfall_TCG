@@ -7,7 +7,7 @@ const fs = require('fs');
 // turns so its other abilities (end of turn, attacks, deaths) get a chance to run.
 // It fails on a crash, a card that can't be played, or a broken table (see check()).
 const dir = process.argv[2] || '.';
-eval(fs.readFileSync(dir + '/js/data.js', 'utf8') + ';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' + ['engine', 'effects', 'champions', 'ai'].map(f => fs.readFileSync(dir + '/js/' + f + '.js', 'utf8')).join('\n') + `
+eval(fs.readFileSync(dir + '/js/data.js', 'utf8') + ';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' + ['engine', 'rules-champions', 'rules-events', 'rules-shard', 'effects', 'champions', 'ai'].map(f => fs.readFileSync(dir + '/js/' + f + '.js', 'utf8')).join('\n') + `
 let fails = 0, passes = 0;
 const bad = (card, why) => { console.log('FAIL ' + card.name + ' (' + card.id + '): ' + why); fails++; };
 const cards = Object.values(DATA.cardsById);
