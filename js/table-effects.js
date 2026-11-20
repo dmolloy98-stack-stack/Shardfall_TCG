@@ -8,7 +8,7 @@
 function floatText(x, y, text, color, small) {
   fxDiv("float" + (small ? " small" : ""), `left:${x}px;top:${y}px;color:${color}`, 1250).textContent = text;
 }
-// Random events (see "Random events" in js/engine.js): a small card in the middle of the table
+// Random events (see js/rules-events.js): a small card in the middle of the table
 // that says what is coming, how soon, and what it does. During the event round it says "This round".
 // The random events are the small shard falls; the big one in round 8 shows here too when it is close.
 function eventLine() {

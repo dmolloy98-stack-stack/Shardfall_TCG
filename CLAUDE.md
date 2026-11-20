@@ -55,8 +55,9 @@ builds it, tests it, and explains it.
 ## Before saying something works
 
 - `node tools/test-all.js` must end with `EVERYTHING PASSED` (GitHub runs it too). The play
-  fingerprint (currently 1506290345 for `ai 2`, in `EXPECTED` in `tools/test-all.js`) changes only
-  when play is meant to change; then update both places and say so. Which focused test covers
+  fingerprint (currently 1727378807 for `ai 2`, in `EXPECTED` in `tools/test-all.js`) changes only
+  when play is meant to change; then update both places, re-record the matches
+  (`node tools/replay-test.js . --update`) and say so. Which focused test covers
   what: `add-feature` skill.
 - For anything on screen: `node tools/browser-check.js` at desktop and phone size, and look at a
   screenshot (`browser-check` skill).

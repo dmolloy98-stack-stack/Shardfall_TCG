@@ -15,7 +15,8 @@ added, split or renamed, or the flow between them changes.
 
 ## Where things go
 
-- **Rules** (`js/engine.js`, `js/effects.js`): no screen code, so `tools/selftest.js` can load
+- **Rules** (`js/engine.js`, `js/effects.js`, and `js/rules-champions.js`, `js/rules-events.js`,
+  `js/rules-shard.js` for champions, events and the big shard): no screen code, so `tools/selftest.js` can load
   them in Node. Game state is `S`; it must survive `structuredClone` (store owners as player
   indexes, no functions or DOM in `S`). `simulate()` runs moves on a clone with events muted,
   so the computer can think.
@@ -48,8 +49,10 @@ added, split or renamed, or the flow between them changes.
    (`js/ui.js`, "board clicks"), Settings uses `data-set="…"` and the game menu `data-m="…"` (both in `js/panels.js`).
    **Add a new branch; don't add a second handler or a second branch for an existing act.**
    (A duplicate branch once stopped played cards from being counted.)
-4. **Saved settings:** `PREFS.get(key, fallback)` / `PREFS.set(key, value)` (`js/help.js`; wrapped,
-   so private browsing can't crash it). Load into `U` with a default in the `U` object; add the
+4. **Saved settings:** `PREFS.get(key, fallback)` / `PREFS.set(key, value)` (`js/saves.js`; wrapped,
+   so private browsing can't crash it). Every new key goes in `SAVE_KEYS` there (the save code
+   carries it; `tools/saves-test.js` checks). Changing the form of something already saved means
+   raising `SAVE_VERSION` and adding an upgrade step in `SAVE_UPGRADES`. Load into `U` with a default in the `U` object; add the
    button to `showSettings()` with `aria-pressed` for on/off.
 5. **Heavy effects off** (`html.light-fx`, `applyHeavyFx()`): any **looping** animation must be
    added to the `html.light-fx … { animation: none }` list in `css/style.css`. One-time effects
@@ -61,7 +64,10 @@ added, split or renamed, or the flow between them changes.
    44 px on screen, readable text at phone size, nothing hidden behind iPhone notches
    (`env(safe-area-inset-*)`). Phones start with Heavy effects off.
 8. **Reduced motion:** respect `prefers-reduced-motion` for anything big that moves.
-9. **Match saving:** a match in progress survives live updates of the claude.ai page (`js/boot.js`
+9. **Moves go through the front door.** Anything a player does is `move(name, …)` (`MOVES` in
+   `js/engine.js`), never a direct call to `playCard()` and friends, and nothing outside a move
+   changes `S`. Otherwise recorded matches stop replaying (see "Moves" in `docs/code-map.md`).
+10. **Match saving:** a match in progress survives live updates of the claude.ai page (`js/boot.js`
    restores `S` over `baseState()`). New fields in `S` need a default in `baseState()`.
 
 ## Which focused test covers what
@@ -71,14 +77,18 @@ added, split or renamed, or the flow between them changes.
 | Area | Test |
 |---|---|
 | Tribes, classes, fractures and the cards that use them | `node tools/kinds-test.js .` |
-| Random events (`data/events.csv`, "Random events" in `js/engine.js`) | `node tools/events-test.js .` |
+| Random events (`data/events.csv`, `js/rules-events.js`) | `node tools/events-test.js .` |
 | The Protected rule, Pierce and Protected skills | `node tools/protected-test.js .` |
 | The big shard fall, champion shard bonuses | `node tools/shard-test.js .` |
 | Champion abilities and champion cards | `node tools/champions-test.js .` |
+| Every card played at least once (any card or effect change) | `node tools/cards-test.js .` |
+| Saving: listed keys, upgrades, the save code | `node tools/saves-test.js .` |
+| Recorded matches; which move first plays differently | `node tools/replay-test.js .` (`--update` when play is meant to change) |
 | Whole games, crashes, stuck states | `node tools/selftest.js . ai 2` and `. rand 300` (`"problems": {}`) |
 
 The selftest fingerprints (in `EXPECTED` at the top of `tools/test-all.js`, and the `ai 2` one in
-CLAUDE.md) only change when a change is meant to alter play; update both and say so.
+CLAUDE.md) only change when a change is meant to alter play; update both, re-record the matches
+(`node tools/replay-test.js . --update`), and say so.
 
 ## Before calling it done
 

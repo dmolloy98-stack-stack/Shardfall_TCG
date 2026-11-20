@@ -5,6 +5,11 @@
 // ---------------------------------------------------------------------------
 window.claude?.hot?.snapshot?.(() => ({ S: U.tutorial ? null : S, screen: U.screen, deckId: U.deckId, mode: U.mode }));
 window.shardfallStarted = true;
+// The offline helper (sw.js): keeps a copy of the game so it starts with no internet. Only on the
+// real site (or a test server on this computer), never in the one-file or claude.ai copies.
+if ("serviceWorker" in navigator && typeof EMBEDDED_FILES === "undefined" && /(^|\.)github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname)) {
+  navigator.serviceWorker.register("sw.js").catch(() => { /* no offline copy; the game works as usual */ });
+}
 function boot(saved) {
   if (saved?.deckId) U.deckId = saved.deckId;
   if (saved?.mode) U.mode = saved.mode;

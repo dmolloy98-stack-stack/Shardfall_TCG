@@ -101,8 +101,8 @@ function showChoose() {
     if (!opt) return;
     $("#modal-content").onclick = null;
     closeModal();
-    if (opt.dataset.opt === "__skip") act(() => resolveChoice([], null));
-    else act(() => resolveChoice([...picked], opt.dataset.opt));
+    if (opt.dataset.opt === "__skip") act(() => move("choose", [], null));
+    else act(() => move("choose", [...picked], opt.dataset.opt));
   };
 }
 
@@ -118,10 +118,85 @@ function showSettings() {
       <button type="button" class="btn" data-set="passcheck" aria-pressed="${U.passCheck}" title="Ask before you pass with mana and playable cards, or characters that can still attack">Ask before passing early: ${U.passCheck ? "On" : "Off"}</button>
       ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">Read the battle log</button>` : ""}
       ${U.screen === "menu" ? `<button type="button" class="btn" data-set="intro">Watch the intro</button>` : ""}
+      <button type="button" class="btn" data-set="savecode" title="Copy your progress to another device or browser">Save code: copy or load progress</button>
     </div>
     <div class="menu-skins"><h3>Board</h3><div class="skin-list compact">${skinButtons("data-skin")}</div></div>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-set="done">${U.screen === "game" ? "Back to the game menu" : "Done"}</button></div>`);
 }
+
+// Save code (js/saves.js): your progress and settings as one line of text, to carry them to
+// another device or browser, or to keep a copy.
+function showSaveCode() {
+  openModal(`<h2 id="modal-title">Save code</h2>
+    <p>Your progress and settings as one line of text: campaign, decks, trophies, card stories and Settings. Copy it and keep it somewhere safe, or paste it into Shardfall on another device to carry on there.</p>
+    <textarea id="save-code-out" class="save-code" readonly rows="3" aria-label="Your save code">${esc(exportSave())}</textarea>
+    <div class="detail-actions"><button type="button" class="btn" data-set="copycode">Copy my save code</button></div>
+    <h3>Load a save code</h3>
+    <p>Paste a code here. It replaces the progress and settings on this device.</p>
+    <textarea id="save-code-in" class="save-code" rows="3" aria-label="Save code to load" placeholder="SHARDFALL1:…"></textarea>
+    <p id="save-code-msg" class="save-code-msg" role="status"></p>
+    <div class="detail-actions"><button type="button" class="btn" data-set="loadcode">Load this code</button><button type="button" class="btn btn-primary" data-set="settings">Back to Settings</button></div>`);
+}
+function saveCodeMessage(text) { const m = byId("save-code-msg"); if (m) m.textContent = text; }
+async function copySaveCode() {
+  const box = byId("save-code-out");
+  try { await navigator.clipboard.writeText(box.value); }
+  catch { box.select(); try { document.execCommand("copy"); } catch { /* the code stays selected to copy by hand */ } }
+  saveCodeMessage("Copied. Keep it somewhere safe, like a note or an email to yourself.");
+}
+function loadSaveCode(btn) {
+  const code = byId("save-code-in").value;
+  const check = readSaveCode(code);
+  if (check.error) { saveCodeMessage(check.error); return; }
+  if (!btn.dataset.sure) {   // a second press confirms, since this replaces everything saved here
+    btn.dataset.sure = "1"; btn.textContent = "Yes, replace my progress";
+    saveCodeMessage("This replaces the progress and settings on this device. Press again to go ahead.");
+    return;
+  }
+  const error = importSave(code);
+  if (error) { saveCodeMessage(error); return; }
+  saveCodeMessage("Loaded. Shardfall is restarting…");
+  setTimeout(() => location.reload(), 700);
+}
+
+// ---------------------------------------------------------------------------
+// Bug report: if the game hits an error, offer the player a report to copy and send. It holds the
+// error, which screen was open, and the match so far as its setup and move list, so the match can
+// be replayed exactly (node tools/replay-report.js <file>).
+// ---------------------------------------------------------------------------
+let bugShown = false;
+function bugReport(err) {
+  const lines = String(err?.stack || "").split("\n").slice(0, 6).map(l => l.trim());
+  const report = {
+    kind: "shardfall-bug-report", when: new Date().toISOString(),
+    error: String(err?.message || err || "unknown error"), where: lines,
+    screen: U?.screen, tutorial: !!U?.tutorial, browser: navigator.userAgent,
+    match: S?.setup ? matchRecord() : null,
+    lastLog: (S?.log || []).slice(-25),
+  };
+  return JSON.stringify(report);
+}
+function showBugReport(err) {
+  if (bugShown) return;   // one report per visit; later errors are usually the same one
+  bugShown = true;
+  let text;
+  try { text = bugReport(err); } catch (e) { text = JSON.stringify({ kind: "shardfall-bug-report", error: String(err?.message || err), reportError: e.message }); }
+  openModal(`<h2 id="modal-title">Something went wrong</h2>
+    <p>Shardfall hit a problem it didn't expect. You can usually keep playing. To help fix it, copy this bug report and send it to the person who shared the game with you. It holds the match so far, so the problem can be played again exactly.</p>
+    <textarea id="bug-report" class="save-code" readonly rows="4" aria-label="Bug report">${esc(text)}</textarea>
+    <p id="bug-msg" class="save-code-msg" role="status"></p>
+    <div class="detail-actions"><button type="button" class="btn" data-bug="copy">Copy bug report</button><button type="button" class="btn btn-primary" data-bug="close">Keep playing</button></div>`);
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-bug]");
+  if (!b) return;
+  if (b.dataset.bug === "close") { closeModal(); return; }
+  const box = byId("bug-report");
+  try { await navigator.clipboard.writeText(box.value); } catch { box.select(); try { document.execCommand("copy"); } catch { /* selected for copying by hand */ } }
+  byId("bug-msg").textContent = "Copied. Paste it into a message or email.";
+});
+window.addEventListener("error", e => { if (e.error) showBugReport(e.error); });
+window.addEventListener("unhandledrejection", e => showBugReport(e.reason));
 
 function showGameMenu() {
   const canUndo = U.undo.length && humanTurn();
@@ -166,6 +241,10 @@ $("#modal").addEventListener("click", e => {
     else if (set.dataset.set === "flow") { U.autoFlow = !U.autoFlow; PREFS.set("autoFlow", U.autoFlow); showSettings(); }
     else if (set.dataset.set === "passcheck") { U.passCheck = !U.passCheck; PREFS.set("passCheck", U.passCheck); showSettings(); }
     else if (set.dataset.set === "intro") { closeModal(); playIntro(); }
+    else if (set.dataset.set === "savecode") showSaveCode();
+    else if (set.dataset.set === "copycode") copySaveCode();
+    else if (set.dataset.set === "loadcode") loadSaveCode(set);
+    else if (set.dataset.set === "settings") showSettings();
     else if (U.screen === "game") showGameMenu();
     else closeModal();
     return;
@@ -175,18 +254,18 @@ $("#modal").addEventListener("click", e => {
   const m = b.dataset.m, uid = Number(b.dataset.uid);
   if (m === "detail") { const c = findCardAnywhere(uid); if (c) showDetail(c); return; }
   closeModal();
-  if (m === "play") act(() => playCard(uid));
+  if (m === "play") act(() => move("play", uid));
   else if (m === "arm") { U.armed = { uid, from: "hand" }; render(); }
-  else if (m === "tofield") act(() => playCard(uid, { toField: true }));
+  else if (m === "tofield") act(() => move("play", uid, { toField: true }));
   else if (m === "restart") U.tutorial ? startTutorial() : U.campaign ? playCampaignMatch(U.campaign.stage) : startGame();
   else if (m === "settings") showSettings();
   else if (m === "log") showLog();
-  else if (m === "passok") act(endTurn);
-  else if (m === "passnever") { U.passCheck = false; PREFS.set("passCheck", false); act(endTurn); }
+  else if (m === "passok") act(() => move("end"));
+  else if (m === "passnever") { U.passCheck = false; PREFS.set("passCheck", false); act(() => move("end")); }
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
   else if (m === "rules") showGuide();
   else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); U.menuView = "home"; showScreen("menu"); }
   else if (m === "undo") { if (U.undo.length) { S = U.undo.pop(); if (S.histLen != null) U.hist.length = Math.min(U.hist.length, S.histLen); U.selected = null; U.armed = null; U.ended = S.over; render(); } }
-  else if (m === "mana") act(() => { active().mana++; });
-  else if (m === "qadraw") act(() => { drawCard(active()); });
+  else if (m === "mana") act(() => move("testMana"));
+  else if (m === "qadraw") act(() => move("testDraw"));
 });

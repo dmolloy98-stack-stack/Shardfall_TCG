@@ -135,7 +135,7 @@ addEventListener("pointerup", e => {
   const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.field-card.attackable, .plate.attackable, .face-btn, .shard-rock.attackable');
   if (!over || U.selected !== d.uid) return;
   U.selected = null;
-  act(() => attack(d.uid, over.classList.contains("shard-rock") ? "shard" : over.classList.contains("field-card") ? Number(over.dataset.uid) : null));
+  act(() => move("attack", d.uid, over.classList.contains("shard-rock") ? "shard" : over.classList.contains("field-card") ? Number(over.dataset.uid) : null));
 });
 addEventListener("pointercancel", () => { dragAtk = null; });
 

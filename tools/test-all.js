@@ -4,12 +4,13 @@
 // change that breaks something shows a red mark before it is merged.
 //
 // It checks:
-//   - the five focused tests (kinds, events, protected, shard, champions) each say ALL PASSED
-//   - the automatic games (selftest "ai 2" and "rand 300") find no problems
+//   - the focused tests (kinds, events, protected, shard, champions, replay, cards, saves) each say ALL PASSED
+//   - the automatic games (selftest "ai 2" and "rand 300") find no problems, and each one
+//     replays exactly from its move list
 //   - those games still play exactly as before: their fingerprints match the numbers below.
 //     When a change is meant to alter how the game plays, update these numbers (and the one
 //     in CLAUDE.md) in the same change.
-const EXPECTED = { ai: 1506290345, rand: 1933343540 };
+const EXPECTED = { ai: 1727378807, rand: 1933343540 };
 
 const { execFileSync } = require('child_process');
 const path = require('path');
@@ -22,7 +23,7 @@ const run = args => {
 let failed = 0;
 const report = (name, ok, detail) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`); if (!ok) failed++; };
 
-for (const t of ['kinds', 'events', 'protected', 'shard', 'champions']) {
+for (const t of ['kinds', 'events', 'protected', 'shard', 'champions', 'replay', 'cards', 'saves']) {
   const { out, code } = run([`tools/${t}-test.js`, '.']);
   const ok = code === 0 && /ALL PASSED\s*$/.test(out.trim());
   report(`${t}-test`, ok, ok ? '' : '\n' + out.split('\n').filter(l => /FAIL|Error/.test(l)).slice(0, 15).join('\n'));

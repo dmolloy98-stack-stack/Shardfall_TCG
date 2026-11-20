@@ -20,7 +20,7 @@ ask or offer options first.
   non-character, `N/A` for no fracture.
 - **Ability** is the text players read; **Effect** names the code that makes it work: an entry
   in `EFFECTS` in `js/effects.js` (target, intent, filter, apply). Champion abilities are in
-  `data/champion_abilities.csv` and "Champion abilities" in `js/engine.js`. Skills (Rush,
+  `data/champion_abilities.csv` and `CHAMPION_RULES` in `js/rules-champions.js`. Skills (Rush,
   Swift, Rally, Protected, Pierce…) are in `data/skills.csv` and the engine.
 - Decks: `data/decks.csv` (`CardID:copies|…`). Deck rules: `data/game_rules.csv`.
 - If the computer needs to understand a new effect (to use it well), check `js/ai.js`; the
@@ -29,9 +29,10 @@ ask or offer options first.
 ## Steps
 
 1. Edit the data (and effect code if needed). Keep Ability text and Effect in agreement.
-2. Run the focused test for what was touched (CLAUDE.md lists them: kinds, events, protected,
-   shard, champions), then `node tools/test-all.js`. A real play change moves the fingerprints:
-   update `EXPECTED` in `tools/test-all.js` and the number in CLAUDE.md, and say so.
+2. Run the focused test for what was touched (the `add-feature` skill lists them; `cards-test`
+   plays every card once), then `node tools/test-all.js`. A real play change moves the
+   fingerprints and the recorded matches: update `EXPECTED` in `tools/test-all.js` and the number
+   in CLAUDE.md, re-record with `node tools/replay-test.js . --update`, and say so.
 3. Measure with the `balance` skill (before and after) when the change could affect who wins.
 4. Look at the card in the browser (`browser-check`): the name fits on one line (only Shadow-Stitched
    Soldier may take two), the text fits, the Almanac shows it right.

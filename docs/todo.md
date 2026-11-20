@@ -138,6 +138,26 @@ prompt, press Queue, check `ComfyUI\output`); 4) then connect Claude (Claude Cod
 PC, or Remote Control) and decide about the "art is out of scope" rule in CLAUDE.md. Nothing has been
 downloaded from GitHub; Claude needs the owner's go-ahead before installing any ComfyUI tool.
 
+## Behind-the-scenes groundwork for long-term growth — chosen by the owner (20 Nov), being built
+
+The owner picked all twelve. Nothing here changes how the game plays. Build order: 1+2, 9, 6, 7,
+8, 10, 4, 5, 3, 11, 12. Mark each one built as it lands.
+
+1. **Built (20 Nov).** **Every move written down as a short note** (a move list). With the match seed it replays a
+   match exactly. Needed for Play a Friend, recorded test matches and bug reports.
+2. **Built (20 Nov).** **One front door for moves.** Taps, the computer and the tutorial all send moves through one
+   entrance into the rules; a friend's moves online will use it too.
+3. **Written (20 Nov): `docs/online-play.md`.** **A written plan for hidden cards online**, so a browser can't peek at the other hand.
+4. **Built (20 Nov).** **Champions, events and shard bonuses in their own files**, so a new one is "add a file".
+5. **Built (20 Nov).** **More words in the card ability language**, so fewer future cards need custom code.
+6. **Built (20 Nov).** **A test that plays every card at least once.**
+7. **Built (20 Nov).** **A version number on saved progress**, with an upgrade step for old saves.
+8. **Built (20 Nov).** **Save code: export and import progress** (copy a code, paste it on another device).
+9. **Built (20 Nov).** **Recorded test matches** (needs 1), replayed in every test run.
+10. **Built (20 Nov).** **"Copy bug report" button** when the game hits an error (seed and moves).
+11. **Built (20 Nov).** **Balance check on every pull request** (warn if a starter deck leaves about 40–60% wins).
+12. **Built (20 Nov).** **Quicker loading and offline play** (one bundled file; add to home screen).
+
 ## Not doing for now
 
 - **A solo run mode** (a Slay the Spire style roguelike deckbuilder). The owner is wary of
@@ -156,4 +176,4 @@ means "not now"; the owner may pick it up later.
 - **Phone-only table layout:** discontinued; the current phone layout is good enough. Kept as a reference in `docs/phone-table/`.
 - **Card-sheet "card lab" and other early tools** (options 2 and 3 when the data moved to CSV files): on hold since the start; the My Decks builder exists now.
 - **Champion leveling:** waiting on the owner's designs (see "Champion leveling" above).
-- **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project.
+- **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project. The plan for hiding cards, and an open question for the owner about the counter window, is `docs/online-play.md`.

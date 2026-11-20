@@ -97,20 +97,7 @@ function beginCampaignMatch(i) {
   startGame({
     campaign: { stage: i },
     opponentDeckId: campaignDeck(st.faction),
-    setup: S => {
-      const foe = S.players[1];
-      foe.name = st.champion;
-      foe.champion = st.champion;   // js/champions.js: its lines, and how the computer plays it
-      // The champion starts in hand, so it shows up in the match.
-      const k = foe.deck.findIndex(c => c.name === st.champion);
-      if (k >= 0 && !foe.hand.some(c => c.name === st.champion)) {
-        const champ = foe.deck.splice(k, 1)[0];
-        foe.deck.unshift(foe.hand.pop());
-        foe.hand.push(champ);
-        shuffle(foe.deck);
-      }
-      S.log.push(`${st.champion} challenges ${S.players[0].name}.`);
-    },
+    foeChampion: st.champion,   // the champion starts with its card in hand (campaignChampion in js/engine.js)
   });
   championMatchStarts();
 }

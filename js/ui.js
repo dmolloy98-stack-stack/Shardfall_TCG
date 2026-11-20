@@ -180,7 +180,7 @@ function crystalSVG(cls, cracks = 0) {
   return `<svg class="${cls}" viewBox="0 0 40 48" aria-hidden="true"><path class="c-body" d="${CRYSTAL}"/><path class="c-shine" d="${CRYSTAL}"/><path class="c-facet" d="${CRYSTAL_FACETS}"/>${CRACKS.slice(0, cracks).map(d => `<path class="c-crack" d="${d}"/>`).join("")}</svg>`;
 }
 
-// The big shard ("The big shard fall" in js/engine.js): a tall crystal in the middle band, left of
+// The big shard (js/rules-shard.js): a tall crystal in the middle band, left of
 // the phases, glowing purple, blue and green. It cracks more as it loses health. When it lands, the
 // table cracks open from that spot and stays cracked, glowing, for the rest of the match.
 const SHARD_AT = { x: 365, y: 398 };
@@ -236,16 +236,9 @@ function showShard() {
     <p class="sub">${sh.health} of ${sh.max} health</p>
     <p>It fell into the middle of the table in round ${RULES.shardRound}. In your Battle phase, any of your characters can attack it. It never hits back, and Challenge and Tower don't protect it. Spells can't touch it.</p>
     <p>Its health is shared. <b>Whoever deals the blow that breaks it claims it</b>: you draw ${RULES.shardDraw === 1 ? "a card" : RULES.shardDraw + " cards"} and get your champion's shard bonus. A deck with no champion draws ${RULES.shardDrawNoChamp} cards instead.</p>
-    <ul>${Object.keys(SHARD_BONUS).filter(id => DATA.cardsById[id]).map(id => `<li><b>${esc(DATA.cardsById[id].name)}</b>: ${esc(SHARD_BONUS_TEXT[id])}</li>`).join("")}</ul>
+    <ul>${Object.keys(CHAMPION_RULES).filter(id => DATA.cardsById[id] && CHAMPION_RULES[id].shardText).map(id => `<li><b>${esc(DATA.cardsById[id].name)}</b>: ${esc(CHAMPION_RULES[id].shardText)}</li>`).join("")}</ul>
     <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
 }
-const SHARD_BONUS_TEXT = {
-  the_simplistic: "all your characters are fully healed.",
-  the_man_ape: "a free 2/2 Monkey (a Chimp with +1 Attack).",
-  ip_man: "your strongest character gets Swift for the rest of the match.",
-  boss_level: "Boss Level jumps to its next phase.",
-  soul_shepard: "your last fallen character comes back to your hand.",
-};
 
 // ---------------------------------------------------------------------------
 // Board rendering
@@ -257,15 +250,15 @@ function lifeTier(p) {
   const ratio = Math.max(0, Math.min(1, p.health / p.maxHealth));
   return { ratio, cls: LIFE_TIERS.find(t => ratio >= t.min).cls };
 }
-// A champion's ability (data/champion_abilities.csv, "Champion abilities" in js/engine.js): its name,
+// A champion's ability (data/champion_abilities.csv, js/rules-champions.js): its name,
 // level and progress toward leveling up, shown under the player's name. Tap it for the details.
 function champInfo(p) {
   const ch = p.champ;
   if (!ch) return null;
   const info = DATA.championAbilities[ch.id];
-  const grows = !info.goal;   // no levels: Chest Thump, Boss Phases, Soul Shepard (see champStatus in js/engine.js)
+  const grows = !info.goal;   // no levels: Chest Thump, Boss Phases, Soul Shepard (see champStatus in js/rules-champions.js)
   if (grows) { const st = champStatus(p); return { info, ch, grows, progress: st.text, lit: st.lit, label: info.name }; }
-  const n = ch.id === "the_simplistic" ? p.manaMax : ch.n;
+  const n = champCount(p);
   const progress = ch.level >= 2 ? "Leveled up" : `${Math.min(n, info.goal)}/${info.goal} ${info.counts.toLowerCase()}`;
   return { info, ch, n, grows, progress, lit: ch.level >= 2, label: `${info.name} · Lv ${ch.level}` };
 }
@@ -743,7 +736,7 @@ function scheduleAI() {
   }, (S.phase === PHASE.DRAW ? 900 : 750) * AI_SPEEDS[U.aiSpeed].k + wait);
 }
 
-// opts.opponentDeckId and opts.setup(S) are used by the campaign (js/campaign.js).
+// opts.opponentDeckId and opts.foeChampion are used by the campaign (js/campaign.js).
 function startGame(opts = {}) {
   if (deckProblem(U.deckId)) { showScreen("menu"); return; }
   endTutorial();
@@ -751,8 +744,7 @@ function startGame(opts = {}) {
   Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
   U.campaign = opts.campaign ?? null;
-  newGame({ deckId: U.deckId, opponentDeckId: opts.opponentDeckId, mode: U.campaign ? "ai" : U.mode });
-  opts.setup?.(S);
+  newGame({ deckId: U.deckId, opponentDeckId: opts.opponentDeckId, mode: U.campaign ? "ai" : U.mode, foeChampion: opts.foeChampion });
   showScreen("game");
   if (S.mode === "hotseat") U.curtain = true; else banner("Your turn");
   if (!U.campaign && S.mode === "ai") championMatchStarts();   // the computer's champion speaks (js/campaign.js)
@@ -763,10 +755,10 @@ function onPhaseButton() {
   if (!humanTurn() || S.pending || U.armed) return;
   U.selected = null;
   if (S.phase === PHASE.DRAW) {
-    if (!active().deck.length) { act(() => { deckOut(active()); }); return; }
-    act(doDraw);
+    if (!active().deck.length) { act(() => move("deckOut")); return; }
+    act(() => move("draw"));
   } else if (S.phase === PHASE.END) passTurn();
-  else act(advancePhase);
+  else act(() => move("next"));
 }
 
 // Passing early: with "Ask before passing early" on (Settings), passing while you could still
@@ -775,7 +767,7 @@ function passTurn() {
   const p = active();
   const playable = S.phase === PHASE.SETUP ? p.hand.filter(c => canPlay(c, p)).length : 0;
   const ready = S.phase <= PHASE.BATTLE ? p.field.chars.filter(c => !c.hasAttacked && !hasSkill(c, "Tower")).length : 0;
-  if (!U.passCheck || U.tutorial || (!playable && !ready)) { act(endTurn); return; }
+  if (!U.passCheck || U.tutorial || (!playable && !ready)) { act(() => move("end")); return; }
   const left = [playable && `${p.mana} mana and ${playable} card${playable > 1 ? "s" : ""} you can play`, ready && `${ready} character${ready > 1 ? "s" : ""} that can still attack`].filter(Boolean).join(", and ");
   openModal(`<h2 id="modal-title">Pass your turn?</h2><p>You still have ${esc(left)}.</p>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Keep playing</button><button type="button" class="btn" data-m="passok">Pass turn</button></div>
@@ -794,7 +786,7 @@ function autoFlow() {
     U.flowTimer = setTimeout(() => {
       if (!humanTurn() || S.phase !== PHASE.BATTLE || S.pending) return;
       floatText(720, 345, "Nothing can attack: Battle skipped", "#cfd8ff", true);
-      act(advancePhase);
+      act(() => move("next"));
     }, 650);
   }
 }
@@ -802,16 +794,11 @@ function autoFlow() {
 // With two or more guards (Challenge or Tower) the attacker's player picks which one to hit.
 // The rules send an attack aimed anywhere else to the first guard, which is right when there
 // is only one. With several, that took the choice away, so such a tap now asks for a guard.
-// "All attack player": every character that can attack hits the opposing player. Does nothing
-// while a guard (Challenge or Tower) stands, since the rules send those blows to the guard.
-// One Undo takes the whole attack back.
-function attackAllFace() {
-  if (guards(opponent()).length) return false;
-  const ids = active().field.chars.filter(canAttack).map(c => c.uid);
-  let any = false;
-  U.multiAttack = true;   // no wind-ups: the blows come in one rush
-  try { for (const uid of ids) { if (S.over) break; if (attack(uid, null)) any = true; } } finally { U.multiAttack = false; }
-  return any;
+// "All attack": the rules are in js/engine.js. The blows come in one rush, without wind-ups,
+// and one Undo takes the whole attack back.
+function attackAllFaceMove() {
+  U.multiAttack = true;
+  try { return move("allFace"); } finally { U.multiAttack = false; }
 }
 
 function mustPickGuard(target) {
@@ -826,14 +813,14 @@ function clickChar(uid) {
   const found = findChar(uid);
   if (!found) return;
   if (humanTarget()) {
-    if (isValidTarget({ uid })) act(() => chooseTarget({ uid }));
+    if (isValidTarget({ uid })) act(() => move("target", { uid }));
     return;
   }
   if (human && U.armed) {
     if (found.p === active()) {
       const { uid: eq, from } = U.armed;
       U.armed = null;
-      act(() => from === "field" ? attachFieldEquipment(eq, uid) : playCard(eq, { target: { uid } }));
+      act(() => from === "field" ? move("attach", eq, uid) : move("play", eq, { target: { uid } }));
     }
     return;
   }
@@ -842,7 +829,7 @@ function clickChar(uid) {
     if (found.p !== active() && U.selected) {
       if (mustPickGuard(found.c)) return;
       const a = U.selected; U.selected = null;
-      act(() => attack(a, uid));
+      act(() => move("attack", a, uid));
       return;
     }
   }
@@ -938,11 +925,11 @@ function handUp(e) {
   const c = d.card;
   if (c.type === "Equipment") {
     const inEquipRow = pt.x >= L.backX - 10 && pt.x <= L.backX + RULES.maxBackline * L.slot && pt.y >= L.bottom.backline - 10 && pt.y <= L.bottom.backline + BACK_H + 10;
-    if (charEl) act(() => playCard(c.uid, { target: { uid: Number(charEl.dataset.uid) } }));
-    else if (inEquipRow) act(() => playCard(c.uid, { toField: true }));
+    if (charEl) act(() => move("play", c.uid, { target: { uid: Number(charEl.dataset.uid) } }));
+    else if (inEquipRow) act(() => move("play", c.uid, { toField: true }));
     else if (pt.y < 740 && active().field.chars.length) { U.armed = { uid: c.uid, from: "hand" }; render(); }
     else render();
-  } else if (pt.y < 740) act(() => playCard(c.uid));
+  } else if (pt.y < 740) act(() => move("play", c.uid));
   else render();
 }
 
@@ -968,30 +955,30 @@ $("#board").addEventListener("click", e => {
   if (a === "hist") { showHist(Number(el.dataset.i)); return; }
   if (a === "log") { showLog(); return; }
   if (a === "pass") { if (human && !S.pending && !U.armed) { U.selected = null; passTurn(); } return; }
-  if (a === "faceall") { if (human && S.phase === PHASE.BATTLE) { U.selected = null; act(attackAllFace); } return; }
-  if (a === "face") { if (U.selected) { const s = U.selected; U.selected = null; act(() => attack(s, null)); } return; }
-  if (a === "blade") { if (human) { U.selected = null; act(() => useBlade(uid)); } return; }
+  if (a === "faceall") { if (human && S.phase === PHASE.BATTLE) { U.selected = null; act(attackAllFaceMove); } return; }
+  if (a === "face") { if (U.selected) { const s = U.selected; U.selected = null; act(() => move("attack", s, null)); } return; }
+  if (a === "blade") { if (human) { U.selected = null; act(() => move("blade", uid)); } return; }
   if (a === "char") return clickChar(uid);
-  if (a === "token") { if (human) act(useManaToken); return; }
+  if (a === "token") { if (human) act(() => move("token")); return; }
   if (a === "grave") return showGrave(S.players[Number(el.dataset.player)]);
   if (a === "champ") return showChampion(S.players[Number(el.dataset.player)]);
   if (a === "shard") {
-    if (human && U.selected != null && S.phase === PHASE.BATTLE && S.shard) { const s = U.selected; U.selected = null; act(() => attack(s, "shard")); }
+    if (human && U.selected != null && S.phase === PHASE.BATTLE && S.shard) { const s = U.selected; U.selected = null; act(() => move("attack", s, "shard")); }
     else showShard();
     return;
   }
   if (a === "deck") { if (human && Number(el.dataset.player) === S.active && S.phase === PHASE.DRAW) onPhaseButton(); return; }
   if (a === "plate") {
     const idx = Number(el.dataset.player);
-    if (humanTarget() && isValidTarget({ isPlayer: true, idx })) act(() => chooseTarget({ isPlayer: true, idx }));
-    else if (human && U.selected && idx !== S.active && !mustPickGuard(null)) { const s = U.selected; U.selected = null; act(() => attack(s, null)); }
+    if (humanTarget() && isValidTarget({ isPlayer: true, idx })) act(() => move("target", { isPlayer: true, idx }));
+    else if (human && U.selected && idx !== S.active && !mustPickGuard(null)) { const s = U.selected; U.selected = null; act(() => move("attack", s, null)); }
     return;
   }
   if (a === "area") {
     const pd = S.pending;
     const found = findArea(uid);
-    if (humanTarget() && pd.targetType === "area") act(() => chooseTarget({ uid }));
-    else if (human && found.p === active() && canActivateArea(found.c)) act(() => activateArea(uid));
+    if (humanTarget() && pd.targetType === "area") act(() => move("target", { uid }));
+    else if (human && found.p === active() && canActivateArea(found.c)) act(() => move("area", uid));
     else showDetail(found.c);
     return;
   }
@@ -1026,7 +1013,7 @@ hand.addEventListener("contextmenu", e => {
 function cancelSomething() {
   if (U.armed) { U.armed = null; render(); return true; }
   if (U.selected) { U.selected = null; render(); return true; }
-  if (S?.pending?.kind === "target" && !S.players[S.pending.owner].isAI) { if (cancelPending()) { render(); return true; } }
+  if (S?.pending?.kind === "target" && !S.players[S.pending.owner].isAI) { if (move("cancel")) { render(); return true; } }
   return false;
 }
 // Keyboard: Space for the next step (Draw card, To battle, ...), E to pass the turn, Escape to

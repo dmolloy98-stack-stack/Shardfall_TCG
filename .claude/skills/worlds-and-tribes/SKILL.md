@@ -77,7 +77,7 @@ colour and feel; Claude proposes the animations.
 ## Adding a new champion
 
 Needs: the card (Unknown rarity, its tribe), an ability (`data/champion_abilities.csv` +
-"Champion abilities" in `js/engine.js`), a shard bonus, voice lines and play style in
+an entry in `CHAMPION_RULES` in `js/rules-champions.js`, which also holds its shard bonus), voice lines and play style in
 `js/champions.js` (`story-writing` for the words), a campaign stage if the owner wants one
 (`js/campaign.js`), and tests in `tools/champions-test.js`. Two champions of one tribe can't
 share a deck (the one-champion rule already enforces it).

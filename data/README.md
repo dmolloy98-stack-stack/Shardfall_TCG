@@ -94,7 +94,7 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 - kind: `character`, `characterOrPlayer` or `area`. Narrow it with dots: `character.enemy`, `character.mine`, `character.leveler` (has Level Up), `character.mine.levels` (has kept levels).
 - intent: `harm`, `help` or `steal`. This tells the computer player how to use it.
 
-**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). Narrow a group with dots: a fracture (`allies.Monkey`), a tribe or tribe family (`allies.Zombie` is the fracture, `allies.tribe:Zombie` the tribe, `allies.Undead` the family), a class (`allies.Student`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `swift`, `tower`, `strongest`. Add the kind in front when one name is two things: Fighter is both a fracture and a class, so `allies.Fighter` means the fracture and `allies.class:Fighter` the class (`fracture:`, `tribe:` and `class:` all work). Filters add up: `allies.class:Student.class:Fighter` is your Students who are also Fighters.
+**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). For cards that aren't on the table there are four **piles**: `grave` (your graveyard), `graves` (both graveyards), `deck` and `hand`; they never hold tokens (cards made during play). Narrow a group with dots: a fracture (`allies.Monkey`), a tribe or tribe family (`allies.Zombie` is the fracture, `allies.tribe:Zombie` the tribe, `allies.Undead` the family), a class (`allies.Student`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `swift`, `tower`, `strongest`, a kind of card (`character`, `spell`, `equipment`, `area`), a printed cost (`cost<=2`, `cost>=4`, `cost=3`), and `not:` in front of any of these for the opposite (`not:primate`). Add the kind in front when one name is two things: Fighter is both a fracture and a class, so `allies.Fighter` means the fracture and `allies.class:Fighter` the class (`fracture:`, `tribe:` and `class:` all work). Filters add up: `allies.class:Student.class:Fighter` is your Students who are also Fighters.
 
 **Numbers** can be whole numbers or these words, joined with `+` or `-`:
 
@@ -137,6 +137,10 @@ Any action can end with `if <number>`: it only happens when the number is more t
 | `summonFromDeck <CardID>` | Moves that card from your deck onto your field |
 | `flag ripen` | Remembers that Ripen was cast |
 | `say <who> "TEXT" <color>` | Shows a word over the card, like `"+1 ATK" #ffe066` |
+| `pick <pile> <n> hand\|field ["question"]` | The player picks up to n cards from a pile (`grave.Monkey.character`, `graves.character`) and they go to the hand or back onto the field. Nothing happens if the pile has none. Example: Call of the Jungle, `pick grave.Monkey.character 3 hand "Pick up to 3 Monkey characters to return to your hand."` |
+| `take deck.<narrowing> <n> hand\|field` | The top n matching cards of your deck go to your hand or the field, no choice. Example: Primate, `take deck.Monkey.character.cost<=2.not:primate 2 field` |
+| `discardDraw ["question"]` | The player discards a card from their hand, then draws one (Rotten Finger) |
+| `drainLife <who>` | You gain health equal to the character's Attack plus Health (Soul Suction: `drainLife target, damage target 99999`) |
 | `script <name>` | Runs a one-off ability written in `js/effects.js` |
 
 **Cards whose rules stay in code.** A few cards change how the game itself works, so their Effect is empty or a `script`: The Simplistic, IP Man (his redirect), The Man Ape, Soul Shepard, Boss Level, Pesky Programmer, Sensei, Weapons Enthusiast, Kenshi's Blade (the once-per-battle use), Black Belt Student, API Key (the Level Up it gives). Ask for code when a new card needs a rule like these.
@@ -230,7 +234,7 @@ A deck that holds a champion (an Unknown card) gets that champion's ability from
 | Goal | The number the progress counts up to (the code uses this number, so change it here, not in the text only) |
 | Counts | What the progress counts, in a few words ("Fights won") |
 
-You can reword the text freely. What each ability does is written in `js/engine.js` ("Champion abilities"), so a new ability needs code. Each champion's bonus for breaking the big shard is `SHARD_BONUS` in `js/engine.js` ("The big shard fall"). Soul Shepard's growth is a `rule: grieve Undead` on its own card in cards.csv: +1 Health each time a character of that tribe dies.
+You can reword the text freely. What each ability does is written in `js/rules-champions.js` (one entry per champion), so a new ability needs code. Each champion's bonus for breaking the big shard is in the same entry. Soul Shepard's growth is a `rule: grieve Undead` on its own card in cards.csv: +1 Health each time a character of that tribe dies.
 
 ### phases.csv and ui_text.csv
 
