@@ -147,7 +147,7 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
    match exactly. Needed for Play a Friend, recorded test matches and bug reports.
 2. **Built (20 Nov).** **One front door for moves.** Taps, the computer and the tutorial all send moves through one
    entrance into the rules; a friend's moves online will use it too.
-3. **A written plan for hidden cards online**, so a browser can't peek at the other hand.
+3. **Written (20 Nov): `docs/online-play.md`.** **A written plan for hidden cards online**, so a browser can't peek at the other hand.
 4. **Built (20 Nov).** **Champions, events and shard bonuses in their own files**, so a new one is "add a file".
 5. **Built (20 Nov).** **More words in the card ability language**, so fewer future cards need custom code.
 6. **Built (20 Nov).** **A test that plays every card at least once.**
@@ -176,4 +176,4 @@ means "not now"; the owner may pick it up later.
 - **Phone-only table layout:** discontinued; the current phone layout is good enough. Kept as a reference in `docs/phone-table/`.
 - **Card-sheet "card lab" and other early tools** (options 2 and 3 when the data moved to CSV files): on hold since the start; the My Decks builder exists now.
 - **Champion leveling:** waiting on the owner's designs (see "Champion leveling" above).
-- **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project.
+- **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project. The plan for hiding cards, and an open question for the owner about the counter window, is `docs/online-play.md`.

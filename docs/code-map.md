@@ -55,7 +55,7 @@ Every move, from you, the computer or the tutorial's Trainer, goes through one f
 down in `S.moves` as a short note, for example `[0, "play", 41]` (player 1 plays the card with
 uid 41). `S.setup` holds how the match began: the seed, both deck lists, and the campaign
 champion if there is one. Setup and notes together replay the match exactly (`replayMatch()`),
-which is what Play a Friend will send between browsers.
+which is what Play a Friend will send between browsers (plan: `docs/online-play.md`).
 
 ```mermaid
 flowchart LR
