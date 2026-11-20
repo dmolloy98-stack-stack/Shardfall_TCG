@@ -150,7 +150,7 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
 3. **A written plan for hidden cards online**, so a browser can't peek at the other hand.
 4. **Champions, events and shard bonuses in their own files**, so a new one is "add a file".
 5. **More words in the card ability language**, so fewer future cards need custom code.
-6. **A test that plays every card at least once.**
+6. **Built (20 Nov).** **A test that plays every card at least once.**
 7. **A version number on saved progress**, with an upgrade step for old saves.
 8. **Save code: export and import progress** (copy a code, paste it on another device).
 9. **Built (20 Nov).** **Recorded test matches** (needs 1), replayed in every test run.

@@ -78,6 +78,7 @@ added, split or renamed, or the flow between them changes.
 | The Protected rule, Pierce and Protected skills | `node tools/protected-test.js .` |
 | The big shard fall, champion shard bonuses | `node tools/shard-test.js .` |
 | Champion abilities and champion cards | `node tools/champions-test.js .` |
+| Every card played at least once (any card or effect change) | `node tools/cards-test.js .` |
 | Recorded matches; which move first plays differently | `node tools/replay-test.js .` (`--update` when play is meant to change) |
 | Whole games, crashes, stuck states | `node tools/selftest.js . ai 2` and `. rand 300` (`"problems": {}`) |
 
