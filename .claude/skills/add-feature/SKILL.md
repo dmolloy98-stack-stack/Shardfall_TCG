@@ -19,7 +19,10 @@ added, split or renamed, or the flow between them changes.
   them in Node. Game state is `S`; it must survive `structuredClone` (store owners as player
   indexes, no functions or DOM in `S`). `simulate()` runs moves on a clone with events muted,
   so the computer can think.
-- **Screen** (`js/ui.js` and friends): state for the screen is `U`; the computer is `js/ai.js`.
+- **Screen**: `js/ui.js` (state `U`, the board, input), `js/cards.js` (how a card is drawn),
+  `js/table-effects.js` (reactions to game events on the table), `js/panels.js` (pop-up windows,
+  Settings). The computer is `js/ai.js`. A new top-level `const` used by another file at load time
+  must be in a file that loads earlier (`GAME_SCRIPTS` order).
 - **Data** goes in `data/*.csv`, not in code, when the owner might want to edit it.
 - **New script file:** add it to `GAME_SCRIPTS` in `js/data.js` (order matters; `js/boot.js` is
   last), to the README file table, and to the code map.
@@ -42,7 +45,7 @@ added, split or renamed, or the flow between them changes.
      it**, or that region redraws every time;
    - an animation started on an element survives redraws only if the element's HTML didn't change.
 3. **Clicks** go through one handler per area: `#board` uses `data-act="…"`
-   (`js/ui.js`, "board clicks"), Settings uses `data-set="…"`, the game menu `data-m="…"`.
+   (`js/ui.js`, "board clicks"), Settings uses `data-set="…"` and the game menu `data-m="…"` (both in `js/panels.js`).
    **Add a new branch; don't add a second handler or a second branch for an existing act.**
    (A duplicate branch once stopped played cards from being counted.)
 4. **Saved settings:** `PREFS.get(key, fallback)` / `PREFS.set(key, value)` (`js/help.js`; wrapped,
@@ -61,10 +64,26 @@ added, split or renamed, or the flow between them changes.
 9. **Match saving:** a match in progress survives live updates of the claude.ai page (`js/boot.js`
    restores `S` over `baseState()`). New fields in `S` need a default in `baseState()`.
 
+## Which focused test covers what
+
+`node tools/test-all.js` runs all of these; run one alone while working on its area:
+
+| Area | Test |
+|---|---|
+| Tribes, classes, fractures and the cards that use them | `node tools/kinds-test.js .` |
+| Random events (`data/events.csv`, "Random events" in `js/engine.js`) | `node tools/events-test.js .` |
+| The Protected rule, Pierce and Protected skills | `node tools/protected-test.js .` |
+| The big shard fall, champion shard bonuses | `node tools/shard-test.js .` |
+| Champion abilities and champion cards | `node tools/champions-test.js .` |
+| Whole games, crashes, stuck states | `node tools/selftest.js . ai 2` and `. rand 300` (`"problems": {}`) |
+
+The selftest fingerprints (in `EXPECTED` at the top of `tools/test-all.js`, and the `ai 2` one in
+CLAUDE.md) only change when a change is meant to alter play; update both and say so.
+
 ## Before calling it done
 
 - `node tools/test-all.js` → `EVERYTHING PASSED` (fingerprints change only if play changed).
 - `browser-check` skill: desktop and phone, look at the screenshots; for anything heavy, run
   `node tools/speed-check.js` before and after.
 - Update `docs/code-map.md`, and the README if players or the file table are affected.
-- Then the `backup` skill.
+- Commit and push (`pr-cycle`); the `backup` skill runs once the pull request merges.

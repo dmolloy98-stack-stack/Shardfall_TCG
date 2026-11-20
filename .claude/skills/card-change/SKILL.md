@@ -38,4 +38,4 @@ ask or offer options first.
 5. **Update the card sheet to match** (`sheet-sync`): the game files are the master copy, and
    the sheet row number is the cards.csv line number.
 6. If the card's story or a clue is touched, `story-writing` (clue log in `docs/world.md`).
-7. Commit, then `backup`.
+7. Commit and push (`pr-cycle`); `backup` runs once the pull request merges.

@@ -73,7 +73,10 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/engine.js` | Game rules: turns, combat, skills. Shuffles come from a seed per match (shown in the game log), so a game can be replayed exactly |
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
 | `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |
-| `js/ui.js` | Board rendering, input, dialogs, Settings |
+| `js/cards.js` | How a card is drawn: frames, art, badges, names |
+| `js/ui.js` | Board rendering and input |
+| `js/table-effects.js` | Deaths, hits and other reactions on the table |
+| `js/panels.js` | Pop-up windows and Settings |
 | `js/menu.js` | The start menu: three doors (Campaign, Quick Match, Two Players) and the smaller buttons, then a step for picking your deck and the opponent's (or just looking after your decks); and the Almanac |
 | `js/storm.js` | The falling-shards animation behind the main menu |
 | `js/boot.js` | Starts the game once every script has loaded |
@@ -101,6 +104,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/winrates.js` | Plays every starter deck against every other and prints win rates and game length: `node tools/winrates.js 50` |
 | `tools/speed-check.js` | Measures how smoothly the game runs on a slowed-down computer (like a phone), with Heavy effects on and off: `node tools/speed-check.js` |
 | `tools/readability.js` | Used by the browser check: finds text that is too small, overlapping or cut off |
+| `tools/drive-bundle.js` | Makes the one-file Google Drive backups: the changes of a pull request, or a full snapshot |
 | `tools/serve.js` | Lets a test browser load the game straight from this folder, without a web server |
 | `.claude/skills/` | Step-by-step recipes Claude follows for routine jobs (Drive backup, pull requests, browser checks, balance tests, card changes, story writing and more) |
 | `tools/guide-shots.js` | Retakes the annotated guide pictures: `node tools/guide-shots.js` (needs Node.js and Playwright) |
