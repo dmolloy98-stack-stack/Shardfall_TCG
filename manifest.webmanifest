@@ -1,0 +1,10 @@
+{
+  "name": "Shardfall",
+  "short_name": "Shardfall",
+  "start_url": "./#menu",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#070a18",
+  "theme_color": "#070a18"
+}

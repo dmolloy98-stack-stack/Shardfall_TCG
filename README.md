@@ -70,6 +70,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `css/style.css` | All styling and animations |
 | `data/*.csv` | Cards, decks, skills and rules (see above) |
 | `js/data.js` | Loads and checks the CSV files, then starts the game |
+| `sw.js` | The offline helper: after one visit the browser keeps a copy of the game, so it starts with no internet and doesn't wait long on a slow connection. Its file list comes from `js/data.js` by itself |
+| `manifest.webmanifest` | Lets a phone add Shardfall to its home screen as a full-screen app (it has no app icon yet: that's art) |
 | `js/saves.js` | Everything saved in the browser: the list of saved items, the save version and its upgrade steps, and the save code (Settings → Save code) that copies progress to another device. Loaded first |
 | `js/rules-champions.js` | Champion abilities: one entry per champion saying what it does at each moment (turn start, battle, fights, damage, the big shard). A new champion is a new entry |
 | `js/rules-events.js` | The random events (mini shard falls): when they come and what each does |

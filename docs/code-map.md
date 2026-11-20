@@ -204,6 +204,7 @@ their own story or coaching, then hand over to the same engine.
 | The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/style.css`; the list of skins is `SKINS` in `js/ui.js`; the long cracks are redrawn by `tools/make-crystal.js` |
 | The playable single-file copy | `tools/build-single.js` |
 | The "Something went wrong" window and its bug report | `showBugReport()` and `bugReport()` in `js/panels.js` (any uncaught error opens it once per visit); replay a report with `node tools/replay-report.js <file>` |
+| Offline play and the home-screen app | `sw.js` (network first, the saved copy after 2 seconds or with no internet; it saves the files listed in `js/data.js` by itself) and `manifest.webmanifest`; registered at the top of `js/boot.js`, only on the real site. Raise `CACHE` in `sw.js` only to throw away every saved copy |
 | Something new to save in the browser, or a change to how something is saved | add the key to `SAVE_KEYS` in `js/saves.js`; if old saves need changing, raise `SAVE_VERSION` and add a step to `SAVE_UPGRADES` (test: `tools/saves-test.js`) |
 | A new kind of move (anything a player can do) | add it to `MOVES` in `js/engine.js` and send it with `move()`; see "Moves" above |
 | Every card played at least once | `tools/cards-test.js` (its table: two plain characters, a Level Up character and an area on each side) |

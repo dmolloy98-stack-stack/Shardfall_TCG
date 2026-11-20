@@ -156,7 +156,7 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
 9. **Built (20 Nov).** **Recorded test matches** (needs 1), replayed in every test run.
 10. **Built (20 Nov).** **"Copy bug report" button** when the game hits an error (seed and moves).
 11. **Built (20 Nov).** **Balance check on every pull request** (warn if a starter deck leaves about 40–60% wins).
-12. **Quicker loading and offline play** (one bundled file; add to home screen).
+12. **Built (20 Nov).** **Quicker loading and offline play** (one bundled file; add to home screen).
 
 ## Not doing for now
 
