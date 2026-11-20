@@ -965,34 +965,34 @@ dl.words dd { margin: 0; }
     repeating-linear-gradient(-8deg, rgba(40, 60, 20, 0.22) 0 10px, transparent 10px 26px),
     linear-gradient(#6f9443, #557a33);
 }
-.skin-battlefield .side[data-faction="Monkey"] {
+.skin-battlefield .side[data-faction="Wild"] {
   background:
     radial-gradient(circle 60px at 8% 25%, #2f7a3a, transparent), radial-gradient(circle 80px at 92% 70%, #2a6d34, transparent),
     radial-gradient(circle 50px at 60% 15%, #3a8a44, transparent), radial-gradient(circle 70px at 35% 85%, #24622f, transparent),
     radial-gradient(ellipse 30% 20% at 50% 50%, rgba(255, 220, 120, 0.12), transparent),
     linear-gradient(#1f4d29, #173d20);
 }
-.skin-battlefield .side[data-faction="Zombie"] {
+.skin-battlefield .side[data-faction="Undead"] {
   background:
     radial-gradient(ellipse 40% 25% at 30% 40%, rgba(200, 230, 200, 0.14), transparent),
     radial-gradient(ellipse 35% 20% at 75% 65%, rgba(200, 230, 200, 0.12), transparent),
     repeating-linear-gradient(90deg, transparent 0 140px, rgba(0, 0, 0, 0.18) 140px 146px),
     linear-gradient(#3b4536, #2a3127);
 }
-.skin-battlefield .side[data-faction="Fighter"] {
+.skin-battlefield .side[data-faction="Mortal"] {
   background:
     repeating-linear-gradient(0deg, rgba(90, 60, 20, 0.08) 0 2px, transparent 2px 6px),
     repeating-linear-gradient(90deg, transparent 0 236px, #3b2a1a 236px 242px),
     linear-gradient(#cdb977, #b9a265);
 }
-.skin-battlefield .side[data-faction="Digital"] {
+.skin-battlefield .side[data-faction="Cyber"] {
   background:
     radial-gradient(circle 3px at 50% 50%, rgba(90, 220, 255, 0.8), transparent) 0 0 / 120px 80px,
     repeating-linear-gradient(0deg, rgba(64, 200, 255, 0.14) 0 2px, transparent 2px 80px),
     repeating-linear-gradient(90deg, rgba(64, 200, 255, 0.1) 0 2px, transparent 2px 120px),
     linear-gradient(#0f2a3a, #0a1c28);
 }
-.skin-battlefield .side[data-faction="Digital"], .skin-battlefield .side[data-faction="Zombie"] { --rock: #2c2a3a; --rock-dark: #1a1824; }
+.skin-battlefield .side[data-faction="Cyber"], .skin-battlefield .side[data-faction="Undead"] { --rock: #2c2a3a; --rock-dark: #1a1824; }
 .skin-battlefield .rift { background: radial-gradient(ellipse 55% 34% at 50% 50%, rgba(200, 150, 255, 0.55), rgba(110, 50, 200, 0.18) 60%, transparent 75%); }
 .skin-battlefield .rift::before {
   content: ""; position: absolute; left: 4%; right: 4%; top: 46%; height: 6px;

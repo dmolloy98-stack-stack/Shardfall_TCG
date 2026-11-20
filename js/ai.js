@@ -16,10 +16,10 @@
 //   hand   cards kept in hand                               wild   how often it takes its
 //                                                                  second-best idea instead
 const AI_STYLES = {
-  Fighter: { face: 1.35, board: 0.95, hand: 0.4, wild: 0 },    // rushes the player down
-  Monkey:  { face: 1.1,  board: 1,    hand: 0.5, wild: 0.25 }, // unpredictable
-  Zombie:  { face: 0.9,  board: 1.15, hand: 0.6, wild: 0 },    // builds a swarm, strikes late
-  Digital: { face: 1,    board: 1.1,  hand: 0.5, wild: 0 },    // grows its characters
+  Mortal:  { face: 1.35, board: 0.95, hand: 0.4, wild: 0 },    // rushes the player down
+  Wild:    { face: 1.1,  board: 1,    hand: 0.5, wild: 0.25 }, // unpredictable
+  Undead:  { face: 0.9,  board: 1.15, hand: 0.6, wild: 0 },    // builds a swarm, strikes late
+  Cyber:   { face: 1,    board: 1.1,  hand: 0.5, wild: 0 },    // grows its characters
   Simple:  { face: 1,    board: 1,    hand: 0.5, wild: 0 },    // steady
 };
 const AI_PLAIN = { face: 1, board: 1, hand: 0.5, wild: 0 };

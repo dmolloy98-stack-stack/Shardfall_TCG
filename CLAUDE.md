@@ -63,7 +63,7 @@ builds it, tests it, and explains it.
   When a change is meant to alter how the game plays, update the fingerprints in `EXPECTED` at the
   top of `tools/test-all.js` and the one here.
 - Run `node tools/selftest.js . ai 2` and `node tools/selftest.js . rand 300`. Expect
-  `"problems": {}`. The fingerprint (currently 1861231774 for `ai 2`) must stay the same unless the
+  `"problems": {}`. The fingerprint (currently 1506290345 for `ai 2`) must stay the same unless the
   change is meant to alter how the game plays; when it does change on purpose, say so.
 - Run `node tools/kinds-test.js .` after touching tribes, classes, fractures or the cards that use them; expect `ALL PASSED`.
 - Run `node tools/events-test.js .` after touching the random events (`data/events.csv`, "Random events" in `js/engine.js`); expect `ALL PASSED`.

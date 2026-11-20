@@ -13,7 +13,7 @@ const game = (deck, opp, opts) => {
   return S.players[0];
 };
 const put = (p, id) => { const c = newCard(DATA.cardsById[id]); c.owner = p.idx; putOnField(c, p); c.hasAttacked = false; return c; };
-const hitter = (p, atk) => { const c = put(p, find(c => c.type === 'Character' && c.rarity === 'Basic' && !c.rules && !(c.skills || []).length && c.group !== 'Monkey').id); c.attack = atk; c.baseAttack = atk; c.hasAttacked = false; return c; };
+const hitter = (p, atk) => { const c = put(p, find(c => c.type === 'Character' && c.rarity === 'Basic' && !c.rules && !(c.skills || []).length && c.group !== 'Wild').id); c.attack = atk; c.baseAttack = atk; c.hasAttacked = false; return c; };
 const NOCHAMP = '__nochamp';
 DATA.decks[NOCHAMP] = { ...DATA.decks.simple_starter, cards: DATA.decks.simple_starter.cards.filter(e => DATA.cardsById[e.cardId].rarity !== 'Unknown') };
 

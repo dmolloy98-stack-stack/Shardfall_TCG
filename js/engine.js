@@ -77,15 +77,18 @@ const hasSkill = (c, n) => (c.skills || []).includes(n);
 // (classes). A card can have one or two of each. c.group is the first fracture: it sets the color.
 const groupsOf = c => c.groups || [c.group];
 const inGroup = (c, g) => groupsOf(c).includes(g);
-// A tribe family is a wider name for several tribes ("tribe_family_<Name>" rows in data/game_rules.csv):
-// Undead is every tribe that should be dead but is living (today only Zombie). A card "has" a family
-// when it has any tribe in it, so "allies.Undead" and "rule: grieve Undead" reach all of them.
+// A tribe family is a wider name for several tribes ("tribe_family_<Name>" rows in data/game_rules.csv).
+// None are in use: Undead used to be one, and is now a fracture (a whole world, holding the Zombie
+// tribe today and Skeletons or Vampires later). A card "has" a family when it has any tribe in it.
 const TRIBE_FAMILIES = Object.fromEntries(Object.entries(DATA.rules).filter(([k]) => k.startsWith("tribe_family_"))
   .map(([k, v]) => [k.slice("tribe_family_".length), String(v).split("|").map(s => s.trim()).filter(Boolean)]));
 const hasTribe = (c, t) => (c.tribes || []).includes(t) || (TRIBE_FAMILIES[t] || []).some(x => (c.tribes || []).includes(x));
 // Every tribe a character counts as: its own, plus each family one of them belongs to.
 const tribesOf = c => [...new Set([...(c.tribes || []), ...Object.keys(TRIBE_FAMILIES).filter(f => hasTribe(c, f))])];
 const hasClass = (c, k) => (c.classes || []).includes(k);
+// A card "is" a name when it is that fracture, tribe or class, checked in that order. Rules that
+// name a kind of card ("rule: shepherd Undead", "rule: sacrifice Monkey") use this.
+const isKind = (c, name) => (DATA.factions[name] ? inGroup(c, name) : hasTribe(c, name) || hasClass(c, name));
 const removeSkill = (c, n) => { const i = (c.skills || []).indexOf(n); if (i >= 0) c.skills.splice(i, 1); };
 const active = () => S.players[S.active];
 const opponent = () => S.players[1 - S.active];
@@ -344,14 +347,16 @@ function healPlayer(p, amount) {
 }
 
 function sendToGraveyard(p, c) {
-  // "rule: shepherd <Faction>" (Soul Shepard): asked each time another card of that faction dies.
-  const shepard = p.field.chars.find(x => x !== c && inGroup(c, cardRule(x, "shepherd")?.[0]));
+  // "rule: shepherd <Kind>" (Soul Shepard): asked each time another card of that kind dies
+  // (a fracture, tribe or class; Soul Shepard's is the Undead fracture).
+  const shepard = p.field.chars.find(x => x !== c && cardRule(x, "shepherd") && isKind(c, cardRule(x, "shepherd")[0]));
   const gain = shepard && p.field.chars.includes(c) ? statsAsRead(c) : null;
   const i = p.field.chars.indexOf(c);
   if (i >= 0) p.field.chars.splice(i, 1);
   p.grave.push(c);
   if (i >= 0) {
-    for (const tribe of tribesOf(c)) S.died[tribe] = (S.died[tribe] || 0) + 1;   // Soul Shepard grows with each Undead that dies
+    // deaths counted by fracture and by tribe: Soul Shepard grows with each Undead that dies
+    for (const k of new Set([...groupsOf(c), ...tribesOf(c)])) S.died[k] = (S.died[k] || 0) + 1;
   }
   updateRally(p);
   emit("death", { uid: c.uid, group: c.group });
@@ -479,11 +484,10 @@ function damageEverything(n) {
   }
 }
 
-// An infected character becomes a Zombie in full: its fracture changes to Zombie (so Zombie
-// bonuses reach it) and it gains the Zombie tribe on top of the tribes it had (so it counts as
-// Undead too). Its class stays.
+// An infected character gains the Zombie tribe on top of the tribes it had, so cards that care
+// about Zombies reach it. It keeps its own fracture (the owner's choice: it doesn't join the
+// Undead world) and its class.
 function makeZombie(t) {
-  t.group = "Zombie"; t.groups = ["Zombie"];
   if (!(t.tribes || []).includes("Zombie")) t.tribes = [...(t.tribes || []), "Zombie"];
 }
 
@@ -697,7 +701,7 @@ function champProgress(p, add) {
 }
 
 // Extra Attack and Health a character gets from its owner's champion ability, and from its own
-// "rule: grieve <Tribe>" (Soul Shepard).
+// "rule: grieve <Kind>" (Soul Shepard: Undead, a fracture).
 function championBonus(c) {
   let a = 0, h = 0;
   if (c.type !== "Character") return { a, h };
@@ -711,7 +715,7 @@ function championBonus(c) {
   h += grieveBonus(c);
   return { a, h };
 }
-// "rule: grieve <Tribe>": Health gained from every character of that tribe that has died. Counted
+// "rule: grieve <Kind>": Health gained from every character of that fracture or tribe that has died. Counted
 // from the start of the match, so it is already there when the card is still in the hand.
 function grieveBonus(c) {
   const r = S && cardRule(c, "grieve");
@@ -1264,14 +1268,14 @@ function useBlade(uid) {
   return true;
 }
 
-// "rule: sacrifice <Faction>" (The Man Ape): after each of your Battle phases you may sacrifice
-// another character of that faction you control to give it +1 to all stats for good and heal
+// "rule: sacrifice <Kind>" (The Man Ape: Monkey, a tribe): after each of your Battle phases you may
+// sacrifice another character of that kind you control to give it +1 to all stats for good and heal
 // it fully.
 function afterBattle(p) {
   for (const ape of p.field.chars.filter(c => cardRule(c, "sacrifice") && c.apeRound !== S.round)) {
     ape.apeRound = S.round;
     const faction = cardRule(ape, "sacrifice")[0];
-    const monkeys = p.field.chars.filter(c => c !== ape && inGroup(c, faction));
+    const monkeys = p.field.chars.filter(c => c !== ape && isKind(c, faction));
     if (!monkeys.length) continue;
     ask({
       kind: "choose", source: ape, owner: p.idx, title: ape.name,

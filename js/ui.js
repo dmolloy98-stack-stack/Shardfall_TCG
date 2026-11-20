@@ -135,10 +135,10 @@ applyHeavyFx();
 // ---------------------------------------------------------------------------
 const GLYPHS = {
   Simple: '<path d="M12 20V10" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><ellipse cx="8.3" cy="8.6" rx="4" ry="2.1" transform="rotate(-25 8.3 8.6)" fill="currentColor"/><ellipse cx="15.6" cy="11.4" rx="4" ry="2.1" transform="rotate(20 15.6 11.4)" fill="currentColor"/>',
-  Monkey: '<circle cx="12" cy="14" r="3.6" fill="currentColor"/><circle cx="7.6" cy="10" r="2.3" fill="currentColor"/><circle cx="16.4" cy="10" r="2.3" fill="currentColor"/><circle cx="10.4" cy="6.6" r="1.8" fill="currentColor"/><circle cx="13.6" cy="6.6" r="1.8" fill="currentColor"/>',
-  Zombie: '<rect x="6.5" y="6" width="11" height="9.5" rx="2" fill="currentColor"/><rect x="9" y="9" width="2" height="2.4" fill="var(--g-bg)"/><rect x="13" y="9" width="2" height="2.4" fill="var(--g-bg)"/><path d="M8.5 18h7M10 15.5v3M12 15.5v3M14 15.5v3" stroke="currentColor" stroke-width="1.4"/>',
-  Fighter: '<path d="M6 6l11 11M18 6L7 17M8.4 4.8l-3.4 3.4M15.6 4.8l3.4 3.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/>',
-  Digital: '<rect x="7.5" y="7.5" width="9" height="9" rx="1.2" fill="currentColor"/><rect x="10.3" y="10.3" width="3.4" height="3.4" fill="var(--g-bg)"/><path d="M10 4.5v3M14 4.5v3M10 16.5v3M14 16.5v3M4.5 10h3M4.5 14h3M16.5 10h3M16.5 14h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+  Wild: '<circle cx="12" cy="14" r="3.6" fill="currentColor"/><circle cx="7.6" cy="10" r="2.3" fill="currentColor"/><circle cx="16.4" cy="10" r="2.3" fill="currentColor"/><circle cx="10.4" cy="6.6" r="1.8" fill="currentColor"/><circle cx="13.6" cy="6.6" r="1.8" fill="currentColor"/>',
+  Undead: '<rect x="6.5" y="6" width="11" height="9.5" rx="2" fill="currentColor"/><rect x="9" y="9" width="2" height="2.4" fill="var(--g-bg)"/><rect x="13" y="9" width="2" height="2.4" fill="var(--g-bg)"/><path d="M8.5 18h7M10 15.5v3M12 15.5v3M14 15.5v3" stroke="currentColor" stroke-width="1.4"/>',
+  Mortal: '<path d="M6 6l11 11M18 6L7 17M8.4 4.8l-3.4 3.4M15.6 4.8l3.4 3.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/>',
+  Cyber: '<rect x="7.5" y="7.5" width="9" height="9" rx="1.2" fill="currentColor"/><rect x="10.3" y="10.3" width="3.4" height="3.4" fill="var(--g-bg)"/><path d="M10 4.5v3M14 4.5v3M10 16.5v3M14 16.5v3M4.5 10h3M4.5 14h3M16.5 10h3M16.5 14h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
   "N/A": '<path d="M12 4l6 8-6 8-6-8z" fill="currentColor"/><path d="M12 4v16M6 12h12" stroke="var(--g-bg)" stroke-width="0.8"/>',
 };
 function medal(group, cls = "medal") {
@@ -262,11 +262,11 @@ const fractureLabel = c => groupsOf(c).map(groupLabel).join(" + ");
 // in round badges and classes in square ones. A name with no symbol shows its first letter.
 const TAG_GLYPHS = {
   Human: '<circle cx="12" cy="8" r="3.6" fill="currentColor"/><path d="M5 20c0-4.6 3-7 7-7s7 2.4 7 7z" fill="currentColor"/>',
-  Animal: '<ellipse cx="12" cy="15.5" rx="4.6" ry="3.6" fill="currentColor"/><circle cx="6.3" cy="10.6" r="1.9" fill="currentColor"/><circle cx="10" cy="6.8" r="1.9" fill="currentColor"/><circle cx="14" cy="6.8" r="1.9" fill="currentColor"/><circle cx="17.7" cy="10.6" r="1.9" fill="currentColor"/>',
+  Monkey: '<ellipse cx="12" cy="15.5" rx="4.6" ry="3.6" fill="currentColor"/><circle cx="6.3" cy="10.6" r="1.9" fill="currentColor"/><circle cx="10" cy="6.8" r="1.9" fill="currentColor"/><circle cx="14" cy="6.8" r="1.9" fill="currentColor"/><circle cx="17.7" cy="10.6" r="1.9" fill="currentColor"/>',
   Undead: '<path d="M6.2 20V10.2a5.8 5.8 0 0 1 11.6 0V20z" fill="currentColor"/><path d="M11.2 8h1.6v7.5h-1.6zM9 10.2h6v1.6H9z" fill="var(--g-bg)"/><rect x="3" y="19.4" width="18" height="2" rx="1" fill="currentColor"/>',   // the family: any tribe that should be dead but is living (a gravestone)
   Zombie: '<circle cx="12" cy="12" r="5.2" fill="currentColor"/><path d="M16.6 12.0L20.0 12.0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="20.6" cy="12.0" r="1.5" fill="currentColor"/><path d="M15.3 15.3L17.7 17.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="18.1" cy="18.1" r="1.5" fill="currentColor"/><path d="M12.0 16.6L12.0 20.0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12.0" cy="20.6" r="1.5" fill="currentColor"/><path d="M8.7 15.3L6.3 17.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="5.9" cy="18.1" r="1.5" fill="currentColor"/><path d="M7.4 12.0L4.0 12.0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="3.4" cy="12.0" r="1.5" fill="currentColor"/><path d="M8.7 8.7L6.3 6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="5.9" cy="5.9" r="1.5" fill="currentColor"/><path d="M12.0 7.4L12.0 4.0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12.0" cy="3.4" r="1.5" fill="currentColor"/><path d="M15.3 8.7L17.7 6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="18.1" cy="5.9" r="1.5" fill="currentColor"/><circle cx="10.3" cy="10.6" r="1.2" fill="var(--g-bg)"/><circle cx="13.8" cy="13" r="1.5" fill="var(--g-bg)"/><circle cx="10.9" cy="14.2" r=".8" fill="var(--g-bg)"/>',   // a germ: the infection
   Skeleton: '<path d="M12 2.8C7.6 2.8 4.8 5.7 4.8 9.6c0 2.3 1 3.9 2.6 4.8v1.8h9.2v-1.8c1.6-.9 2.6-2.5 2.6-4.8 0-3.9-2.8-6.8-7.2-6.8z" fill="currentColor"/><path d="M7.3 9.3l3.3.6-1.2 2.9zM16.7 9.3l-3.3.6 1.2 2.9zM12 12.4l-1.1 2h2.2z" fill="var(--g-bg)"/><rect x="7.6" y="17" width="8.8" height="4" rx="1.2" fill="currentColor"/><path d="M10 17v4M12 17v4M14 17v4" stroke="var(--g-bg)" stroke-width=".9"/>',   // a bony skull with its jaw
-  Cyber: '<path d="M12 3l7.5 4.3v9.4L12 21l-7.5-4.3V7.3z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/>',
+  Program: '<path d="M12 3l7.5 4.3v9.4L12 21l-7.5-4.3V7.3z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/>',
   Plant: '<path d="M12 21V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 12C7 12 5 8 5 4c5 0 7 3 7 8zM12 14c4 0 7-2.5 7-7-4.500 0-7 2.500-7 7z" fill="currentColor"/>',
   Goblin: '<path d="M3 8l5 2.5h8L21 8l-2.600 6.500c-1 3.500-3.600 5.500-6.400 5.500s-5.400-2-6.400-5.500z" fill="currentColor"/><circle cx="9.500" cy="13" r="1.200" fill="var(--g-bg)"/><circle cx="14.500" cy="13" r="1.200" fill="var(--g-bg)"/>',
   Warrior: '<path d="M12 2.500l2 3v9.500h-4V5.500z" fill="currentColor"/><path d="M6.500 15h11v2.200h-11zM11 17h2v4.500h-2z" fill="currentColor"/>',
@@ -528,27 +528,27 @@ function shatter(uid, delay = 0, group = null) {
   shatterFrom(src, group);
 }
 // Each faction leaves the table its own way. Other cards shatter like crystal.
-const DEATHS = { Zombie: sinkAway, Digital: pixelAway, Monkey: tumbleAway, Fighter: slashAway };
+const DEATHS = { Undead: sinkAway, Cyber: pixelAway, Wild: tumbleAway, Mortal: slashAway };
 function deathPiece(src, cls, style = "", ms = 1000) {
   const piece = fxDiv(cls, `left:${src.offsetLeft}px;top:${src.offsetTop}px;${style}`, ms);
   piece.innerHTML = src.innerHTML;
   return piece;
 }
-function sinkAway(src) {   // Zombie: sinks back into the ground
+function sinkAway(src) {   // Undead: sinks back into the ground
   deathPiece(src, "death-sink", "", 1100);
 }
-function pixelAway(src) {  // Digital: breaks up into pixels and glitches out
+function pixelAway(src) {  // Cyber: breaks up into pixels and glitches out
   const cols = 5, rows = 7, w = FIELD_W / cols, h = FIELD_H / rows;
   for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
     const l = k * w, t = r * h;
     deathPiece(src, "death-pixel", `clip-path:inset(${t}px ${FIELD_W - l - w}px ${FIELD_H - t - h}px ${l}px);--dx:${(Math.random() - 0.5) * 70}px;--dy:${(Math.random() - 0.3) * 60}px;animation-delay:${(Math.random() * 0.35).toFixed(2)}s`, 1200);
   }
 }
-function tumbleAway(src) { // Monkey: knocked off the table, tumbling
+function tumbleAway(src) { // Wild: knocked off the table, tumbling
   const dir = Math.random() < 0.5 ? -1 : 1;
   deathPiece(src, "death-tumble", `--dx:${dir * 140}px;--r:${dir * 540}deg`, 1000);
 }
-function slashAway(src) {  // Fighter: cut in two by a clean strike
+function slashAway(src) {  // Mortal: cut in two by a clean strike
   deathPiece(src, "death-slash", `clip-path:polygon(0 0, 100% 0, 100% 35%, 0 70%);--dx:-18px;--dy:-26px;--r:-8deg`, 1000);
   deathPiece(src, "death-slash", `clip-path:polygon(0 70%, 100% 35%, 100% 100%, 0 100%);--dx:18px;--dy:34px;--r:8deg`, 1000);
   fxDiv("death-slash-line", `left:${src.offsetLeft - 10}px;top:${src.offsetTop + FIELD_H * 0.525}px`, 500);
@@ -1446,7 +1446,7 @@ function skillRows(c) {
   }).join("");
 }
 
-// "Tribe: Human, Animal · Class: Master": what a character is and what it does.
+// "Tribe: Human, Monkey · Class: Master": what a character is and what it does.
 function kindsLine(c) {
   if (c.type !== "Character" || !(c.tribes?.length || c.classes?.length)) return "";
   const part = (label, list, kind) => list?.length ? `<span class="kinds-part"><b>${label}</b> ${list.map(n => `${tagBadge(kind, n)}${esc(n)}`).join(", ")}</span>` : "";

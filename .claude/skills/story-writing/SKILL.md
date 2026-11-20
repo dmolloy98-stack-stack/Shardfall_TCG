@@ -19,21 +19,25 @@ in the game.
 (spoilers)** and the **clue log**. Read the parts that matter before drafting.
 
 Tone: playful on the surface, with a dark story underneath (touchstone: *Adventure Time*).
-Darker decks (Zombie first) show more of the dark side. Clues are **very hard to notice**
+Darker decks (the Undead world first) show more of the dark side. Clues are **very hard to notice**
 (like One Piece). Early campaign fights get subtler clues than late ones.
 
 ## The champions' voices
 
+A champion is the strongest of its tribe, known across every world. A tribe may have more than
+one champion; a deck holds only one. Worlds (fractures) are broad; tribes and classes tell cards
+apart (see "Fractures, tribes and classes" in `docs/world.md`).
+
 The full personalities are in `js/champions.js` (`CHAMPIONS`, with the line keys explained at the
 top) and `docs/world.md`. Short version:
-- **The Simplistic** (Simple): calm, plain, "why fight?". **Repeats its lines word for word, and
+- **The Simplistic** (Simple world; leads the Villagers): calm, plain, "why fight?". **Repeats its lines word for word, and
   every new line must reuse an old one exactly.** That's a clue that it's robotic (made by Boss
   Level). Never give it a fresh line.
-- **The Man Ape** (Monkey): loud, possessive, bananas and shards ("My jungle. My shards.").
-- **IP Man** (Fighter): polite and calm, a teacher; bows (`*bows*`); every fight is a lesson.
-- **Boss Level** (Digital): video-game talk (levels, continues, final boss); its motive is
+- **The Man Ape** (Wild world; leads the Monkeys): loud, possessive, bananas and shards ("My jungle. My shards.").
+- **IP Man** (Mortal world; leads the Martial Artists): polite and calm, a teacher; bows (`*bows*`); every fight is a lesson.
+- **Boss Level** (Cyber world; leads the Programs): video-game talk (levels, continues, final boss); its motive is
   "level up". Being fight four, it can carry bolder clues.
-- **Soul Shepard** (Zombie): gentle and sad; tends the fallen; blamed for the Shardfall but a
+- **Soul Shepard** (Undead world; leads the Zombies): gentle and sad; tends the fallen; blamed for the Shardfall but a
   victim.
 
 ## Where words live

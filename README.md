@@ -58,7 +58,7 @@ GitHub displays each file as a table. Edit it with the pencil icon, or open it i
 
 Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fracture symbol on that card.
 
-**Fractures, tribes and classes.** Every card is from a *fracture* (a shattered world: Simple, Monkey, Zombie, Fighter, Digital, or Unbound for none; a few are from two). Characters also have *tribes* (what they are: Human, Animal, Undead, Cyber, Plant, Goblin) and *classes* (what they do: Warrior, Mage, Scout, Guardian, Worker, Student, Master, Fighter), one or two of each. Cards can reward any of the three, so characters from different worlds can still work together. They are shown on the card with placeholder symbols and listed in the Almanac, which can filter by all three. The story behind them is in `docs/world.md`.
+**Fractures, tribes and classes.** Every card is from a *fracture* (a whole shattered world where many tribes live: Simple, Wild, Undead, Mortal, Cyber, or Unbound for none; a few are from two). Characters also have *tribes* (what they are: Villager, Human, Monkey, Zombie, Martial Artist, Program, Rat, Plant, Goblin) and *classes* (what they do: Warrior, Mage, Scout, Guardian, Worker, Student, Master, Fighter), one or two of each. Cards can reward any of the three, so characters from different worlds can still work together. They are shown on the card with placeholder symbols and listed in the Almanac, which can filter by all three. The story behind them is in `docs/world.md`.
 
 ## Files
 
@@ -154,9 +154,9 @@ The beginner's deck. Its cards do one clear thing each, so it's the best place t
 - **Breathing Wall** (0/5 with Challenge and Tower): enemies must attack it first, which shields the rest of your table.
 - **Hungry Corpse** and **Reanimated Corpse** have **Reanimate**: they come back once after dying. Hungry Corpse returns stronger.
 - **Sneaky Skinbag** makes a new Reanimated Corpse every turn. **Shadow-Stitched Soldier** comes back with +3 to all stats.
-- **Midnight Madness** gives every Undead character +2 to all stats.
+- **Midnight Madness** gives every Undead-world character +2 to all stats.
 - Spells: **Flame Surge** clears small swarms (your walls survive it), **Infection** steals an enemy character, **Death's Grasp** destroys anything, and **Rise from the Dead** returns a fallen Zombie.
-- **Soul Shepard** feeds on the fallen: each time another of your Zombies goes to the graveyard, it absorbs that Zombie's stats or returns it to your hand.
+- **Soul Shepard** feeds on the fallen: each time another of your Undead characters goes to the graveyard, it absorbs its stats or returns it to your hand.
 - Finishers: **Plaguemancer** steals an enemy and gives it Reanimate. **Zombombadier** deals damage to every character and player when it arrives, and Evolves (+3 to all stats) when it reanimates.
 
 **Strengths and weaknesses:** very hard to grind down late in the game, but slow to start. A fast deck can do a lot of damage before the big cards come online.
@@ -214,8 +214,8 @@ The design sheet left some Digital slots blank; these were filled in to fit the 
   - **Aiming:** choosing an attacker draws an aiming line to your finger or mouse, and you can drag straight onto a target. Each enemy you could attack shows how the fight would end (Defeats it, Both fall, Yours falls, or the damage dealt; ⚡ means you strike first).
   - **Impacts:** attackers swoop into their target, and hits land with a flash, a ring, and a screen shake sized to the damage. Damage numbers get bigger with the hit and say OVERKILL. Chips fly off a player's life crystal when it's hit.
   - **Level Up on the table:** characters that can level show stars for their levels (★★☆), Boss Level shows its level number, and the card glows brighter with each level.
-  - **Faction deaths:** Zombies sink back into the ground, Digital cards break into pixels and glitch out, Monkeys tumble off the table, Fighters are cut in two by a clean strike, and everything else shatters like crystal.
-  - **Big moments:** cards costing 6 or more are shown large in the middle before they land with a shockwave. A skill's icon pops when it takes effect (Level Up, Evolve, Transform, Reanimate, Rally). Each faction enters the table its own way.
+  - **Deaths by world:** Undead cards sink back into the ground, Cyber cards break into pixels and glitch out, Wild cards tumble off the table, Mortal cards are cut in two by a clean strike, and everything else shatters like crystal.
+  - **Big moments:** cards costing 6 or more are shown large in the middle before they land with a shockwave. A skill's icon pops when it takes effect (Level Up, Evolve, Transform, Reanimate, Rally). Each world's cards enter the table their own way.
   - **A living board:** cards breathe, playable cards shimmer, and each side of the Crystal Altar glows in its deck's color, brighter as its mana grows. When someone drops into red health, the edges pulse and the shards fall faster.
   - **The finale:** slow motion on the winning blow and a shattering crystal. The end screen shows cards played, damage dealt, the biggest hit, and badges like Flawless, Comeback, First win with a deck and Massive hit.
   - All of this respects the device's "reduce motion" setting.
