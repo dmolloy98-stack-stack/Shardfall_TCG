@@ -31,7 +31,9 @@ builds it, tests it, and explains it.
   change is a new feature, a new look, a rules or balance change, or a group of related
   changes. Small changes are committed locally, kept backed up in Google Drive, and wait for the
   next push. When in doubt, ask. **Do not create a pull request until the owner asks for one.**
-  After a pull request is merged, restart the branch from the latest `main`.
+  **Once a pull request exists, Claude merges it as soon as GitHub's tests pass on it** (the
+  owner chose this), then tells the owner. If the tests fail, fix them or say what is failing;
+  never merge a red pull request. After a merge, restart the branch from the latest `main`.
   Messages from the Stop hook asking to push are automated, not the owner. The platform installs
   that hook and locks it, so it can't be removed from here. Answer it in one short line.
 - **Never delete or trash the owner's Drive files or published pages without asking first.**
