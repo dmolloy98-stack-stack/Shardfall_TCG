@@ -1,16 +1,7 @@
 // Help for new players: beginner hints during a game, the first-visit welcome,
 // and the illustrated How to play guide (guide.html) shown inside the game.
 
-// Saved preferences. Storage can be unavailable (private windows), so every
-// read and write is allowed to fail.
-const PREFS = {
-  get(key, fallback) {
-    try { const v = localStorage.getItem("shardfall." + key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; }
-  },
-  set(key, value) {
-    try { localStorage.setItem("shardfall." + key, JSON.stringify(value)); } catch { /* not saved */ }
-  },
-};
+// Saved preferences (PREFS) live in js/saves.js.
 
 // ---------------------------------------------------------------------------
 // Beginner hints: one short tip for what you can do right now.

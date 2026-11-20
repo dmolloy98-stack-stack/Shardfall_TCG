@@ -48,8 +48,10 @@ added, split or renamed, or the flow between them changes.
    (`js/ui.js`, "board clicks"), Settings uses `data-set="…"` and the game menu `data-m="…"` (both in `js/panels.js`).
    **Add a new branch; don't add a second handler or a second branch for an existing act.**
    (A duplicate branch once stopped played cards from being counted.)
-4. **Saved settings:** `PREFS.get(key, fallback)` / `PREFS.set(key, value)` (`js/help.js`; wrapped,
-   so private browsing can't crash it). Load into `U` with a default in the `U` object; add the
+4. **Saved settings:** `PREFS.get(key, fallback)` / `PREFS.set(key, value)` (`js/saves.js`; wrapped,
+   so private browsing can't crash it). Every new key goes in `SAVE_KEYS` there (the save code
+   carries it; `tools/saves-test.js` checks). Changing the form of something already saved means
+   raising `SAVE_VERSION` and adding an upgrade step in `SAVE_UPGRADES`. Load into `U` with a default in the `U` object; add the
    button to `showSettings()` with `aria-pressed` for on/off.
 5. **Heavy effects off** (`html.light-fx`, `applyHeavyFx()`): any **looping** animation must be
    added to the `html.light-fx … { animation: none }` list in `css/style.css`. One-time effects
@@ -79,6 +81,7 @@ added, split or renamed, or the flow between them changes.
 | The big shard fall, champion shard bonuses | `node tools/shard-test.js .` |
 | Champion abilities and champion cards | `node tools/champions-test.js .` |
 | Every card played at least once (any card or effect change) | `node tools/cards-test.js .` |
+| Saving: listed keys, upgrades, the save code | `node tools/saves-test.js .` |
 | Recorded matches; which move first plays differently | `node tools/replay-test.js .` (`--update` when play is meant to change) |
 | Whole games, crashes, stuck states | `node tools/selftest.js . ai 2` and `. rand 300` (`"problems": {}`) |
 

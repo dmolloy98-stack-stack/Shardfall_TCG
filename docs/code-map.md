@@ -38,7 +38,10 @@ few plays, then the best few follow-ups to each, and takes the first step of the
 Undo works the same way: `act()` saves a copy of `S` before every move.
 
 Kept in the player's browser: settings and hints (`js/help.js`), custom decks
-(`js/decks.js`) and campaign progress (`js/campaign.js`).
+(`js/decks.js`) and campaign progress (`js/campaign.js`). Every saved item is listed in
+`SAVE_KEYS` in `js/saves.js`, which also holds the save version (`SAVE_VERSION`, with an upgrade
+step per version in `SAVE_UPGRADES`) and the save code (`exportSave()`, `importSave()`; the window
+is `showSaveCode()` in `js/panels.js`).
 
 ## Moves: one front door, written down
 
@@ -195,6 +198,7 @@ their own story or coaching, then hand over to the same engine.
 | A random event (a mini shard fall in rounds 4 and 12, one round long) | names and descriptions in `data/events.csv`; what each does is `EVENT_ON_START` and `eventNow()` in `js/engine.js`, with the cost and area-bonus effects in `costFromEffect` and `auraBonus` in `js/effects.js`; the warning card is `eventPill()` in `js/ui.js` |
 | The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/style.css`; the list of skins is `SKINS` in `js/ui.js`; the long cracks are redrawn by `tools/make-crystal.js` |
 | The playable single-file copy | `tools/build-single.js` |
+| Something new to save in the browser, or a change to how something is saved | add the key to `SAVE_KEYS` in `js/saves.js`; if old saves need changing, raise `SAVE_VERSION` and add a step to `SAVE_UPGRADES` (test: `tools/saves-test.js`) |
 | A new kind of move (anything a player can do) | add it to `MOVES` in `js/engine.js` and send it with `move()`; see "Moves" above |
 | Every card played at least once | `tools/cards-test.js` (its table: two plain characters, a Level Up character and an area on each side) |
 | Recorded test matches | `tools/replay-test.js`; re-record with `node tools/replay-test.js . --update` when play is meant to change |
@@ -205,7 +209,7 @@ their own story or coaching, then hand over to the same engine.
 
 ## Size and shape
 
-About 7,200 lines of JavaScript in 20 files (November 2026). The largest are `js/engine.js` at
+About 7,400 lines of JavaScript in 21 files (November 2026). The largest are `js/engine.js` at
 about 1,350 and `js/ui.js` at about 1,130. The menu, the Almanac, the menu background and the
 start-up code used to live in `ui.js`; they are now `menu.js`, `storm.js` and `boot.js`. In
 November 2026 the card drawing (`cards.js`), the table effects (`table-effects.js`) and the pop-up

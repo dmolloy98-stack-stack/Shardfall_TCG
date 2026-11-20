@@ -118,9 +118,45 @@ function showSettings() {
       <button type="button" class="btn" data-set="passcheck" aria-pressed="${U.passCheck}" title="Ask before you pass with mana and playable cards, or characters that can still attack">Ask before passing early: ${U.passCheck ? "On" : "Off"}</button>
       ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">Read the battle log</button>` : ""}
       ${U.screen === "menu" ? `<button type="button" class="btn" data-set="intro">Watch the intro</button>` : ""}
+      <button type="button" class="btn" data-set="savecode" title="Copy your progress to another device or browser">Save code: copy or load progress</button>
     </div>
     <div class="menu-skins"><h3>Board</h3><div class="skin-list compact">${skinButtons("data-skin")}</div></div>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-set="done">${U.screen === "game" ? "Back to the game menu" : "Done"}</button></div>`);
+}
+
+// Save code (js/saves.js): your progress and settings as one line of text, to carry them to
+// another device or browser, or to keep a copy.
+function showSaveCode() {
+  openModal(`<h2 id="modal-title">Save code</h2>
+    <p>Your progress and settings as one line of text: campaign, decks, trophies, card stories and Settings. Copy it and keep it somewhere safe, or paste it into Shardfall on another device to carry on there.</p>
+    <textarea id="save-code-out" class="save-code" readonly rows="3" aria-label="Your save code">${esc(exportSave())}</textarea>
+    <div class="detail-actions"><button type="button" class="btn" data-set="copycode">Copy my save code</button></div>
+    <h3>Load a save code</h3>
+    <p>Paste a code here. It replaces the progress and settings on this device.</p>
+    <textarea id="save-code-in" class="save-code" rows="3" aria-label="Save code to load" placeholder="SHARDFALL1:…"></textarea>
+    <p id="save-code-msg" class="save-code-msg" role="status"></p>
+    <div class="detail-actions"><button type="button" class="btn" data-set="loadcode">Load this code</button><button type="button" class="btn btn-primary" data-set="settings">Back to Settings</button></div>`);
+}
+function saveCodeMessage(text) { const m = byId("save-code-msg"); if (m) m.textContent = text; }
+async function copySaveCode() {
+  const box = byId("save-code-out");
+  try { await navigator.clipboard.writeText(box.value); }
+  catch { box.select(); try { document.execCommand("copy"); } catch { /* the code stays selected to copy by hand */ } }
+  saveCodeMessage("Copied. Keep it somewhere safe, like a note or an email to yourself.");
+}
+function loadSaveCode(btn) {
+  const code = byId("save-code-in").value;
+  const check = readSaveCode(code);
+  if (check.error) { saveCodeMessage(check.error); return; }
+  if (!btn.dataset.sure) {   // a second press confirms, since this replaces everything saved here
+    btn.dataset.sure = "1"; btn.textContent = "Yes, replace my progress";
+    saveCodeMessage("This replaces the progress and settings on this device. Press again to go ahead.");
+    return;
+  }
+  const error = importSave(code);
+  if (error) { saveCodeMessage(error); return; }
+  saveCodeMessage("Loaded. Shardfall is restarting…");
+  setTimeout(() => location.reload(), 700);
 }
 
 function showGameMenu() {
@@ -166,6 +202,10 @@ $("#modal").addEventListener("click", e => {
     else if (set.dataset.set === "flow") { U.autoFlow = !U.autoFlow; PREFS.set("autoFlow", U.autoFlow); showSettings(); }
     else if (set.dataset.set === "passcheck") { U.passCheck = !U.passCheck; PREFS.set("passCheck", U.passCheck); showSettings(); }
     else if (set.dataset.set === "intro") { closeModal(); playIntro(); }
+    else if (set.dataset.set === "savecode") showSaveCode();
+    else if (set.dataset.set === "copycode") copySaveCode();
+    else if (set.dataset.set === "loadcode") loadSaveCode(set);
+    else if (set.dataset.set === "settings") showSettings();
     else if (U.screen === "game") showGameMenu();
     else closeModal();
     return;
