@@ -68,7 +68,11 @@ function splitOutside(text, sep) {
 const words = text => (text.match(/"[^"]*"|\S+/g) || []).map(w => w.replace(/^"|"$/g, ""));
 
 // Who an action affects. "allies.Monkey.other" = your Monkey characters except this card.
-const SELECTOR_BASES = ["self", "target", "holder", "allies", "enemies", "everyone", "me", "foe", "gear"];
+// The card piles grave (your graveyard), graves (both), deck and hand hold cards that aren't on the
+// table, for pick and take: "grave.Monkey.character" = the Monkey characters in your graveyard.
+// Piles never hold tokens (cards made during play, like Master Rat's Turtles).
+const PILE_BASES = ["grave", "graves", "deck", "hand"];
+const SELECTOR_BASES = ["self", "target", "holder", "allies", "enemies", "everyone", "me", "foe", "gear", ...PILE_BASES];
 function parseSelector(text, where) {
   const [base, ...filters] = text.split(".");
   if (!SELECTOR_BASES.includes(base)) throw new Error(`${where}: "${text}" is not someone an action can affect. Use one of: ${SELECTOR_BASES.join(", ")}.`);
@@ -86,6 +90,11 @@ function selectorFilter(f) {
   if (f === "strongest") return null;   // handled after filtering
   if (f === "swift") return c => isSwift(c);
   if (f === "tower") return c => hasSkill(c, "Tower");
+  if (["character", "spell", "equipment", "area"].includes(f)) return c => c.type.toLowerCase() === f;   // a kind of card
+  const cost = f.match(/^cost(<=|>=|=)(\d+)$/);                                                     // cost<=2: by printed mana cost
+  if (cost) { const n = Number(cost[2]); return { "<=": c => c.manaCost <= n, ">=": c => c.manaCost >= n, "=": c => c.manaCost === n }[cost[1]]; }
+  const not = f.match(/^not:(.+)$/);                                                               // not:primate: anything but that
+  if (not) { const fn = selectorFilter(not[1]); return fn ? (c, ctx) => !fn(c, ctx) : null; }
   // Fracture, tribe or class, written plainly (allies.Undead, allies.Monkey, allies.Student) or with
   // its kind in front (allies.class:Fighter). Use the kind if a name is ever two things; the plain
   // word means the fracture first, then the tribe, then the class.
@@ -108,6 +117,10 @@ function select(sel, ctx) {
     case "me": return [ctx.owner];
     case "foe": return [foeOf(ctx.owner)];
     case "gear": return S.players.flatMap(p => p.field.equips);
+    case "grave": list = ctx.owner.grave.filter(c => !c.token); break;
+    case "graves": list = S.players.flatMap(p => p.grave).filter(c => !c.token); break;
+    case "deck": list = ctx.owner.deck.filter(c => !c.token); break;
+    case "hand": list = ctx.owner.hand.filter(c => !c.token); break;
   }
   for (const f of sel.filters) { const fn = selectorFilter(f); if (fn) list = list.filter(c => !c.isPlayer && fn(c, ctx)); }
   if (sel.filters.includes("strongest") && list.length) list = [list.reduce((a, b) => (stats(b).a > stats(a).a ? b : a))];
@@ -201,6 +214,33 @@ const ACTIONS = {
     const c = takeFromDeck(ctx.owner, x => x.id === id);
     if (c) { putOnField(c, ctx.owner); log(`${c.name} comes to the field from ${ctx.owner.name}'s deck.`); }
   }],
+  drainLife: ["s", (ctx, who) => { for (const c of chars(who(ctx))) { const st = stats(c); healPlayer(ctx.owner, st.a + st.h); } }],
+  // cards from piles: pick (the player chooses) and take (from the top of the deck, no choice)
+  pick: ["snww?", (ctx, pile, n, to, prompt) => {
+    const cards = pile(ctx), p = ctx.owner, k = n(ctx);
+    if (!cards.length || (to === "field" && p.field.chars.length >= RULES.maxChars)) return;
+    const where = to === "field" ? "bring back to the field" : "return to your hand";
+    ask({
+      kind: "choose", source: ctx.card, owner: p.idx, title: ctx.card.name, cards, pick: k,
+      prompt: prompt || `Pick ${k === 1 ? "a card" : `up to ${k} cards`} to ${where}.`,
+      ...(to === "field" ? { options: [{ id: "field", label: "Bring it back to the field" }], resolve: "rise" } : { resolve: "toHand" }),
+    });
+  }, ([pile, , to], where) => {
+    if (!PILE_BASES.includes(pile.split(".")[0]) || !["hand", "field"].includes(to)) throw new Error(`${where}: write pick as "pick <grave|graves|deck|hand>.<narrowing> <how many> hand|field", optionally followed by "the question in quotes".`);
+  }],
+  take: ["snw", (ctx, pile, n, to) => {
+    const p = ctx.owner;
+    for (const c of pile(ctx).slice(-n(ctx))) {   // the deck's top is its end
+      if (to === "field" && p.field.chars.length >= RULES.maxChars) break;
+      p.deck.splice(p.deck.indexOf(c), 1);
+      if (to === "field") putOnField(c, p); else addToHand(p, c);
+    }
+  }, ([pile, , to], where) => {
+    if (pile.split(".")[0] !== "deck" || !["hand", "field"].includes(to)) throw new Error(`${where}: write take as "take deck.<narrowing> <how many> hand|field".`);
+  }],
+  discardDraw: ["w?", (ctx, prompt) => {
+    if (ctx.owner.hand.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: ctx.card.name, prompt: prompt || "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" });
+  }],
   flag: ["w", (ctx, name) => { ctx.owner[name] = true; }],
   say: ["sww?", (ctx, who, text, color) => { for (const c of chars(who(ctx))) emit("text", { uid: c.uid, text, color: color || "#ffffff" }); }],
   script: ["w", (ctx, name) => SCRIPTS[name](ctx)],
@@ -225,6 +265,7 @@ function parseAction(text, where) {
     if (name === "script" && !SCRIPTS[a]) throw new Error(`${where}: there is no script called "${a}".`);
     return a;
   });
+  def[2]?.(args, where);   // an action's own check of how it is written
   const test = cond ? parseNumber(cond, where) : null;
   return { name, args: parsed, test, run: ctx => { if (!test || test(ctx) > 0) def[1](ctx, ...parsed); } };
 }
@@ -299,31 +340,6 @@ const SCRIPTS = {
     healPlayer(ctx.owner, n * hit.length);
     for (const c of hit) { emit("charDamage", { uid: c.uid, amount: n }); checkDeath(c); }
   },
-  primate(ctx) {
-    const picks = ctx.owner.deck.filter(n => hasTribe(n, "Monkey") && n.type === "Character" && n.name !== "Primate" && n.manaCost <= 2).slice(-2);
-    for (const n of picks) {
-      if (ctx.owner.field.chars.length >= RULES.maxChars) break;
-      ctx.owner.deck.splice(ctx.owner.deck.indexOf(n), 1);
-      putOnField(n, ctx.owner);
-    }
-  },
-  callOfTheJungle(ctx) {
-    const cards = ctx.owner.grave.filter(c => hasTribe(c, "Monkey") && c.type === "Character" && !c.token);
-    if (cards.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call of the Jungle", prompt: "Pick up to 3 Monkey characters to return to your hand.", cards, pick: 3, resolve: "toHand" });
-  },
-  soulSuction(ctx) {
-    const st = stats(ctx.target);
-    healPlayer(ctx.owner, st.a + st.h);
-    dealDamageToCharacter(ctx.target, 99999);
-  },
-  rottenFinger(ctx) {
-    if (ctx.owner.hand.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rotten Finger", prompt: "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" });
-  },
-  riseFromTheDead(ctx) {
-    const cards = ctx.owner.grave.filter(c => inGroup(c, "Undead") && c.type === "Character");
-    if (!cards.length || ctx.owner.field.chars.length >= RULES.maxChars) return;
-    ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Rise from the Dead", prompt: "Pick an Undead character from your graveyard to bring back to the field.", cards, pick: 1, options: [{ id: "field", label: "Bring it back to the field" }], resolve: "rise" });
-  },
   keepComing() {
     for (const c of allChars()) if (hasTribe(c, "Zombie")) {
       if (hasSkill(c, "Reanimate")) c.currentHealth += 3;
@@ -339,10 +355,6 @@ const SCRIPTS = {
     const top = alive.reduce((a, b) => (stats(b).a > stats(a).a ? b : a));
     const drain = top.levelUpCount || 0;
     for (const c of foeOf(ctx.owner).field.chars) { c.attack -= drain; emit("text", { uid: c.uid, text: `-${drain} ATK`, color: "#ff8a6b" }); }
-  },
-  callBack(ctx) {
-    const cards = S.players.flatMap(p => p.grave).filter(c => c.type === "Character" && !c.token);
-    if (cards.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: "Call Back", prompt: "Pick a character from either graveyard to add to your hand.", cards, pick: 1, resolve: "toHand" });
   },
   zombombadier(ctx) {
     const c = ctx.card, d = c.attack + c.health;

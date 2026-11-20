@@ -149,7 +149,7 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
    entrance into the rules; a friend's moves online will use it too.
 3. **A written plan for hidden cards online**, so a browser can't peek at the other hand.
 4. **Built (20 Nov).** **Champions, events and shard bonuses in their own files**, so a new one is "add a file".
-5. **More words in the card ability language**, so fewer future cards need custom code.
+5. **Built (20 Nov).** **More words in the card ability language**, so fewer future cards need custom code.
 6. **Built (20 Nov).** **A test that plays every card at least once.**
 7. **Built (20 Nov).** **A version number on saved progress**, with an upgrade step for old saves.
 8. **Built (20 Nov).** **Save code: export and import progress** (copy a code, paste it on another device).
