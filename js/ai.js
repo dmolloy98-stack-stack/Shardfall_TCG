@@ -92,7 +92,7 @@ function aiResolveChoice() {
   // Soul Shepard and The Man Ape: try each answer on a copy of the game and take the best.
   if (pd.resolve === "shepard") {
     const score = o => simulate(() => { resolveChoice([], o); return evaluate(me); });
-    resolveChoice([], score("absorb") >= score("hand") + (aiStyle(me).gather || 0) ? "absorb" : "hand");
+    move("choose", [], score("absorb") >= score("hand") + (aiStyle(me).gather || 0) ? "absorb" : "hand");
     return;
   }
   if (pd.resolve === "apeSacrifice") {
@@ -101,7 +101,7 @@ function aiResolveChoice() {
       const sc = simulate(() => { resolveChoice([c.uid], "sacrifice"); return evaluate(me); });
       if (sc > bestScore + (aiStyle(me).sac ?? 0.5)) { bestScore = sc; best = c.uid; }
     }
-    resolveChoice(best ? [best] : [], best ? "sacrifice" : null);
+    move("choose", best ? [best] : [], best ? "sacrifice" : null);
     return;
   }
   // A counter spell: use one only when stopping the card is worth more than the counter costs,
@@ -113,26 +113,26 @@ function aiResolveChoice() {
       const gain = simulate(() => { resolveChoice([c.uid], "counter"); return evaluate(me); }) - letIt - playCost(c, S.players[me]) * 1.2;
       if (gain > bestGain) { bestGain = gain; best = c.uid; }
     }
-    resolveChoice(best ? [best] : [], best ? "counter" : null);
+    move("choose", best ? [best] : [], best ? "counter" : null);
     return;
   }
   if (pd.resolve === "messenger") {
     const top = pd.cards[0];
-    resolveChoice([], top && top.manaCost >= 3 ? "take" : "discard");
+    move("choose", [], top && top.manaCost >= 3 ? "take" : "discard");
     return;
   }
   const sorted = pd.cards.slice().sort((a, b) => b.manaCost - a.manaCost);
   if (pd.resolve === "discardDraw") sorted.reverse();
   const picks = sorted.slice(0, pd.pick || 1).map(c => c.uid);
   const option = pd.options?.some(o => o.id === "field") && S.players[me].mana >= 2 ? "field" : "hand";
-  resolveChoice(picks, option);
+  move("choose", picks, option);
 }
 
 // Do one setup action and answer any choice it raises, the way the computer would.
 // Returns false if the action could not be done.
 function aiDo(run) {
   if (!run()) return false;
-  if (S.pending?.kind === "target") { const t = aiPickTarget(); if (!t) return false; chooseTarget(targetRef(t)); }
+  if (S.pending?.kind === "target") { const t = aiPickTarget(); if (!t) return false; move("target", targetRef(t)); }
   if (S.pending?.kind === "choose") aiResolveChoice();
   return true;
 }
@@ -151,18 +151,18 @@ function aiSetupActions() {
   for (const c of p.hand) {
     if (!canPlay(c, p)) continue;
     if (c.type === "Equipment") {
-      for (const t of p.field.chars) tryAction(`equip ${c.name}`, () => playCard(c.uid, { target: t }));
-      if (!p.field.chars.length) tryAction(`place ${c.name}`, () => playCard(c.uid, { toField: true }));
+      for (const t of p.field.chars) tryAction(`equip ${c.name}`, () => move("play", c.uid, { target: t }));
+      if (!p.field.chars.length) tryAction(`place ${c.name}`, () => move("play", c.uid, { toField: true }));
     } else {
-      tryAction(`play ${c.name}`, () => playCard(c.uid));
+      tryAction(`play ${c.name}`, () => move("play", c.uid));
     }
   }
   for (const a of p.field.areas) {
-    if (canActivateArea(a, p)) tryAction(`activate ${a.name}`, () => activateArea(a.uid));
+    if (canActivateArea(a, p)) tryAction(`activate ${a.name}`, () => move("area", a.uid));
   }
   for (const e of p.field.equips) {
     if (!canAttachFromField(e, p)) continue;
-    for (const t of p.field.chars) tryAction(`attach ${e.name}`, () => attachFieldEquipment(e.uid, t.uid));
+    for (const t of p.field.chars) tryAction(`attach ${e.name}`, () => move("attach", e.uid, t.uid));
   }
   // Developing the board is worth something even when the position score barely moves.
   for (const a of actions) a.gain = a.score - base;
@@ -180,6 +180,18 @@ function aiPlanScore(me, depth) {
   return best;
 }
 
+// The computer's own random numbers, for its occasional surprise choice. They are kept apart from
+// the match's random numbers (S.rng, which shuffle decks and so on), so the computer's thinking
+// never changes a match's luck, and a recorded match replays the same without the computer.
+let aiSeed = null, aiRng = 0;
+function aiRand() {
+  if (aiSeed !== S.seed) { aiSeed = S.seed; aiRng = (S.seed ^ 0x9e3779b9) >>> 0; }
+  let t = (aiRng = (aiRng + 0x6d2b79f5) >>> 0);
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
 // The setup play to make now: the first step of the best line of plays, or null to stop.
 function aiPlanSetup() {
   const me = S.active;
@@ -189,7 +201,7 @@ function aiPlanSetup() {
   options.sort((x, y) => y.plan - x.plan);
   // A wild player sometimes goes with its second idea.
   const wild = aiStyle(me).wild;
-  if (wild && options.length > 1 && options[1].plan > evaluate(me) && rand() < wild) return options[1];
+  if (wild && options.length > 1 && options[1].plan > evaluate(me) && aiRand() < wild) return options[1];
   return options[0];
 }
 
@@ -236,9 +248,9 @@ function aiAttackActions() {
 
 // Do one battle action from aiAttackActions().
 function aiStrike(a) {
-  if (a.blade) { useBlade(a.blade); chooseTarget({ uid: a.target }); }
-  else attack(a.attacker, a.target);
-  if (S.pending?.kind === "target") { const t = aiPickTarget(); if (t) chooseTarget(targetRef(t)); }
+  if (a.blade) { move("blade", a.blade); move("target", { uid: a.target }); }
+  else move("attack", a.attacker, a.target);
+  if (S.pending?.kind === "target") { const t = aiPickTarget(); if (t) move("target", targetRef(t)); }
   if (S.pending?.kind === "choose") aiResolveChoice();
 }
 
@@ -289,29 +301,29 @@ function aiDecide() {
   if (S.pending?.kind === "target") {
     const t = aiPickTarget(), src = S.pending.source;
     return { aim: t ? { from: src.uid, to: t.isPlayer ? { isPlayer: true, idx: t.idx } : t.uid } : null,
-      run: () => { if (t) chooseTarget(targetRef(t)); else cancelPending(); return true; } };
+      run: () => { if (t) move("target", targetRef(t)); else move("cancel"); return true; } };
   }
   if (S.pending?.kind === "choose") return { aim: null, run: () => { aiResolveChoice(); return true; } };
 
   if (S.phase === PHASE.DRAW) {
-    if (!active().deck.length) return { aim: null, run: () => { deckOut(active()); return false; } };
-    return { aim: null, run: () => { doDraw(); return true; } };
+    if (!active().deck.length) return { aim: null, run: () => { move("deckOut"); return false; } };
+    return { aim: null, run: () => { move("draw"); return true; } };
   }
   if (S.phase === PHASE.SETUP) {
     const best = aiPlanSetup();
     if (best) return { aim: null, run: () => { best.run(); return true; } };
     // Spend the one-time mana token only when the extra mana unlocks a good play.
-    if (active().manaToken && simulate(() => useManaToken() && aiSetupActions().length > 0)) return { aim: null, run: () => { useManaToken(); return true; } };
-    return { aim: null, run: () => { advancePhase(); return true; } };
+    if (active().manaToken && simulate(() => useManaToken() && aiSetupActions().length > 0)) return { aim: null, run: () => { move("token"); return true; } };
+    return { aim: null, run: () => { move("next"); return true; } };
   }
   if (S.phase === PHASE.BATTLE) {
     const foe = { isPlayer: true, idx: 1 - S.active };
     const lethal = aiLethal();
-    if (lethal != null) return { aim: { from: lethal, to: foe }, run: () => { attack(lethal, null); return true; } };
+    if (lethal != null) return { aim: { from: lethal, to: foe }, run: () => { move("attack", lethal, null); return true; } };
     const best = aiPlanBattle();
-    if (best?.blade) return { aim: { from: best.blade, to: best.target }, run: () => { useBlade(best.blade); chooseTarget({ uid: best.target }); return true; } };
-    if (best) return { aim: { from: best.attacker, to: best.target ?? foe }, run: () => { attack(best.attacker, best.target); return true; } };
-    return { aim: null, run: () => { advancePhase(); return true; } };
+    if (best?.blade) return { aim: { from: best.blade, to: best.target }, run: () => { move("blade", best.blade); move("target", { uid: best.target }); return true; } };
+    if (best) return { aim: { from: best.attacker, to: best.target ?? foe }, run: () => { move("attack", best.attacker, best.target); return true; } };
+    return { aim: null, run: () => { move("next"); return true; } };
   }
-  return { aim: null, run: () => { endTurn(); return false; } };
+  return { aim: null, run: () => { move("end"); return false; } };
 }

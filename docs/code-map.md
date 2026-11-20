@@ -40,6 +40,37 @@ Undo works the same way: `act()` saves a copy of `S` before every move.
 Kept in the player's browser: settings and hints (`js/help.js`), custom decks
 (`js/decks.js`) and campaign progress (`js/campaign.js`).
 
+## Moves: one front door, written down
+
+Every move, from you, the computer or the tutorial's Trainer, goes through one front door,
+`move(name, …)` in `js/engine.js` (the list of names is `MOVES`). Each accepted move is written
+down in `S.moves` as a short note, for example `[0, "play", 41]` (player 1 plays the card with
+uid 41). `S.setup` holds how the match began: the seed, both deck lists, and the campaign
+champion if there is one. Setup and notes together replay the match exactly (`replayMatch()`),
+which is what Play a Friend will send between browsers.
+
+```mermaid
+flowchart LR
+  you["You<br/>ui.js · act()"] --> door
+  ai["The computer<br/>ai.js"] --> door
+  tut["Tutorial Trainer<br/>tutorial.js"] --> door
+  friend["A friend (later)"] -.-> door
+  door{{"move(name, …)<br/>engine.js"}} --> rules[["The rules<br/>playCard, attack, …"]]
+  door -->|accepted| notes[("S.moves<br/>+ S.setup")]
+  notes --> replay["replayMatch()<br/>tests, bug reports"]
+```
+
+Rules for keeping replays exact:
+- Real moves go through `move()`. The computer's look-ahead calls the rules directly on a copy,
+  which is never written down.
+- Nothing outside a move may change `S` (the campaign's champion-in-hand start is
+  `campaignChampion()` in the engine for this reason). The tutorial rigs its hands, so lessons
+  are marked `S.setup.scripted` and are not replayed.
+- The computer's surprise choices use its own dice (`aiRand()` in `js/ai.js`), never the match's.
+- A rule must not change the game and then report "refused" (return false).
+- Tests: every automatic game in `tools/selftest.js` is replayed from its notes, and
+  `tools/replay-test.js` replays recorded matches (`tools/recorded-matches.json`).
+
 ## When you play a card
 
 Every move takes the same route, whether it's a card, an attack or an area. Characters and
@@ -164,6 +195,8 @@ their own story or coaching, then hand over to the same engine.
 | A random event (a mini shard fall in rounds 4 and 12, one round long) | names and descriptions in `data/events.csv`; what each does is `EVENT_ON_START` and `eventNow()` in `js/engine.js`, with the cost and area-bonus effects in `costFromEffect` and `auraBonus` in `js/effects.js`; the warning card is `eventPill()` in `js/ui.js` |
 | The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/style.css`; the list of skins is `SKINS` in `js/ui.js`; the long cracks are redrawn by `tools/make-crystal.js` |
 | The playable single-file copy | `tools/build-single.js` |
+| A new kind of move (anything a player can do) | add it to `MOVES` in `js/engine.js` and send it with `move()`; see "Moves" above |
+| Recorded test matches | `tools/replay-test.js`; re-record with `node tools/replay-test.js . --update` when play is meant to change |
 | Checking a rules or card change broke nothing | `node tools/test-all.js` (every test; GitHub runs it on each push), and `node tools/selftest.js . rand 1000` for a deeper look |
 | Checking a screen change in a browser | `node tools/browser-check.js` (uses `tools/serve.js` to load the game from disk and `tools/readability.js` for the "can you read it?" check); the `browser-check` skill in `.claude/skills/` |
 | Deck win rates and game length | `node tools/winrates.js` (plays `tools/selftest.js` games and sums them up) |

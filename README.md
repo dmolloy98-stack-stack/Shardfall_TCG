@@ -70,7 +70,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `css/style.css` | All styling and animations |
 | `data/*.csv` | Cards, decks, skills and rules (see above) |
 | `js/data.js` | Loads and checks the CSV files, then starts the game |
-| `js/engine.js` | Game rules: turns, combat, skills. Shuffles come from a seed per match (shown in the game log), so a game can be replayed exactly |
+| `js/engine.js` | Game rules: turns, combat, skills. Every move comes in through one front door and is written down as a short note; with the match seed (shown in the game log) the notes replay a match exactly |
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
 | `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |
 | `js/cards.js` | How a card is drawn: frames, art, badges, names |
@@ -93,6 +93,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
 | `tools/test-all.js` | Runs every test below in one go and says whether all passed: `node tools/test-all.js`. GitHub runs it on every push and pull request (`.github/workflows/tests.yml`) |
 | `tools/selftest.js` | Plays many automatic games and reports anything broken: `node tools/selftest.js . ai 4` and `node tools/selftest.js . rand 1000` (needs Node.js). Run it after changing rules or cards |
+| `tools/replay-test.js` | Replays a few recorded matches (`tools/recorded-matches.json`) and says which move first plays differently: `node tools/replay-test.js .`. When a change is meant to alter play, record them again with `--update` |
 | `tools/kinds-test.js` | Checks the fracture, tribe and class rules and the cards built on them (Sensei, Speedrunner, hybrids, infection): `node tools/kinds-test.js .` |
 | `tools/events-test.js` | Checks the random events: `node tools/events-test.js .` |
 | `tools/champions-test.js` | Checks the champion abilities: `node tools/champions-test.js .` |

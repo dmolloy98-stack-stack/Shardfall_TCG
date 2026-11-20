@@ -143,9 +143,9 @@ downloaded from GitHub; Claude needs the owner's go-ahead before installing any 
 The owner picked all twelve. Nothing here changes how the game plays. Build order: 1+2, 9, 6, 7,
 8, 10, 4, 5, 3, 11, 12. Mark each one built as it lands.
 
-1. **Every move written down as a short note** (a move list). With the match seed it replays a
+1. **Built (20 Nov).** **Every move written down as a short note** (a move list). With the match seed it replays a
    match exactly. Needed for Play a Friend, recorded test matches and bug reports.
-2. **One front door for moves.** Taps, the computer and the tutorial all send moves through one
+2. **Built (20 Nov).** **One front door for moves.** Taps, the computer and the tutorial all send moves through one
    entrance into the rules; a friend's moves online will use it too.
 3. **A written plan for hidden cards online**, so a browser can't peek at the other hand.
 4. **Champions, events and shard bonuses in their own files**, so a new one is "add a file".
@@ -153,7 +153,7 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
 6. **A test that plays every card at least once.**
 7. **A version number on saved progress**, with an upgrade step for old saves.
 8. **Save code: export and import progress** (copy a code, paste it on another device).
-9. **Recorded test matches** (needs 1), replayed in every test run.
+9. **Built (20 Nov).** **Recorded test matches** (needs 1), replayed in every test run.
 10. **"Copy bug report" button** when the game hits an error (seed and moves).
 11. **Balance check on every pull request** (warn if a starter deck leaves about 40–60% wins).
 12. **Quicker loading and offline play** (one bundled file; add to home screen).

@@ -61,7 +61,10 @@ added, split or renamed, or the flow between them changes.
    44 px on screen, readable text at phone size, nothing hidden behind iPhone notches
    (`env(safe-area-inset-*)`). Phones start with Heavy effects off.
 8. **Reduced motion:** respect `prefers-reduced-motion` for anything big that moves.
-9. **Match saving:** a match in progress survives live updates of the claude.ai page (`js/boot.js`
+9. **Moves go through the front door.** Anything a player does is `move(name, …)` (`MOVES` in
+   `js/engine.js`), never a direct call to `playCard()` and friends, and nothing outside a move
+   changes `S`. Otherwise recorded matches stop replaying (see "Moves" in `docs/code-map.md`).
+10. **Match saving:** a match in progress survives live updates of the claude.ai page (`js/boot.js`
    restores `S` over `baseState()`). New fields in `S` need a default in `baseState()`.
 
 ## Which focused test covers what
@@ -75,10 +78,12 @@ added, split or renamed, or the flow between them changes.
 | The Protected rule, Pierce and Protected skills | `node tools/protected-test.js .` |
 | The big shard fall, champion shard bonuses | `node tools/shard-test.js .` |
 | Champion abilities and champion cards | `node tools/champions-test.js .` |
+| Recorded matches; which move first plays differently | `node tools/replay-test.js .` (`--update` when play is meant to change) |
 | Whole games, crashes, stuck states | `node tools/selftest.js . ai 2` and `. rand 300` (`"problems": {}`) |
 
 The selftest fingerprints (in `EXPECTED` at the top of `tools/test-all.js`, and the `ai 2` one in
-CLAUDE.md) only change when a change is meant to alter play; update both and say so.
+CLAUDE.md) only change when a change is meant to alter play; update both, re-record the matches
+(`node tools/replay-test.js . --update`), and say so.
 
 ## Before calling it done
 

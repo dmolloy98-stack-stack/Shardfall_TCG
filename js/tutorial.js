@@ -20,6 +20,7 @@ function startTutorial() {
   Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
   U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
   newGame({ deckId: "simple_starter", opponentDeckId: "simple_starter", mode: "ai", events: false, abilities: false, shard: false });   // lessons are scripted, so no random events, champion abilities or big shard
+  S.setup.scripted = true;   // fixed hands and decks, so a lesson can't be replayed from its moves
   const [me, tr] = S.players;
   tr.name = "Trainer"; tr.faction = "Training"; tr.deckLabel = "Training deck";
   tr.health = tr.maxHealth = TUT_TRAINER_HEALTH;
@@ -149,10 +150,10 @@ const TUT_STEPS = [
   {
     text: "The Trainer's turn. Watch what it does.",
     opp: [
-      () => doDraw(),
-      () => useManaToken(),
-      () => playCard(tid("husk")),
-      () => advancePhase(), () => advancePhase(), () => endTurn(),
+      () => move("draw"),
+      () => move("token"),
+      () => move("play", tid("husk")),
+      () => move("next"), () => move("next"), () => move("end"),
     ],
   },
   {
@@ -218,11 +219,11 @@ const TUT_STEPS = [
   {
     text: "The Trainer's turn.",
     opp: [
-      () => doDraw(),
-      () => playCard(tid("bowman")),
-      () => advancePhase(),
-      () => attack(tid("bowman"), tcard("farmerB") ? tid("farmerB") : null),
-      () => advancePhase(), () => endTurn(),
+      () => move("draw"),
+      () => move("play", tid("bowman")),
+      () => move("next"),
+      () => move("attack", tid("bowman"), tcard("farmerB") ? tid("farmerB") : null),
+      () => move("next"), () => move("end"),
     ],
   },
   {
@@ -272,9 +273,9 @@ const TUT_STEPS = [
   {
     text: "The Trainer's turn.",
     opp: [
-      () => doDraw(),
-      () => playCard(tid("wall")),
-      () => advancePhase(), () => advancePhase(), () => endTurn(),
+      () => move("draw"),
+      () => move("play", tid("wall")),
+      () => move("next"), () => move("next"), () => move("end"),
     ],
   },
   {

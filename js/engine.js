@@ -64,9 +64,89 @@ function log(msg) { if (!muted) { S.log.push(msg); if (S.log.length > 400) S.log
 // Run fn against a cloned copy of the state without emitting events.
 function simulate(fn) {
   const saved = S;
-  S = structuredClone(saved);
+  S = structuredClone({ ...saved, moves: [] });   // the move list isn't needed for a look-ahead
   muted++;
   try { return fn(S); } finally { muted--; S = saved; }
+}
+
+// ---------------------------------------------------------------------------
+// The front door for moves
+// ---------------------------------------------------------------------------
+// Every move a player makes comes in through move(name, ...details): your taps (js/ui.js), the
+// computer (js/ai.js), the tutorial's scripted opponent, and one day a friend's moves sent over
+// the internet. Each accepted move is written down in S.moves as a short note,
+// [player, name, ...details], for example [0, "play", 41, { toField: true }]. The notes hold only
+// numbers and words, so they can be saved or sent as text. With S.setup (the seed and both deck
+// lists) they replay the match exactly: replayMatch().
+// The functions behind the names below are the rules themselves; the computer's look-ahead calls
+// them directly on a copy of the game, which is never written down.
+const MOVES = {
+  draw: () => doDraw(),
+  deckOut: () => { deckOut(active()); return true; },   // Draw phase with an empty deck: you lose
+  next: () => advancePhase(),
+  end: () => endTurn(),
+  token: () => useManaToken(),
+  play: (uid, opts) => playCard(uid, opts || {}),
+  attach: (equipUid, charUid) => attachFieldEquipment(equipUid, charUid),
+  area: uid => activateArea(uid),
+  attack: (uid, target) => attack(uid, target ?? null),
+  allFace: () => attackAllFace(),
+  blade: uid => useBlade(uid),
+  target: t => chooseTarget(t),
+  cancel: () => cancelPending(),
+  choose: (picks, option) => resolveChoice(picks || [], option ?? null),
+  testMana: () => { active().mana++; return true; },          // the Testing tools in the game menu
+  testDraw: () => { drawCard(active()); return true; },
+};
+
+// A detail as it is written in a note: a player as { isPlayer, idx }, a card by its uid.
+function noteOf(x) {
+  if (x == null || typeof x !== "object") return x ?? null;
+  if (Array.isArray(x)) return x.map(noteOf);
+  if (x.isPlayer || S.players.includes(x)) return { isPlayer: true, idx: x.idx };
+  if (x.uid != null && x.name != null) return { uid: x.uid };
+  const o = {};
+  for (const k of Object.keys(x)) if (x[k] !== undefined) o[k] = noteOf(x[k]);
+  return o;
+}
+
+// Whose decision the game is waiting for: the player answering a question, else the active player.
+const decider = () => (S.pending ? S.pending.owner : S.active);
+
+function move(name, ...details) {
+  const fn = MOVES[name];
+  if (!fn) throw new Error(`Unknown move "${name}"`);
+  while (details.length && details[details.length - 1] === undefined) details.pop();
+  details = details.map(noteOf);
+  const by = decider();
+  const ok = fn(...details);
+  if (ok !== false && !muted) S.moves.push([by, name, ...details]);
+  return ok;
+}
+
+// "All attack": every character that can attack hits the opposing player. Does nothing while a
+// guard (Challenge or Tower) stands, since the rules send those blows to the guard.
+function attackAllFace() {
+  if (guards(opponent()).length) return false;
+  const ids = active().field.chars.filter(canAttack).map(c => c.uid);
+  let any = false;
+  for (const uid of ids) { if (S.over) break; if (attack(uid, null)) any = true; }
+  return any;
+}
+
+// A whole match as text-friendly data: how it was set up, and every move since.
+const matchRecord = () => ({ setup: S.setup, moves: S.moves });
+
+// Plays a recorded match again from the start. Stops with an error naming the move that no
+// longer fits (for example after a card was changed), so a broken replay is never silent.
+function replayMatch(rec) {
+  if (!rec?.setup || rec.setup.scripted) throw new Error("This match can't be replayed (no setup, or a tutorial lesson).");
+  newGame({ ...rec.setup });
+  rec.moves.forEach(([by, name, ...details], i) => {
+    if (decider() !== by) throw new Error(`Replay went wrong at move ${i + 1} (${name}): it was player ${by + 1}'s move, but the game was waiting for player ${decider() + 1}.`);
+    if (move(name, ...details) === false) throw new Error(`Replay went wrong at move ${i + 1} (${name}): the rules refused it.`);
+  });
+  return S;
 }
 
 // ---------------------------------------------------------------------------
@@ -548,7 +628,7 @@ function isValidTarget(target) {
 // Players, decks, turns
 // ---------------------------------------------------------------------------
 function makePlayer(idx, deckId, isAI) {
-  const def = DATA.decks[deckId];
+  const def = DATA.decks[deckId] || { faction: "Mixed", custom: true, name: "Replayed deck" };   // a replayed custom deck that isn't saved here
   return {
     idx, name: isAI ? "Computer" : `Player ${idx + 1}`, isAI: !!isAI, deckId, faction: def.faction,
     deckLabel: def.custom ? def.name : `${def.faction} deck`,
@@ -559,9 +639,9 @@ function makePlayer(idx, deckId, isAI) {
   };
 }
 
-function buildDeck(deckId) {
+function buildDeck(list) {
   const d = [];
-  for (const entry of DATA.decks[deckId].cards) for (let k = 0; k < entry.quantity; k++) d.push(newCard(DATA.cardsById[entry.cardId]));
+  for (const entry of list) for (let k = 0; k < entry.quantity; k++) d.push(newCard(DATA.cardsById[entry.cardId]));
   return shuffle(d);
 }
 
@@ -634,19 +714,28 @@ function activateArea(uid) {
 // missing from a match saved by an older version of the game (the hosted page keeps a match
 // going across updates), so a newer rule never meets a match that lacks its part.
 const baseState = () => ({ players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], nextUid: 1, log: [],
-  event: null, upcoming: null, lastEvent: null, noEvents: false, noAbilities: false, noShard: false, shard: null, shardFell: false, shardChip: [0, 0], died: {} });
+  moves: [], setup: null, event: null, upcoming: null, lastEvent: null, noEvents: false, noAbilities: false, noShard: false, shard: null, shardFell: false, shardChip: [0, 0], died: {} });
 
-function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard }) {
+// A new match. Everything needed to replay it is kept in S.setup: these same settings, the seed,
+// and both deck lists (so a replay works even where a custom deck isn't saved).
+//   foeChampion  campaign: the second player is this champion, who starts with its card in hand
+//   lists        [deck list, deck list] to use instead of the saved decks (replays)
+//   randPick     a replay of a match whose opponent deck was picked at random
+function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard, foeChampion, lists, randPick }) {
   seed = (seed ?? newSeed()) >>> 0;
   S = { ...baseState(), mode, seed, rng: seed, noEvents: events === false, noAbilities: abilities === false, noShard: shard === false };
   let opp = opponentDeckId;
-  if (!opp) {
+  if (!opp || randPick) {
+    randPick = true;
     const others = DATA.deckOrder.filter(id => id !== deckId);
-    opp = others.length ? others[Math.floor(rand() * others.length)] : deckId;
+    const pick = rand();
+    if (!opp) opp = others.length ? others[Math.floor(pick * others.length)] : deckId;
   }
+  lists = lists || [deckId, opp].map(id => DATA.decks[id].cards.map(e => ({ cardId: e.cardId, quantity: e.quantity })));
+  S.setup = { deckId, opponentDeckId: opp, mode, seed, events, abilities, shard, foeChampion, randPick: !!randPick, lists };
   S.players = [makePlayer(0, deckId, false), makePlayer(1, opp, mode === "ai")];
   for (const p of S.players) {
-    p.deck = buildDeck(p.deckId);
+    p.deck = buildDeck(lists[p.idx]);
     p.champ = null;   // champion ability, see "Champion abilities" below
     const champion = S.noAbilities ? null : p.deck.find(c => c.rarity === "Unknown" && DATA.championAbilities[c.id]);
     if (champion) p.champ = { id: champion.id, level: 1, n: 0 };
@@ -659,8 +748,24 @@ function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard 
   S.phase = PHASE.SETUP;
   S.players[1].manaToken = true;
   log(`${S.players[0].name} (${S.players[0].faction}) vs ${S.players[1].name} (${S.players[1].faction}) · match seed ${seed}`);
+  if (foeChampion) campaignChampion(S.players[1], foeChampion);
   emit("newGame", {});
   return S;
+}
+
+// A campaign match: the second player is a champion, who starts with its own card in hand so it
+// shows up in the match. (Its lines and how the computer plays it are in js/champions.js.)
+function campaignChampion(foe, name) {
+  foe.name = name;
+  foe.champion = name;
+  const k = foe.deck.findIndex(c => c.name === name);
+  if (k >= 0 && !foe.hand.some(c => c.name === name)) {
+    const champ = foe.deck.splice(k, 1)[0];
+    foe.deck.unshift(foe.hand.pop());
+    foe.hand.push(champ);
+    shuffle(foe.deck);
+  }
+  S.log.push(`${name} challenges ${S.players[0].name}.`);
 }
 
 // ---------------------------------------------------------------------------
@@ -1296,7 +1401,7 @@ function drawStep() {
   const p = active();
   if (S.phase !== PHASE.DRAW || S.over) return false;
   const c = drawCard(p);
-  if (!c) return false;
+  if (!c) return true;   // an empty deck: the draw happened, and its player lost (deckOut)
   if (champOf(p, "boss_level")?.level >= 2 && !S.over) drawCard(p);   // Boss Phases: 1 extra card
   p.hasDrawn = true;
   S.phase = PHASE.SETUP;

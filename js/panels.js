@@ -101,8 +101,8 @@ function showChoose() {
     if (!opt) return;
     $("#modal-content").onclick = null;
     closeModal();
-    if (opt.dataset.opt === "__skip") act(() => resolveChoice([], null));
-    else act(() => resolveChoice([...picked], opt.dataset.opt));
+    if (opt.dataset.opt === "__skip") act(() => move("choose", [], null));
+    else act(() => move("choose", [...picked], opt.dataset.opt));
   };
 }
 
@@ -175,18 +175,18 @@ $("#modal").addEventListener("click", e => {
   const m = b.dataset.m, uid = Number(b.dataset.uid);
   if (m === "detail") { const c = findCardAnywhere(uid); if (c) showDetail(c); return; }
   closeModal();
-  if (m === "play") act(() => playCard(uid));
+  if (m === "play") act(() => move("play", uid));
   else if (m === "arm") { U.armed = { uid, from: "hand" }; render(); }
-  else if (m === "tofield") act(() => playCard(uid, { toField: true }));
+  else if (m === "tofield") act(() => move("play", uid, { toField: true }));
   else if (m === "restart") U.tutorial ? startTutorial() : U.campaign ? playCampaignMatch(U.campaign.stage) : startGame();
   else if (m === "settings") showSettings();
   else if (m === "log") showLog();
-  else if (m === "passok") act(endTurn);
-  else if (m === "passnever") { U.passCheck = false; PREFS.set("passCheck", false); act(endTurn); }
+  else if (m === "passok") act(() => move("end"));
+  else if (m === "passnever") { U.passCheck = false; PREFS.set("passCheck", false); act(() => move("end")); }
   else if (m === "almanac") { U.almanacReturn = "game"; clearTimeout(U.aiTimer); showScreen("almanac"); }
   else if (m === "rules") showGuide();
   else if (m === "mainmenu") { endTutorial(); clearTimeout(U.aiTimer); U.menuView = "home"; showScreen("menu"); }
   else if (m === "undo") { if (U.undo.length) { S = U.undo.pop(); if (S.histLen != null) U.hist.length = Math.min(U.hist.length, S.histLen); U.selected = null; U.armed = null; U.ended = S.over; render(); } }
-  else if (m === "mana") act(() => { active().mana++; });
-  else if (m === "qadraw") act(() => { drawCard(active()); });
+  else if (m === "mana") act(() => move("testMana"));
+  else if (m === "qadraw") act(() => move("testDraw"));
 });
