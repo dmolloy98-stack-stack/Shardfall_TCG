@@ -123,7 +123,7 @@ their own story or coaching, then hand over to the same engine.
 | An area's bonus, or a skill an area grants | the area's `aura:` clause in the Effect column |
 | A counter spell | its `counter:` clause in the Effect column; the window is `offerCounter()` in `js/engine.js` |
 | How the game plays: turns, phases, combat, winning | `js/engine.js` |
-| How smart the computer is, or how each faction plays | `js/ai.js` (`PLAN_DEPTH`, `BATTLE_DEPTH`, `AI_STYLES`) |
+| How smart the computer is, or how each world's deck plays | `js/ai.js` (`PLAN_DEPTH`, `BATTLE_DEPTH`, `AI_STYLES`) |
 | What a champion says, or how the computer plays it | `js/champions.js` (`CHAMPIONS`); the speech bubbles are in `js/campaign.js` |
 | Layout, card look, phone layout | `js/ui.js` |
 | The main menu, deck choice or Almanac | `js/menu.js` |

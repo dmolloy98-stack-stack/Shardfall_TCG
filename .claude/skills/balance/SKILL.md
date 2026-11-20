@@ -22,6 +22,20 @@ It plays every starter deck against every other with the computer on both sides
 win rate and the average game length. Each game per pairing adds about 13 seconds, so 50 per
 pairing (~1,250 games) takes about 11 minutes: start it with `run_in_background` and keep working.
 
+## Before and after at the same time
+
+To compare the old rules with your uncommitted change, run the old version from a side copy:
+
+```bash
+SP=<scratchpad>; git worktree add -q $SP/before HEAD && cp tools/winrates.js $SP/before/tools/
+(cd $SP/before && node tools/winrates.js 20 > $SP/wr_before.txt 2>&1 &)
+(node tools/winrates.js 20 > $SP/wr_after.txt 2>&1 &)
+```
+
+Both finish in about 5 minutes for 20 per pairing. Wait with a background `until` loop (never a
+foreground `sleep`), then `git worktree remove --force $SP/before`. Use the same game count for
+both, and report them side by side.
+
 ## Targets (accepted by the owner so far)
 
 - Every starter deck about 45–58%. The owner is **fine with some starters being stronger**:

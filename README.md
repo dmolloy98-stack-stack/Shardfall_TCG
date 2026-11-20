@@ -1,6 +1,6 @@
 # Shardfall
 
-A two-player fantasy trading card game that runs in the browser. Pick one of five starter decks, one for each fracture (Simple, Monkey, Zombie, Fighter, Digital) and play against the computer or against a friend on the same device.
+A two-player fantasy trading card game that runs in the browser. Pick one of five starter decks (Simple, Monkey, Zombie, Fighter, Digital), one from each fracture (Simple, Wild, Undead, Mortal, Cyber), and play against the computer or against a friend on the same device.
 
 This is a port of the original LÖVE2D / Lua version (`original-lua/main.lua`, kept for reference).
 
