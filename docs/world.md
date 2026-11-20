@@ -85,7 +85,7 @@ later), but **a deck holds only one champion card** (one kind, at most 2 copies)
 | Mortal (Fighter deck) | IP Man (Martial Artist) | A calm, polite master who bows before and after every fight. Treats a loss as a lesson. Grieving under the calm | Patient: waits for a clean exchange and keeps IP Man at home for his redirect |
 | Cyber (Digital deck) | Boss Level (Program) | A smug final boss that narrates its own phases ("LEVEL UP", "CRITICAL HIT") | Confident early (grows its team), dangerous late (goes for the player from round 5) |
 
-- The champion is each faction's "top dog" card, of Unknown rarity.
+- The champion is the "top dog" of its tribe, a card of Unknown rarity.
 - **Deck rule:** a deck holds only one kind of Unknown card (its champion), with up to
   2 copies. This is `max_unknown_kinds` and `max_unknown_copies` in
   `data/game_rules.csv`.

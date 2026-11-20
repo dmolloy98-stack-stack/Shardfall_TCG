@@ -41,6 +41,14 @@ Compare every tab with the game files: Cards (all columns, row = cards.csv line)
 cards (0-copy rows are deliberate), Fractures (hex vs 0–1 colours), Skills, Lists, and the two
 guide tabs. The game files win. The sheet's Check columns must all say OK afterwards.
 
+## Many cards changed at once (a rename, a new tribe list)
+
+Rewrite whole columns from the game files instead of row by row: build the column from
+`data/cards.csv` in sheet form (`+` → ", ", `---` → empty, row = cards.csv line number) and
+write it with one `update_values` call per column (for example `Cards!G2:G114` for Tribes,
+`Cards!I2:I114` for Fracture). Then read back `Cards!Q2:Q114` and `Decks!H2:H6`: every row must
+say OK. Fix single changed cells (an Ability, an Effect) separately. Leave the DRAFT tabs alone.
+
 ## Card vocabulary
 
 A card has a **Fracture** (where it is from; a hybrid has two). A character also has **Tribes**

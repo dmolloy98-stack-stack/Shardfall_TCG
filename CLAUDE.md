@@ -110,13 +110,14 @@ the steps out again:
 - `add-feature` (the building rules for any code change), `card-change` (a card or rule the
   owner decided), `sheet-sync` (the card sheet), `balance` (win rates, `tools/winrates.js`)
 - `story-writing` (champion voices, card stories, clues), `ideas-menu` ("what's next?"),
-  `code-map` (the written map and the two claude.ai map pages), `tool-check` ("is this useful?")
+  `code-map` (the written map and the claude.ai map pages), `worlds-and-tribes`
+  (renaming or adding a world, tribe or champion), `tool-check` ("is this useful?")
 
 ## Links
 
 - Play (GitHub Pages): https://dmolloy98-stack-stack.github.io/Shardfall_TCG/ (`#menu` skips the
   intro, `#tutorial` starts the tutorial; the guide is `guide.html`)
 - Playable claude.ai copy: https://claude.ai/artifact/5hWErf72EZxcunSyP4CXX1
-- Code Map page: https://claude.ai/artifact/WUQA9uzWYC6oLPL4XnWebz; Code Graph page:
-  https://claude.ai/artifact/SGGy6xeiMFn14Kob6mknCg
+- Map pages (made with archify): Shardfall File Map https://claude.ai/artifact/DZGvMWEJF37CU9NkFJxXZ9
+  and Shardfall Turn Flow https://claude.ai/artifact/RGLT4sVnTcqMgN4xTojwrL
 - Card sheet: https://docs.google.com/spreadsheets/d/1RzePfEgUN4QJsLTDGnhU7xaTa0_snq2lVswEUy5JNX0
