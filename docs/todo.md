@@ -176,4 +176,4 @@ means "not now"; the owner may pick it up later.
 - **Phone-only table layout:** discontinued; the current phone layout is good enough. Kept as a reference in `docs/phone-table/`.
 - **Card-sheet "card lab" and other early tools** (options 2 and 3 when the data moved to CSV files): on hold since the start; the My Decks builder exists now.
 - **Champion leveling:** waiting on the owner's designs (see "Champion leveling" above).
-- **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project. The plan for hiding cards, and an open question for the owner about the counter window, is `docs/online-play.md`.
+- **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project. The plan for hiding cards is `docs/online-play.md`; the owner decided (21 Nov) that the counter window always pauses briefly when the other player has spare mana.
