@@ -3,6 +3,19 @@
 Ideas the owner has asked to keep for later. Nothing here is built yet. Design decisions
 belong to the owner: Claude offers options and waits.
 
+## Waiting on the owner (added 22 Nov)
+
+Things Claude has prepared that need the owner before they can go further. The owner will get to
+them; nothing is lost while they wait.
+
+- **Real phone testing** (round two, step 9). The owner applies for BrowserStack's free
+  open-source account (steps in `docs/real-phones.md`), then does the 15-minute phone checklist
+  there before big releases. Once the account exists, Claude can add automatic runs.
+- **Anonymous play numbers** (round two, step 11). Three decisions in `docs/play-numbers.md`: ask
+  players first or count by default, which numbers to count, and who sees them; plus the draft
+  privacy note to reword. Also needs the Firebase project (the same one as Play a Friend).
+  Nothing is collected until then.
+
 ## Card levels and mastery (like Team Fight Tactics)
 
 **The idea.** In Team Fight Tactics a player's little companion (the "avatar") has several
