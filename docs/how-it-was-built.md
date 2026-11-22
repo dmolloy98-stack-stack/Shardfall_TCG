@@ -141,7 +141,9 @@ never needs editing for a new file.
   and the recorded matches are updated together.
 - Recorded matches (`tools/replay-test.js`) say which move first plays differently.
 - `tools/cards-test.js` plays every card at least once.
-- The browser check looks at the real screen at desktop and phone size.
+- The browser check looks at the real screen at desktop and phone size, and the screen tests
+  (`tools/screen-test.js`) click and drag through the game on every pull request. They click
+  table pieces even while they gently move, as a player would.
 - The balance check warns on a pull request if a starter deck leaves 40–60% wins.
 
 **The Drive backups are proven, not assumed.** `tools/restore.js` rebuilds the game from a

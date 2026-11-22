@@ -1,1 +1,3 @@
 shardfall-single.html
+node_modules/
+package-lock.json

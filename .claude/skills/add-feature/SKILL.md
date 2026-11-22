@@ -84,6 +84,7 @@ added, split or renamed, or the flow between them changes.
 | Every card played at least once (any card or effect change) | `node tools/cards-test.js .` |
 | Saving: listed keys, upgrades, the save code | `node tools/saves-test.js .` |
 | Recorded matches; which move first plays differently | `node tools/replay-test.js .` (`--update` when play is meant to change) |
+| Anything on screen: menus, windows, a match by clicking and dragging | `node tools/screen-test.js` (add a test for a new screen or button) |
 | Whole games, crashes, stuck states | `node tools/selftest.js . ai 2` and `. rand 300` (`"problems": {}`) |
 
 The selftest fingerprints (in `EXPECTED` at the top of `tools/test-all.js`, and the `ai 2` one in

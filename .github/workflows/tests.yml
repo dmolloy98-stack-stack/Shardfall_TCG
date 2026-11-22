@@ -32,3 +32,18 @@ jobs:
       - run: |
           node tools/winrates.js 20 --check | tee winrates.txt
           { echo '### Balance (20 games per pairing)'; echo '```'; cat winrates.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  # Screen tests on pull requests: a real (headless) browser clicks and drags through the game
+  # (tools/screen-test.js). The browser is installed for the run only; the game itself still has
+  # no libraries.
+  screen:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-package-lock playwright@1.63.0 && npx playwright install --with-deps chromium
+      - run: node tools/screen-test.js
