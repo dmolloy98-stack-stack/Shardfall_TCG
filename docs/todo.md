@@ -29,7 +29,7 @@ It applies to **cards** and to **whole decks**, to show mastery of them. The wor
   owner has not said otherwise; confirm before adding any bonus.
 - The campaign already knows when a stage is won (`js/campaign.js`). A "deck beaten the
   campaign" flag could hang off that.
-- Cards are drawn in `cardHTML` (`js/ui.js`), so extra looks (gold title, animation class)
+- Cards are drawn in `cardHTML` (`js/cards.js`), so extra looks (gold title, animation class)
   would go there and in `css/style.css`.
 - Alternate art and card backs need art, which is outside what Claude makes. Claude can build
   the slot (a level picks which image to show); the owner supplies the images.
@@ -100,11 +100,11 @@ design; each needs code in `js/engine.js`.
 
 ## Protected look that hints at the Shardfall — the owner's idea, not designed yet
 
-- The runes that circle a Protected card (`RUNES` and `runeRingHTML()` in `js/ui.js`) should
+- The runes that circle a Protected card (`RUNES` and `runeRingHTML()` in `js/board.js`) should
   one day hint at what made the shards fall: the big event behind the Shardfall. The owner will
   design what that is, then it gets pulled into the runes.
 - The shell of shards on a Protected player's health gem (`WARD` and `wardHTML()` in
-  `js/ui.js`) should carry the same hint, so the two Protected looks clearly belong together
+  `js/board.js`) should carry the same hint, so the two Protected looks clearly belong together
   and nobody is confused.
 - Today the runes are placeholder shapes. The shell has no runes yet.
 - Keep the hint subtle, like the other clues; once it is designed, log it in the clue log in
@@ -158,6 +158,36 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
 11. **Built (20 Nov).** **Balance check on every pull request** (warn if a starter deck leaves about 40–60% wins).
 12. **Built (20 Nov).** **Quicker loading and offline play** (one bundled file; add to home screen).
 
+## Background improvements, round two — chosen by the owner (22 Nov), being built
+
+The owner picked all thirteen. Build order: 3, 7, 13, 12, 5, 6, 8, 4, 1, 2, 10, then 9 and 11,
+which need the owner. Mark each one built as it lands.
+
+1. **Built (22 Nov): js/ui.js split into ui.js, board.js and input.js.** **Split the screen code into smaller files** by job. Nothing on screen changes.
+2. **Started (22 Nov).** **Player words move into the editable word table** (`data/ui_text.csv`), a screen at a time.
+   Done: the start menu, Settings, the save code window, the game menu, What's new, the
+   "Something went wrong" window, the "pass the device" screen and the end of a match.
+   Still in the code, one screen at a time from here: the deck builder, the Almanac and card
+   details, the battle log and hints, the board's buttons and prompts, the campaign and trophies,
+   the champions' lines, the tutorial, and the intro.
+3. **Built (22 Nov).** **A version number and "What's new" list in the game.**
+4. **Built (22 Nov): five of seven; Simple Messenger and Digital Drainage stay as code.** **General ability words for the last seven one-off cards** where a pattern is reusable.
+5. **Built (22 Nov).** **Automatic screen tests** on every pull request.
+6. **Built (22 Nov).** **Picture comparison**: screenshots flagged when they change unexpectedly.
+7. **Built (22 Nov).** **The card sheet checks itself against the game** (a tool listing differences).
+8. **Built (22 Nov).** **A speed budget**: GitHub warns when loading or a turn gets noticeably slower.
+9. **Prepared (22 Nov): `docs/real-phones.md`.** **Real phone testing.** Waiting on the owner to apply for
+   BrowserStack's free open-source account. Automatic runs come after, from its current instructions.
+10. **Built (22 Nov).** **Accessibility check** (contrast, sizes, keyboard), with simple fixes. Fixed: the
+    What's new list and the battle log can be scrolled by keyboard, the computer's "thinking" dots
+    speak properly, and the screens sit in one main area. Not checkable automatically: text
+    contrast on gradients (most text); judge it by eye.
+11. **Planned (22 Nov): `docs/play-numbers.md`.** **Anonymous play numbers.** Needs the owner's decisions
+    on what to collect (three questions in the plan), and the Firebase project. Nothing is collected.
+12. **Built (22 Nov).** **One-button restore** from the Drive backups, proven by running every test.
+13. **Built (22 Nov).** **A "how this was built" guide** (`docs/how-it-was-built.md`): the why behind the code. Kept
+    current with every change that involves a "why" (CLAUDE.md, `pr-cycle`).
+
 ## Not doing for now
 
 - **A solo run mode** (a Slay the Spire style roguelike deckbuilder). The owner is wary of
@@ -176,4 +206,4 @@ means "not now"; the owner may pick it up later.
 - **Phone-only table layout:** discontinued; the current phone layout is good enough. Kept as a reference in `docs/phone-table/`.
 - **Card-sheet "card lab" and other early tools** (options 2 and 3 when the data moved to CSV files): on hold since the start; the My Decks builder exists now.
 - **Champion leveling:** waiting on the owner's designs (see "Champion leveling" above).
-- **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project. The plan for hiding cards, and an open question for the owner about the counter window, is `docs/online-play.md`.
+- **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project. The plan for hiding cards is `docs/online-play.md`; the owner decided (21 Nov) that the counter window always pauses briefly when the other player has spare mana.

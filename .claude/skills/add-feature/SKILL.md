@@ -20,7 +20,8 @@ added, split or renamed, or the flow between them changes.
   them in Node. Game state is `S`; it must survive `structuredClone` (store owners as player
   indexes, no functions or DOM in `S`). `simulate()` runs moves on a clone with events muted,
   so the computer can think.
-- **Screen**: `js/ui.js` (state `U`, the board, input), `js/cards.js` (how a card is drawn),
+- **Screen**: `js/ui.js` (state `U`, redraws, actions, screens), `js/board.js` (what's drawn on
+  the table, `render()`), `js/input.js` (drag, taps, keyboard), `js/cards.js` (how a card is drawn),
   `js/table-effects.js` (reactions to game events on the table), `js/panels.js` (pop-up windows,
   Settings). The computer is `js/ai.js`. A new top-level `const` used by another file at load time
   must be in a file that loads earlier (`GAME_SCRIPTS` order).
@@ -28,7 +29,9 @@ added, split or renamed, or the flow between them changes.
 - **New script file:** add it to `GAME_SCRIPTS` in `js/data.js` (order matters; `js/boot.js` is
   last), to the README file table, and to the code map.
 - **Words players see** are plain English and use the owner's vocabulary (Fracture, Tribes,
-  Classes; see CLAUDE.md).
+  Classes; see CLAUDE.md). New words go in `data/ui_text.csv` and the code asks for them with
+  `T("id")` (or `T("id", { name })` for `{name}` in the text; `data-t="id"` in index.html), so the
+  owner can reword them. `tools/words-test.js` checks every id has its row.
 
 ## Patterns that must be kept
 
@@ -46,7 +49,7 @@ added, split or renamed, or the flow between them changes.
      it**, or that region redraws every time;
    - an animation started on an element survives redraws only if the element's HTML didn't change.
 3. **Clicks** go through one handler per area: `#board` uses `data-act="…"`
-   (`js/ui.js`, "board clicks"), Settings uses `data-set="…"` and the game menu `data-m="…"` (both in `js/panels.js`).
+   (`js/input.js`, "Board input"), Settings uses `data-set="…"` and the game menu `data-m="…"` (both in `js/panels.js`).
    **Add a new branch; don't add a second handler or a second branch for an existing act.**
    (A duplicate branch once stopped played cards from being counted.)
 4. **Saved settings:** `PREFS.get(key, fallback)` / `PREFS.set(key, value)` (`js/saves.js`; wrapped,
@@ -83,7 +86,9 @@ added, split or renamed, or the flow between them changes.
 | Champion abilities and champion cards | `node tools/champions-test.js .` |
 | Every card played at least once (any card or effect change) | `node tools/cards-test.js .` |
 | Saving: listed keys, upgrades, the save code | `node tools/saves-test.js .` |
+| Words players read (`data/ui_text.csv`) | `node tools/words-test.js .` |
 | Recorded matches; which move first plays differently | `node tools/replay-test.js .` (`--update` when play is meant to change) |
+| Anything on screen: menus, windows, a match by clicking and dragging | `node tools/screen-test.js` (add a test for a new screen or button) |
 | Whole games, crashes, stuck states | `node tools/selftest.js . ai 2` and `. rand 300` (`"problems": {}`) |
 
 The selftest fingerprints (in `EXPECTED` at the top of `tools/test-all.js`, and the `ai 2` one in
@@ -96,4 +101,6 @@ CLAUDE.md) only change when a change is meant to alter play; update both, re-rec
 - `browser-check` skill: desktop and phone, look at the screenshots; for anything heavy, run
   `node tools/speed-check.js` before and after.
 - Update `docs/code-map.md`, and the README if players or the file table are affected.
+- If the change set a pattern, made a trade-off or fixed a trap, write it in
+  `docs/how-it-was-built.md` (its checklist says what belongs there).
 - Commit and push (`pr-cycle`); the `backup` skill runs once the pull request merges.

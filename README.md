@@ -49,6 +49,7 @@ All cards, decks, skills and balance numbers are CSV files in the [`data/`](data
 | [`data/decks.csv`](data/decks.csv) | The starter decks and their card lists |
 | [`data/skills.csv`](data/skills.csv) | Skill keywords and their descriptions |
 | [`data/game_rules.csv`](data/game_rules.csv) | Starting health, hand size, mana growth, field limits, deck-building rules |
+| [`data/whats_new.csv`](data/whats_new.csv) | The "What's new" list: one row per update, newest first; the top row is the version shown on the menu |
 | [`data/events.csv`](data/events.csv) | The random events: their names and descriptions (what they do is in `js/engine.js`) |
 | [`data/champion_abilities.csv`](data/champion_abilities.csv) | The champions' abilities: names, what they do, when they level up (the rules are in `js/engine.js`) |
 | [`data/rarities.csv`](data/rarities.csv), [`data/factions.csv`](data/factions.csv) | Colors, symbols, equipment attach costs |
@@ -80,7 +81,9 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
 | `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |
 | `js/cards.js` | How a card is drawn: frames, art, badges, names |
-| `js/ui.js` | Board rendering and input |
+| `js/ui.js` | The screen's core: its state, fast redraws, actions (Undo), screens and phone layout |
+| `js/board.js` | Everything drawn on the table: players' plates, health, mana, the big shard, the battle log, turn history and the hand |
+| `js/input.js` | Dragging cards from the hand, taps on the table, and keyboard shortcuts |
 | `js/table-effects.js` | Deaths, hits and other reactions on the table |
 | `js/panels.js` | Pop-up windows and Settings |
 | `js/menu.js` | The start menu: three doors (Campaign, Quick Match, Two Players) and the smaller buttons, then a step for picking your deck and the opponent's (or just looking after your decks); and the Almanac |
@@ -93,6 +96,9 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/intro.js` | The stained-glass cold open before the main menu |
 | `js/campaign.js` | The campaign: one match against each faction's champion, with its story text, saved progress and the champions' speech bubbles (in normal matches too, as the champion of the computer's deck); deck mastery points and titles |
 | `docs/code-map.md` | How the files fit together: diagrams of the big picture, one move's path and the screens, plus where to change things |
+| `docs/play-numbers.md` | A plan for anonymous play numbers (not built, nothing collected): what could be counted, the owner's decisions, a draft privacy note |
+| `docs/real-phones.md` | How to check the game on real phones (a free device cloud for open-source projects) and a checklist of what to look at |
+| `docs/how-it-was-built.md` | Why the code is built the way it is, the owner's decisions that shape it, and traps already fallen into. Checked with every change (its top says what belongs in it) |
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
 | `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/motion.js` | Cards that travel: drawn cards slide out of the deck, played cards fly from the hand to the table (the computer's from its hidden hand), cards drift into the graveyard, the hand closes up smoothly, a cast spell is shown in the middle of the table, and health counts down instead of jumping |
@@ -100,6 +106,10 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/test-all.js` | Runs every test below in one go and says whether all passed: `node tools/test-all.js`. GitHub runs it on every push and pull request (`.github/workflows/tests.yml`) |
 | `tools/selftest.js` | Plays many automatic games and reports anything broken: `node tools/selftest.js . ai 4` and `node tools/selftest.js . rand 1000` (needs Node.js). Run it after changing rules or cards |
 | `tools/cards-test.js` | Plays every card at least once on a prepared table, then lets the computer play a few turns, and reports any card that crashes, can't be played or breaks the table: `node tools/cards-test.js .` |
+| `tools/restore.js` | Rebuilds the whole game from the Drive backups (a monthly snapshot plus the patches after it) and runs every test to prove it worked: `node tools/restore.js <empty folder> <snapshot> <patches…>` |
+| `tools/a11y-check.js` | Accessibility check: runs axe on the main screens at desktop and phone size and tries the menu by keyboard; lists problems for players with poor eyesight, colour blindness, a screen reader or no mouse: `node tools/a11y-check.js` (needs `npm install --no-save --no-package-lock axe-core@4.10.2` once). GitHub runs it on every pull request |
+| `tools/words-test.js` | Checks that every word the game asks for is in `data/ui_text.csv`: `node tools/words-test.js .` |
+| `tools/sheet-check.js` | Compares the owner's card sheet (downloaded as .xlsx) with the game's card, deck, fracture and skill files and lists every difference in plain words: `node tools/sheet-check.js sheet.xlsx` (uses `tools/sheet-export.py`) |
 | `tools/replay-report.js` | Replays the match inside a player's bug report (the text from the game's "Something went wrong" window, saved to a file) and shows where it breaks: `node tools/replay-report.js report.txt` |
 | `tools/saves-test.js` | Checks saving: every saved item is listed, old saves are upgraded, and a save code carries progress exactly: `node tools/saves-test.js .` |
 | `tools/replay-test.js` | Replays a few recorded matches (`tools/recorded-matches.json`) and says which move first plays differently: `node tools/replay-test.js .`. When a change is meant to alter play, record them again with `--update` |
@@ -110,8 +120,11 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/shard-test.js` | Checks the big shard fall: when it lands, attacking it, who claims it and each champion's shard bonus: `node tools/shard-test.js .` |
 | `tools/make-glass.js` | Redraws the stained-glass window behind the Stained Glass board into `css/style.css`: `node tools/make-glass.js` |
 | `tools/make-crystal.js` | Redraws the long glowing cracks across the Shattered Crystal board into `css/style.css`: `node tools/make-crystal.js` |
+| `tools/screen-test.js` | Automatic screen tests: a test browser clicks and drags through the menu, Settings, the Almanac, a match, the campaign, the tutorial and the deck builder, at desktop and phone size: `node tools/screen-test.js`. GitHub runs it on every pull request |
+| `tools/picture-test.js` | Picture comparison: photographs the same scenes from an older version and this one and flags any that look different, with before / after / difference pictures in a `report.html`: `node tools/picture-test.js <older game folder>`. GitHub runs it on every pull request against `main` |
 | `tools/browser-check.js` | Opens the game in a test browser at desktop and phone size, plays a few rounds, saves screenshots and checks the text is readable: `node tools/browser-check.js <folder>` (needs Node.js and Playwright) |
 | `tools/winrates.js` | Plays every starter deck against every other (the decks side by side, using every processor) and prints win rates and game length: `node tools/winrates.js 50`. With `--check` it warns about a deck outside 40–60%; GitHub runs that on every pull request |
+| `tools/speed-budget.js` | Speed budget: measures an older version and this one side by side on a slowed processor (loading, starting a match, redrawing, the computer's turn, download size) and warns if this one is more than 15% slower: `node tools/speed-budget.js <older game folder>`. GitHub runs it on every pull request against `main` |
 | `tools/speed-check.js` | Measures how smoothly the game runs on a slowed-down computer (like a phone), with Heavy effects on and off: `node tools/speed-check.js` |
 | `tools/readability.js` | Used by the browser check: finds text that is too small, overlapping or cut off |
 | `tools/drive-bundle.js` | Makes the one-file Google Drive backups: the changes of a pull request, or a full snapshot |

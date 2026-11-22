@@ -63,21 +63,22 @@ into players' hands soonest. To keep the door to B open:
 - The setup (seed and deck lists) is agreed at the start, then kept out of sight.
   A simple guard against one side choosing a "lucky" seed: each browser picks half of it.
 
-## A question for the owner (a design choice, not a technical one)
+## Decided by the owner (21 Nov): always pause when there is spare mana
 
-**The counter window gives something away.** When you play a card, the game pauses to ask the
-other player "Respond?" only if they hold a counter spell they can pay for. So the pause itself
-tells you they hold one. Online, that is a real tell. Options:
+**The counter window gives something away.** Today, when you play a card, the game pauses to ask
+the other player "Respond?" only if they hold a counter spell they can pay for. So the pause
+itself tells you they hold one. Online, that would be a real tell.
 
-1. **Keep it as it is.** The pause is a tell; experienced players will read it (Magic: The
-   Gathering players read hesitation the same way).
-2. **Always pause briefly** after every character or spell when the other player has unspent
-   mana, whether or not they hold a counter. No tell, but every play takes a little longer.
-3. **Pause only when they hold a counter, but also sometimes when they don't** (a bluff timer).
-   A middle ground, but harder to explain.
+The owner chose to **pause briefly whenever the other player has spare mana**, whether or not they
+hold a counter, so the pause tells nothing. (The two options not chosen: keep the tell as it is,
+or pause sometimes as a bluff.)
 
-Recommendation: 2, with a short pause (about a second) that the other player can skip, and only
-when they have enough unspent mana for the cheapest counter in the game.
+Left to tune when Play a Friend is built (Claude's guesses, the owner can overrule):
+- The pause is about a second, and the other player can skip it.
+- "Spare mana" means enough unspent mana for the cheapest counter in the game, so a player with
+  no mana to counter anything isn't slowed down for nothing.
+- The pause is for online matches only. Matches against the computer keep today's behaviour,
+  since the computer can't read a pause.
 
 ## What A needs, step by step (for when the Firebase project exists)
 

@@ -40,6 +40,38 @@ then `await readability(page)`.
 
 Screenshots and test scripts go in the session scratchpad, never in the repo.
 
+## Picture comparison (before and after a look change)
+
+```bash
+git worktree add <scratchpad>/main origin/main
+node tools/picture-test.js <scratchpad>/main <scratchpad>/pics
+```
+
+It photographs 9 scenes at desktop and phone size from both versions, with animations off and
+fixed seeds, and lists the scenes that changed; `<scratchpad>/pics/report.html` shows before,
+after and the difference in red. GitHub does the same on every pull request (a warning, never a
+red mark) and attaches the pictures as "picture-changes". To add a scene, add it to `SCENES`.
+
+## Speed budget (did this change make it slower?)
+
+`node tools/speed-budget.js <scratchpad>/main` (same `main` worktree as above) measures both
+versions in turns, 5 times each, with the processor slowed 4x, and compares the middle results.
+More than 15% slower (and more than 3 ms) is flagged; GitHub does the same on each pull request as
+a warning. Use `tools/speed-check.js` for frames per second with Heavy effects on and off.
+
+## Real phones
+
+The pretend phone can't show heat, real touch or Safari quirks. Before a big release, point the
+owner to `docs/real-phones.md` (a device cloud's Live mode and a checklist).
+
+## Accessibility
+
+`node tools/a11y-check.js` (install axe once: `npm install --no-save --no-package-lock axe-core@4.10.2`;
+it lands in the git-ignored `node_modules/`). It must end `NO ACCESSIBILITY PROBLEMS FOUND`; `--all`
+also shows milder problems. It can't judge text contrast on gradients and pictures (most of the
+game's text), so look at new text against its background by eye in the screenshots. Scrolling
+boxes need `tabindex="0"` and an `aria-label`, so keyboard players can scroll them.
+
 ## A custom check
 
 For anything the quick check doesn't reach, write a short script in the scratchpad:

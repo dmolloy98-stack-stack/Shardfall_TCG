@@ -12,6 +12,7 @@ const report = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 
 eval(fs.readFileSync(dir + '/js/data.js', 'utf8') + ';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' + ['engine', 'rules-champions', 'rules-events', 'rules-shard', 'effects', 'champions', 'ai'].map(f => fs.readFileSync(dir + '/js/' + f + '.js', 'utf8')).join('\n') + `
 console.log('Error: ' + report.error);
 for (const l of report.where || []) console.log('   ' + l);
+console.log('Game version: ' + (report.version || 'not recorded'));
 console.log('Screen: ' + report.screen + (report.tutorial ? ' (tutorial)' : '') + ' · ' + report.when);
 const rec = report.match;
 if (!rec) { console.log('No match in the report (the error happened outside a match).'); process.exit(0); }

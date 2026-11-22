@@ -37,7 +37,19 @@ The game files are the master copy: if cards change in code, update the sheet to
 
 ## Checking the whole sheet ("is it up to date?")
 
-Compare every tab with the game files: Cards (all columns, row = cards.csv line), Decks and Deck
+Do it with the tool, not by eye:
+1. Download the whole sheet: `mcp__Google_Drive__download_file_content`, `fileId` = the sheet's
+   id, `exportMimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"`.
+   The result names the saved `.xlsx` file.
+2. `node tools/sheet-check.js <that file>`. It ends `THE SHEET MATCHES THE GAME`, or lists each
+   difference in plain words (Draft and Ready rows are listed as waiting, not compared).
+3. Fix the sheet to match the game (the game files win), download again and re-run until it
+   matches. Run it after every change to cards, decks, fractures or skills.
+
+Watch out: a cell starting with `+`, `-` or `=` is taken as a sum by Google Sheets and shows
+`#ERROR!`. Write it with a leading `'` (for example `'+1 Attack ...`).
+
+What the tool compares, for reference: Cards (all columns, row = cards.csv line), Decks and Deck
 cards (0-copy rows are deliberate), Fractures (hex vs 0–1 colours), Skills, Lists, and the two
 guide tabs. The game files win. The sheet's Check columns must all say OK afterwards.
 

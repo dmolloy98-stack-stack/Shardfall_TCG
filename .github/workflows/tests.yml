@@ -29,6 +29,56 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: |
+      - shell: bash
+        run: |
           node tools/winrates.js 20 --check | tee winrates.txt
           { echo '### Balance (20 games per pairing)'; echo '```'; cat winrates.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  # Screen tests on pull requests: a real (headless) browser clicks and drags through the game
+  # (tools/screen-test.js). The browser is installed for the run only; the game itself still has
+  # no libraries.
+  screen:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Both test tools in one install: a second "npm install --no-save" removes what the first added.
+      - run: npm install --no-save --no-package-lock playwright@1.63.0 axe-core@4.10.2 && npx playwright install --with-deps chromium
+      - run: node tools/screen-test.js
+      # Accessibility: axe on the main screens plus a keyboard check; problems show as warnings.
+      # "shell: bash" makes a step fail when the tool crashes, even though its output goes through tee.
+      - name: Accessibility check
+        if: always()
+        shell: bash
+        run: |
+          node tools/a11y-check.js | tee a11y.txt
+          { echo '### Accessibility'; echo '```'; tail -3 a11y.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      # Picture comparison: the same scenes photographed from main and from this pull request, on this
+      # machine. A changed scene is a warning (many look changes are on purpose), with the pictures
+      # attached to the run as "picture-changes".
+      - name: Picture comparison
+        if: always()
+        shell: bash
+        run: |
+          git fetch --depth 1 origin ${{ github.base_ref }}
+          git worktree add /tmp/before FETCH_HEAD
+          node tools/picture-test.js /tmp/before picture-changes | tee pictures.txt
+          { echo '### Pictures'; echo '```'; tail -1 pictures.txt; grep CHANGED pictures.txt || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      # Speed budget: main and this pull request measured side by side on a slowed processor; a warning
+      # if loading, starting a match, redrawing or the computer's turn gets noticeably slower.
+      - name: Speed budget
+        if: always()
+        shell: bash
+        run: |
+          node tools/speed-budget.js /tmp/before | tee speed.txt
+          { echo '### Speed (lower is better)'; echo '```'; cat speed.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: picture-changes
+          path: picture-changes/
+          if-no-files-found: ignore

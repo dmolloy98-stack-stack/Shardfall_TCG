@@ -4,7 +4,7 @@
 // change that breaks something shows a red mark before it is merged.
 //
 // It checks:
-//   - the focused tests (kinds, events, protected, shard, champions, replay, cards, saves) each say ALL PASSED
+//   - the focused tests (kinds, events, protected, shard, champions, replay, cards, saves, words) each say ALL PASSED
 //   - the automatic games (selftest "ai 2" and "rand 300") find no problems, and each one
 //     replays exactly from its move list
 //   - those games still play exactly as before: their fingerprints match the numbers below.
@@ -23,7 +23,7 @@ const run = args => {
 let failed = 0;
 const report = (name, ok, detail) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`); if (!ok) failed++; };
 
-for (const t of ['kinds', 'events', 'protected', 'shard', 'champions', 'replay', 'cards', 'saves']) {
+for (const t of ['kinds', 'events', 'protected', 'shard', 'champions', 'replay', 'cards', 'saves', 'words']) {
   const { out, code } = run([`tools/${t}-test.js`, '.']);
   const ok = code === 0 && /ALL PASSED\s*$/.test(out.trim());
   report(`${t}-test`, ok, ok ? '' : '\n' + out.split('\n').filter(l => /FAIL|Error/.test(l)).slice(0, 15).join('\n'));

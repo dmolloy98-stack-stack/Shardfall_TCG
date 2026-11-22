@@ -11,10 +11,10 @@ U.menuView = "home";
 U.setupMode = "ai";
 U.oppDeckId = PREFS.get("opp", "random");   // the other side's deck: "random" or a deck id
 const SETUP = {
-  ai: { title: "Quick Match", deck: "Choose your deck", opp: "The computer's deck", start: "Start match" },
-  hotseat: { title: "Two Players", deck: "Player 1's deck", opp: "Player 2's deck", start: "Start match" },
-  campaign: { title: "Your deck for the Campaign", deck: "Choose your deck", opp: null, start: "Back to the Campaign" },
-  decks: { title: "My Decks", deck: "Your decks", opp: null, start: null },
+  ai: { title: "door_quick", deck: "setup_ai_deck", opp: "setup_ai_opp", start: "menu_start_match" },
+  hotseat: { title: "door_two", deck: "setup_hotseat_deck", opp: "setup_hotseat_opp", start: "menu_start_match" },
+  campaign: { title: "setup_campaign_title", deck: "setup_ai_deck", opp: null, start: "setup_campaign_start" },
+  decks: { title: "menu_my_decks", deck: "setup_decks_deck", opp: null, start: null },   // TextIDs in data/ui_text.csv
 };
 function renderMenu() {
   if (!DATA.decks[U.deckId]) U.deckId = DATA.deckOrder[0];
@@ -27,18 +27,19 @@ function renderMenu() {
 function renderDoors() {
   const cleared = campaignCleared(), total = CAMPAIGN.length;
   const next = CAMPAIGN[Math.min(cleared, total - 1)];
-  const campChip = cleared >= total ? "Campaign complete" : `Next: ${next.champion} · ${cleared} of ${total} beaten`;
+  const campChip = cleared >= total ? T("door_campaign_done") : T("door_campaign_next", { champion: next.champion, cleared, total });
   const deck = DATA.decks[U.deckId], m = masteryOf(U.deckId);
   const door = (sym, chip, title, text, go) => `<span class="door-sym" aria-hidden="true">${sym}</span>${chip ? `<span class="door-chip">${esc(chip)}</span>` : ""}<span class="door-title">${title}</span><span class="door-text">${text}</span><span class="btn door-go">${go}</span>`;
-  $("#btn-campaign").innerHTML = door("♛", campChip, "Campaign", "Face each champion, one by one, and learn what the shards are hiding.", cleared ? "Continue" : "Begin");
-  $("#door-quick").innerHTML = door("⚔", `${deck?.name || ""}${m.title ? ` · ★ ${m.title}` : ""}`, "Quick Match", "One match against the computer. Pick your deck and theirs.", "Play");
-  $("#door-two").innerHTML = door("⇄", "", "Two Players", "Take turns on one device.", "Play");
+  $("#btn-campaign").innerHTML = door("♛", campChip, esc(T("door_campaign")), esc(T("door_campaign_text")), esc(T(cleared ? "door_continue" : "door_begin")));
+  $("#door-quick").innerHTML = door("⚔", `${deck?.name || ""}${m.title ? ` · ★ ${m.title}` : ""}`, esc(T("door_quick")), esc(T("door_quick_text")), esc(T("door_play")));
+  $("#btn-version").textContent = DATA.version ? T("menu_version", { version: DATA.version }) : T("menu_whats_new");
+  $("#door-two").innerHTML = door("⇄", "", esc(T("door_two")), esc(T("door_two_text")), esc(T("door_play")));
 }
 
 function renderSetup() {
   const mode = SETUP[U.setupMode] || SETUP.ai;
-  $("#setup-title").textContent = mode.title;
-  $("#deck-label").textContent = mode.deck;
+  $("#setup-title").textContent = T(mode.title);
+  $("#deck-label").textContent = T(mode.deck);
   const tile = id => {
     const d = DATA.decks[id];
     const edit = d.custom ? `<button type="button" class="deck-edit btn btn-small" data-edit="${id}" aria-label="Edit ${esc(d.name)}">Edit</button>` : "";
@@ -51,7 +52,7 @@ function renderSetup() {
   // The other side's deck: random, a starter deck, or (two players) one of your own.
   $("#opp-block").hidden = !mode.opp;
   if (mode.opp) {
-    $("#opp-label").textContent = mode.opp;
+    $("#opp-label").textContent = T(mode.opp);
     const choices = [...starters, ...(U.setupMode === "hotseat" ? mine.filter(id => !deckProblem(id)) : [])];
     if (U.oppDeckId !== "random" && !choices.includes(U.oppDeckId)) U.oppDeckId = "random";
     const opp = (id, name, icon, fc) => `<button type="button" class="opp-tile" data-opp="${id}" aria-pressed="${U.oppDeckId === id}" style="--fc:${fc}">${icon}<span>${esc(name)}</span></button>`;
@@ -62,7 +63,7 @@ function renderSetup() {
   $("#deck-problem").hidden = !problem;
   $("#deck-problem").textContent = problem || "";
   $("#btn-start").hidden = !mode.start;
-  $("#btn-start").textContent = mode.start || "";
+  $("#btn-start").textContent = mode.start ? T(mode.start) : "";
   $("#btn-start").disabled = !!problem && U.setupMode !== "campaign";
 }
 function showMenuHome() { U.menuView = "home"; renderMenu(); }
@@ -94,6 +95,16 @@ $("#btn-almanac").addEventListener("click", () => { U.almanacReturn = "menu"; sh
 $("#btn-rules").addEventListener("click", () => showGuide());
 $("#btn-settings").addEventListener("click", showSettings);
 $("#btn-trophies").addEventListener("click", () => showTrophies());
+$("#btn-version").addEventListener("click", () => showWhatsNew());
+
+// What's new (data/whats_new.csv): every update, newest first.
+function showWhatsNew() {
+  const date = d => { const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }); };
+  openModal(`<h2 id="modal-title">${esc(T("whatsnew_title"))}</h2>
+    <p class="sub">${esc(T("whatsnew_you_have", { version: DATA.version || "" }))}</p>
+    <div class="whats-new" tabindex="0" aria-label="Updates, newest first">${DATA.whatsNew.map((u, i) => `<section class="${i ? "" : "latest"}"><h3>${esc(T("whatsnew_update", { n: u.update }))} <small>${esc(date(u.date))}</small></h3><ul>${u.changes.map(c => `<li>${esc(c)}</li>`).join("")}</ul></section>`).join("")}</div>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>${esc(T("close"))}</button></div>`);
+}
 $("#btn-tutorial").addEventListener("click", startTutorial);
 $("#guide-back").addEventListener("click", () => showScreen(U.guideReturn === "game" && S ? "game" : "menu"));
 $("#guide-tutorial").addEventListener("click", startTutorial);

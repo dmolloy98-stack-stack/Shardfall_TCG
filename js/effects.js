@@ -90,6 +90,8 @@ function selectorFilter(f) {
   if (f === "strongest") return null;   // handled after filtering
   if (f === "swift") return c => isSwift(c);
   if (f === "tower") return c => hasSkill(c, "Tower");
+  const has = f.match(/^has:(.+)$/);                                                               // has:Reanimate: has that skill
+  if (has) return c => hasSkill(c, has[1]);
   if (["character", "spell", "equipment", "area"].includes(f)) return c => c.type.toLowerCase() === f;   // a kind of card
   const cost = f.match(/^cost(<=|>=|=)(\d+)$/);                                                     // cost<=2: by printed mana cost
   if (cost) { const n = Number(cost[2]); return { "<=": c => c.manaCost <= n, ">=": c => c.manaCost >= n, "=": c => c.manaCost === n }[cost[1]]; }
@@ -131,14 +133,22 @@ function select(sel, ctx) {
 //   #allies.Monkey      how many there are       #allies.Monkey>=3   1 if at least 3, else 0
 //   boost               The Simplistic's +3 on Simple spells
 //   ripen               1 after Ripen was cast   amount   the damage being redirected (IP Man)
+//   statline            this card's Attack plus Health
+//   2*#enemies          numbers can be multiplied with * (it is worked out before + and -)
 function parseNumber(text, where) {
   const terms = text.replace(/-/g, "+-").split("+").filter(Boolean).map(t => {
     const neg = t.startsWith("-"); const body = neg ? t.slice(1) : t;
+    if (body.includes("*")) {   // a product: each factor is a number of its own
+      const fs = body.split("*").map(f => parseNumber(f, where));
+      const prod = ctx => fs.reduce((n, f) => n * f(ctx), 1);
+      return neg ? ctx => -prod(ctx) : prod;
+    }
     let fn;
     if (/^\d+$/.test(body)) { const n = Number(body); fn = () => n; }
     else if (body === "boost") fn = ctx => spellBoost(ctx);
     else if (body === "ripen") fn = ctx => (ctx.owner.ripen ? 1 : 0);
     else if (body === "amount") fn = ctx => ctx.amount || 0;
+    else if (body === "statline") fn = ctx => (ctx.card ? ctx.card.attack + ctx.card.health : 0);
     else if (body.startsWith("#")) {
       const m = body.slice(1).match(/^([^<>=]+?)(>=(\d+))?$/);
       if (!m) throw new Error(`${where}: "${t}" is not a number.`);
@@ -161,16 +171,19 @@ const ACTIONS = {
     for (const c of chars(list)) dealDamageToCharacter(c, amt);
     for (const p of players(list)) dealDamageToPlayer(p, amt);
   }],
-  damageAll: ["n", (ctx, n) => damageEverything(n(ctx))],
+  damageAll: ["nw?", (ctx, n, other) => damageEverything(n(ctx), other === "other" ? ctx.card : null)],   // "other": not this card
   buff: ["snn", (ctx, who, a, h) => { for (const c of chars(who(ctx))) { c.attack += a(ctx); c.currentHealth += h(ctx); } }],
   shrink: ["sn", (ctx, who, n) => {   // loses attack and health
     const amt = n(ctx);
-    for (const c of chars(who(ctx))) { c.attack -= amt; c.currentHealth -= amt; emit("charDamage", { uid: c.uid, amount: amt }); checkDeath(c); }
+    const hit = chars(who(ctx));
+    for (const c of hit) { c.attack -= amt; c.currentHealth -= amt; }   // all of them first, then who died
+    for (const c of hit) { emit("charDamage", { uid: c.uid, amount: amt }); checkDeath(c); }
   }],
   setStats: ["snn", (ctx, who, a, h) => { for (const c of chars(who(ctx))) { c.attack = a(ctx); c.currentHealth = h(ctx); } }],
   loseAttack: ["sn", (ctx, who, n) => { for (const c of chars(who(ctx))) c.attack = Math.max(0, c.attack - n(ctx)); }],
   grow: ["sn", (ctx, who, n) => { for (const c of chars(who(ctx))) { c.currentHealth += n(ctx); c.baseHealth += n(ctx); } }],
   levelUp: ["sn", (ctx, who, n) => { for (const c of chars(who(ctx))) levelUp(c, n(ctx)); }],
+  levelDown: ["s", (ctx, who) => { for (const c of chars(who(ctx))) levelDown(c); }],   // takes back one Level Up
   destroy: ["s", (ctx, who) => { for (const c of chars(who(ctx))) destroyCharacter(c); }],
   destroyArea: ["s", (ctx, who) => {
     for (const a of who(ctx)) { const f = findArea(a.uid); if (f) { f.p.field.areas.splice(f.i, 1); f.p.grave.push(a); log(`${a.name} was destroyed.`); } }
@@ -206,8 +219,8 @@ const ACTIONS = {
   discardHand: ["s", (ctx, who) => { for (const p of players(who(ctx))) while (p.hand.length) p.grave.push(p.hand.pop()); }],
   fetch: ["c", (ctx, id) => { const c = takeFromDeck(ctx.owner, x => x.id === id); if (c) addToHand(ctx.owner, c); }],
   shuffle: ["", ctx => shuffle(ctx.owner.deck)],
-  summon: ["cn", (ctx, id, n) => {
-    for (let k = n(ctx); k > 0; k--) { const c = newCard(DATA.cardsById[id]); if (!putOnField(c, ctx.owner)) break; }
+  summon: ["cn", (ctx, id, n) => {   // a card from cards.csv, or a token from TOKENS
+    for (let k = n(ctx); k > 0; k--) { const c = newCard(DATA.cardsById[id] || TOKENS[id]); if (!putOnField(c, ctx.owner)) break; }
   }],
   summonFromDeck: ["c", (ctx, id) => {
     if (ctx.owner.field.chars.length >= RULES.maxChars) return;
@@ -261,7 +274,7 @@ function parseAction(text, where) {
     const k = sig[i].k;
     if (k === "s") { const sel = parseSelector(a, where); return ctx => select(sel, ctx); }
     if (k === "n") return parseNumber(a, where);
-    if (k === "c") { if (!DATA.cardsById[a] && !TOKEN_EFFECTS[a]) throw new Error(`${where}: "${a}" is not a CardID.`); return a; }
+    if (k === "c") { if (!DATA.cardsById[a] && !TOKENS[a]) throw new Error(`${where}: "${a}" is not a CardID.`); return a; }
     if (name === "script" && !SCRIPTS[a]) throw new Error(`${where}: there is no script called "${a}".`);
     return a;
   });
@@ -333,20 +346,6 @@ const SCRIPTS = {
       resolve: "messenger",
     });
   },
-  simplicity(ctx) {
-    const hit = foeOf(ctx.owner).field.chars.slice();
-    const n = 2 + spellBoost(ctx);
-    for (const c of hit) { c.attack -= n; c.currentHealth -= n; }
-    healPlayer(ctx.owner, n * hit.length);
-    for (const c of hit) { emit("charDamage", { uid: c.uid, amount: n }); checkDeath(c); }
-  },
-  keepComing() {
-    for (const c of allChars()) if (hasTribe(c, "Zombie")) {
-      if (hasSkill(c, "Reanimate")) c.currentHealth += 3;
-      else { c.skills.push("Reanimate"); c.reanimated = false; }
-    }
-  },
-  dataTransfer(ctx) { if (levelDown(ctx.target)) healPlayer(ctx.owner, 2); },
   digitalDrainage(ctx) {
     const levelers = ctx.owner.field.chars.filter(c => hasSkill(c, "Level Up"));
     for (const c of levelers) levelUp(c, 3);
@@ -356,26 +355,18 @@ const SCRIPTS = {
     const drain = top.levelUpCount || 0;
     for (const c of foeOf(ctx.owner).field.chars) { c.attack -= drain; emit("text", { uid: c.uid, text: `-${drain} ATK`, color: "#ff8a6b" }); }
   },
-  zombombadier(ctx) {
-    const c = ctx.card, d = c.attack + c.health;
-    for (const q of S.players) {
-      for (const x of q.field.chars.filter(x => x !== c)) dealDamageToCharacter(x, d);
-      dealDamageToPlayer(q, d);
-    }
-  },
-  masterRat(ctx) {
-    for (let k = 0; k < 4; k++) {
-      const turtle = {
-        uid: S.nextUid++, id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", tribes: ["Turtle"], classes: ["Student"], group: "Mortal", groups: ["Mortal"],
-        manaCost: 0, attack: 1, health: 1, skills: [], ability: "Gain +1 to each stat for every other Turtle on the field",
-        description: "", artKey: "turtle", token: true,
-      };
-      if (!putOnField(turtle, ctx.owner)) break;
-    }
-  },
 };
 
-// Effects for cards made during play that aren't in cards.csv.
+// Tokens: cards made during play that aren't in cards.csv (Master Rat's Turtles). "summon <id> <n>"
+// makes them. Tokens never go back to a hand or come back from a graveyard (pick and take skip them).
+const TOKENS = {
+  turtle: {
+    id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", tribes: ["Turtle"], classes: ["Student"], group: "Mortal", groups: ["Mortal"],
+    manaCost: 0, attack: 1, health: 1, skills: [], ability: "Gain +1 to each stat for every other Turtle on the field",
+    description: "", artKey: "turtle", token: true,
+  },
+};
+// What each token does, in the same words as the Effect column.
 const TOKEN_EFFECTS = { turtle: "aura: buff self #allies.turtle.other #allies.turtle.other" };
 
 // ---------------------------------------------------------------------------

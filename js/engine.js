@@ -557,9 +557,9 @@ function equipmentEntered(p) {
 //   now(ctx)                                  (run immediately, no target)
 // ctx = { card, owner, spell }
 // ---------------------------------------------------------------------------
-function damageEverything(n) {
+function damageEverything(n, spare = null) {   // spare: a character left out (Zombombadier itself)
   for (const q of S.players) {
-    for (const x of q.field.chars.slice()) dealDamageToCharacter(x, n);
+    for (const x of q.field.chars.filter(x => x !== spare)) dealDamageToCharacter(x, n);
     dealDamageToPlayer(q, n);
   }
 }

@@ -94,7 +94,7 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 - kind: `character`, `characterOrPlayer` or `area`. Narrow it with dots: `character.enemy`, `character.mine`, `character.leveler` (has Level Up), `character.mine.levels` (has kept levels).
 - intent: `harm`, `help` or `steal`. This tells the computer player how to use it.
 
-**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). For cards that aren't on the table there are four **piles**: `grave` (your graveyard), `graves` (both graveyards), `deck` and `hand`; they never hold tokens (cards made during play). Narrow a group with dots: a fracture (`allies.Monkey`), a tribe or tribe family (`allies.Zombie` is the fracture, `allies.tribe:Zombie` the tribe, `allies.Undead` the family), a class (`allies.Student`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `swift`, `tower`, `strongest`, a kind of card (`character`, `spell`, `equipment`, `area`), a printed cost (`cost<=2`, `cost>=4`, `cost=3`), and `not:` in front of any of these for the opposite (`not:primate`). Add the kind in front when one name is two things: Fighter is both a fracture and a class, so `allies.Fighter` means the fracture and `allies.class:Fighter` the class (`fracture:`, `tribe:` and `class:` all work). Filters add up: `allies.class:Student.class:Fighter` is your Students who are also Fighters.
+**Who** an action affects: `self` (this card), `target`, `holder` (the character holding this equipment), `allies` (your characters), `enemies`, `everyone` (all characters), `me`, `foe` (the players) and `gear` (stored equipment on both backlines). For cards that aren't on the table there are four **piles**: `grave` (your graveyard), `graves` (both graveyards), `deck` and `hand`; they never hold tokens (cards made during play). Narrow a group with dots: a fracture (`allies.Monkey`), a tribe or tribe family (`allies.Zombie` is the fracture, `allies.tribe:Zombie` the tribe, `allies.Undead` the family), a class (`allies.Student`), a CardID (`allies.simple_farmer`), `other` (not this card), `leveler`, `swift`, `tower`, `strongest`, a kind of card (`character`, `spell`, `equipment`, `area`), a printed cost (`cost<=2`, `cost>=4`, `cost=3`), any skill with `has:` in front (`has:Reanimate`), and `not:` in front of any of these for the opposite (`not:primate`). Add the kind in front when one name is two things: Fighter is both a fracture and a class, so `allies.Fighter` means the fracture and `allies.class:Fighter` the class (`fracture:`, `tribe:` and `class:` all work). Filters add up: `allies.class:Student.class:Fighter` is your Students who are also Fighters.
 
 **Numbers** can be whole numbers or these words, joined with `+` or `-`:
 
@@ -103,6 +103,8 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 | `#allies.Monkey` | How many there are |
 | `#allies.Monkey>=3` | 1 if there are at least 3, otherwise 0 |
 | `boost` | +3 on Simple spells while The Simplistic is out |
+| `statline` | This card's Attack plus Health |
+| `2*#enemies` | Numbers can be multiplied with `*` (worked out before `+` and `-`): Simplicity heals `2*#enemies+boost*#enemies` |
 | `ripen` | 1 after Ripen was cast |
 | `amount` | The damage being redirected (IP Man) |
 
@@ -113,9 +115,9 @@ Any action can end with `if <number>`: it only happens when the number is more t
 | Action | Does |
 |---|---|
 | `damage <who> <n>` | Deals n damage to characters or players |
-| `damageAll <n>` | n damage to every character and both players |
+| `damageAll <n> [other]` | n damage to every character and both players; `other` spares this card (Zombombadier: `damageAll statline other`) |
 | `buff <who> <attack> <health>` | Adds to attack and health (use negative numbers to lower them) |
-| `shrink <who> <n>` | Loses n attack and n health |
+| `shrink <who> <n>` | Loses n attack and n health (all of them first, then any that fall die) |
 | `setStats <who> <attack> <health>` | Stats become exactly these |
 | `loseAttack <who> <n>` | Loses n attack (not below 0) |
 | `grow <who> <n>` | Gains n health for good (raises its full health too) |
@@ -133,13 +135,14 @@ Any action can end with `if <number>`: it only happens when the number is more t
 | `discardHand <me/foe>` | Discards the whole hand |
 | `fetch <CardID>` | Takes that card from your deck into your hand |
 | `shuffle` | Shuffles your deck |
-| `summon <CardID> <n>` | Puts n new copies onto your field |
+| `summon <CardID or token> <n>` | Puts n new copies onto your field. Tokens are cards made during play, defined in `TOKENS` in `js/effects.js` (`turtle`: Master Rat's Turtles) |
 | `summonFromDeck <CardID>` | Moves that card from your deck onto your field |
 | `flag ripen` | Remembers that Ripen was cast |
 | `say <who> "TEXT" <color>` | Shows a word over the card, like `"+1 ATK" #ffe066` |
 | `pick <pile> <n> hand\|field ["question"]` | The player picks up to n cards from a pile (`grave.Monkey.character`, `graves.character`) and they go to the hand or back onto the field. Nothing happens if the pile has none. Example: Call of the Jungle, `pick grave.Monkey.character 3 hand "Pick up to 3 Monkey characters to return to your hand."` |
 | `take deck.<narrowing> <n> hand\|field` | The top n matching cards of your deck go to your hand or the field, no choice. Example: Primate, `take deck.Monkey.character.cost<=2.not:primate 2 field` |
 | `discardDraw ["question"]` | The player discards a card from their hand, then draws one (Rotten Finger) |
+| `levelDown <who>` | Takes back one Level Up from a character that has one to give (Data Transfer) |
 | `drainLife <who>` | You gain health equal to the character's Attack plus Health (Soul Suction: `drainLife target, damage target 99999`) |
 | `script <name>` | Runs a one-off ability written in `js/effects.js` |
 
@@ -236,6 +239,15 @@ A deck that holds a champion (an Unknown card) gets that champion's ability from
 
 You can reword the text freely. What each ability does is written in `js/rules-champions.js` (one entry per champion), so a new ability needs code. Each champion's bonus for breaking the big shard is in the same entry. Soul Shepard's growth is a `rule: grieve Undead` on its own card in cards.csv: +1 Health each time a character of that tribe dies.
 
+### whats_new.csv: the "What's new" list
+
+One row per update, newest first: **Update** (the pull request number), **Date** (YYYY-MM-DD) and
+**Changes**, what a player would notice in plain words, separated by `|`. The top row is the
+version the menu shows ("Update 30 · What's new") and the one a bug report names. Changes nobody
+playing would notice (tests, tools, tidying) are left out.
+
 ### phases.csv and ui_text.csv
 
-Phase names and the one-line instructions shown on the board, plus a few button labels and the names of the two rows on each side of the table (`zone_frontline` and `zone_backline`). Change the wording freely; the order of phases is fixed by the game.
+Phase names and the one-line instructions shown on the board (phases.csv), and the words players read (ui_text.csv). Change the wording freely; the order of phases is fixed by the game.
+
+**ui_text.csv** holds the words of the start menu, Settings, the save code window, the game menu, What's new, the "Something went wrong" window, the "pass the device" screen and the end of a match, plus the names of the table's two rows (`zone_frontline`, `zone_backline`). The **Category** column says where each appears. Words in curly brackets, like `{name}` or `{round}`, are filled in by the game: keep them, but you may move them around the sentence. Other screens (the tutorial, the campaign, champions' lines, help) still have their words in the code and are being moved here a screen at a time.
