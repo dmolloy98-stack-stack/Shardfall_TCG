@@ -57,13 +57,14 @@ async function measure(browser, root) {
     const board = document.getElementById('board');
     for (let i = 0; i < 20; i++) { board.innerHTML = ''; delete board.dataset.regions; render(); }
     const redraw = (t() - a) / 20;
-    // The computer playing a whole turn from this position (on a copy of the game, three times).
+    // The computer playing a whole turn from this position (on a copy of the game, ten times: one
+    // turn alone varies a lot with whatever else the computer is doing).
     a = t();
-    for (let i = 0; i < 3; i++) simulate(() => {
+    for (let i = 0; i < 10; i++) simulate(() => {
       const me = S.active; S.players[me].isAI = true; let k = 0;
       while (!S.over && S.active === me && k++ < 80) aiStep();
     });
-    const think = (t() - a) / 3;
+    const think = (t() - a) / 10;
     return { match, redraw, think };
   });
   await ctx.close();

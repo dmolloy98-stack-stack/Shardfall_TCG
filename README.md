@@ -81,7 +81,9 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
 | `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |
 | `js/cards.js` | How a card is drawn: frames, art, badges, names |
-| `js/ui.js` | Board rendering and input |
+| `js/ui.js` | The screen's core: its state, fast redraws, actions (Undo), screens and phone layout |
+| `js/board.js` | Everything drawn on the table: players' plates, health, mana, the big shard, the battle log, turn history and the hand |
+| `js/input.js` | Dragging cards from the hand, taps on the table, and keyboard shortcuts |
 | `js/table-effects.js` | Deaths, hits and other reactions on the table |
 | `js/panels.js` | Pop-up windows and Settings |
 | `js/menu.js` | The start menu: three doors (Campaign, Quick Match, Two Players) and the smaller buttons, then a step for picking your deck and the opponent's (or just looking after your decks); and the Almanac |

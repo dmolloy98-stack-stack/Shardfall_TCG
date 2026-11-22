@@ -20,7 +20,8 @@ added, split or renamed, or the flow between them changes.
   them in Node. Game state is `S`; it must survive `structuredClone` (store owners as player
   indexes, no functions or DOM in `S`). `simulate()` runs moves on a clone with events muted,
   so the computer can think.
-- **Screen**: `js/ui.js` (state `U`, the board, input), `js/cards.js` (how a card is drawn),
+- **Screen**: `js/ui.js` (state `U`, redraws, actions, screens), `js/board.js` (what's drawn on
+  the table, `render()`), `js/input.js` (drag, taps, keyboard), `js/cards.js` (how a card is drawn),
   `js/table-effects.js` (reactions to game events on the table), `js/panels.js` (pop-up windows,
   Settings). The computer is `js/ai.js`. A new top-level `const` used by another file at load time
   must be in a file that loads earlier (`GAME_SCRIPTS` order).
@@ -46,7 +47,7 @@ added, split or renamed, or the flow between them changes.
      it**, or that region redraws every time;
    - an animation started on an element survives redraws only if the element's HTML didn't change.
 3. **Clicks** go through one handler per area: `#board` uses `data-act="…"`
-   (`js/ui.js`, "board clicks"), Settings uses `data-set="…"` and the game menu `data-m="…"` (both in `js/panels.js`).
+   (`js/input.js`, "Board input"), Settings uses `data-set="…"` and the game menu `data-m="…"` (both in `js/panels.js`).
    **Add a new branch; don't add a second handler or a second branch for an existing act.**
    (A duplicate branch once stopped played cards from being counted.)
 4. **Saved settings:** `PREFS.get(key, fallback)` / `PREFS.set(key, value)` (`js/saves.js`; wrapped,

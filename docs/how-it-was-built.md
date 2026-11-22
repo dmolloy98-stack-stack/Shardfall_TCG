@@ -119,6 +119,11 @@ layout is the same everywhere. Tap targets are at least 44 pixels on screen. Loo
 listed under "Heavy effects", which start off on touch screens, and everything rests ("dozes")
 after 20 seconds with nothing happening. These keep phones cool and the battery alive.
 
+**The screen code is split by job.** `js/ui.js` is the core (state, redraws, actions, screens),
+`js/board.js` draws the table, `js/input.js` handles taps, drags and keys. A split like this is
+proven safe by the picture comparison (no picture changes), the screen tests and the speed budget,
+all run against the version before the split. (Nov 2026)
+
 **One click handler per area.** Each area of the screen has one handler that reads a `data-…`
 attribute and picks a branch. A second handler, or a second branch for the same action, causes
 double actions.

@@ -29,7 +29,7 @@ It applies to **cards** and to **whole decks**, to show mastery of them. The wor
   owner has not said otherwise; confirm before adding any bonus.
 - The campaign already knows when a stage is won (`js/campaign.js`). A "deck beaten the
   campaign" flag could hang off that.
-- Cards are drawn in `cardHTML` (`js/ui.js`), so extra looks (gold title, animation class)
+- Cards are drawn in `cardHTML` (`js/cards.js`), so extra looks (gold title, animation class)
   would go there and in `css/style.css`.
 - Alternate art and card backs need art, which is outside what Claude makes. Claude can build
   the slot (a level picks which image to show); the owner supplies the images.
@@ -100,11 +100,11 @@ design; each needs code in `js/engine.js`.
 
 ## Protected look that hints at the Shardfall — the owner's idea, not designed yet
 
-- The runes that circle a Protected card (`RUNES` and `runeRingHTML()` in `js/ui.js`) should
+- The runes that circle a Protected card (`RUNES` and `runeRingHTML()` in `js/board.js`) should
   one day hint at what made the shards fall: the big event behind the Shardfall. The owner will
   design what that is, then it gets pulled into the runes.
 - The shell of shards on a Protected player's health gem (`WARD` and `wardHTML()` in
-  `js/ui.js`) should carry the same hint, so the two Protected looks clearly belong together
+  `js/board.js`) should carry the same hint, so the two Protected looks clearly belong together
   and nobody is confused.
 - Today the runes are placeholder shapes. The shell has no runes yet.
 - Keep the hint subtle, like the other clues; once it is designed, log it in the clue log in
@@ -163,7 +163,7 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
 The owner picked all thirteen. Build order: 3, 7, 13, 12, 5, 6, 8, 4, 1, 2, 10, then 9 and 11,
 which need the owner. Mark each one built as it lands.
 
-1. **Split the screen code into smaller files** by job. Nothing on screen changes.
+1. **Built (22 Nov): js/ui.js split into ui.js, board.js and input.js.** **Split the screen code into smaller files** by job. Nothing on screen changes.
 2. **Player words move into the editable word table** (`data/ui_text.csv`), a screen at a time.
 3. **Built (22 Nov).** **A version number and "What's new" list in the game.**
 4. **Built (22 Nov): five of seven; Simple Messenger and Digital Drainage stay as code.** **General ability words for the last seven one-off cards** where a pattern is reusable.
