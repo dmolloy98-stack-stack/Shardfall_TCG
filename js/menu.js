@@ -102,7 +102,7 @@ function showWhatsNew() {
   const date = d => { const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }); };
   openModal(`<h2 id="modal-title">${esc(T("whatsnew_title"))}</h2>
     <p class="sub">${esc(T("whatsnew_you_have", { version: DATA.version || "" }))}</p>
-    <div class="whats-new">${DATA.whatsNew.map((u, i) => `<section class="${i ? "" : "latest"}"><h3>${esc(T("whatsnew_update", { n: u.update }))} <small>${esc(date(u.date))}</small></h3><ul>${u.changes.map(c => `<li>${esc(c)}</li>`).join("")}</ul></section>`).join("")}</div>
+    <div class="whats-new" tabindex="0" aria-label="Updates, newest first">${DATA.whatsNew.map((u, i) => `<section class="${i ? "" : "latest"}"><h3>${esc(T("whatsnew_update", { n: u.update }))} <small>${esc(date(u.date))}</small></h3><ul>${u.changes.map(c => `<li>${esc(c)}</li>`).join("")}</ul></section>`).join("")}</div>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>${esc(T("close"))}</button></div>`);
 }
 $("#btn-tutorial").addEventListener("click", startTutorial);

@@ -59,6 +59,14 @@ versions in turns, 5 times each, with the processor slowed 4x, and compares the 
 More than 15% slower (and more than 3 ms) is flagged; GitHub does the same on each pull request as
 a warning. Use `tools/speed-check.js` for frames per second with Heavy effects on and off.
 
+## Accessibility
+
+`node tools/a11y-check.js` (install axe once: `npm install --no-save --no-package-lock axe-core@4.10.2`;
+it lands in the git-ignored `node_modules/`). It must end `NO ACCESSIBILITY PROBLEMS FOUND`; `--all`
+also shows milder problems. It can't judge text contrast on gradients and pictures (most of the
+game's text), so look at new text against its background by eye in the screenshots. Scrolling
+boxes need `tabindex="0"` and an `aria-label`, so keyboard players can scroll them.
+
 ## A custom check
 
 For anything the quick check doesn't reach, write a short script in the scratchpad:

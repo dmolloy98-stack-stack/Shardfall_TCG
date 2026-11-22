@@ -47,6 +47,13 @@ jobs:
           node-version: 22
       - run: npm install --no-save --no-package-lock playwright@1.63.0 && npx playwright install --with-deps chromium
       - run: node tools/screen-test.js
+      # Accessibility: axe on the main screens plus a keyboard check; problems show as warnings.
+      - name: Accessibility check
+        if: always()
+        run: |
+          npm install --no-save --no-package-lock axe-core@4.10.2
+          node tools/a11y-check.js | tee a11y.txt
+          { echo '### Accessibility'; echo '```'; tail -3 a11y.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       # Picture comparison: the same scenes photographed from main and from this pull request, on this
       # machine. A changed scene is a warning (many look changes are on purpose), with the pictures
       # attached to the run as "picture-changes".

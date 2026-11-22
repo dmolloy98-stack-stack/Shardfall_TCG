@@ -177,7 +177,10 @@ which need the owner. Mark each one built as it lands.
 7. **Built (22 Nov).** **The card sheet checks itself against the game** (a tool listing differences).
 8. **Built (22 Nov).** **A speed budget**: GitHub warns when loading or a turn gets noticeably slower.
 9. **Real phone testing.** Needs the owner to create a free account with a device-testing service.
-10. **Accessibility check** (contrast, sizes, keyboard), with simple fixes.
+10. **Built (22 Nov).** **Accessibility check** (contrast, sizes, keyboard), with simple fixes. Fixed: the
+    What's new list and the battle log can be scrolled by keyboard, the computer's "thinking" dots
+    speak properly, and the screens sit in one main area. Not checkable automatically: text
+    contrast on gradients (most text); judge it by eye.
 11. **Anonymous play numbers.** Needs the owner's decisions on what to collect, and somewhere to
     send them (the Firebase project). Nothing is collected until then.
 12. **Built (22 Nov).** **One-button restore** from the Drive backups, proven by running every test.

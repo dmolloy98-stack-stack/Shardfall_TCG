@@ -174,6 +174,11 @@ pull request in turns on the same machine and compares the middle results, becau
 speed varies too much from run to run to compare with a stored number. Over budget is a warning:
 a feature may be worth some speed, and a person decides. (Nov 2026)
 
+**Accessibility is checked with axe on every pull request** (`tools/a11y-check.js`), plus a
+keyboard walk through the menu. The screens live inside one `<main>` area, scrolling boxes can be
+scrolled by keyboard, and icons that speak have a role. Text contrast on gradients can't be
+checked automatically and is judged by eye. (Nov 2026)
+
 **A test is never switched off to get a green mark.** A red test means something changed; find out
 what.
 

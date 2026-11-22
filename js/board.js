@@ -252,7 +252,7 @@ function plateHTML(p, side) {
   const thinking = p.isAI && S.active === p.idx && !S.over && !U.ended;   // the computer is taking its turn
   return `<div class="plate${crackFlash(p.idx) ? " crack-flash" : ""}${thinking ? " thinking" : ""}${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
     <div class="life">${crystalSVG("life-crystal " + tier, cracks)}${wardHTML(p)}<b>${Math.max(0, p.health)}</b></div>
-    <div class="who"><span class="name">${esc(p.name)}${hpBarHTML(p)}${thinking ? `<i class="thinking-dots" aria-label="thinking"><b></b><b></b><b></b></i>` : ""}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
+    <div class="who"><span class="name">${esc(p.name)}${hpBarHTML(p)}${thinking ? `<i class="thinking-dots" role="img" aria-label="thinking"><b></b><b></b><b></b></i>` : ""}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
     ${attackable ? previewBadge(fightPreview(U.selected, null), true) : targetable ? targetBadge(targetPreview({ isPlayer: true, idx: p.idx })) : ""}
   </div>`;
 }
@@ -498,7 +498,7 @@ function logPanelHTML() {
 }
 function showLog() {
   openModal(`<h2 id="modal-title">Battle log</h2>
-    <div class="full-log">${S.log.map((m, i) => `<p${i === S.log.length - 1 ? ' class="last"' : ""}>${esc(m)}</p>`).join("") || "<p>Nothing has happened yet.</p>"}</div>
+    <div class="full-log" tabindex="0" aria-label="Battle log">${S.log.map((m, i) => `<p${i === S.log.length - 1 ? ' class="last"' : ""}>${esc(m)}</p>`).join("") || "<p>Nothing has happened yet.</p>"}</div>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Back to the game</button></div>`);
   const box = document.querySelector("#modal .full-log");
   if (box) box.scrollTop = box.scrollHeight;
