@@ -155,6 +155,11 @@ slightly differently, so stored pictures would raise false alarms. Instead, each
 photographs `main` and itself side by side (`tools/picture-test.js`), with animations off and fixed
 seeds. A change is a warning, not a failure, because many look changes are on purpose. (Nov 2026)
 
+**Speed is measured the same way, side by side.** `tools/speed-budget.js` measures `main` and the
+pull request in turns on the same machine and compares the middle results, because one machine's
+speed varies too much from run to run to compare with a stored number. Over budget is a warning:
+a feature may be worth some speed, and a person decides. (Nov 2026)
+
 **A test is never switched off to get a green mark.** A red test means something changed; find out
 what.
 

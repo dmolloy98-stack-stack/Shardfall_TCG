@@ -52,6 +52,13 @@ fixed seeds, and lists the scenes that changed; `<scratchpad>/pics/report.html` 
 after and the difference in red. GitHub does the same on every pull request (a warning, never a
 red mark) and attaches the pictures as "picture-changes". To add a scene, add it to `SCENES`.
 
+## Speed budget (did this change make it slower?)
+
+`node tools/speed-budget.js <scratchpad>/main` (same `main` worktree as above) measures both
+versions in turns, 5 times each, with the processor slowed 4x, and compares the middle results.
+More than 15% slower (and more than 3 ms) is flagged; GitHub does the same on each pull request as
+a warning. Use `tools/speed-check.js` for frames per second with Heavy effects on and off.
+
 ## A custom check
 
 For anything the quick check doesn't reach, write a short script in the scratchpad:

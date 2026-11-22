@@ -57,6 +57,13 @@ jobs:
           git worktree add /tmp/before FETCH_HEAD
           node tools/picture-test.js /tmp/before picture-changes | tee pictures.txt
           { echo '### Pictures'; echo '```'; tail -1 pictures.txt; grep CHANGED pictures.txt || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      # Speed budget: main and this pull request measured side by side on a slowed processor; a warning
+      # if loading, starting a match, redrawing or the computer's turn gets noticeably slower.
+      - name: Speed budget
+        if: always()
+        run: |
+          node tools/speed-budget.js /tmp/before | tee speed.txt
+          { echo '### Speed (lower is better)'; echo '```'; cat speed.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
