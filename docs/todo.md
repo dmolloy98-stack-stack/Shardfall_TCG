@@ -158,6 +158,27 @@ The owner picked all twelve. Nothing here changes how the game plays. Build orde
 11. **Built (20 Nov).** **Balance check on every pull request** (warn if a starter deck leaves about 40–60% wins).
 12. **Built (20 Nov).** **Quicker loading and offline play** (one bundled file; add to home screen).
 
+## Background improvements, round two — chosen by the owner (22 Nov), being built
+
+The owner picked all thirteen. Build order: 3, 7, 13, 12, 5, 6, 8, 4, 1, 2, 10, then 9 and 11,
+which need the owner. Mark each one built as it lands.
+
+1. **Split the screen code into smaller files** by job. Nothing on screen changes.
+2. **Player words move into the editable word table** (`data/ui_text.csv`), a screen at a time.
+3. **A version number and "What's new" list in the game.**
+4. **General ability words for the last seven one-off cards** where a pattern is reusable.
+5. **Automatic screen tests** on every pull request.
+6. **Picture comparison**: screenshots flagged when they change unexpectedly.
+7. **The card sheet checks itself against the game** (a tool listing differences).
+8. **A speed budget**: GitHub warns when loading or a turn gets noticeably slower.
+9. **Real phone testing.** Needs the owner to create a free account with a device-testing service.
+10. **Accessibility check** (contrast, sizes, keyboard), with simple fixes.
+11. **Anonymous play numbers.** Needs the owner's decisions on what to collect, and somewhere to
+    send them (the Firebase project). Nothing is collected until then.
+12. **One-button restore** from the Drive backups, proven by running every test.
+13. **A "how this was built" guide** (`docs/how-it-was-built.md`): the why behind the code. Kept
+    current with every change that involves a "why" (CLAUDE.md, `pr-cycle`).
+
 ## Not doing for now
 
 - **A solo run mode** (a Slay the Spire style roguelike deckbuilder). The owner is wary of
