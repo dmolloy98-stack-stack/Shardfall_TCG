@@ -1,7 +1,7 @@
 # What's new: one row per update, newest first. Update is the pull request number; the top row is
 # the version the menu shows. Changes are what a player would notice, in plain words, separated by |.
 Update,Date,Changes
-30,2026-11-22,The menu shows which update you have; tap it to see what changed.
+30,2026-11-22,"The menu shows which update you have; tap it to see what changed.|Keyboard players can scroll the What's new list and the battle log, and screen readers announce the computer thinking."
 29,2026-11-20,"Save code in Settings: copy your progress and load it on another device.|If the game hits a problem, a window offers a bug report to copy and send.|Plays offline after one visit, and can be added to a phone's home screen.|The computer's surprise moves no longer change a match's luck."
 26,2026-11-20,"The worlds are now broad: Simple, Wild, Undead, Mortal and Cyber, with new tribes.|Each champion leads a tribe."
 23,2026-11-19,"Phones run cooler: heavy effects start off on touch screens, and looping effects rest when nothing is happening."
