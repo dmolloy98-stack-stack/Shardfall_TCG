@@ -40,6 +40,18 @@ then `await readability(page)`.
 
 Screenshots and test scripts go in the session scratchpad, never in the repo.
 
+## Picture comparison (before and after a look change)
+
+```bash
+git worktree add <scratchpad>/main origin/main
+node tools/picture-test.js <scratchpad>/main <scratchpad>/pics
+```
+
+It photographs 9 scenes at desktop and phone size from both versions, with animations off and
+fixed seeds, and lists the scenes that changed; `<scratchpad>/pics/report.html` shows before,
+after and the difference in red. GitHub does the same on every pull request (a warning, never a
+red mark) and attaches the pictures as "picture-changes". To add a scene, add it to `SCENES`.
+
 ## A custom check
 
 For anything the quick check doesn't reach, write a short script in the scratchpad:

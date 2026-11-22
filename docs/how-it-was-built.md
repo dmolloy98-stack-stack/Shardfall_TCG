@@ -150,6 +150,11 @@ never needs editing for a new file.
 monthly snapshot plus the patches after it and runs every test (tried 22 Nov 2026: identical to
 update 29). Images aren't in the backups, because the Drive connector can't carry them.
 
+**Picture comparison photographs both versions on the same machine.** Two computers draw fonts
+slightly differently, so stored pictures would raise false alarms. Instead, each pull request
+photographs `main` and itself side by side (`tools/picture-test.js`), with animations off and fixed
+seeds. A change is a warning, not a failure, because many look changes are on purpose. (Nov 2026)
+
 **A test is never switched off to get a green mark.** A red test means something changed; find out
 what.
 

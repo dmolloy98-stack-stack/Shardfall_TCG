@@ -47,3 +47,19 @@ jobs:
           node-version: 22
       - run: npm install --no-save --no-package-lock playwright@1.63.0 && npx playwright install --with-deps chromium
       - run: node tools/screen-test.js
+      # Picture comparison: the same scenes photographed from main and from this pull request, on this
+      # machine. A changed scene is a warning (many look changes are on purpose), with the pictures
+      # attached to the run as "picture-changes".
+      - name: Picture comparison
+        if: always()
+        run: |
+          git fetch --depth 1 origin ${{ github.base_ref }}
+          git worktree add /tmp/before FETCH_HEAD
+          node tools/picture-test.js /tmp/before picture-changes | tee pictures.txt
+          { echo '### Pictures'; echo '```'; tail -1 pictures.txt; grep CHANGED pictures.txt || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: picture-changes
+          path: picture-changes/
+          if-no-files-found: ignore
