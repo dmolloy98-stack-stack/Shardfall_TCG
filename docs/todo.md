@@ -169,7 +169,7 @@ which need the owner. Mark each one built as it lands.
 4. **General ability words for the last seven one-off cards** where a pattern is reusable.
 5. **Automatic screen tests** on every pull request.
 6. **Picture comparison**: screenshots flagged when they change unexpectedly.
-7. **The card sheet checks itself against the game** (a tool listing differences).
+7. **Built (22 Nov).** **The card sheet checks itself against the game** (a tool listing differences).
 8. **A speed budget**: GitHub warns when loading or a turn gets noticeably slower.
 9. **Real phone testing.** Needs the owner to create a free account with a device-testing service.
 10. **Accessibility check** (contrast, sizes, keyboard), with simple fixes.
