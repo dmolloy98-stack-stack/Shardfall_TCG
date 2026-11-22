@@ -50,7 +50,11 @@ files in `data/`, which mirror the owner's card sheet. What a card does is the E
 written in a small ability language (`js/effects.js`). This way the owner designs cards without
 code, and most new cards need no programming. Code is only for a genuinely new kind of ability.
 When a one-off ability turns out to be a pattern, it becomes a general ability word (Nov 2026:
-`pick`, `take`, `discardDraw`, `drainLife`).
+`pick`, `take`, `discardDraw`, `drainLife`; 22 Nov: `levelDown`, `statline`, `*`, `has:`, tokens
+for `summon`). Only two cards still need one-off code: Simple Messenger and Digital Drainage.
+Every such move is checked by playing each changed card on the same table in the old and new
+versions and comparing the result exactly; the big automatic games alone miss cards that no
+starter deck holds.
 
 **The game files are the master copy.** If the card sheet and the game disagree, the game wins and
 the sheet is fixed to match (`tools/sheet-check.js` lists the differences).

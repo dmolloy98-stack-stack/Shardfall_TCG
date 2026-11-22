@@ -166,7 +166,7 @@ which need the owner. Mark each one built as it lands.
 1. **Split the screen code into smaller files** by job. Nothing on screen changes.
 2. **Player words move into the editable word table** (`data/ui_text.csv`), a screen at a time.
 3. **Built (22 Nov).** **A version number and "What's new" list in the game.**
-4. **General ability words for the last seven one-off cards** where a pattern is reusable.
+4. **Built (22 Nov): five of seven; Simple Messenger and Digital Drainage stay as code.** **General ability words for the last seven one-off cards** where a pattern is reusable.
 5. **Built (22 Nov).** **Automatic screen tests** on every pull request.
 6. **Built (22 Nov).** **Picture comparison**: screenshots flagged when they change unexpectedly.
 7. **Built (22 Nov).** **The card sheet checks itself against the game** (a tool listing differences).
