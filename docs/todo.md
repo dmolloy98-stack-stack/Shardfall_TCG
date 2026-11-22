@@ -182,8 +182,8 @@ which need the owner. Mark each one built as it lands.
     What's new list and the battle log can be scrolled by keyboard, the computer's "thinking" dots
     speak properly, and the screens sit in one main area. Not checkable automatically: text
     contrast on gradients (most text); judge it by eye.
-11. **Anonymous play numbers.** Needs the owner's decisions on what to collect, and somewhere to
-    send them (the Firebase project). Nothing is collected until then.
+11. **Planned (22 Nov): `docs/play-numbers.md`.** **Anonymous play numbers.** Needs the owner's decisions
+    on what to collect (three questions in the plan), and the Firebase project. Nothing is collected.
 12. **Built (22 Nov).** **One-button restore** from the Drive backups, proven by running every test.
 13. **Built (22 Nov).** **A "how this was built" guide** (`docs/how-it-was-built.md`): the why behind the code. Kept
     current with every change that involves a "why" (CLAUDE.md, `pr-cycle`).
