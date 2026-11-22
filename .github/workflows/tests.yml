@@ -29,7 +29,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: |
+      - shell: bash
+        run: |
           node tools/winrates.js 20 --check | tee winrates.txt
           { echo '### Balance (20 games per pairing)'; echo '```'; cat winrates.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
@@ -45,13 +46,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-save --no-package-lock playwright@1.63.0 && npx playwright install --with-deps chromium
+      # Both test tools in one install: a second "npm install --no-save" removes what the first added.
+      - run: npm install --no-save --no-package-lock playwright@1.63.0 axe-core@4.10.2 && npx playwright install --with-deps chromium
       - run: node tools/screen-test.js
       # Accessibility: axe on the main screens plus a keyboard check; problems show as warnings.
+      # "shell: bash" makes a step fail when the tool crashes, even though its output goes through tee.
       - name: Accessibility check
         if: always()
+        shell: bash
         run: |
-          npm install --no-save --no-package-lock axe-core@4.10.2
           node tools/a11y-check.js | tee a11y.txt
           { echo '### Accessibility'; echo '```'; tail -3 a11y.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       # Picture comparison: the same scenes photographed from main and from this pull request, on this
@@ -59,6 +62,7 @@ jobs:
       # attached to the run as "picture-changes".
       - name: Picture comparison
         if: always()
+        shell: bash
         run: |
           git fetch --depth 1 origin ${{ github.base_ref }}
           git worktree add /tmp/before FETCH_HEAD
@@ -68,6 +72,7 @@ jobs:
       # if loading, starting a match, redrawing or the computer's turn gets noticeably slower.
       - name: Speed budget
         if: always()
+        shell: bash
         run: |
           node tools/speed-budget.js /tmp/before | tee speed.txt
           { echo '### Speed (lower is better)'; echo '```'; cat speed.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

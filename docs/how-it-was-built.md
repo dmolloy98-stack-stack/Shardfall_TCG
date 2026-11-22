@@ -214,6 +214,10 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
   `#ERROR!`. Write it with a leading `'`.
 - **Renaming a world or tribe** leaves old names in many places (pull request #27 found
   leftovers). Use the `worlds-and-tribes` skill's full list.
+- **A green GitHub check can hide a crash** when a step sends its output through `tee`: only the
+  last command counts. Such steps use `shell: bash`, which fails on any part of the pipe. And a
+  second `npm install --no-save` removes what an earlier one added, so the test tools are
+  installed in one command (found on pull request #30, before merging).
 - **Looping animations** must be added to the Heavy effects list in `css/style.css`, or phones run
   hot.
 - **An old saved match** can lack a newer field and crash (fixed Nov 2026). Every field in `S`
