@@ -49,6 +49,7 @@ All cards, decks, skills and balance numbers are CSV files in the [`data/`](data
 | [`data/decks.csv`](data/decks.csv) | The starter decks and their card lists |
 | [`data/skills.csv`](data/skills.csv) | Skill keywords and their descriptions |
 | [`data/game_rules.csv`](data/game_rules.csv) | Starting health, hand size, mana growth, field limits, deck-building rules |
+| [`data/whats_new.csv`](data/whats_new.csv) | The "What's new" list: one row per update, newest first; the top row is the version shown on the menu |
 | [`data/events.csv`](data/events.csv) | The random events: their names and descriptions (what they do is in `js/engine.js`) |
 | [`data/champion_abilities.csv`](data/champion_abilities.csv) | The champions' abilities: names, what they do, when they level up (the rules are in `js/engine.js`) |
 | [`data/rarities.csv`](data/rarities.csv), [`data/factions.csv`](data/factions.csv) | Colors, symbols, equipment attach costs |

@@ -236,6 +236,13 @@ A deck that holds a champion (an Unknown card) gets that champion's ability from
 
 You can reword the text freely. What each ability does is written in `js/rules-champions.js` (one entry per champion), so a new ability needs code. Each champion's bonus for breaking the big shard is in the same entry. Soul Shepard's growth is a `rule: grieve Undead` on its own card in cards.csv: +1 Health each time a character of that tribe dies.
 
+### whats_new.csv: the "What's new" list
+
+One row per update, newest first: **Update** (the pull request number), **Date** (YYYY-MM-DD) and
+**Changes**, what a player would notice in plain words, separated by `|`. The top row is the
+version the menu shows ("Update 30 · What's new") and the one a bug report names. Changes nobody
+playing would notice (tests, tools, tidying) are left out.
+
 ### phases.csv and ui_text.csv
 
 Phase names and the one-line instructions shown on the board, plus a few button labels and the names of the two rows on each side of the table (`zone_frontline` and `zone_backline`). Change the wording freely; the order of phases is fixed by the game.

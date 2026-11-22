@@ -32,6 +32,7 @@ function renderDoors() {
   const door = (sym, chip, title, text, go) => `<span class="door-sym" aria-hidden="true">${sym}</span>${chip ? `<span class="door-chip">${esc(chip)}</span>` : ""}<span class="door-title">${title}</span><span class="door-text">${text}</span><span class="btn door-go">${go}</span>`;
   $("#btn-campaign").innerHTML = door("♛", campChip, "Campaign", "Face each champion, one by one, and learn what the shards are hiding.", cleared ? "Continue" : "Begin");
   $("#door-quick").innerHTML = door("⚔", `${deck?.name || ""}${m.title ? ` · ★ ${m.title}` : ""}`, "Quick Match", "One match against the computer. Pick your deck and theirs.", "Play");
+  $("#btn-version").textContent = DATA.version ? `${DATA.version} · What's new` : "What's new";
   $("#door-two").innerHTML = door("⇄", "", "Two Players", "Take turns on one device.", "Play");
 }
 
@@ -94,6 +95,16 @@ $("#btn-almanac").addEventListener("click", () => { U.almanacReturn = "menu"; sh
 $("#btn-rules").addEventListener("click", () => showGuide());
 $("#btn-settings").addEventListener("click", showSettings);
 $("#btn-trophies").addEventListener("click", () => showTrophies());
+$("#btn-version").addEventListener("click", () => showWhatsNew());
+
+// What's new (data/whats_new.csv): every update, newest first.
+function showWhatsNew() {
+  const date = d => { const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }); };
+  openModal(`<h2 id="modal-title">What's new</h2>
+    <p class="sub">You have ${esc(DATA.version || "this version")}.</p>
+    <div class="whats-new">${DATA.whatsNew.map((u, i) => `<section class="${i ? "" : "latest"}"><h3>Update ${esc(u.update)} <small>${esc(date(u.date))}</small></h3><ul>${u.changes.map(c => `<li>${esc(c)}</li>`).join("")}</ul></section>`).join("")}</div>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Close</button></div>`);
+}
 $("#btn-tutorial").addEventListener("click", startTutorial);
 $("#guide-back").addEventListener("click", () => showScreen(U.guideReturn === "game" && S ? "game" : "menu"));
 $("#guide-tutorial").addEventListener("click", startTutorial);

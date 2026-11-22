@@ -1,0 +1,13 @@
+# What's new: one row per update, newest first. Update is the pull request number; the top row is
+# the version the menu shows. Changes are what a player would notice, in plain words, separated by |.
+Update,Date,Changes
+30,2026-11-22,The menu shows which update you have; tap it to see what changed.
+29,2026-11-20,"Save code in Settings: copy your progress and load it on another device.|If the game hits a problem, a window offers a bug report to copy and send.|Plays offline after one visit, and can be added to a phone's home screen.|The computer's surprise moves no longer change a match's luck."
+26,2026-11-20,"The worlds are now broad: Simple, Wild, Undead, Mortal and Cyber, with new tribes.|Each champion leads a tribe."
+23,2026-11-19,"Phones run cooler: heavy effects start off on touch screens, and looping effects rest when nothing is happening."
+22,2026-11-19,"Settings: turn heavy effects on or off.|The table redraws faster.|Card stories for all 113 cards, unlocked the first time you play each card.|A Trophy case, and scenes in the Campaign.|Turn history in the battle log.|Each deck shows its record and average cost."
+21,2026-11-19,"A new start menu: Campaign, Quick Match and Two Players.|Champions speak in every match.|Deck mastery titles."
+20,2026-11-19,"Cards travel across the table, characters are bigger, and the computer's turns are easier to follow.|Spots light up while you place a card.|Big hits flash the edges of the screen.|Fixed: passing in the Draw phase skipped your draw."
+16,2026-11-15,"The Shattered Crystal look.|Random events.|Bigger card art, and bigger tap areas on phones."
+8,2026-10-29,The deck builder.|The Crystal Altar board.|Health changes colour as it drops.
+1,2026-10-28,Shardfall moves from a desktop program into the browser.

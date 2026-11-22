@@ -170,6 +170,15 @@ button { font: inherit; color: inherit; }
 .door .door-go { margin-top: 6px; pointer-events: none; }
 .door-main .door-go { background: linear-gradient(#ffd27a, #e08a1e); color: #2a1606; }
 .menu-actions.minor { justify-content: center; }
+/* The version line under the menu buttons; it opens What's new */
+.menu-version { appearance: none; justify-self: center; background: none; border: 0; padding: 10px 14px; min-height: 44px; cursor: pointer;
+  font: 600 0.95rem var(--font-body); color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.menu-version:hover, .menu-version:focus-visible { color: var(--parchment); }
+.whats-new { display: grid; gap: 14px; margin-top: 14px; max-height: 60vh; overflow: auto; padding-right: 6px; }
+.whats-new h3 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; color: var(--parchment); }
+.whats-new h3 small { font-family: var(--font-body); font-size: 0.85rem; color: var(--muted); margin-left: 6px; }
+.whats-new .latest h3 { color: var(--brass); }
+.whats-new ul { margin: 0; padding-left: 1.2em; }
 .menu-actions.minor .btn { min-width: 150px; }
 /* Choosing decks before a match */
 .setup-head { display: flex; align-items: center; gap: 14px; }

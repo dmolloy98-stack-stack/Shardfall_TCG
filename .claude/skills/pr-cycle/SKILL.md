@@ -23,6 +23,10 @@ Repo `dmolloy98-stack-stack/Shardfall_TCG`; work branch is the one the session n
 
 ## Before a pull request
 
+- **What's new:** if players would notice anything, add a row at the top of
+  `data/whats_new.csv`: Update = this pull request's number (the last one + 1; check it once the
+  pull request is open and fix the row if GitHub gave another number), today's date, and the
+  changes in plain words separated by `|`. Nothing players would notice: no row.
 - `node tools/test-all.js` ends with `EVERYTHING PASSED`.
 - Screen changes: `browser-check` at desktop and phone, screenshots looked at.
 

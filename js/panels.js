@@ -168,7 +168,7 @@ let bugShown = false;
 function bugReport(err) {
   const lines = String(err?.stack || "").split("\n").slice(0, 6).map(l => l.trim());
   const report = {
-    kind: "shardfall-bug-report", when: new Date().toISOString(),
+    kind: "shardfall-bug-report", version: DATA.version, when: new Date().toISOString(),
     error: String(err?.message || err || "unknown error"), where: lines,
     screen: U?.screen, tutorial: !!U?.tutorial, browser: navigator.userAgent,
     match: S?.setup ? matchRecord() : null,
