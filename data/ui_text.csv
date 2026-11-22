@@ -1,3 +1,6 @@
+# The words players read. TextID is what the code asks for (T("id") in js/); Text is what players
+# see, and can be changed freely. {name} and the like are filled in by the game: keep them. Category
+# says where the words appear. tools/words-test.js checks every TextID the code asks for is here.
 TextID,Text,Category
 button_start_game,START GAME,Button
 button_almanac,ALMANAC,Button
@@ -8,3 +11,97 @@ zone_backline,Backline,Board
 tutorial_draw,Click DRAW CARD to begin,Tutorial
 tutorial_setup,Drag cards with green glow onto the field to play them,Tutorial
 tutorial_battle,Click one of your characters then click an enemy,Tutorial
+menu_tagline,"A trading card game for people who want to have fun, not spend money.",Menu
+menu_my_decks,My Decks,Menu
+menu_tutorial,Tutorial,Menu
+menu_how_to_play,How to play,Menu
+menu_almanac,Almanac,Menu
+menu_trophies,Trophies,Menu
+menu_settings,Settings,Menu
+menu_back,← Back,Menu
+menu_start_match,Start match,Menu
+menu_version,{version} · What's new,Menu
+menu_whats_new,What's new,Menu
+door_campaign,Campaign,Menu
+door_campaign_text,"Face each champion, one by one, and learn what the shards are hiding.",Menu
+door_campaign_next,Next: {champion} · {cleared} of {total} beaten,Menu
+door_campaign_done,Campaign complete,Menu
+door_begin,Begin,Menu
+door_continue,Continue,Menu
+door_play,Play,Menu
+door_quick,Quick Match,Menu
+door_quick_text,One match against the computer. Pick your deck and theirs.,Menu
+door_two,Two Players,Menu
+door_two_text,Take turns on one device.,Menu
+setup_ai_deck,Choose your deck,Menu
+setup_ai_opp,The computer's deck,Menu
+setup_hotseat_deck,Player 1's deck,Menu
+setup_hotseat_opp,Player 2's deck,Menu
+setup_campaign_title,Your deck for the Campaign,Menu
+setup_campaign_start,Back to the Campaign,Menu
+setup_decks_deck,Your decks,Menu
+settings_title,Settings,Settings
+on,On,Settings
+off,Off,Settings
+shown,Shown,Settings
+hidden,Hidden,Settings
+settings_hints,Beginner hints: {state},Settings
+settings_log,Battle log on the table: {state},Settings
+settings_speed,Computer speed: {speed},Settings
+settings_speed_tip,How fast the computer plays its turn,Settings
+settings_fx,Heavy effects: {state},Settings
+settings_fx_tip,"The always-on glows, shimmers and falling shards. Turn off if the game feels slow on this device",Settings
+settings_flow,Draw and skip by themselves: {state},Settings
+settings_flow_tip,"Draw your card by itself, and skip Battle when nothing can attack",Settings
+settings_passcheck,Ask before passing early: {state},Settings
+settings_passcheck_tip,"Ask before you pass with mana and playable cards, or characters that can still attack",Settings
+settings_readlog,Read the battle log,Settings
+settings_intro,Watch the intro,Settings
+settings_savecode,Save code: copy or load progress,Settings
+settings_savecode_tip,Copy your progress to another device or browser,Settings
+settings_board,Board,Settings
+settings_done,Done,Settings
+settings_back_to_menu,Back to the game menu,Settings
+save_title,Save code,Save code
+save_intro,"Your progress and settings as one line of text: campaign, decks, trophies, card stories and Settings. Copy it and keep it somewhere safe, or paste it into Shardfall on another device to carry on there.",Save code
+save_copy,Copy my save code,Save code
+save_load_title,Load a save code,Save code
+save_load_intro,Paste a code here. It replaces the progress and settings on this device.,Save code
+save_load,Load this code,Save code
+save_back,Back to Settings,Save code
+save_copied,"Copied. Keep it somewhere safe, like a note or an email to yourself.",Save code
+save_sure,"Yes, replace my progress",Save code
+save_sure_text,This replaces the progress and settings on this device. Press again to go ahead.,Save code
+save_loaded,Loaded. Shardfall is restarting…,Save code
+gamemenu_title,Game menu,Game menu
+gamemenu_resume,Resume,Game menu
+gamemenu_settings,Settings,Game menu
+gamemenu_log,Battle log,Game menu
+gamemenu_rules,How to play,Game menu
+gamemenu_tutorial_title,Tutorial,Game menu
+gamemenu_tutorial_restart,Start the tutorial over,Game menu
+gamemenu_tutorial_leave,Leave tutorial,Game menu
+gamemenu_testing,Testing tools,Game menu
+gamemenu_undo,Undo ({n}),Game menu
+gamemenu_mana,+1 mana,Game menu
+gamemenu_draw,Draw a card,Game menu
+whatsnew_title,What's new,What's new
+whatsnew_you_have,You have {version}.,What's new
+whatsnew_update,Update {n},What's new
+close,Close,What's new
+bug_title,Something went wrong,Bug report
+bug_text,"Shardfall hit a problem it didn't expect. You can usually keep playing. To help fix it, copy this bug report and send it to the person who shared the game with you. It holds the match so far, so the problem can be played again exactly.",Bug report
+bug_copy,Copy bug report,Bug report
+bug_copied,Copied. Paste it into a message or email.,Bug report
+bug_close,Keep playing,Bug report
+end_victory,Victory,End screen
+end_defeat,Defeat,End screen
+end_draw,A draw,End screen
+end_wins,{name} wins,End screen
+end_both_fell,Both players fell at once.,End screen
+end_wins_round,{name} wins in round {round}.,End screen
+end_again,Play again,End screen
+end_menu,Main menu,End screen
+curtain_pass,Pass the device to,Board
+curtain_start,Start turn,Board
+curtain_round,{deck} · Round {round},Board

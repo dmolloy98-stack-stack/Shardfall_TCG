@@ -11,6 +11,7 @@ if ("serviceWorker" in navigator && typeof EMBEDDED_FILES === "undefined" && /(^
   navigator.serviceWorker.register("sw.js").catch(() => { /* no offline copy; the game works as usual */ });
 }
 function boot(saved) {
+  fillWords();   // the menu's words from data/ui_text.csv
   if (saved?.deckId) U.deckId = saved.deckId;
   if (saved?.mode) U.mode = saved.mode;
   if (saved?.S) { S = { ...baseState(), ...saved.S }; U.ended = S.over; showScreen(saved.screen === "almanac" ? "almanac" : "game"); return; }

@@ -56,6 +56,11 @@ Every such move is checked by playing each changed card on the same table in the
 versions and comparing the result exactly; the big automatic games alone miss cards that no
 starter deck holds.
 
+**Words players read live in a table too.** `data/ui_text.csv` holds them, and the code asks with
+`T("id")`, so the owner can reword anything without code, and other languages become possible
+later. Screens are moved over one at a time; a moved screen is checked with the picture comparison
+(the words must look exactly the same) and `tools/words-test.js`. (Nov 2026)
+
 **The game files are the master copy.** If the card sheet and the game disagree, the game wins and
 the sheet is fixed to match (`tools/sheet-check.js` lists the differences).
 

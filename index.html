@@ -37,7 +37,7 @@
     <div class="menu-inner">
       <header class="menu-title">
         <h1>Shardfall</h1>
-        <p class="tagline">A trading card game for people who want to have fun, not spend money.</p>
+        <p class="tagline" data-t="menu_tagline">A trading card game for people who want to have fun, not spend money.</p>
       </header>
 
       <!-- The start menu's home: three ways to play, then the rest (js/menu.js renders the doors) -->
@@ -48,12 +48,12 @@
           <button type="button" id="door-two" class="door" data-setup="hotseat"></button>
         </div>
         <div class="menu-actions minor">
-          <button type="button" id="btn-decks" class="btn" data-setup="decks">My Decks</button>
-          <button type="button" id="btn-tutorial" class="btn">Tutorial</button>
-          <button type="button" id="btn-rules" class="btn">How to play</button>
-          <button type="button" id="btn-almanac" class="btn">Almanac</button>
-          <button type="button" id="btn-trophies" class="btn">Trophies</button>
-          <button type="button" id="btn-settings" class="btn">Settings</button>
+          <button type="button" id="btn-decks" class="btn" data-setup="decks" data-t="menu_my_decks">My Decks</button>
+          <button type="button" id="btn-tutorial" class="btn" data-t="menu_tutorial">Tutorial</button>
+          <button type="button" id="btn-rules" class="btn" data-t="menu_how_to_play">How to play</button>
+          <button type="button" id="btn-almanac" class="btn" data-t="menu_almanac">Almanac</button>
+          <button type="button" id="btn-trophies" class="btn" data-t="menu_trophies">Trophies</button>
+          <button type="button" id="btn-settings" class="btn" data-t="menu_settings">Settings</button>
         </div>
         <button type="button" id="btn-version" class="menu-version" title="What's new in Shardfall"></button>
       </div>
@@ -61,7 +61,7 @@
       <!-- Choosing decks before a match (Quick Match, Two Players), or just looking after them (My Decks) -->
       <div id="menu-setup" class="menu-panel" hidden>
         <div class="setup-head">
-          <button type="button" id="btn-back" class="btn btn-small">← Back</button>
+          <button type="button" id="btn-back" class="btn btn-small" data-t="menu_back">← Back</button>
           <h2 id="setup-title" class="setup-title"></h2>
         </div>
         <h2 id="deck-label" class="panel-label">Choose your deck</h2>

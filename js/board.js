@@ -422,12 +422,12 @@ function render() {
   h += RG("over");
 
   if (U.curtain) {
-    h += `<div class="curtain"><p>Pass the device to</p><h2>${esc(active().name)}</h2><p>${esc(active().deckLabel ?? active().faction + " deck")} · Round ${S.round}</p>${eventLine() ? `<p>${esc(eventLine().when)}: ${esc(eventLine().name)}. ${esc(eventLine().desc)}</p>` : ""}<button type="button" class="btn btn-primary" data-act="curtain">Start turn</button></div>`;
+    h += `<div class="curtain"><p>${esc(T("curtain_pass"))}</p><h2>${esc(active().name)}</h2><p>${esc(T("curtain_round", { deck: active().deckLabel ?? active().faction + " deck", round: S.round }))}</p>${eventLine() ? `<p>${esc(eventLine().when)}: ${esc(eventLine().name)}. ${esc(eventLine().desc)}</p>` : ""}<button type="button" class="btn btn-primary" data-act="curtain">${esc(T("curtain_start"))}</button></div>`;
   } else if (U.ended && !U.tutorial) {
-    const title = S.winner == null ? "A draw" : S.mode === "ai" ? (S.winner === 0 ? "Victory" : "Defeat") : `${S.players[S.winner].name} wins`;
-    const sub = S.winner == null ? "Both players fell at once." : `${S.players[S.winner].name} wins in round ${S.round}.`;
+    const title = S.winner == null ? T("end_draw") : S.mode === "ai" ? T(S.winner === 0 ? "end_victory" : "end_defeat") : T("end_wins", { name: S.players[S.winner].name });
+    const sub = S.winner == null ? T("end_both_fell") : T("end_wins_round", { name: S.players[S.winner].name, round: S.round });
     const camp = U.campaign ? campaignEndHTML(S.winner === 0) : null;
-    const actions = camp ? camp.actions : `<button type="button" class="btn btn-primary" data-act="again">Play again</button><button type="button" class="btn" data-act="tomenu">Main menu</button>`;
+    const actions = camp ? camp.actions : `<button type="button" class="btn btn-primary" data-act="again">${esc(T("end_again"))}</button><button type="button" class="btn" data-act="tomenu">${esc(T("end_menu"))}</button>`;
     h += `<div class="curtain endscreen"><h2>${esc(title)}</h2><p>${esc(sub)}</p>${camp ? camp.story : ""}${recallHTML()}${masteryHTML()}${newTrophiesHTML()}${newLoreHTML()}${endStatsHTML()}<div class="detail-actions">${actions}</div></div>`;
   }
   renderRegions($("#board"), h);

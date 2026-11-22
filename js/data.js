@@ -8,6 +8,18 @@ const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "fa
 const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/rules-champions.js", "js/rules-events.js", "js/rules-shard.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/board.js", "js/input.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
 let DATA = null;
 
+// Words players read (data/ui_text.csv). T("id") gives the text; T("id", { name: "Ann" }) fills in
+// {name}. A TextID missing from the file shows as [id], so it is easy to spot (tools/words-test.js
+// checks every T("...") in the code has its row).
+function T(id, vars) {
+  let t = DATA.uiText[id];
+  if (t == null) { console.warn(`No words for "${id}" in data/ui_text.csv`); return `[${id}]`; }
+  if (vars) t = t.replace(/\{(\w+)\}/g, (m, k) => (vars[k] ?? m));
+  return t;
+}
+// Fills every element marked data-t="id" in the page with its words (index.html).
+function fillWords(root = document) { for (const el of root.querySelectorAll("[data-t]")) el.textContent = T(el.dataset.t); }
+
 // Parsing (port of the DATA.load* functions in main.lua)
 // ---------------------------------------------------------------------------
 

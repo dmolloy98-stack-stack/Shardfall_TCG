@@ -248,4 +248,6 @@ playing would notice (tests, tools, tidying) are left out.
 
 ### phases.csv and ui_text.csv
 
-Phase names and the one-line instructions shown on the board, plus a few button labels and the names of the two rows on each side of the table (`zone_frontline` and `zone_backline`). Change the wording freely; the order of phases is fixed by the game.
+Phase names and the one-line instructions shown on the board (phases.csv), and the words players read (ui_text.csv). Change the wording freely; the order of phases is fixed by the game.
+
+**ui_text.csv** holds the words of the start menu, Settings, the save code window, the game menu, What's new, the "Something went wrong" window, the "pass the device" screen and the end of a match, plus the names of the table's two rows (`zone_frontline`, `zone_backline`). The **Category** column says where each appears. Words in curly brackets, like `{name}` or `{round}`, are filled in by the game: keep them, but you may move them around the sentence. Other screens (the tutorial, the campaign, champions' lines, help) still have their words in the code and are being moved here a screen at a time.

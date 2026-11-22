@@ -164,7 +164,12 @@ The owner picked all thirteen. Build order: 3, 7, 13, 12, 5, 6, 8, 4, 1, 2, 10, 
 which need the owner. Mark each one built as it lands.
 
 1. **Built (22 Nov): js/ui.js split into ui.js, board.js and input.js.** **Split the screen code into smaller files** by job. Nothing on screen changes.
-2. **Player words move into the editable word table** (`data/ui_text.csv`), a screen at a time.
+2. **Started (22 Nov).** **Player words move into the editable word table** (`data/ui_text.csv`), a screen at a time.
+   Done: the start menu, Settings, the save code window, the game menu, What's new, the
+   "Something went wrong" window, the "pass the device" screen and the end of a match.
+   Still in the code, one screen at a time from here: the deck builder, the Almanac and card
+   details, the battle log and hints, the board's buttons and prompts, the campaign and trophies,
+   the champions' lines, the tutorial, and the intro.
 3. **Built (22 Nov).** **A version number and "What's new" list in the game.**
 4. **Built (22 Nov): five of seven; Simple Messenger and Digital Drainage stay as code.** **General ability words for the last seven one-off cards** where a pattern is reusable.
 5. **Built (22 Nov).** **Automatic screen tests** on every pull request.

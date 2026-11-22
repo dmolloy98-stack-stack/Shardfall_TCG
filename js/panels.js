@@ -108,54 +108,55 @@ function showChoose() {
 
 // Settings: beginner hints and the board skin. Opened from the main menu or the game menu.
 function showSettings() {
-  openModal(`<h2 id="modal-title">Settings</h2>
+  const onOff = on => T(on ? "on" : "off");
+  openModal(`<h2 id="modal-title">${esc(T("settings_title"))}</h2>
     <div class="menu-list">
-      <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">Beginner hints: ${U.hints ? "On" : "Off"}</button>
-      <button type="button" class="btn" data-set="log" aria-pressed="${U.showLog}">Battle log on the table: ${U.showLog ? "Shown" : "Hidden"}</button>
-      <button type="button" class="btn" data-set="speed" title="How fast the computer plays its turn">Computer speed: ${AI_SPEEDS[U.aiSpeed].name}</button>
-      <button type="button" class="btn" data-set="fx" aria-pressed="${U.heavyFx}" title="The always-on glows, shimmers and falling shards. Turn off if the game feels slow on this device">Heavy effects: ${U.heavyFx ? "On" : "Off"}</button>
-      <button type="button" class="btn" data-set="flow" aria-pressed="${U.autoFlow}" title="Draw your card by itself, and skip Battle when nothing can attack">Draw and skip by themselves: ${U.autoFlow ? "On" : "Off"}</button>
-      <button type="button" class="btn" data-set="passcheck" aria-pressed="${U.passCheck}" title="Ask before you pass with mana and playable cards, or characters that can still attack">Ask before passing early: ${U.passCheck ? "On" : "Off"}</button>
-      ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">Read the battle log</button>` : ""}
-      ${U.screen === "menu" ? `<button type="button" class="btn" data-set="intro">Watch the intro</button>` : ""}
-      <button type="button" class="btn" data-set="savecode" title="Copy your progress to another device or browser">Save code: copy or load progress</button>
+      <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">${esc(T("settings_hints", { state: onOff(U.hints) }))}</button>
+      <button type="button" class="btn" data-set="log" aria-pressed="${U.showLog}">${esc(T("settings_log", { state: T(U.showLog ? "shown" : "hidden") }))}</button>
+      <button type="button" class="btn" data-set="speed" title="${esc(T("settings_speed_tip"))}">${esc(T("settings_speed", { speed: AI_SPEEDS[U.aiSpeed].name }))}</button>
+      <button type="button" class="btn" data-set="fx" aria-pressed="${U.heavyFx}" title="${esc(T("settings_fx_tip"))}">${esc(T("settings_fx", { state: onOff(U.heavyFx) }))}</button>
+      <button type="button" class="btn" data-set="flow" aria-pressed="${U.autoFlow}" title="${esc(T("settings_flow_tip"))}">${esc(T("settings_flow", { state: onOff(U.autoFlow) }))}</button>
+      <button type="button" class="btn" data-set="passcheck" aria-pressed="${U.passCheck}" title="${esc(T("settings_passcheck_tip"))}">${esc(T("settings_passcheck", { state: onOff(U.passCheck) }))}</button>
+      ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">${esc(T("settings_readlog"))}</button>` : ""}
+      ${U.screen === "menu" ? `<button type="button" class="btn" data-set="intro">${esc(T("settings_intro"))}</button>` : ""}
+      <button type="button" class="btn" data-set="savecode" title="${esc(T("settings_savecode_tip"))}">${esc(T("settings_savecode"))}</button>
     </div>
-    <div class="menu-skins"><h3>Board</h3><div class="skin-list compact">${skinButtons("data-skin")}</div></div>
-    <div class="detail-actions"><button type="button" class="btn btn-primary" data-set="done">${U.screen === "game" ? "Back to the game menu" : "Done"}</button></div>`);
+    <div class="menu-skins"><h3>${esc(T("settings_board"))}</h3><div class="skin-list compact">${skinButtons("data-skin")}</div></div>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-set="done">${esc(T(U.screen === "game" ? "settings_back_to_menu" : "settings_done"))}</button></div>`);
 }
 
 // Save code (js/saves.js): your progress and settings as one line of text, to carry them to
 // another device or browser, or to keep a copy.
 function showSaveCode() {
-  openModal(`<h2 id="modal-title">Save code</h2>
-    <p>Your progress and settings as one line of text: campaign, decks, trophies, card stories and Settings. Copy it and keep it somewhere safe, or paste it into Shardfall on another device to carry on there.</p>
+  openModal(`<h2 id="modal-title">${esc(T("save_title"))}</h2>
+    <p>${esc(T("save_intro"))}</p>
     <textarea id="save-code-out" class="save-code" readonly rows="3" aria-label="Your save code">${esc(exportSave())}</textarea>
-    <div class="detail-actions"><button type="button" class="btn" data-set="copycode">Copy my save code</button></div>
-    <h3>Load a save code</h3>
-    <p>Paste a code here. It replaces the progress and settings on this device.</p>
+    <div class="detail-actions"><button type="button" class="btn" data-set="copycode">${esc(T("save_copy"))}</button></div>
+    <h3>${esc(T("save_load_title"))}</h3>
+    <p>${esc(T("save_load_intro"))}</p>
     <textarea id="save-code-in" class="save-code" rows="3" aria-label="Save code to load" placeholder="SHARDFALL1:…"></textarea>
     <p id="save-code-msg" class="save-code-msg" role="status"></p>
-    <div class="detail-actions"><button type="button" class="btn" data-set="loadcode">Load this code</button><button type="button" class="btn btn-primary" data-set="settings">Back to Settings</button></div>`);
+    <div class="detail-actions"><button type="button" class="btn" data-set="loadcode">${esc(T("save_load"))}</button><button type="button" class="btn btn-primary" data-set="settings">${esc(T("save_back"))}</button></div>`);
 }
 function saveCodeMessage(text) { const m = byId("save-code-msg"); if (m) m.textContent = text; }
 async function copySaveCode() {
   const box = byId("save-code-out");
   try { await navigator.clipboard.writeText(box.value); }
   catch { box.select(); try { document.execCommand("copy"); } catch { /* the code stays selected to copy by hand */ } }
-  saveCodeMessage("Copied. Keep it somewhere safe, like a note or an email to yourself.");
+  saveCodeMessage(T("save_copied"));
 }
 function loadSaveCode(btn) {
   const code = byId("save-code-in").value;
   const check = readSaveCode(code);
   if (check.error) { saveCodeMessage(check.error); return; }
   if (!btn.dataset.sure) {   // a second press confirms, since this replaces everything saved here
-    btn.dataset.sure = "1"; btn.textContent = "Yes, replace my progress";
-    saveCodeMessage("This replaces the progress and settings on this device. Press again to go ahead.");
+    btn.dataset.sure = "1"; btn.textContent = T("save_sure");
+    saveCodeMessage(T("save_sure_text"));
     return;
   }
   const error = importSave(code);
   if (error) { saveCodeMessage(error); return; }
-  saveCodeMessage("Loaded. Shardfall is restarting…");
+  saveCodeMessage(T("save_loaded"));
   setTimeout(() => location.reload(), 700);
 }
 
@@ -181,11 +182,11 @@ function showBugReport(err) {
   bugShown = true;
   let text;
   try { text = bugReport(err); } catch (e) { text = JSON.stringify({ kind: "shardfall-bug-report", error: String(err?.message || err), reportError: e.message }); }
-  openModal(`<h2 id="modal-title">Something went wrong</h2>
-    <p>Shardfall hit a problem it didn't expect. You can usually keep playing. To help fix it, copy this bug report and send it to the person who shared the game with you. It holds the match so far, so the problem can be played again exactly.</p>
+  openModal(`<h2 id="modal-title">${esc(T("bug_title"))}</h2>
+    <p>${esc(T("bug_text"))}</p>
     <textarea id="bug-report" class="save-code" readonly rows="4" aria-label="Bug report">${esc(text)}</textarea>
     <p id="bug-msg" class="save-code-msg" role="status"></p>
-    <div class="detail-actions"><button type="button" class="btn" data-bug="copy">Copy bug report</button><button type="button" class="btn btn-primary" data-bug="close">Keep playing</button></div>`);
+    <div class="detail-actions"><button type="button" class="btn" data-bug="copy">${esc(T("bug_copy"))}</button><button type="button" class="btn btn-primary" data-bug="close">${esc(T("bug_close"))}</button></div>`);
 }
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-bug]");
@@ -193,7 +194,7 @@ document.addEventListener("click", async e => {
   if (b.dataset.bug === "close") { closeModal(); return; }
   const box = byId("bug-report");
   try { await navigator.clipboard.writeText(box.value); } catch { box.select(); try { document.execCommand("copy"); } catch { /* selected for copying by hand */ } }
-  byId("bug-msg").textContent = "Copied. Paste it into a message or email.";
+  byId("bug-msg").textContent = T("bug_copied");
 });
 window.addEventListener("error", e => { if (e.error) showBugReport(e.error); });
 window.addEventListener("unhandledrejection", e => showBugReport(e.reason));
@@ -201,29 +202,29 @@ window.addEventListener("unhandledrejection", e => showBugReport(e.reason));
 function showGameMenu() {
   const canUndo = U.undo.length && humanTurn();
   if (U.tutorial) {
-    openModal(`<h2 id="modal-title">Tutorial</h2>
+    openModal(`<h2 id="modal-title">${esc(T("gamemenu_tutorial_title"))}</h2>
       <div class="menu-list">
-        <button type="button" class="btn" data-m="resume">Resume</button>
-        <button type="button" class="btn" data-m="restart">Start the tutorial over</button>
-        <button type="button" class="btn" data-m="rules">How to play</button>
-        <button type="button" class="btn" data-m="mainmenu">Leave tutorial</button>
+        <button type="button" class="btn" data-m="resume">${esc(T("gamemenu_resume"))}</button>
+        <button type="button" class="btn" data-m="restart">${esc(T("gamemenu_tutorial_restart"))}</button>
+        <button type="button" class="btn" data-m="rules">${esc(T("gamemenu_rules"))}</button>
+        <button type="button" class="btn" data-m="mainmenu">${esc(T("gamemenu_tutorial_leave"))}</button>
       </div>`);
     return;
   }
-  openModal(`<h2 id="modal-title">Game menu</h2>
+  openModal(`<h2 id="modal-title">${esc(T("gamemenu_title"))}</h2>
     <div class="menu-list">
-      <button type="button" class="btn" data-m="resume">Resume</button>
-      <button type="button" class="btn" data-m="restart">${esc(DATA.text("button_restart", "Restart"))}</button>
-      <button type="button" class="btn" data-m="settings">Settings</button>
-      <button type="button" class="btn" data-m="log">Battle log</button>
-      <button type="button" class="btn" data-m="almanac">${esc(DATA.text("button_almanac", "Almanac"))}</button>
-      <button type="button" class="btn" data-m="rules">How to play</button>
-      <button type="button" class="btn" data-m="mainmenu">${esc(DATA.text("button_main_menu", "Main menu"))}</button>
+      <button type="button" class="btn" data-m="resume">${esc(T("gamemenu_resume"))}</button>
+      <button type="button" class="btn" data-m="restart">${esc(T("button_restart"))}</button>
+      <button type="button" class="btn" data-m="settings">${esc(T("gamemenu_settings"))}</button>
+      <button type="button" class="btn" data-m="log">${esc(T("gamemenu_log"))}</button>
+      <button type="button" class="btn" data-m="almanac">${esc(T("button_almanac"))}</button>
+      <button type="button" class="btn" data-m="rules">${esc(T("gamemenu_rules"))}</button>
+      <button type="button" class="btn" data-m="mainmenu">${esc(T("button_main_menu"))}</button>
     </div>
-    <div class="dev"><h3>Testing tools</h3><div class="row">
-      <button type="button" class="btn btn-small" data-m="undo" ${canUndo ? "" : "disabled"}>Undo (${U.undo.length})</button>
-      <button type="button" class="btn btn-small" data-m="mana" ${humanTurn() ? "" : "disabled"}>+1 mana</button>
-      <button type="button" class="btn btn-small" data-m="qadraw" ${humanTurn() ? "" : "disabled"}>Draw a card</button>
+    <div class="dev"><h3>${esc(T("gamemenu_testing"))}</h3><div class="row">
+      <button type="button" class="btn btn-small" data-m="undo" ${canUndo ? "" : "disabled"}>${esc(T("gamemenu_undo", { n: U.undo.length }))}</button>
+      <button type="button" class="btn btn-small" data-m="mana" ${humanTurn() ? "" : "disabled"}>${esc(T("gamemenu_mana"))}</button>
+      <button type="button" class="btn btn-small" data-m="qadraw" ${humanTurn() ? "" : "disabled"}>${esc(T("gamemenu_draw"))}</button>
     </div></div>`);
 }
 
