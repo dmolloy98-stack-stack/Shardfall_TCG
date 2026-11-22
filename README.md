@@ -96,6 +96,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/intro.js` | The stained-glass cold open before the main menu |
 | `js/campaign.js` | The campaign: one match against each faction's champion, with its story text, saved progress and the champions' speech bubbles (in normal matches too, as the champion of the computer's deck); deck mastery points and titles |
 | `docs/code-map.md` | How the files fit together: diagrams of the big picture, one move's path and the screens, plus where to change things |
+| `docs/real-phones.md` | How to check the game on real phones (a free device cloud for open-source projects) and a checklist of what to look at |
 | `docs/how-it-was-built.md` | Why the code is built the way it is, the owner's decisions that shape it, and traps already fallen into. Checked with every change (its top says what belongs in it) |
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
 | `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |

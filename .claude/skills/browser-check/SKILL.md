@@ -59,6 +59,11 @@ versions in turns, 5 times each, with the processor slowed 4x, and compares the 
 More than 15% slower (and more than 3 ms) is flagged; GitHub does the same on each pull request as
 a warning. Use `tools/speed-check.js` for frames per second with Heavy effects on and off.
 
+## Real phones
+
+The pretend phone can't show heat, real touch or Safari quirks. Before a big release, point the
+owner to `docs/real-phones.md` (a device cloud's Live mode and a checklist).
+
 ## Accessibility
 
 `node tools/a11y-check.js` (install axe once: `npm install --no-save --no-package-lock axe-core@4.10.2`;
