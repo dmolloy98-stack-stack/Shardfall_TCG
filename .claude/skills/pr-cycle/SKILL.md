@@ -27,6 +27,10 @@ Repo `dmolloy98-stack-stack/Shardfall_TCG`; work branch is the one the session n
   `data/whats_new.csv`: Update = this pull request's number (the last one + 1; check it once the
   pull request is open and fix the row if GitHub gave another number), today's date, and the
   changes in plain words separated by `|`. Nothing players would notice: no row.
+- **The "why" guide:** read the checklist at the top of `docs/how-it-was-built.md` and add or
+  change entries if this pull request picked a pattern, made a trade-off, fixed a bug that could
+  recur, replaced an entry, or recorded an owner decision that shapes the code. Update its "Last
+  checked" line with today's date and this pull request's number either way.
 - `node tools/test-all.js` ends with `EVERYTHING PASSED`.
 - Screen changes: `browser-check` at desktop and phone, screenshots looked at.
 

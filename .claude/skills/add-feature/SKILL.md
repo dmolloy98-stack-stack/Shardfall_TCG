@@ -96,4 +96,6 @@ CLAUDE.md) only change when a change is meant to alter play; update both, re-rec
 - `browser-check` skill: desktop and phone, look at the screenshots; for anything heavy, run
   `node tools/speed-check.js` before and after.
 - Update `docs/code-map.md`, and the README if players or the file table are affected.
+- If the change set a pattern, made a trade-off or fixed a trap, write it in
+  `docs/how-it-was-built.md` (its checklist says what belongs there).
 - Commit and push (`pr-cycle`); the `backup` skill runs once the pull request merges.

@@ -69,6 +69,14 @@ builds it, tests it, and explains it.
 `docs/code-map.md` shows how the files fit together. Update it when files are added, split or
 renamed, or when the flow between them changes.
 
+## How it was built (the "why" guide)
+
+`docs/how-it-was-built.md` explains why the code is built the way it is, the owner's decisions
+that shape it, and the traps already fallen into. **Check it with every change** before a pull
+request: most changes add nothing, but a new pattern, a trade-off, a bug that could recur, or
+something that replaces an entry must be written down. The top of the guide says exactly what
+belongs there. Always update its "Last checked" line.
+
 ## Back up to Google Drive
 
 Everything on GitHub is also kept in Drive with a full history: **once per merged pull request**,

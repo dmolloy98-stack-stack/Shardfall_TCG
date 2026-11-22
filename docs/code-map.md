@@ -1,6 +1,7 @@
 # Code map
 
-How Shardfall's files fit together. Update this page when files are added, split or renamed.
+How Shardfall's files fit together. For *why* they are built this way, see
+[how-it-was-built.md](how-it-was-built.md). Update this page when files are added, split or renamed.
 It doesn't need updating for ordinary changes inside a file. For a one-line summary of
 every file, see the file table in the [README](../README.md).
 
