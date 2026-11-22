@@ -102,6 +102,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/test-all.js` | Runs every test below in one go and says whether all passed: `node tools/test-all.js`. GitHub runs it on every push and pull request (`.github/workflows/tests.yml`) |
 | `tools/selftest.js` | Plays many automatic games and reports anything broken: `node tools/selftest.js . ai 4` and `node tools/selftest.js . rand 1000` (needs Node.js). Run it after changing rules or cards |
 | `tools/cards-test.js` | Plays every card at least once on a prepared table, then lets the computer play a few turns, and reports any card that crashes, can't be played or breaks the table: `node tools/cards-test.js .` |
+| `tools/restore.js` | Rebuilds the whole game from the Drive backups (a monthly snapshot plus the patches after it) and runs every test to prove it worked: `node tools/restore.js <empty folder> <snapshot> <patches…>` |
 | `tools/sheet-check.js` | Compares the owner's card sheet (downloaded as .xlsx) with the game's card, deck, fracture and skill files and lists every difference in plain words: `node tools/sheet-check.js sheet.xlsx` (uses `tools/sheet-export.py`) |
 | `tools/replay-report.js` | Replays the match inside a player's bug report (the text from the game's "Something went wrong" window, saved to a file) and shows where it breaks: `node tools/replay-report.js report.txt` |
 | `tools/saves-test.js` | Checks saving: every saved item is listed, old saves are upgraded, and a save code carries progress exactly: `node tools/saves-test.js .` |

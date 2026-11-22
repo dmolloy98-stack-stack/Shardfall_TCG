@@ -144,6 +144,10 @@ never needs editing for a new file.
 - The browser check looks at the real screen at desktop and phone size.
 - The balance check warns on a pull request if a starter deck leaves 40–60% wins.
 
+**The Drive backups are proven, not assumed.** `tools/restore.js` rebuilds the game from a
+monthly snapshot plus the patches after it and runs every test (tried 22 Nov 2026: identical to
+update 29). Images aren't in the backups, because the Drive connector can't carry them.
+
 **A test is never switched off to get a green mark.** A red test means something changed; find out
 what.
 

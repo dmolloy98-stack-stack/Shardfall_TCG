@@ -57,3 +57,15 @@ node tools/build-single.js --page <scratchpad>/artifact/shardfall.html
 Then publish with the Artifact tool, `file_path` = that file, `url:
 "https://claude.ai/artifact/5hWErf72EZxcunSyP4CXX1"`, no `icon`. In a new session `read` that url
 first (a publish to an artifact the session hasn't read is refused).
+
+## Restoring from the backups
+
+When the owner wants the game back from Drive (GitHub gone, or a check that the backups work):
+1. In Versions (`1l1zWvI4KZCiJUaEmxoQcwoSO2TP-TlX6`), find the newest `YYYY-MM · Full snapshot`
+   folder and every `… · PR #N · …` folder made after that snapshot's date.
+2. Download the snapshot and each `PR-N changes.txt` with `mcp__Google_Drive__download_file_content`
+   (each is saved to a file; the result names it).
+3. `node tools/restore.js <new empty folder> <snapshot file> <patch files, oldest first> [--compare]`.
+   It unpacks, applies the patches, runs every test and ends `RESTORE WORKED`. `--compare` also
+   checks it against this checkout. Images aren't in the backups; it lists them.
+Tested 22 Nov 2026: the 2026-11 snapshot plus PR-29 rebuilt update 29 exactly.

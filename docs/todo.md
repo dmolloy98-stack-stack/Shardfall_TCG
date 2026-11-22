@@ -175,7 +175,7 @@ which need the owner. Mark each one built as it lands.
 10. **Accessibility check** (contrast, sizes, keyboard), with simple fixes.
 11. **Anonymous play numbers.** Needs the owner's decisions on what to collect, and somewhere to
     send them (the Firebase project). Nothing is collected until then.
-12. **One-button restore** from the Drive backups, proven by running every test.
+12. **Built (22 Nov).** **One-button restore** from the Drive backups, proven by running every test.
 13. **Built (22 Nov).** **A "how this was built" guide** (`docs/how-it-was-built.md`): the why behind the code. Kept
     current with every change that involves a "why" (CLAUDE.md, `pr-cycle`).
 
