@@ -64,6 +64,8 @@ button { font: inherit; color: inherit; }
 .data-error h2 { margin: 0 0 10px; font-family: var(--font-display); font-weight: 400; color: var(--brass); }
 .data-error p { margin: 0 0 10px; }
 .data-error .detail { color: var(--muted); font-size: 0.9rem; }
+.data-warning { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 400; margin: 0; border-color: var(--brass); max-height: 70vh; overflow: auto; }
+.data-warning ul { margin: 0 0 10px; padding-left: 1.2em; }
 .data-error code { color: var(--parchment); }
 .screen { min-height: 100%; }
 

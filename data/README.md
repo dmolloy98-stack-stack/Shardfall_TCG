@@ -7,7 +7,7 @@ GitHub shows each file as a table. To change one:
 - **On GitHub:** open the file, click the pencil icon, edit the row, and commit.
 - **In Excel or Google Sheets:** open the file, edit it, save or download it as **CSV**, and upload it back here with the same file name.
 
-If a file has a mistake the game can't read (for example, a deck lists a CardID that doesn't exist), the game shows an error naming the problem instead of starting.
+If a file has a mistake the game can't read (for example, a deck lists a CardID that doesn't exist, or an Effect uses a word the game doesn't know), the game shows a message naming the file, the row and the problem instead of starting. A mistake it can live with (a deck breaking the deck rules) shows as a note at the top of the menu. GitHub's tests fail with the same message, so a red mark on a change says what to fix.
 
 ## Tips for editing
 

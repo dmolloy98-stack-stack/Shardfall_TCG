@@ -79,6 +79,7 @@ added, split or renamed, or the flow between them changes.
 
 | Area | Test |
 |---|---|
+| Any data file read the way the game reads it; deck rules | `node tools/data-test.js .` |
 | Tribes, classes, fractures and the cards that use them | `node tools/kinds-test.js .` |
 | Random events (`data/events.csv`, `js/rules-events.js`) | `node tools/events-test.js .` |
 | The Protected rule, Pierce and Protected skills | `node tools/protected-test.js .` |

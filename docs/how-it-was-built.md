@@ -61,6 +61,12 @@ starter deck holds.
 later. Screens are moved over one at a time; a moved screen is checked with the picture comparison
 (the words must look exactly the same) and `tools/words-test.js`. (Nov 2026)
 
+**Data mistakes are named, never hidden.** A mistake in `data/*.csv` that stops the game shows a
+message naming the file and the row; one the game can live with (a deck breaking the deck rules)
+shows as a note on the menu. `tools/data-test.js` fails GitHub's tests with the same sentence. A
+new check of the data should add to `warnings` (in `buildData`) or throw a message starting
+`data/<file>.csv, …`, so both reach the screen. (Nov 2026)
+
 **The game files are the master copy.** If the card sheet and the game disagree, the game wins and
 the sheet is fixed to match (`tools/sheet-check.js` lists the differences).
 
