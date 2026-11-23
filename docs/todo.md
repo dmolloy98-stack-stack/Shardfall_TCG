@@ -17,26 +17,6 @@ them; nothing is lost while they wait.
   privacy note to reword. Also needs the Firebase project (the same one as Play a Friend).
   Nothing is collected until then.
 
-## Round three — chosen by the owner (23 Nov), being built
-
-The owner picked 5 to 18 of the "what's next" list. Nothing here changes how the game plays.
-Mark each built as it lands, then move the finished list to `docs/done.md`.
-
-5. **Built (23 Nov).** **Finish splitting the rules file**: combat, turns and phases, and playing cards in their own files.
-6. **Built (23 Nov).** **Plain-English errors when card data is wrong**, on screen and in GitHub's tests.
-7. **Built (23 Nov).** **An "explain this Effect" tool**: a card's Effect text in plain English.
-8. **Built (23 Nov).** **A permanent "same play" check** for card changes (old and new versions side by side).
-9. **Built (23 Nov).** **One command for "play is meant to change"**: fingerprints and recorded matches together.
-10. **Built (23 Nov).** **Small upkeep**: GitHub's building blocks updated before they stop working.
-11. **Built (23 Nov).** **A "project at a glance" page** (`docs/status.md`), rewritten by a tool with each pull request.
-12. **Built (23 Nov).** **Split the to-do list**: finished work in `docs/done.md`, live items here.
-13. **Built (23 Nov).** **A short summary when each session starts** (branch, tests, waiting on the owner).
-14. **Built (23 Nov): https://claude.ai/artifact/VC8opzKwdKLh5srrGCBwcr.** **A "Shardfall dashboard" for the owner** (a claude.ai page), updated with each pull request.
-15. **Built (23 Nov).** **`ability-words` skill**.
-16. **Built (23 Nov).** **`move-words` skill**.
-17. **Built (23 Nov).** **`bug-report` skill**.
-18. **Built (23 Nov).** **`ci-check` skill**.
-
 ## Still to do from earlier rounds
 
 - **Player words into the word table** (round two, step 2): done for the start menu, Settings, the
