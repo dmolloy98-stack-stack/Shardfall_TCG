@@ -24,6 +24,9 @@ them; nothing is lost while they wait.
   device" screen and the end of a match. Still in the code, one screen at a time: the deck
   builder, the Almanac and card details, the battle log and hints, the board's buttons and
   prompts, the campaign and trophies, the champions' lines, the tutorial, and the intro.
+- **GitHub's picture-attaching step** (`actions/upload-artifact`) still runs on the old Node and shows a
+  warning on every pull request (seen on #31). It works; move it to a newer version once one is
+  confirmed to use Node 24.
 - **Simple Messenger and Digital Drainage** keep their own code (round two, step 4): truly
   one-of-a-kind. Nothing to do unless a future card shares their pattern.
 
