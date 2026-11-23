@@ -5,7 +5,7 @@
 // and then starts the game scripts.
 
 const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events", "champion_abilities", "whats_new"];
-const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/rules-champions.js", "js/rules-events.js", "js/rules-shard.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/board.js", "js/input.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
+const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/rules-combat.js", "js/rules-turns.js", "js/rules-play.js", "js/rules-champions.js", "js/rules-events.js", "js/rules-shard.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/board.js", "js/input.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
 let DATA = null;
 
 // Words players read (data/ui_text.csv). T("id") gives the text; T("id", { name: "Ann" }) fills in
@@ -50,6 +50,7 @@ function rgb(r, g, b) {
 }
 
 function buildData(CSV) {
+  const warnings = [];   // mistakes the game can live with; shown on the menu and failed by tools/data-test.js
   const rules = {};
   for (const [id, value, kind] of csvRows(CSV.game_rules)) rules[id] = kind === "number" ? Number(value) : value;
 
@@ -150,13 +151,13 @@ function buildData(CSV) {
     if (!deck.cards.length) throw new Error(`data/decks.csv, deck ${id}: the CardList is empty.`);
     // Deck-building rules from the design sheet. Problems are reported, not fatal.
     const size = deck.cards.reduce((n, e) => n + e.quantity, 0);
-    if (size < (rules.min_deck_size ?? 0)) console.warn(`Deck ${id} has ${size} cards; the minimum is ${rules.min_deck_size}`);
+    if (size < (rules.min_deck_size ?? 0)) warnings.push(`data/decks.csv, deck ${id}: it has ${size} cards; the minimum is ${rules.min_deck_size}.`);
     for (const e of deck.cards) {
       const limit = cardsById[e.cardId].rarity === "Unknown" ? rules.max_unknown_copies : rules.max_copies;
-      if (limit && e.quantity > limit) console.warn(`Deck ${id} has ${e.quantity} copies of ${e.cardId}; the limit is ${limit}`);
+      if (limit && e.quantity > limit) warnings.push(`data/decks.csv, deck ${id}: it has ${e.quantity} copies of ${e.cardId}; the limit is ${limit}.`);
     }
     const champions = deck.cards.filter(e => cardsById[e.cardId].rarity === "Unknown").length;
-    if (rules.max_unknown_kinds != null && champions > rules.max_unknown_kinds) console.warn(`Deck ${id} has ${champions} different Unknown cards; the limit is ${rules.max_unknown_kinds}`);
+    if (rules.max_unknown_kinds != null && champions > rules.max_unknown_kinds) warnings.push(`data/decks.csv, deck ${id}: it has ${champions} different champions (Unknown cards); the limit is ${rules.max_unknown_kinds}.`);
     decks[id] = deck;
     deckOrder.push(id);
   }
@@ -167,6 +168,7 @@ function buildData(CSV) {
   const version = whatsNew[0] ? `Update ${whatsNew[0].update}` : "";
 
   return {
+    warnings,
     whatsNew, version,
     rules, phases, uiText, events, eventOrder, championAbilities, skills, skillOrder, rarities, rarityOrder, factions,
     cardsById, cardsByName, cardList, decks, deckOrder,
@@ -210,12 +212,20 @@ async function loadGame() {
   }
   // Each script runs as soon as it is added, in order. boot.js sets shardfallStarted
   // once everything is in place.
+  // A mistake in a card's Effect stops a script while it reads the cards; catch it to say so.
+  const errors = [];
+  const onError = e => errors.push(e.error || e.message);
+  window.addEventListener("error", onError);
   for (const text of code) {
     const el = document.createElement("script");
     el.textContent = text;
     document.body.appendChild(el);
   }
-  if (!window.shardfallStarted) recoverFromBadLoad();
+  window.removeEventListener("error", onError);
+  const dataMistake = errors.find(e => /^data\//.test(String(e?.message || e)));
+  if (dataMistake) { showDataError(dataMistake); return; }   // even if the rest started, the cards are wrong
+  if (!window.shardfallStarted) { recoverFromBadLoad(); return; }
+  if (DATA.warnings.length) showDataWarnings(DATA.warnings);
 }
 
 // If the game didn't start, the page itself was probably an old copy. Reload once, which
@@ -242,7 +252,12 @@ function showDataError(err) {
   const local = location.protocol === "file:";
   const box = document.createElement("div");
   box.className = "data-error";
-  box.innerHTML = `<h2>The game data could not be loaded</h2>
+  const mistake = /^data\//.test(String(err.message || err));   // a mistake in a data file, named in the message
+  box.innerHTML = mistake
+    ? `<h2>There is a mistake in the card data</h2>
+    <p class="detail"></p>
+    <p>The message names the file and the row. Fix it there (on GitHub: open the file, press the pencil, change the row, and commit), and the game starts again. The card sheet's Effects guide lists every word an Effect can use.</p>`
+    : `<h2>The game data could not be loaded</h2>
     <p>${local
       ? "Browsers block a page opened straight from your computer from reading the data folder. Play from the GitHub Pages link instead, or run a local server in this folder (for example <code>python3 -m http.server</code>, then open http://localhost:8000)."
       : "Check that the data folder is next to index.html and that each CSV file is valid."}</p>
@@ -251,6 +266,18 @@ function showDataError(err) {
   document.getElementById("app").hidden = true;
   document.body.prepend(box);
   console.error(err);
+}
+
+// Mistakes the game can live with (a deck breaking the deck rules): the game still starts, with a
+// note at the top of the page listing them, so whoever edited the data sees it at once.
+function showDataWarnings(list) {
+  const box = document.createElement("div");
+  box.className = "data-error data-warning";
+  box.setAttribute("role", "alert");
+  box.innerHTML = `<h2>The card data has ${list.length === 1 ? "a problem" : list.length + " problems"}</h2><ul></ul><p>The game still works. Fix these in the files named, and this note goes away.</p><p><button type="button" class="btn btn-small">Hide for now</button></p>`;
+  for (const w of list) { const li = document.createElement("li"); li.textContent = w; box.querySelector("ul").appendChild(li); }
+  box.querySelector("button").addEventListener("click", () => box.remove());
+  document.body.prepend(box);
 }
 
 // Pages that only need the data (the How to play guide) load this script with data-only.

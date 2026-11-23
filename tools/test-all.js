@@ -4,7 +4,7 @@
 // change that breaks something shows a red mark before it is merged.
 //
 // It checks:
-//   - the focused tests (kinds, events, protected, shard, champions, replay, cards, saves, words) each say ALL PASSED
+//   - the focused tests (data, kinds, events, protected, shard, champions, replay, cards, saves, words) each say ALL PASSED
 //   - the automatic games (selftest "ai 2" and "rand 300") find no problems, and each one
 //     replays exactly from its move list
 //   - those games still play exactly as before: their fingerprints match the numbers below.
@@ -23,10 +23,15 @@ const run = args => {
 let failed = 0;
 const report = (name, ok, detail) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`); if (!ok) failed++; };
 
-for (const t of ['kinds', 'events', 'protected', 'shard', 'champions', 'replay', 'cards', 'saves', 'words']) {
+for (const t of ['data', 'kinds', 'events', 'protected', 'shard', 'champions', 'replay', 'cards', 'saves', 'words']) {
   const { out, code } = run([`tools/${t}-test.js`, '.']);
   const ok = code === 0 && /ALL PASSED\s*$/.test(out.trim());
   report(`${t}-test`, ok, ok ? '' : '\n' + out.split('\n').filter(l => /FAIL|Error/.test(l)).slice(0, 15).join('\n'));
+}
+
+{ // every card's Effect has a plain-English description (tools/explain-effect.js)
+  const { out, code } = run(['tools/explain-effect.js', '--all']);
+  report('every Effect explained in plain English', code === 0, code === 0 ? '' : '\n' + out.split('\n').filter(l => /PROBLEM/.test(l)).slice(0, 10).join('\n'));
 }
 
 for (const [mode, n] of [['ai', 2], ['rand', 300]]) {
@@ -37,7 +42,7 @@ for (const [mode, n] of [['ai', 2], ['rand', 300]]) {
   const problems = Object.keys(res.problems);
   report(`selftest ${mode} ${n}: no problems`, !problems.length, problems.length ? '\n' + JSON.stringify(res.problems, null, 1) : '');
   report(`selftest ${mode} ${n}: plays as before`, res.fingerprint === EXPECTED[mode],
-    res.fingerprint === EXPECTED[mode] ? '' : `fingerprint ${res.fingerprint}, expected ${EXPECTED[mode]} (update EXPECTED in tools/test-all.js if this change is meant to alter play)`);
+    res.fingerprint === EXPECTED[mode] ? '' : `fingerprint ${res.fingerprint}, expected ${EXPECTED[mode]} (if this change is meant to alter play: node tools/update-expected.js --write)`);
 }
 
 console.log(failed ? `\n${failed} CHECK${failed > 1 ? 'S' : ''} FAILED` : '\nEVERYTHING PASSED');

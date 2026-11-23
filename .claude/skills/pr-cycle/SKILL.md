@@ -31,6 +31,8 @@ Repo `dmolloy98-stack-stack/Shardfall_TCG`; work branch is the one the session n
   change entries if this pull request picked a pattern, made a trade-off, fixed a bug that could
   recur, replaced an entry, or recorded an owner decision that shapes the code. Update its "Last
   checked" line with today's date and this pull request's number either way.
+- **Status page:** `node tools/make-status.js` (add `--winrates` when cards, decks or rules changed),
+  and commit `docs/status.md`.
 - `node tools/test-all.js` ends with `EVERYTHING PASSED`.
 - Screen changes: `browser-check` at desktop and phone, screenshots looked at.
 
@@ -47,7 +49,8 @@ https://claude.ai/code/session_<this session's id>
 
 ## Merging
 
-1. `mcp__github__pull_request_read` `method: "get_check_runs"`; while running, do other work
+1. Read the results properly (`ci-check` skill): the logs, not just the marks.
+   `mcp__github__pull_request_read` `method: "get_check_runs"`; while running, do other work
    (the backup prep) and check again, never a foreground `sleep`.
 2. All `success` → `mcp__github__merge_pull_request`, `merge_method: "merge"`.
 3. Restart the branch (only when `git log origin/main..<branch>` is empty):

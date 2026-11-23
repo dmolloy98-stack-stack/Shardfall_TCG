@@ -11,7 +11,7 @@
 // SELFTEST_DECK=<DeckID> plays only the games where that deck goes first (tools/winrates.js uses it
 // to play the decks side by side); each game is still the same game.
 const fs=require('fs');const dir=process.argv[2];const mode=process.argv[3]||'ai';const N=+process.argv[4]||6;
-eval(fs.readFileSync(dir+'/js/data.js','utf8')+';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));'+['engine','rules-champions','rules-events','rules-shard','effects','champions','ai'].map(f=>fs.readFileSync(dir+'/js/'+f+'.js','utf8')).join('\n')+`
+eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
 const decks=DATA.deckOrder.filter(id=>DATA.decks[id].isPlayable);
 let seedR=1; const rnd=()=>{seedR=(seedR*16807)%2147483647;return (seedR-1)/2147483646;}; const pick=a=>a[Math.floor(rnd()*a.length)];
 const problems={}; const note=(k,d)=>{ (problems[k]=problems[k]||[]).length<3 && problems[k].push(d); problems[k].n=(problems[k].n||0)+1; };

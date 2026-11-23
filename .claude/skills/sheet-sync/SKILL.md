@@ -74,6 +74,8 @@ See `docs/world.md`.
    such as `Cards!A1:P200`). A Ready row with an existing ID replaces that row.
 2. If Effect is empty but Ability describes something, write the Effect (or a `script` in
    `js/effects.js`). Read the Notes for Claude column. New skills and fractures need code.
+   Run `node tools/explain-effect.js <CardID>` on each new or changed card and check the plain
+   English matches the Ability text players read; a mismatch is a question for the owner.
 3. Check every card loads (js/data.js warns about unknown skills, rarities and types), run
    balance simulations with `tools/selftest.js`, `node tools/test-all.js`, and the browser
    check, as for any other change. New cards change play, so expect new fingerprints: update

@@ -24,7 +24,7 @@ has to rediscover them the hard way.
 
 **What does not belong here:** what changed for players (that's `data/whats_new.csv`), where a
 function lives (`docs/code-map.md`), step-by-step recipes (`.claude/skills/`), story and clues
-(`docs/world.md`), plans and ideas (`docs/todo.md`), or a list of every change (git history and
+(`docs/world.md`), plans and ideas (`docs/todo.md`; finished work `docs/done.md`), or a list of every change (git history and
 the Drive change history).
 
 **How to write an entry:** a short bold name, then two to five plain sentences: what we do, why,
@@ -53,13 +53,19 @@ When a one-off ability turns out to be a pattern, it becomes a general ability w
 `pick`, `take`, `discardDraw`, `drainLife`; 22 Nov: `levelDown`, `statline`, `*`, `has:`, tokens
 for `summon`). Only two cards still need one-off code: Simple Messenger and Digital Drainage.
 Every such move is checked by playing each changed card on the same table in the old and new
-versions and comparing the result exactly; the big automatic games alone miss cards that no
+versions and comparing the result exactly (`tools/card-equivalence.js`, `ability-words` skill); the big automatic games alone miss cards that no
 starter deck holds.
 
 **Words players read live in a table too.** `data/ui_text.csv` holds them, and the code asks with
 `T("id")`, so the owner can reword anything without code, and other languages become possible
 later. Screens are moved over one at a time; a moved screen is checked with the picture comparison
 (the words must look exactly the same) and `tools/words-test.js`. (Nov 2026)
+
+**Data mistakes are named, never hidden.** A mistake in `data/*.csv` that stops the game shows a
+message naming the file and the row; one the game can live with (a deck breaking the deck rules)
+shows as a note on the menu. `tools/data-test.js` fails GitHub's tests with the same sentence. A
+new check of the data should add to `warnings` (in `buildData`) or throw a message starting
+`data/<file>.csv, …`, so both reach the screen. (Nov 2026)
 
 **The game files are the master copy.** If the card sheet and the game disagree, the game wins and
 the sheet is fixed to match (`tools/sheet-check.js` lists the differences).
@@ -101,6 +107,12 @@ counter window never opens on a copy, because that would let the computer learn 
 a counter spell.
 
 ## How the rules are organised
+
+**The rules are split by job, and tools load them from one list.** `js/engine.js` is the core;
+combat, turns and playing cards have their own files (Nov 2026). Tests and tools load the rules
+through `tools/rules-code.js`, which reads `GAME_SCRIPTS`, so a split or a new rules file never
+means editing a dozen tools. A split like this is proven by identical fingerprints, every card
+playing the same (`tools/card-equivalence.js --all`) and no picture changes.
 
 **Champions, events and the big shard are add-ons.** Each champion is one entry in
 `CHAMPION_RULES` (`js/rules-champions.js`) saying what it does at each moment (turn start, battle,
@@ -184,6 +196,12 @@ what.
 
 ## Working together
 
+**One page to start from.** `docs/status.md` is written by `tools/make-status.js` from the
+project's own files (it can't drift), and `.claude/hooks/session-start.sh` prints a short summary
+when a session starts: branch, what's being built, what waits on the owner, quick checks. Long
+history lives in `docs/done.md`, so `docs/todo.md` stays short to read. (Nov 2026)
+
+
 **The owner decides what the game is; Claude decides how it's built.** Story, cards, characters,
 look and feel are the owner's: Claude offers two or three options and waits. How to build, split,
 test and name things in code are Claude's, and Claude says what was decided. See CLAUDE.md.
@@ -225,4 +243,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-22, pull request #30.
+Last checked: 2026-11-23, pull request #31.

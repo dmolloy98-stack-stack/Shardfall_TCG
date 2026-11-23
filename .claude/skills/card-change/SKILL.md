@@ -31,8 +31,8 @@ ask or offer options first.
 1. Edit the data (and effect code if needed). Keep Ability text and Effect in agreement.
 2. Run the focused test for what was touched (the `add-feature` skill lists them; `cards-test`
    plays every card once), then `node tools/test-all.js`. A real play change moves the
-   fingerprints and the recorded matches: update `EXPECTED` in `tools/test-all.js` and the number
-   in CLAUDE.md, re-record with `node tools/replay-test.js . --update`, and say so.
+   fingerprints and the recorded matches: `node tools/update-expected.js --write` updates them all,
+   then say so.
 3. Measure with the `balance` skill (before and after) when the change could affect who wins.
 4. Look at the card in the browser (`browser-check`): the name fits on one line (only Shadow-Stitched
    Soldier may take two), the text fits, the Almanac shows it right.

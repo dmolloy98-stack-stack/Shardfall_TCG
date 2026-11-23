@@ -10,7 +10,7 @@ const fs = require('fs');
 const dir = process.argv[2] || '.';
 const UPDATE = process.argv.includes('--update');
 const FILE = dir + '/tools/recorded-matches.json';
-eval(fs.readFileSync(dir + '/js/data.js', 'utf8') + ';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' + ['engine', 'rules-champions', 'rules-events', 'rules-shard', 'effects', 'champions', 'ai'].map(f => fs.readFileSync(dir + '/js/' + f + '.js', 'utf8')).join('\n') + `
+eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
 // The matches to record: the computer plays both sides. Between them they cover every starter
 // deck, a campaign match, a custom deck list, and an opponent picked at random.
 const mixed = [...DATA.decks.simple_starter.cards.slice(0, 8), ...DATA.decks.fighter_starter.cards.slice(0, 8)];

@@ -1,5 +1,9 @@
 # Notes for Claude
 
+**Start here:** `docs/status.md` ("Shardfall at a glance", written by `tools/make-status.js`) has the
+current version, what is being built, what waits on the owner, the numbers and every skill. A short
+summary also prints at the start of each session (`.claude/hooks/session-start.sh`).
+
 ## Who does what
 
 **The owner is the visionary. Claude is the programmer.** The owner decides what Shardfall is:
@@ -56,8 +60,8 @@ builds it, tests it, and explains it.
 
 - `node tools/test-all.js` must end with `EVERYTHING PASSED` (GitHub runs it too). The play
   fingerprint (currently 1727378807 for `ai 2`, in `EXPECTED` in `tools/test-all.js`) changes only
-  when play is meant to change; then update both places, re-record the matches
-  (`node tools/replay-test.js . --update`) and say so. Which focused test covers
+  when play is meant to change; then run `node tools/update-expected.js --write` (it updates both
+  fingerprints, this line and the recorded matches together) and say so. Which focused test covers
   what: `add-feature` skill.
 - For anything on screen: `node tools/browser-check.js` at desktop and phone size, and look at a
   screenshot (`browser-check` skill).
@@ -80,8 +84,8 @@ belongs there. Always update its "Last checked" line.
 ## Back up to Google Drive
 
 Everything on GitHub is also kept in Drive with a full history: **once per merged pull request**,
-a change-history entry, one patch file, a monthly full snapshot, and the republished claude.ai
-page. Steps and ids: `backup` skill. Tell the owner when a step could not be done and why.
+a change-history entry, one patch file, a monthly full snapshot, the republished claude.ai
+page, and the owner's dashboard. Steps and ids: `backup` skill. Tell the owner when a step could not be done and why.
 
 ## Card and deck builder sheet
 
@@ -103,6 +107,9 @@ the steps out again:
 - `browser-check` (desktop and phone checks, iPhone checks, `tools/speed-check.js`)
 - `add-feature` (the building rules for any code change), `card-change` (a card or rule the
   owner decided), `sheet-sync` (the card sheet), `balance` (win rates, `tools/winrates.js`)
+- `ability-words` (turning one-off card code into ability words, with the same-play check),
+  `move-words` (a screen's words into the word table), `bug-report` (a player's bug report),
+  `ci-check` (reading GitHub's results before merging)
 - `story-writing` (champion voices, card stories, clues), `ideas-menu` ("what's next?"),
   `code-map` (the written map and the claude.ai map pages), `worlds-and-tribes`
   (renaming or adding a world, tribe or champion), `tool-check` ("is this useful?")
@@ -112,6 +119,8 @@ the steps out again:
 - Play (GitHub Pages): https://dmolloy98-stack-stack.github.io/Shardfall_TCG/ (`#menu` skips the
   intro, `#tutorial` starts the tutorial; the guide is `guide.html`)
 - Playable claude.ai copy: https://claude.ai/artifact/5hWErf72EZxcunSyP4CXX1
+- The owner's dashboard (claude.ai): https://claude.ai/artifact/VC8opzKwdKLh5srrGCBwcr, rebuilt by
+  `tools/make-dashboard.js` with every backup
 - Map pages (made with archify): Shardfall File Map https://claude.ai/artifact/DZGvMWEJF37CU9NkFJxXZ9
   and Shardfall Turn Flow https://claude.ai/artifact/RGLT4sVnTcqMgN4xTojwrL
 - Card sheet: https://docs.google.com/spreadsheets/d/1RzePfEgUN4QJsLTDGnhU7xaTa0_snq2lVswEUy5JNX0

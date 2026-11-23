@@ -15,7 +15,8 @@ added, split or renamed, or the flow between them changes.
 
 ## Where things go
 
-- **Rules** (`js/engine.js`, `js/effects.js`, and `js/rules-champions.js`, `js/rules-events.js`,
+- **Rules** (`js/engine.js` the core, `js/rules-combat.js`, `js/rules-turns.js`, `js/rules-play.js`,
+  `js/effects.js`, and `js/rules-champions.js`, `js/rules-events.js`,
   `js/rules-shard.js` for champions, events and the big shard): no screen code, so `tools/selftest.js` can load
   them in Node. Game state is `S`; it must survive `structuredClone` (store owners as player
   indexes, no functions or DOM in `S`). `simulate()` runs moves on a clone with events muted,
@@ -79,11 +80,13 @@ added, split or renamed, or the flow between them changes.
 
 | Area | Test |
 |---|---|
+| Any data file read the way the game reads it; deck rules | `node tools/data-test.js .` |
 | Tribes, classes, fractures and the cards that use them | `node tools/kinds-test.js .` |
 | Random events (`data/events.csv`, `js/rules-events.js`) | `node tools/events-test.js .` |
 | The Protected rule, Pierce and Protected skills | `node tools/protected-test.js .` |
 | The big shard fall, champion shard bonuses | `node tools/shard-test.js .` |
 | Champion abilities and champion cards | `node tools/champions-test.js .` |
+| A card's Effect or an ability word rewritten without meaning to change play | `node tools/card-equivalence.js <main copy>` (`ability-words` skill) |
 | Every card played at least once (any card or effect change) | `node tools/cards-test.js .` |
 | Saving: listed keys, upgrades, the save code | `node tools/saves-test.js .` |
 | Words players read (`data/ui_text.csv`) | `node tools/words-test.js .` |
@@ -92,8 +95,9 @@ added, split or renamed, or the flow between them changes.
 | Whole games, crashes, stuck states | `node tools/selftest.js . ai 2` and `. rand 300` (`"problems": {}`) |
 
 The selftest fingerprints (in `EXPECTED` at the top of `tools/test-all.js`, and the `ai 2` one in
-CLAUDE.md) only change when a change is meant to alter play; update both, re-record the matches
-(`node tools/replay-test.js . --update`), and say so.
+CLAUDE.md) only change when a change is meant to alter play; run
+`node tools/update-expected.js --write` (fingerprints, CLAUDE.md and recorded matches in one go),
+and say so.
 
 ## Before calling it done
 

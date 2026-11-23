@@ -1,7 +1,7 @@
 const fs = require('fs');
 // Checks the fracture, tribe and class rules and the cards built on them: node tools/kinds-test.js .
 const dir = process.argv[2] || '.';
-eval(fs.readFileSync(dir + '/js/data.js', 'utf8') + ';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' + ['engine', 'rules-champions', 'rules-events', 'rules-shard', 'effects', 'champions', 'ai'].map(f => fs.readFileSync(dir + '/js/' + f + '.js', 'utf8')).join('\n') + `
+eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
 let fails = 0;
 const ok = (name, cond, extra) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); if (!cond) fails++; };
 const fresh = () => { newGame({ deckId: 'fighter_starter', opponentDeckId: 'zombie_starter', mode: 'ai', seed: 5 }); const p = S.players[0]; p.field.chars.length = 0; S.players[1].field.chars.length = 0; p.field.areas.length = 0; return p; };

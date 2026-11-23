@@ -1,7 +1,54 @@
-# To do (later)
+# To do
 
-Ideas the owner has asked to keep for later. Nothing here is built yet. Design decisions
-belong to the owner: Claude offers options and waits.
+What is still to do, decided or waiting. Finished work moves to `docs/done.md` (the history), so
+this list stays short. Design decisions belong to the owner: Claude offers options and waits.
+Keep it that way: when an item is built, move it to `docs/done.md` in the same change.
+
+## Waiting on the owner (added 22 Nov)
+
+Things Claude has prepared that need the owner before they can go further. The owner will get to
+them; nothing is lost while they wait.
+
+- **Real phone testing** (round two, step 9). The owner applies for BrowserStack's free
+  open-source account (steps in `docs/real-phones.md`), then does the 15-minute phone checklist
+  there before big releases. Once the account exists, Claude can add automatic runs.
+- **Anonymous play numbers** (round two, step 11). Three decisions in `docs/play-numbers.md`: ask
+  players first or count by default, which numbers to count, and who sees them; plus the draft
+  privacy note to reword. Also needs the Firebase project (the same one as Play a Friend).
+  Nothing is collected until then.
+
+## Still to do from earlier rounds
+
+- **Player words into the word table** (round two, step 2): done for the start menu, Settings, the
+  save code window, the game menu, What's new, the "Something went wrong" window, the "pass the
+  device" screen and the end of a match. Still in the code, one screen at a time: the deck
+  builder, the Almanac and card details, the battle log and hints, the board's buttons and
+  prompts, the campaign and trophies, the champions' lines, the tutorial, and the intro.
+- **Simple Messenger and Digital Drainage** keep their own code (round two, step 4): truly
+  one-of-a-kind. Nothing to do unless a future card shares their pattern.
+
+## Open points on built features
+
+### Random events
+- A one-round event is one player's turn, so Spell Surge and Amplified Areas help only the
+  player whose turn it is. Tremor and Windfall hit both sides at once. If this feels lopsided,
+  an event can last two rounds (one turn each); this is a small change.
+- The computer ignores events when it plans. It could learn to hold spells for a Spell Surge.
+- Events are not in the owner's card sheet yet (no tab for them).
+
+### The big shard fall
+- The Man Ape's free 2/2 Monkey is a Chimp with +1 Attack, because no 2/2 Monkey card exists. The
+  owner could design a card for it.
+- The big shard could carry the hint about what caused the Shardfall (see the Protected item below).
+- Round 4 and round 12 are both the second player's turns, so events that help only the active
+  player (Spell Surge, Amplified Areas) always help the second player.
+
+## Offered, not picked yet (23 Nov)
+
+From the "what's next" list; the owner may pick them later.
+- **Watch your last match again** (a replay on the end screen, from the move list).
+- **Deck codes** to share a custom deck as a line of text.
+- **Computer difficulty: Easy / Normal / Hard.**
 
 ## Card levels and mastery (like Team Fight Tactics)
 
@@ -37,26 +84,6 @@ It applies to **cards** and to **whole decks**, to show mastery of them. The wor
   upgrade" like Team Fight Tactics, but the later answers talk only about earning levels. Ask
   again before building anything that costs money.
 
-## Champion abilities — built, first tuning done
-
-All five champions have an ability, from the owner's choices: The Simplistic (Humble Beginnings),
-The Man Ape (The Troop Remembers), IP Man (The Bow), Boss Level (LEVEL UP), and Soul Shepard
-(Challenge, and +1 Health for every Undead that dies, either side, from turn one; no levels).
-They work from turn one without the champion on the table. The tutorial explains them on two
-pages near its end. Words: `data/champion_abilities.csv`. Rules: `js/engine.js`.
-
-**Decided by the owner (16 Nov).**
-- Second tuning: Humble Beginnings has no starting part any more, only the level-up at 6 mana.
-  In a 1,250-game test this put Simple at about 51% (it was 65% with the starting part).
-- First tuning: Humble Beginnings only for Simple characters costing 1 (was 2 or less), and The
-  Troop Remembers' level 2 gives +1 Attack (was +2). The first version made Simple win 69%.
-- The Bow picks automatically (the strongest ready attacker).
-- The Troop Remembers does not stack: two fallen Monkeys before the next is played is one discount.
-- A won fight for IP Man: its character survives and the enemy character is knocked out.
-  Fights against the player's face don't count.
-- The name "Humble Beginnings" stays. ("Start small, then level up" is a hidden clue in
-  `docs/world.md`, so it is not used.)
-
 ## Champion leveling (like Legends of Runeterra) — the owner chose "no champion is a real choice"
 
 **The idea.** Each champion (Unknown card) levels up when its deck meets a condition, and it
@@ -77,21 +104,6 @@ changes into a stronger version. A deck may hold one kind of champion, or none.
   starter decks are already uneven (Monkey wins about 41%, Simple about 58%).
 - Research said to make leveling happen often and keep it something the opponent can fight.
 
-## Random events every 5 rounds — built
-
-Built on the owner's decisions: an event every 5 rounds (rounds 6, 11, 16 ...; a round is one
-player's turn), announced two rounds ahead with a one-line description, lasting one round.
-The four events the owner chose: Spell Surge, Tremor, Windfall, Amplified Areas (names are
-working names; the owner can rename them in `data/events.csv`). More events are the owner's
-design; each needs code in `js/engine.js`.
-
-**Open points.**
-- A one-round event is one player's turn, so Spell Surge and Amplified Areas help only the
-  player whose turn it is. Tremor and Windfall hit both sides at once. If this feels lopsided,
-  an event can last two rounds (one turn each); this is a small change.
-- The computer ignores events when it plans. It could learn to hold spells for a Spell Surge.
-- Events are not in the owner's card sheet yet (no tab for them).
-
 ## More area cards — an idea the owner likes, not yet designed
 
 - Areas that **change a rule for both players**, not only +stats (today only Whirlpool does).
@@ -111,20 +123,6 @@ design; each needs code in `js/engine.js`.
   `docs/world.md`.
 - Not now: the owner will raise it when ready.
 
-## The big shard fall — built (17 Nov)
-
-Built from the owner's design: once a match in round 8 a 10-health shard (15 at first; lowered to 10 after balance tests) falls into the middle of
-the table; whoever breaks it draws a card (2 with no champion; it was +5 and +10 health at first) and gets their champion's bonus. The
-random events became "mini shard falls" in rounds 4 and 12 only. The table cracks and glows after the
-big fall. Chest Thump replaced The Troop Remembers and Boss Phases replaced LEVEL UP.
-
-**Open points.**
-- The Man Ape's free 2/2 Monkey is a Chimp with +1 Attack, because no 2/2 Monkey card exists. The
-  owner could design a card for it.
-- The big shard could carry the hint about what caused the Shardfall (see the Protected item above).
-- Round 4 and round 12 are both the second player's turns, so events that help only the active
-  player (Spell Surge, Amplified Areas) always help the second player.
-
 ## Art: remind the owner about ComfyUI next time art comes up
 
 The owner put art aside for now (18 Nov) and asked to be reminded, the next time they ask about
@@ -137,56 +135,6 @@ from Stability AI on Hugging Face, or an SDXL fantasy-art model whose license al
 prompt, press Queue, check `ComfyUI\output`); 4) then connect Claude (Claude Code desktop app on the
 PC, or Remote Control) and decide about the "art is out of scope" rule in CLAUDE.md. Nothing has been
 downloaded from GitHub; Claude needs the owner's go-ahead before installing any ComfyUI tool.
-
-## Behind-the-scenes groundwork for long-term growth — chosen by the owner (20 Nov), being built
-
-The owner picked all twelve. Nothing here changes how the game plays. Build order: 1+2, 9, 6, 7,
-8, 10, 4, 5, 3, 11, 12. Mark each one built as it lands.
-
-1. **Built (20 Nov).** **Every move written down as a short note** (a move list). With the match seed it replays a
-   match exactly. Needed for Play a Friend, recorded test matches and bug reports.
-2. **Built (20 Nov).** **One front door for moves.** Taps, the computer and the tutorial all send moves through one
-   entrance into the rules; a friend's moves online will use it too.
-3. **Written (20 Nov): `docs/online-play.md`.** **A written plan for hidden cards online**, so a browser can't peek at the other hand.
-4. **Built (20 Nov).** **Champions, events and shard bonuses in their own files**, so a new one is "add a file".
-5. **Built (20 Nov).** **More words in the card ability language**, so fewer future cards need custom code.
-6. **Built (20 Nov).** **A test that plays every card at least once.**
-7. **Built (20 Nov).** **A version number on saved progress**, with an upgrade step for old saves.
-8. **Built (20 Nov).** **Save code: export and import progress** (copy a code, paste it on another device).
-9. **Built (20 Nov).** **Recorded test matches** (needs 1), replayed in every test run.
-10. **Built (20 Nov).** **"Copy bug report" button** when the game hits an error (seed and moves).
-11. **Built (20 Nov).** **Balance check on every pull request** (warn if a starter deck leaves about 40–60% wins).
-12. **Built (20 Nov).** **Quicker loading and offline play** (one bundled file; add to home screen).
-
-## Background improvements, round two — chosen by the owner (22 Nov), being built
-
-The owner picked all thirteen. Build order: 3, 7, 13, 12, 5, 6, 8, 4, 1, 2, 10, then 9 and 11,
-which need the owner. Mark each one built as it lands.
-
-1. **Built (22 Nov): js/ui.js split into ui.js, board.js and input.js.** **Split the screen code into smaller files** by job. Nothing on screen changes.
-2. **Started (22 Nov).** **Player words move into the editable word table** (`data/ui_text.csv`), a screen at a time.
-   Done: the start menu, Settings, the save code window, the game menu, What's new, the
-   "Something went wrong" window, the "pass the device" screen and the end of a match.
-   Still in the code, one screen at a time from here: the deck builder, the Almanac and card
-   details, the battle log and hints, the board's buttons and prompts, the campaign and trophies,
-   the champions' lines, the tutorial, and the intro.
-3. **Built (22 Nov).** **A version number and "What's new" list in the game.**
-4. **Built (22 Nov): five of seven; Simple Messenger and Digital Drainage stay as code.** **General ability words for the last seven one-off cards** where a pattern is reusable.
-5. **Built (22 Nov).** **Automatic screen tests** on every pull request.
-6. **Built (22 Nov).** **Picture comparison**: screenshots flagged when they change unexpectedly.
-7. **Built (22 Nov).** **The card sheet checks itself against the game** (a tool listing differences).
-8. **Built (22 Nov).** **A speed budget**: GitHub warns when loading or a turn gets noticeably slower.
-9. **Prepared (22 Nov): `docs/real-phones.md`.** **Real phone testing.** Waiting on the owner to apply for
-   BrowserStack's free open-source account. Automatic runs come after, from its current instructions.
-10. **Built (22 Nov).** **Accessibility check** (contrast, sizes, keyboard), with simple fixes. Fixed: the
-    What's new list and the battle log can be scrolled by keyboard, the computer's "thinking" dots
-    speak properly, and the screens sit in one main area. Not checkable automatically: text
-    contrast on gradients (most text); judge it by eye.
-11. **Planned (22 Nov): `docs/play-numbers.md`.** **Anonymous play numbers.** Needs the owner's decisions
-    on what to collect (three questions in the plan), and the Firebase project. Nothing is collected.
-12. **Built (22 Nov).** **One-button restore** from the Drive backups, proven by running every test.
-13. **Built (22 Nov).** **A "how this was built" guide** (`docs/how-it-was-built.md`): the why behind the code. Kept
-    current with every change that involves a "why" (CLAUDE.md, `pr-cycle`).
 
 ## Not doing for now
 
