@@ -31,6 +31,8 @@ Repo `dmolloy98-stack-stack/Shardfall_TCG`; work branch is the one the session n
   change entries if this pull request picked a pattern, made a trade-off, fixed a bug that could
   recur, replaced an entry, or recorded an owner decision that shapes the code. Update its "Last
   checked" line with today's date and this pull request's number either way.
+- **Status page:** `node tools/make-status.js` (add `--winrates` when cards, decks or rules changed),
+  and commit `docs/status.md`.
 - `node tools/test-all.js` ends with `EVERYTHING PASSED`.
 - Screen changes: `browser-check` at desktop and phone, screenshots looked at.
 

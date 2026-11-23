@@ -1,5 +1,9 @@
 # Notes for Claude
 
+**Start here:** `docs/status.md` ("Shardfall at a glance", written by `tools/make-status.js`) has the
+current version, what is being built, what waits on the owner, the numbers and every skill. A short
+summary also prints at the start of each session (`.claude/hooks/session-start.sh`).
+
 ## Who does what
 
 **The owner is the visionary. Claude is the programmer.** The owner decides what Shardfall is:

@@ -101,6 +101,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `docs/code-map.md` | How the files fit together: diagrams of the big picture, one move's path and the screens, plus where to change things |
 | `docs/play-numbers.md` | A plan for anonymous play numbers (not built, nothing collected): what could be counted, the owner's decisions, a draft privacy note |
 | `docs/real-phones.md` | How to check the game on real phones (a free device cloud for open-source projects) and a checklist of what to look at |
+| `docs/status.md` | "Shardfall at a glance": version, what's being built, what waits on the owner, numbers, tests, skills. Written by `tools/make-status.js`; read it first |
 | `docs/todo.md` | What is still to do: waiting on the owner, the current round, ideas and what was turned down |
 | `docs/done.md` | The history of finished work, with the owner's decisions behind it |
 | `docs/how-it-was-built.md` | Why the code is built the way it is, the owner's decisions that shape it, and traps already fallen into. Checked with every change (its top says what belongs in it) |
@@ -116,6 +117,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/words-test.js` | Checks that every word the game asks for is in `data/ui_text.csv`: `node tools/words-test.js .` |
 | `tools/sheet-check.js` | Compares the owner's card sheet (downloaded as .xlsx) with the game's card, deck, fracture and skill files and lists every difference in plain words: `node tools/sheet-check.js sheet.xlsx` (uses `tools/sheet-export.py`) |
 | `tools/explain-effect.js` | Explains a card's Effect in plain English and checks the game can read it: `node tools/explain-effect.js primate`, or an Effect in quotes, or `--all` for every card |
+| `tools/make-status.js` | Writes `docs/status.md` from the project's files (`--winrates` measures balance again, `--check` says if it is stale, `--brief` is the start-of-session summary) |
 | `tools/rules-code.js` | Used by the tests and tools: loads the game's data and rules files (the list comes from `GAME_SCRIPTS` in `js/data.js`) |
 | `tools/card-equivalence.js` | "Same play" check: plays each card whose Effect changed (or named cards, or `--all`) on the same table in an older version and this one, and says whether it plays the same: `node tools/card-equivalence.js <older game folder>` |
 | `tools/update-expected.js` | For a change meant to alter play: updates the play fingerprints, the number in CLAUDE.md and the recorded matches together (`--write`; without it, it only shows what would change) |

@@ -196,6 +196,12 @@ what.
 
 ## Working together
 
+**One page to start from.** `docs/status.md` is written by `tools/make-status.js` from the
+project's own files (it can't drift), and `.claude/hooks/session-start.sh` prints a short summary
+when a session starts: branch, what's being built, what waits on the owner, quick checks. Long
+history lives in `docs/done.md`, so `docs/todo.md` stays short to read. (Nov 2026)
+
+
 **The owner decides what the game is; Claude decides how it's built.** Story, cards, characters,
 look and feel are the owner's: Claude offers two or three options and waits. How to build, split,
 test and name things in code are Claude's, and Claude says what was decided. See CLAUDE.md.

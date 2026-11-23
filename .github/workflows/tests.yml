@@ -16,6 +16,10 @@ jobs:
         with:
           node-version: 22
       - run: node tools/test-all.js
+      # "Shardfall at a glance" (docs/status.md) should match the project; a warning, never a red mark,
+      # so an edit to the card tables on GitHub isn't blocked by it.
+      - name: Status page up to date?
+        run: node tools/make-status.js --check || echo "::warning title=Status page::docs/status.md is out of date. Run node tools/make-status.js and commit it."
 
   # Balance check on pull requests: the computer plays every starter deck against every other and
   # a warning appears on the pull request if a deck wins less than 40% or more than 60%. A warning
