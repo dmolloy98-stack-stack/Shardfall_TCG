@@ -24,7 +24,7 @@ has to rediscover them the hard way.
 
 **What does not belong here:** what changed for players (that's `data/whats_new.csv`), where a
 function lives (`docs/code-map.md`), step-by-step recipes (`.claude/skills/`), story and clues
-(`docs/world.md`), plans and ideas (`docs/todo.md`), or a list of every change (git history and
+(`docs/world.md`), plans and ideas (`docs/todo.md`; finished work `docs/done.md`), or a list of every change (git history and
 the Drive change history).
 
 **How to write an entry:** a short bold name, then two to five plain sentences: what we do, why,

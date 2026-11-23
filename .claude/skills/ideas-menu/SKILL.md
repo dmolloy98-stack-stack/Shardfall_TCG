@@ -11,7 +11,8 @@ description: >
 
 ## Before suggesting anything
 
-1. Read `docs/todo.md`, especially **"Turned down or on hold"** at the end. Don't offer a
+1. Read `docs/todo.md`, especially **"Turned down or on hold"** and **"Offered, not picked yet"**
+   near the end; `docs/done.md` lists what's already built. Don't offer a
    turned-down idea again; an on-hold idea can be mentioned only as "on hold since …, want to
    pick it up?".
 2. Skim the top of the Drive change history or `git log --oneline -30` so ideas don't repeat
@@ -43,3 +44,6 @@ to for feel: Apex Legends (the Kraber), Deadlock, Cyberpunk 2077, Borderlands an
 - Record what was turned down or put on hold in `docs/todo.md` → "Turned down or on hold"
   (one line each: the idea, the date, the owner's reason if given).
 - Big picked items that won't be built now go in `docs/todo.md` as their own section.
+- Offered items the owner didn't pick (without turning them down) go under "Offered, not picked
+  yet" in `docs/todo.md`, so they can be offered again later as a reminder, not as new.
+- When a picked list is finished, move it from `docs/todo.md` to `docs/done.md`.
