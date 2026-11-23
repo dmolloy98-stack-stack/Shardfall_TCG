@@ -84,6 +84,7 @@ added, split or renamed, or the flow between them changes.
 | The Protected rule, Pierce and Protected skills | `node tools/protected-test.js .` |
 | The big shard fall, champion shard bonuses | `node tools/shard-test.js .` |
 | Champion abilities and champion cards | `node tools/champions-test.js .` |
+| A card's Effect or an ability word rewritten without meaning to change play | `node tools/card-equivalence.js <main copy>` (`ability-words` skill) |
 | Every card played at least once (any card or effect change) | `node tools/cards-test.js .` |
 | Saving: listed keys, upgrades, the save code | `node tools/saves-test.js .` |
 | Words players read (`data/ui_text.csv`) | `node tools/words-test.js .` |

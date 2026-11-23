@@ -53,7 +53,7 @@ When a one-off ability turns out to be a pattern, it becomes a general ability w
 `pick`, `take`, `discardDraw`, `drainLife`; 22 Nov: `levelDown`, `statline`, `*`, `has:`, tokens
 for `summon`). Only two cards still need one-off code: Simple Messenger and Digital Drainage.
 Every such move is checked by playing each changed card on the same table in the old and new
-versions and comparing the result exactly; the big automatic games alone miss cards that no
+versions and comparing the result exactly (`tools/card-equivalence.js`, `ability-words` skill); the big automatic games alone miss cards that no
 starter deck holds.
 
 **Words players read live in a table too.** `data/ui_text.csv` holds them, and the code asks with
