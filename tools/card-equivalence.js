@@ -66,7 +66,7 @@ function main() {
 
 // Runs inside one game folder: plays each card in CARDS and prints RESULT {id: [after card, after play, round, health]}.
 function runChild(dir) {
-eval(fs.readFileSync(dir + '/js/data.js', 'utf8') + ';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' + ['engine', 'rules-champions', 'rules-events', 'rules-shard', 'effects', 'champions', 'ai'].filter(f => fs.existsSync(dir + '/js/' + f + '.js')).map(f => fs.readFileSync(dir + '/js/' + f + '.js', 'utf8')).join('\n') + `
+eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
 let fails = 0, passes = 0;
 if (typeof move === 'undefined') { var move = (n, ...a) => ({ play: (u, o) => playCard(u, o || {}), target: chooseTarget, choose: resolveChoice, cancel: cancelPending })[n](...a); }
 const ONLY = process.env.CARDS.split(',');

@@ -15,7 +15,8 @@ added, split or renamed, or the flow between them changes.
 
 ## Where things go
 
-- **Rules** (`js/engine.js`, `js/effects.js`, and `js/rules-champions.js`, `js/rules-events.js`,
+- **Rules** (`js/engine.js` the core, `js/rules-combat.js`, `js/rules-turns.js`, `js/rules-play.js`,
+  `js/effects.js`, and `js/rules-champions.js`, `js/rules-events.js`,
   `js/rules-shard.js` for champions, events and the big shard): no screen code, so `tools/selftest.js` can load
   them in Node. Game state is `S`; it must survive `structuredClone` (store owners as player
   indexes, no functions or DOM in `S`). `simulate()` runs moves on a clone with events muted,

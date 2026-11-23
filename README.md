@@ -74,10 +74,13 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `sw.js` | The offline helper: after one visit the browser keeps a copy of the game, so it starts with no internet and doesn't wait long on a slow connection. Its file list comes from `js/data.js` by itself |
 | `manifest.webmanifest` | Lets a phone add Shardfall to its home screen as a full-screen app (it has no app icon yet: that's art) |
 | `js/saves.js` | Everything saved in the browser: the list of saved items, the save version and its upgrade steps, and the save code (Settings → Save code) that copies progress to another device. Loaded first |
+| `js/rules-combat.js` | Damage, death and attacks: Protected, Swift, guards, who wins |
+| `js/rules-turns.js` | Players and decks, starting a match (`newGame`, the campaign champion), turns and phases |
+| `js/rules-play.js` | Costs, playing a card, and the choices a card asks for (targets, pick-a-card windows) |
 | `js/rules-champions.js` | Champion abilities: one entry per champion saying what it does at each moment (turn start, battle, fights, damage, the big shard). A new champion is a new entry |
 | `js/rules-events.js` | The random events (mini shard falls): when they come and what each does |
 | `js/rules-shard.js` | The big shard fall in round 8: attacking it and claiming it |
-| `js/engine.js` | Game rules: turns, combat, skills. Every move comes in through one front door and is written down as a short note; with the match seed (shown in the game log) the notes replay a match exactly |
+| `js/engine.js` | The rules core: the game state, stats and skills (turns, combat and playing cards are the `rules-*.js` files). Every move comes in through one front door and is written down as a short note; with the match seed (shown in the game log) the notes replay a match exactly |
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
 | `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |
 | `js/cards.js` | How a card is drawn: frames, art, badges, names |
@@ -113,6 +116,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/words-test.js` | Checks that every word the game asks for is in `data/ui_text.csv`: `node tools/words-test.js .` |
 | `tools/sheet-check.js` | Compares the owner's card sheet (downloaded as .xlsx) with the game's card, deck, fracture and skill files and lists every difference in plain words: `node tools/sheet-check.js sheet.xlsx` (uses `tools/sheet-export.py`) |
 | `tools/explain-effect.js` | Explains a card's Effect in plain English and checks the game can read it: `node tools/explain-effect.js primate`, or an Effect in quotes, or `--all` for every card |
+| `tools/rules-code.js` | Used by the tests and tools: loads the game's data and rules files (the list comes from `GAME_SCRIPTS` in `js/data.js`) |
 | `tools/card-equivalence.js` | "Same play" check: plays each card whose Effect changed (or named cards, or `--all`) on the same table in an older version and this one, and says whether it plays the same: `node tools/card-equivalence.js <older game folder>` |
 | `tools/update-expected.js` | For a change meant to alter play: updates the play fingerprints, the number in CLAUDE.md and the recorded matches together (`--write`; without it, it only shows what would change) |
 | `tools/replay-report.js` | Replays the match inside a player's bug report (the text from the game's "Something went wrong" window, saved to a file) and shows where it breaks: `node tools/replay-report.js report.txt` |

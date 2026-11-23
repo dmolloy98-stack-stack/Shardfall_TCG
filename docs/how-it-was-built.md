@@ -108,6 +108,12 @@ a counter spell.
 
 ## How the rules are organised
 
+**The rules are split by job, and tools load them from one list.** `js/engine.js` is the core;
+combat, turns and playing cards have their own files (Nov 2026). Tests and tools load the rules
+through `tools/rules-code.js`, which reads `GAME_SCRIPTS`, so a split or a new rules file never
+means editing a dozen tools. A split like this is proven by identical fingerprints, every card
+playing the same (`tools/card-equivalence.js --all`) and no picture changes.
+
 **Champions, events and the big shard are add-ons.** Each champion is one entry in
 `CHAMPION_RULES` (`js/rules-champions.js`) saying what it does at each moment (turn start, battle,
 damage, the shard). The core rules never name a champion; they ask `champHook()`. Events and the

@@ -8,8 +8,7 @@ const fs = require('fs');
 const dir = process.argv[2] || '.';
 let data;
 try {
-  eval(fs.readFileSync(dir + '/js/data.js', 'utf8') + ';data = DATA = buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' +
-    ['engine', 'rules-champions', 'rules-events', 'rules-shard', 'effects'].map(f => fs.readFileSync(dir + '/js/' + f + '.js', 'utf8')).join('\n'));
+  eval(require('./rules-code')(dir) + ';data = DATA;');
 } catch (e) {
   console.log('FAIL the game cannot start: ' + e.message);
   console.log('1 FAILED');

@@ -1,7 +1,7 @@
 const fs = require('fs');
 // Checks the big shard fall (js/rules-shard.js): node tools/shard-test.js .
 const dir = process.argv[2] || '.';
-eval(fs.readFileSync(dir + '/js/data.js', 'utf8') + ';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' + ['engine', 'rules-champions', 'rules-events', 'rules-shard', 'effects', 'champions', 'ai'].map(f => fs.readFileSync(dir + '/js/' + f + '.js', 'utf8')).join('\n') + `
+eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
 let fails = 0;
 const ok = (name, cond, extra) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); if (!cond) fails++; };
 const find = pred => Object.values(DATA.cardsById).find(pred);

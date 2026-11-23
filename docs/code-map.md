@@ -7,7 +7,7 @@ every file, see the file table in the [README](../README.md).
 
 ## The big picture
 
-All the rules and the whole game state live in `js/engine.js`. The state is a single object
+All the rules and the whole game state live in `js/engine.js` and the `js/rules-*.js` files beside it. The state is a single object
 called `S`: hands, board, health, mana, whose turn it is. The engine never draws anything.
 Moves come in from three places, card data comes in from the tables, and the result goes out
 to the screen.
@@ -33,9 +33,13 @@ flowchart LR
   motion --> screen
 ```
 
-The rules are split over four files: `js/engine.js` (the core), and beside it
-`js/rules-champions.js` (one entry per champion), `js/rules-events.js` (the mini shard falls) and
-`js/rules-shard.js` (the big shard). The core never names a champion: it asks the player's
+The rules are split by job: `js/engine.js` (the core: the state `S`, the front door for moves,
+stats, skills, entering the field, the counter window), `js/rules-combat.js` (damage, death,
+attacks), `js/rules-turns.js` (players, decks, starting a match, turns and phases),
+`js/rules-play.js` (costs, playing a card, targets and choices), `js/rules-champions.js` (one entry
+per champion), `js/rules-events.js` (the mini shard falls) and `js/rules-shard.js` (the big shard).
+Tests and tools load them all through `tools/rules-code.js`, which reads the list from
+`GAME_SCRIPTS`, so a new rules file needs no change in the tools. The core never names a champion: it asks the player's
 champion whether it does something at this moment (`champHook()`).
 
 Because the engine never draws, the computer can copy `S`, try a move on the copy
@@ -159,10 +163,10 @@ their own story or coaching, then hand over to the same engine.
 | A card's fracture, tribes or classes | the Fracture, Tribes and Classes columns of `data/cards.csv`; a bonus for a whole tribe or class is written like `allies.Student` in the Effect column |
 | A tribe family (none in use; Undead is now a fracture) | a `tribe_family_<Name>` row in `data/game_rules.csv`; `TRIBE_FAMILIES`, `hasTribe` and `tribesOf` in `js/engine.js`. Rules that name a kind of card (`rule: shepherd Undead`, `rule: sacrifice Monkey`) check it with `isKind` (fracture, then tribe, then class) |
 | The symbols for tribes and classes | `TAG_GLYPHS` in `js/cards.js` (placeholders, to be replaced by art) |
-| A champion that bends a core rule | its `rule:` clause in the Effect column; the rule itself is in `js/engine.js` (list: `RULE_WORDS` in `js/effects.js`) |
+| A champion that bends a core rule | its `rule:` clause in the Effect column; the rule itself is in the rules files (`js/rules-combat.js`, `js/rules-play.js` and others; list: `RULE_WORDS` in `js/effects.js`) |
 | An area's bonus, or a skill an area grants | the area's `aura:` clause in the Effect column |
 | A counter spell | its `counter:` clause in the Effect column; the window is `offerCounter()` in `js/engine.js` |
-| How the game plays: turns, phases, combat, winning | `js/engine.js` |
+| How the game plays: turns, phases, combat, winning | turns and phases `js/rules-turns.js`; attacks, damage and winning `js/rules-combat.js`; playing cards and choices `js/rules-play.js`; the core `js/engine.js` |
 | How smart the computer is, or how each world's deck plays | `js/ai.js` (`PLAN_DEPTH`, `BATTLE_DEPTH`, `AI_STYLES`) |
 | What a champion says, or how the computer plays it | `js/champions.js` (`CHAMPIONS`); the speech bubbles are in `js/campaign.js` |
 | Layout, phone layout | `js/ui.js` (the screen state `U`, screens, phone layout); what is drawn on the table is `js/board.js`, taps and drags `js/input.js` |
@@ -197,7 +201,7 @@ their own story or coaching, then hand over to the same engine.
 | Campaign order and story | `js/campaign.js` |
 | Deck-building rules | `js/decks.js` and `data/game_rules.csv` |
 | Hint wording and settings | `js/help.js` |
-| The Protected rule (half damage to a player with 3+ characters) or the Pierce and Protected skills | `protected_min_characters` in `data/game_rules.csv`; `isProtected()` and `dealDamageToPlayer()` in `js/engine.js`; the plate line `protLine()`, the shard shell on the health gem (`WARD`, `wardHTML()`, `wardHit()`, `wardBreak()`) and the rune ring on Protected cards (`RUNES`, `runeRingHTML()`, `.rune-ring`) in `js/board.js` and `css/style.css`; the Almanac box `protectedRuleHTML()` in `js/menu.js` |
+| The Protected rule (half damage to a player with 3+ characters) or the Pierce and Protected skills | `protected_min_characters` in `data/game_rules.csv`; `isProtected()` and `dealDamageToPlayer()` in `js/rules-combat.js`; the plate line `protLine()`, the shard shell on the health gem (`WARD`, `wardHTML()`, `wardHit()`, `wardBreak()`) and the rune ring on Protected cards (`RUNES`, `runeRingHTML()`, `.rune-ring`) in `js/board.js` and `css/style.css`; the Almanac box `protectedRuleHTML()` in `js/menu.js` |
 | A champion's ability or when it levels up | the words and the goal number in `data/champion_abilities.csv`; what each does is its entry in `CHAMPION_RULES` in `js/rules-champions.js` (one entry per champion; the top of that file lists the moments an entry can use, and the engine asks for them with `champHook()`); the line under the player's name is `champLine()` in `js/board.js`, with the text from each entry's `status` or `count` |
 | The Almanac's Champions tab (the full explanation and pictures of each ability) | `CHAMP_GUIDE` and `championsHTML()` in `js/menu.js`; keep its notes and numbers in step with the rules in `js/rules-champions.js` |
 | The big shard fall (round 8, once a match) | the numbers in `data/game_rules.csv` (`shard_round`, `shard_health`, `shard_draw`, `shard_draw_no_champion`); the rules are `js/rules-shard.js` (`shardFall`, `hitShard`, `claimShard`; each champion's bonus is the `shard` and `shardText` of its entry in `js/rules-champions.js`; an attack on it is `attack(uid, "shard")`); the computer's interest in it is `SHARD_CHIP` in `js/ai.js`; the crystal, the cracked table and the info window are `shardHTML()`, `scarHTML()` and `showShard()` in `js/board.js`, styled at the end of `css/style.css`; test: `tools/shard-test.js` |
@@ -218,8 +222,8 @@ their own story or coaching, then hand over to the same engine.
 
 ## Size and shape
 
-About 7,500 lines of JavaScript in 24 files (November 2026). The largest are `js/engine.js` at
-about 1,230 and `js/board.js` at about 580 (`js/ui.js`, split in two in Nov 2026, is about 350). The menu, the Almanac, the menu background and the
+About 7,600 lines of JavaScript in 27 files (November 2026). The largest are `js/board.js` at about
+580 and `js/engine.js` at about 500 (the rules were split into seven files in Nov 2026; `js/ui.js`, also split, is about 350). The menu, the Almanac, the menu background and the
 start-up code used to live in `ui.js`; they are now `menu.js`, `storm.js` and `boot.js`. In
 November 2026 the card drawing (`cards.js`), the table effects (`table-effects.js`) and the pop-up
 windows and Settings (`panels.js`) moved out of it too. The scripts

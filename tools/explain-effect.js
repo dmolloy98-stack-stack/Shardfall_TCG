@@ -9,8 +9,7 @@
 // fails if a card uses a word this tool doesn't know.
 const fs = require('fs'), path = require('path');
 const dir = path.join(__dirname, '..');
-eval(fs.readFileSync(dir + '/js/data.js', 'utf8') + ';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' +
-  ['engine', 'rules-champions', 'rules-events', 'rules-shard', 'effects'].map(f => fs.readFileSync(dir + '/js/' + f + '.js', 'utf8')).join('\n') +
+eval(require('./rules-code')(dir) +
   ';globalThis.GAME = { DATA, TOKENS, RULE_WORDS };');   // functions like compileEffect are visible already
 const { DATA, TOKENS, RULE_WORDS } = GAME;
 
