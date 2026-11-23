@@ -107,7 +107,9 @@ the steps out again:
 - `browser-check` (desktop and phone checks, iPhone checks, `tools/speed-check.js`)
 - `add-feature` (the building rules for any code change), `card-change` (a card or rule the
   owner decided), `sheet-sync` (the card sheet), `balance` (win rates, `tools/winrates.js`)
-- `ability-words` (turning one-off card code into ability words, with the same-play check)
+- `ability-words` (turning one-off card code into ability words, with the same-play check),
+  `move-words` (a screen's words into the word table), `bug-report` (a player's bug report),
+  `ci-check` (reading GitHub's results before merging)
 - `story-writing` (champion voices, card stories, clues), `ideas-menu` ("what's next?"),
   `code-map` (the written map and the claude.ai map pages), `worlds-and-tribes`
   (renaming or adding a world, tribe or champion), `tool-check` ("is this useful?")

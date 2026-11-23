@@ -28,9 +28,9 @@ Update 30: **Update 30** (2026-11-22): The menu shows which update you have; tap
 - 13. **Built (23 Nov).** **A short summary when each session starts** (branch, tests, waiting on the owner).
 - 14. **Built (23 Nov): https://claude.ai/artifact/VC8opzKwdKLh5srrGCBwcr.** **A "Shardfall dashboard" for the owner** (a claude.ai page), updated with each pull request.
 - 15. **Built (23 Nov).** **`ability-words` skill**.
-- 16. **`move-words` skill**.
-- 17. **`bug-report` skill**.
-- 18. **`ci-check` skill**.
+- 16. **Built (23 Nov).** **`move-words` skill**.
+- 17. **Built (23 Nov).** **`bug-report` skill**.
+- 18. **Built (23 Nov).** **`ci-check` skill**.
 
 ## The game in numbers
 - **Cards:** 113 (Spell 34, Area 7, Character 57, Equipment 15).
@@ -71,9 +71,12 @@ Average game: 13.9 turns (both players' turns counted)
 - **backup**: Shardfall's Google Drive backup, done once per merged pull request: one change-history doc entry, one patch file in a new Versions folder, a full snapshot once a month, and the rebuilt claude.ai playable page.
 - **balance**: Measuring how fair Shardfall is: deck win rates, first-player advantage and game length from many computer-vs-computer games, before and after a rule, card or deck change.
 - **browser-check**: Opening Shardfall in a real (Playwright) browser at desktop and phone size to check a change on screen: page errors, screenshots, driving a match, measuring animations or speed.
+- **bug-report**: What to do with a Shardfall bug report (the text from the game's "Something went wrong" window, or a description from the owner): replay the match, find the cause, fix it, and add a test so it can't come back.
 - **card-change**: Changing or adding a Shardfall card, skill, deck or game rule that the owner has decided on (cost, stats, ability text, effect, tribe/class/fracture, deck list, numbers in game_rules.csv).
+- **ci-check**: Reading GitHub's results for a Shardfall pull request properly: not just the green or red mark, but the logs of every check (rules tests, balance, screen tests, accessibility, picture comparison, speed budget, status page), what each warning means, and when it is safe to merge.
 - **code-map**: Keeping Shardfall's code maps current: docs/code-map.md (the written map) and the "Shardfall File Map" and "Shardfall Turn Flow" pages on claude.ai.
 - **ideas-menu**: Answering Shardfall "what's next / what can be improved / look at other games for ideas" questions: the format the owner likes, the games to draw from, and the list of ideas already turned down or on hold so they aren't offered again.
+- **move-words**: Moving one Shardfall screen's words (buttons, titles, messages, hints) out of the code into the editable word table data/ui_text.csv, with T("id"), so the owner can reword them; proven by the picture comparison showing no change.
 - **pr-cycle**: Shardfall's GitHub routine: push every commit to the work branch, decide when a group of changes is ready for a pull request, open it, merge it once GitHub's tests pass, then restart the branch and back up.
 - **sheet-sync**: Bringing cards, decks, fractures and skills from the owner's Google Sheet "Shardfall – card and deck builder" into the game's data files, and writing game changes back to the sheet.
 - **story-writing**: Writing Shardfall's story text: champion lines and reactions, campaign scenes, card stories (flavor text), the intro, and hidden clues about the Shardfall.

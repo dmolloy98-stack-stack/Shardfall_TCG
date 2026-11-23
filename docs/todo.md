@@ -33,9 +33,9 @@ Mark each built as it lands, then move the finished list to `docs/done.md`.
 13. **Built (23 Nov).** **A short summary when each session starts** (branch, tests, waiting on the owner).
 14. **Built (23 Nov): https://claude.ai/artifact/VC8opzKwdKLh5srrGCBwcr.** **A "Shardfall dashboard" for the owner** (a claude.ai page), updated with each pull request.
 15. **Built (23 Nov).** **`ability-words` skill**.
-16. **`move-words` skill**.
-17. **`bug-report` skill**.
-18. **`ci-check` skill**.
+16. **Built (23 Nov).** **`move-words` skill**.
+17. **Built (23 Nov).** **`bug-report` skill**.
+18. **Built (23 Nov).** **`ci-check` skill**.
 
 ## Still to do from earlier rounds
 

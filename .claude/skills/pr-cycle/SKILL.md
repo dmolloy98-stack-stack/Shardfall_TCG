@@ -49,7 +49,8 @@ https://claude.ai/code/session_<this session's id>
 
 ## Merging
 
-1. `mcp__github__pull_request_read` `method: "get_check_runs"`; while running, do other work
+1. Read the results properly (`ci-check` skill): the logs, not just the marks.
+   `mcp__github__pull_request_read` `method: "get_check_runs"`; while running, do other work
    (the backup prep) and check again, never a foreground `sleep`.
 2. All `success` → `mcp__github__merge_pull_request`, `merge_method: "merge"`.
 3. Restart the branch (only when `git log origin/main..<branch>` is empty):
