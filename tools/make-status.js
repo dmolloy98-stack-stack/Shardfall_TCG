@@ -118,6 +118,19 @@ ${docs.map(f => `- \`docs/${f}\``).join('\n')}
 `;
 }
 
+// The facts both pages use (this one and tools/make-dashboard.js).
+function facts() {
+  const fp = read('tools/test-all.js').match(/const EXPECTED = \{ ai: (-?\d+), rand: (-?\d+) \};/);
+  const block = winRateBlock();
+  const rates = [...block.matchAll(/^(\w+_starter)\s+([\d.]+)%/gm)].map(m => ({ deck: DATA.decks[m[1]]?.name || m[1], fracture: DATA.decks[m[1]]?.faction, rate: Number(m[2]) }));
+  const measured = (block.match(/Measured (\d{4}-\d\d-\d\d)/) || [])[1] || null;
+  const first = (block.match(/First player wins: ([\d.]+)%/) || [])[1];
+  const sectionNames = (read('docs/todo.md').match(/^## .+$/gm) || []).map(h => h.slice(3));
+  return { DATA, SCRIPTS, RULES, fp, rates, measured, first, waiting: todoSection('Waiting on the owner'), round: todoSection('Round'), offered: todoSection('Offered, not picked yet'), sectionNames, bullets, todoSection };
+}
+module.exports = { facts };
+if (require.main !== module) return;
+
 const now = build();
 if (args.includes('--check')) {
   const old = fs.existsSync(path.join(root, OUT)) ? read(OUT) : '';

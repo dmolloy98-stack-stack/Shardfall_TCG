@@ -58,6 +58,18 @@ Then publish with the Artifact tool, `file_path` = that file, `url:
 "https://claude.ai/artifact/5hWErf72EZxcunSyP4CXX1"`, no `icon`. In a new session `read` that url
 first (a publish to an artifact the session hasn't read is refused).
 
+## 4. The owner's dashboard
+
+After every merged pull request (once `docs/status.md` is current on main):
+
+```bash
+node tools/make-dashboard.js <scratchpad>/dashboard/shardfall-dashboard.html
+```
+
+Publish it with the Artifact tool, `file_path` = that file, `url:
+"https://claude.ai/artifact/VC8opzKwdKLh5srrGCBwcr"`, no `icon` (in a new session `read` that url
+first). It is built from the project's files, so never edit it by hand.
+
 ## Restoring from the backups
 
 When the owner wants the game back from Drive (GitHub gone, or a check that the backups work):

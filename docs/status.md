@@ -17,17 +17,20 @@ Update 30: **Update 30** (2026-11-22): The menu shows which update you have; tap
 ## Being built now
 **Round three — chosen by the owner (23 Nov), being built**
 
-- 5. **Finish splitting the rules file**: combat, turns and phases, and card abilities in their own files.
-- 6. **Plain-English errors when card data is wrong**, on screen and in GitHub's tests.
-- 7. **An "explain this Effect" tool**: a card's Effect text in plain English.
-- 8. **A permanent "same play" check** for card changes (old and new versions side by side).
-- 9. **One command for "play is meant to change"**: fingerprints and recorded matches together.
-- 10. **Small upkeep**: GitHub's building blocks updated before they stop working.
-- 11. **A "project at a glance" page** (`docs/status.md`), rewritten by a tool with each pull request.
-- 12. **Split the to-do list**: finished work in `docs/done.md`, live items here.
-- 13. **A short summary when each session starts** (branch, tests, waiting on the owner).
-- 14. **A "Shardfall dashboard" for the owner** (a claude.ai page), updated with each pull request.
-- 15. **`ability-words` skill**; 16. **`move-words` skill**; 17. **`bug-report` skill**; 18. **`ci-check` skill**.
+- 5. **Built (23 Nov).** **Finish splitting the rules file**: combat, turns and phases, and playing cards in their own files.
+- 6. **Built (23 Nov).** **Plain-English errors when card data is wrong**, on screen and in GitHub's tests.
+- 7. **Built (23 Nov).** **An "explain this Effect" tool**: a card's Effect text in plain English.
+- 8. **Built (23 Nov).** **A permanent "same play" check** for card changes (old and new versions side by side).
+- 9. **Built (23 Nov).** **One command for "play is meant to change"**: fingerprints and recorded matches together.
+- 10. **Built (23 Nov).** **Small upkeep**: GitHub's building blocks updated before they stop working.
+- 11. **Built (23 Nov).** **A "project at a glance" page** (`docs/status.md`), rewritten by a tool with each pull request.
+- 12. **Built (23 Nov).** **Split the to-do list**: finished work in `docs/done.md`, live items here.
+- 13. **Built (23 Nov).** **A short summary when each session starts** (branch, tests, waiting on the owner).
+- 14. **Built (23 Nov): https://claude.ai/artifact/VC8opzKwdKLh5srrGCBwcr.** **A "Shardfall dashboard" for the owner** (a claude.ai page), updated with each pull request.
+- 15. **Built (23 Nov).** **`ability-words` skill**.
+- 16. **`move-words` skill**.
+- 17. **`bug-report` skill**.
+- 18. **`ci-check` skill**.
 
 ## The game in numbers
 - **Cards:** 113 (Spell 34, Area 7, Character 57, Equipment 15).
@@ -59,7 +62,7 @@ Average game: 13.9 turns (both players' turns counted)
 
 ## Code
 - 28 game scripts, loaded in this order: saves.js, engine.js, rules-combat.js, rules-turns.js, rules-play.js, rules-champions.js, rules-events.js, rules-shard.js, effects.js, ai.js, tutorial.js, help.js, guide.js, decks.js, fx.js, motion.js, intro.js, cards.js, ui.js, board.js, input.js, table-effects.js, panels.js, menu.js, storm.js, champions.js, campaign.js, boot.js.
-- 35 tools in `tools/` (the README's file table lists them).
+- 36 tools in `tools/` (the README's file table lists them).
 - Map: `docs/code-map.md` (where things are); why: `docs/how-it-was-built.md`.
 
 ## Skills (`.claude/skills/`)

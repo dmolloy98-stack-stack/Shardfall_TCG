@@ -84,8 +84,8 @@ belongs there. Always update its "Last checked" line.
 ## Back up to Google Drive
 
 Everything on GitHub is also kept in Drive with a full history: **once per merged pull request**,
-a change-history entry, one patch file, a monthly full snapshot, and the republished claude.ai
-page. Steps and ids: `backup` skill. Tell the owner when a step could not be done and why.
+a change-history entry, one patch file, a monthly full snapshot, the republished claude.ai
+page, and the owner's dashboard. Steps and ids: `backup` skill. Tell the owner when a step could not be done and why.
 
 ## Card and deck builder sheet
 
@@ -117,6 +117,8 @@ the steps out again:
 - Play (GitHub Pages): https://dmolloy98-stack-stack.github.io/Shardfall_TCG/ (`#menu` skips the
   intro, `#tutorial` starts the tutorial; the guide is `guide.html`)
 - Playable claude.ai copy: https://claude.ai/artifact/5hWErf72EZxcunSyP4CXX1
+- The owner's dashboard (claude.ai): https://claude.ai/artifact/VC8opzKwdKLh5srrGCBwcr, rebuilt by
+  `tools/make-dashboard.js` with every backup
 - Map pages (made with archify): Shardfall File Map https://claude.ai/artifact/DZGvMWEJF37CU9NkFJxXZ9
   and Shardfall Turn Flow https://claude.ai/artifact/RGLT4sVnTcqMgN4xTojwrL
 - Card sheet: https://docs.google.com/spreadsheets/d/1RzePfEgUN4QJsLTDGnhU7xaTa0_snq2lVswEUy5JNX0
