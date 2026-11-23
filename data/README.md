@@ -148,6 +148,8 @@ Any action can end with `if <number>`: it only happens when the number is more t
 
 **Cards whose rules stay in code.** A few cards change how the game itself works, so their Effect is empty or a `script`: The Simplistic, IP Man (his redirect), The Man Ape, Soul Shepard, Boss Level, Pesky Programmer, Sensei, Weapons Enthusiast, Kenshi's Blade (the once-per-battle use), Black Belt Student, API Key (the Level Up it gives). Ask for code when a new card needs a rule like these.
 
+**Checking an Effect.** `node tools/explain-effect.js "play: damage target 2"` (or a CardID, or `--all`) says in plain English what the game will do with it, or what is wrong. Ask Claude to run it on new cards.
+
 ### decks.csv: the starter decks shown on the menu
 
 | Column | Meaning |

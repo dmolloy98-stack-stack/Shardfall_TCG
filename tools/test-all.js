@@ -29,6 +29,11 @@ for (const t of ['data', 'kinds', 'events', 'protected', 'shard', 'champions', '
   report(`${t}-test`, ok, ok ? '' : '\n' + out.split('\n').filter(l => /FAIL|Error/.test(l)).slice(0, 15).join('\n'));
 }
 
+{ // every card's Effect has a plain-English description (tools/explain-effect.js)
+  const { out, code } = run(['tools/explain-effect.js', '--all']);
+  report('every Effect explained in plain English', code === 0, code === 0 ? '' : '\n' + out.split('\n').filter(l => /PROBLEM/.test(l)).slice(0, 10).join('\n'));
+}
+
 for (const [mode, n] of [['ai', 2], ['rand', 300]]) {
   const { out, code } = run(['tools/selftest.js', '.', mode, String(n)]);
   let res = null;
