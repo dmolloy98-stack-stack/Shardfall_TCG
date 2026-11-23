@@ -108,11 +108,19 @@ function readSaveCode(code) {
 function importSave(code) {
   const r = readSaveCode(code);
   if (r.error) return r.error;
+  // Remember what is there now, so a failure half way (storage full, a private window) puts the
+  // old progress back instead of leaving a half-empty save.
+  const names = [...Object.keys(SAVE_KEYS), "saveVersion"].map(k => "shardfall." + k);
+  const backup = new Map();
+  try { for (const n of names) backup.set(n, localStorage.getItem(n)); } catch { /* handled below */ }
   try {
     for (const key of Object.keys(SAVE_KEYS)) localStorage.removeItem("shardfall." + key);
     for (const [key, value] of Object.entries(r.data)) localStorage.setItem("shardfall." + key, JSON.stringify(value));
     localStorage.setItem("shardfall.saveVersion", JSON.stringify(r.version));
-  } catch { return "This browser won't let Shardfall save (a private window?), so the code can't be loaded here."; }
+  } catch {
+    for (const [n, v] of backup) { try { if (v === null) localStorage.removeItem(n); else localStorage.setItem(n, v); } catch { /* nothing more to do */ } }
+    return "This browser won't let Shardfall save (a private window?), so the code can't be loaded here. Your old progress was kept.";
+  }
   upgradeSaves();
   return null;
 }
