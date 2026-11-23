@@ -92,8 +92,9 @@ added, split or renamed, or the flow between them changes.
 | Whole games, crashes, stuck states | `node tools/selftest.js . ai 2` and `. rand 300` (`"problems": {}`) |
 
 The selftest fingerprints (in `EXPECTED` at the top of `tools/test-all.js`, and the `ai 2` one in
-CLAUDE.md) only change when a change is meant to alter play; update both, re-record the matches
-(`node tools/replay-test.js . --update`), and say so.
+CLAUDE.md) only change when a change is meant to alter play; run
+`node tools/update-expected.js --write` (fingerprints, CLAUDE.md and recorded matches in one go),
+and say so.
 
 ## Before calling it done
 

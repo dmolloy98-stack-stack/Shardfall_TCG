@@ -37,7 +37,7 @@ for (const [mode, n] of [['ai', 2], ['rand', 300]]) {
   const problems = Object.keys(res.problems);
   report(`selftest ${mode} ${n}: no problems`, !problems.length, problems.length ? '\n' + JSON.stringify(res.problems, null, 1) : '');
   report(`selftest ${mode} ${n}: plays as before`, res.fingerprint === EXPECTED[mode],
-    res.fingerprint === EXPECTED[mode] ? '' : `fingerprint ${res.fingerprint}, expected ${EXPECTED[mode]} (update EXPECTED in tools/test-all.js if this change is meant to alter play)`);
+    res.fingerprint === EXPECTED[mode] ? '' : `fingerprint ${res.fingerprint}, expected ${EXPECTED[mode]} (if this change is meant to alter play: node tools/update-expected.js --write)`);
 }
 
 console.log(failed ? `\n${failed} CHECK${failed > 1 ? 'S' : ''} FAILED` : '\nEVERYTHING PASSED');

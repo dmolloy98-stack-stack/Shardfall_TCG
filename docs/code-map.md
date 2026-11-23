@@ -210,7 +210,7 @@ their own story or coaching, then hand over to the same engine.
 | Something new to save in the browser, or a change to how something is saved | add the key to `SAVE_KEYS` in `js/saves.js`; if old saves need changing, raise `SAVE_VERSION` and add a step to `SAVE_UPGRADES` (test: `tools/saves-test.js`) |
 | A new kind of move (anything a player can do) | add it to `MOVES` in `js/engine.js` and send it with `move()`; see "Moves" above |
 | Every card played at least once | `tools/cards-test.js` (its table: two plain characters, a Level Up character and an area on each side) |
-| Recorded test matches | `tools/replay-test.js`; re-record with `node tools/replay-test.js . --update` when play is meant to change |
+| Recorded test matches | `tools/replay-test.js`; re-record (with the fingerprints) by `node tools/update-expected.js --write` when play is meant to change |
 | Checking a rules or card change broke nothing | `node tools/test-all.js` (every test; GitHub runs it on each push), and `node tools/selftest.js . rand 1000` for a deeper look |
 | Checking a screen change in a browser | `node tools/browser-check.js` (uses `tools/serve.js` to load the game from disk and `tools/readability.js` for the "can you read it?" check); the `browser-check` skill in `.claude/skills/` |
 | Deck win rates and game length | `node tools/winrates.js` (plays `tools/selftest.js` games and sums them up) |
