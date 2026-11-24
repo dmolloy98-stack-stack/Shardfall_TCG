@@ -179,7 +179,7 @@ function chooseTarget(target) {
 
 function cancelPending() {
   if (!allowed("cancelPending")) return false;
-  if (!S.pending || S.pending.required || S.pending.resolve === "counter") return false;
+  if (!S.pending || S.pending.required || CHOICES[S.pending.resolve]?.noCancel) return false;
   if (S.pending.source?.type === "Area") S.pending.source.usedRound = null;   // cancelling Data Transfer keeps its use
   if (cardRule(S.pending.source, "strike")) S.pending.source.bladeRound = null;   // and a cancelled strike
   S.pending = null;
@@ -187,44 +187,49 @@ function cancelPending() {
   return true;
 }
 
-// Resolve a "choose" dialog. picks = array of card uids, option = option id.
-function resolveChoice(picks, option) {
-  if (!allowed("resolveChoice", picks, option)) return false;
-  const pd = S.pending;
-  if (!pd || pd.kind !== "choose") return false;
-  const owner = S.players[pd.owner];
-  const picked = pd.cards.filter(c => picks.includes(c.uid)).slice(0, pd.pick || 1);
-  S.pending = null;
-  const removeFromGrave = c => { for (const q of S.players) { const i = q.grave.findIndex(x => x.uid === c.uid); if (i >= 0) q.grave.splice(i, 1); } };
-  // A card leaving the graveyard comes back as a clean copy, without damage or buffs.
-  const fresh = c => newCard(DATA.cardsById[c.id] || c);
+// A card leaving the graveyard: take it out of whichever graveyard holds it.
+function takeFromGrave(c) { for (const q of S.players) { const i = q.grave.findIndex(x => x.uid === c.uid); if (i >= 0) q.grave.splice(i, 1); } }
+// A card leaving the graveyard comes back as a clean copy, without damage or buffs.
+function freshCopy(c) { return newCard(DATA.cardsById[c.id] || c); }
 
-  if (pd.resolve === "messenger") {
+// Every kind of "choose" window, in one place, named by the window's `resolve`.
+//   run(pd, owner, picked, option): what happens when it is answered.
+//   needsPick: false when the option buttons work without picking a card first (default true).
+//   noCancel: true when the player can't back out with cancelPending() (default false).
+// The computer's answers are in AI_CHOICES in js/ai.js. A new "pick one" ability adds one entry
+// here, and one there unless "take the most expensive cards" is the right answer for the computer.
+// tools/cards-test.js checks that every resolve used in the code has an entry.
+const CHOICES = {
+  messenger: { needsPick: false, run(pd, owner, picked, option) {
     const foe = foeOf(owner);
     const top = foe.deck.pop();
     if (top) {
       if (option === "take") { owner.deck.push(top); log(`${owner.name} takes ${top.name} onto their deck.`); }
       else { foe.grave.push(top); log(`${top.name} is discarded from ${foe.name}'s deck.`); }
     }
-  } else if (pd.resolve === "toHand") {
-    for (const c of picked) { removeFromGrave(c); if (addToHand(owner, fresh(c))) log(`${c.name} returns to ${owner.name}'s hand.`); }
-  } else if (pd.resolve === "discardDraw") {
+  } },
+  toHand: { run(pd, owner, picked) {
+    for (const c of picked) { takeFromGrave(c); if (addToHand(owner, freshCopy(c))) log(`${c.name} returns to ${owner.name}'s hand.`); }
+  } },
+  discardDraw: { run(pd, owner, picked) {
     const c = picked[0];
     if (c) { owner.hand.splice(owner.hand.findIndex(x => x.uid === c.uid), 1); owner.grave.push(c); }
     drawCard(owner);
-  } else if (pd.resolve === "rise") {
+  } },
+  rise: { run(pd, owner, picked) {
     const c = picked[0];
     if (c) {
-      removeFromGrave(c);
+      takeFromGrave(c);
       log(`${c.name} rises onto the field.`);
-      putOnField(fresh(c), owner);
+      putOnField(freshCopy(c), owner);
     }
-  } else if (pd.resolve === "shepard") {
+  } },
+  shepard: { needsPick: false, run(pd, owner, picked, option) {
     const dead = owner.grave.find(x => x.uid === pd.deadUid);
     const shep = findChar(pd.shepardUid)?.c;
     if (option === "hand" && dead) {
-      removeFromGrave(dead);
-      if (addToHand(owner, fresh(dead))) log(`${pd.source.name} returns ${dead.name} to ${owner.name}'s hand.`);
+      takeFromGrave(dead);
+      if (addToHand(owner, freshCopy(dead))) log(`${pd.source.name} returns ${dead.name} to ${owner.name}'s hand.`);
     } else if (option === "absorb" && shep) {
       const g = pd.gain;
       shep.attack += g.a; shep.currentHealth += g.h;
@@ -232,7 +237,8 @@ function resolveChoice(picks, option) {
       emit("text", { uid: shep.uid, text: `+${g.a}/+${g.h}`, color: "#8dff8d" });
       log(`${pd.source.name} absorbs ${dead?.name || "the fallen card"}.`);
     }
-  } else if (pd.resolve === "counter") {
+  } },
+  counter: { noCancel: true, run(pd, owner, picked, option) {
     const held = pd.held, caster = S.players[held.owner];
     const want = option === "counter" ? picked[0] || (pd.cards.length === 1 ? pd.cards[0] : null) : null;
     const i = want ? owner.hand.findIndex(x => x.uid === want.uid) : -1;
@@ -244,7 +250,8 @@ function resolveChoice(picks, option) {
       emit("countered", { card: held.card, by: counter, player: owner.idx });
       log(`${owner.name} casts ${counter.name}: ${held.card.name} is countered.`);
     } else finishPlay(held);
-  } else if (pd.resolve === "apeSacrifice") {
+  } },
+  apeSacrifice: { run(pd, owner, picked) {
     const ape = findChar(pd.apeUid)?.c;
     const monkey = picked[0] && findChar(picked[0].uid)?.c;
     if (ape && monkey && monkey !== ape) {
@@ -255,7 +262,18 @@ function resolveChoice(picks, option) {
       ape.currentHealth = ape.baseHealth + equipBonuses(ape).h;   // fully healed
       emit("text", { uid: ape.uid, text: "+1 ALL", color: "#ffd25e" });
     }
-  }
+  } },
+};
+
+// Resolve a "choose" dialog. picks = array of card uids, option = option id.
+function resolveChoice(picks, option) {
+  if (!allowed("resolveChoice", picks, option)) return false;
+  const pd = S.pending;
+  if (!pd || pd.kind !== "choose") return false;
+  const owner = S.players[pd.owner];
+  const picked = pd.cards.filter(c => picks.includes(c.uid)).slice(0, pd.pick || 1);
+  S.pending = null;
+  CHOICES[pd.resolve]?.run(pd, owner, picked, option);
   settle();
   return true;
 }
