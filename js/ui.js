@@ -195,7 +195,7 @@ function onPhaseButton() {
 function passTurn() {
   const p = active();
   const playable = S.phase === PHASE.SETUP ? p.hand.filter(c => canPlay(c, p)).length : 0;
-  const ready = S.phase <= PHASE.BATTLE ? p.field.chars.filter(c => !c.hasAttacked && !hasSkill(c, "Tower")).length : 0;
+  const ready = S.phase <= PHASE.BATTLE ? p.field.chars.filter(c => !c.hasAttacked && !skillNow(c, "Tower")).length : 0;
   if (!U.passCheck || U.tutorial || (!playable && !ready)) { act(() => move("end")); return; }
   const left = [playable && `${p.mana} mana and ${playable} card${playable > 1 ? "s" : ""} you can play`, ready && `${ready} character${ready > 1 ? "s" : ""} that can still attack`].filter(Boolean).join(", and ");
   openModal(`<h2 id="modal-title">Pass your turn?</h2><p>You still have ${esc(left)}.</p>

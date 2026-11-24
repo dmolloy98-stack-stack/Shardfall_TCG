@@ -40,8 +40,21 @@ function parseCSVLine(line) {
 
 // Rows of a CSV block, skipping # comments, blank lines and the header row.
 function csvRows(text) {
-  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(l => l.trim() && !l.startsWith("#"));
+  const lines = text.replace(/^﻿/, "").split(/\r?\n/).filter(l => l.trim() && !l.startsWith("#"));
   return lines.slice(1).map(parseCSVLine).filter(row => row.some(Boolean));   // spreadsheet apps can leave empty rows
+}
+
+// The rows of a table as objects named by the header row: row.CardID, row.Effect. Columns are found
+// by their name, so a column can be moved or added in the sheet without breaking the game. A column
+// the game needs that is missing stops it with a message naming the file and the column.
+function csvTable(text, file, needs = []) {
+  const lines = (text || "").replace(/^﻿/, "").split(/\r?\n/).filter(l => l.trim() && !l.startsWith("#"));
+  if (!lines.length) return [];
+  const head = parseCSVLine(lines[0]);
+  const missing = needs.filter(n => !head.includes(n));
+  if (missing.length) throw new Error(`data/${file}.csv: the column${missing.length > 1 ? "s" : ""} ${missing.map(m => `"${m}"`).join(", ")} ${missing.length > 1 ? "are" : "is"} missing from the header row. Its columns are: ${head.join(", ")}.`);
+  return lines.slice(1).map(parseCSVLine).filter(row => row.some(Boolean))
+    .map(row => Object.fromEntries(head.map((h, i) => [h, row[i] ?? ""])));
 }
 
 function rgb(r, g, b) {
@@ -49,61 +62,82 @@ function rgb(r, g, b) {
   return `rgb(${to(r)}, ${to(g)}, ${to(b)})`;
 }
 
-function buildData(CSV) {
-  const warnings = [];   // mistakes the game can live with; shown on the menu and failed by tools/data-test.js
+// ---------------------------------------------------------------------------
+// One reader per table. buildData() calls them in order and checks the cards and decks.
+// ---------------------------------------------------------------------------
+function readRules(text) {
   const rules = {};
-  for (const [id, value, kind] of csvRows(CSV.game_rules)) rules[id] = kind === "number" ? Number(value) : value;
-
-  const phases = csvRows(CSV.phases)
-    .map(c => ({ id: c[0], name: c[1], order: Number(c[2]), instruction: c[3] || "" }))
-    .sort((a, b) => a.order - b.order);
-
+  for (const r of csvTable(text, "game_rules", ["RuleID", "Value", "ValueType"])) rules[r.RuleID] = r.ValueType === "number" ? Number(r.Value) : r.Value;
+  return rules;
+}
+const readPhases = text => csvTable(text, "phases", ["PhaseID", "Name", "DisplayOrder"])
+  .map(r => ({ id: r.PhaseID, name: r.Name, order: Number(r.DisplayOrder), instruction: r.Instruction || "" }))
+  .sort((a, b) => a.order - b.order);
+function readUiText(text) {
   const uiText = {};
-  for (const [id, text] of csvRows(CSV.ui_text)) uiText[id] = text || "";
-
-  // Random events (data/events.csv): what each one is called and how it is described to players.
-  // What an event does is written in js/rules-events.js, keyed by its EventID.
-  const events = {};
-  const eventOrder = [];
-  for (const c of csvRows(CSV.events || "")) { events[c[0]] = { id: c[0], name: c[1], desc: c[2] || "" }; eventOrder.push(c[0]); }
-
-  // Champion abilities (data/champion_abilities.csv): the wording shown to players. What each one does is in js/rules-champions.js.
-  const championAbilities = {};
-  for (const c of csvRows(CSV.champion_abilities || "")) championAbilities[c[0]] = { id: c[0], name: c[1], now: c[2] || "", when: c[3] || "", then: c[4] || "", goal: Number(c[5]) || 0, counts: c[6] || "" };
-
-  const skills = {};
-  const skillOrder = [];
-  for (const c of csvRows(CSV.skills)) {
-    skills[c[1]] = { id: c[0], name: c[1], icon: c[2] || "•", desc: c[3] || "", order: Number(c[4]) || 9999 };
-    skillOrder.push(c[1]);
+  for (const r of csvTable(text, "ui_text", ["TextID", "Text"])) uiText[r.TextID] = r.Text || "";
+  return uiText;
+}
+// Random events (data/events.csv): what each one is called and how it is described to players.
+// What an event does is written in js/rules-events.js, keyed by its EventID.
+function readEvents(text) {
+  const events = {}, eventOrder = [];
+  for (const r of csvTable(text, "events", ["EventID", "Name", "Description"])) { events[r.EventID] = { id: r.EventID, name: r.Name, desc: r.Description || "" }; eventOrder.push(r.EventID); }
+  return { events, eventOrder };
+}
+// Champion abilities (data/champion_abilities.csv): the wording shown to players. What each one does is in js/rules-champions.js.
+function readChampionAbilities(text) {
+  const out = {};
+  for (const r of csvTable(text, "champion_abilities", ["ChampionID", "AbilityName", "Now", "LevelUpWhen", "Then", "Goal", "Counts"])) {
+    out[r.ChampionID] = { id: r.ChampionID, name: r.AbilityName, now: r.Now || "", when: r.LevelUpWhen || "", then: r.Then || "", goal: Number(r.Goal) || 0, counts: r.Counts || "" };
+  }
+  return out;
+}
+function readSkills(text) {
+  const skills = {}, skillOrder = [];
+  for (const r of csvTable(text, "skills", ["SkillID", "Name", "IconKey", "Description", "DisplayOrder"])) {
+    skills[r.Name] = { id: r.SkillID, name: r.Name, icon: r.IconKey || "•", desc: r.Description || "", order: Number(r.DisplayOrder) || 9999 };
+    skillOrder.push(r.Name);
   }
   skillOrder.sort((a, b) => skills[a].order - skills[b].order);
-
-  const rarities = {};
-  const rarityOrder = [];
-  for (const c of csvRows(CSV.rarities)) {
-    rarities[c[1]] = { name: c[1], color: rgb(c[2], c[3], c[4]), attachCost: c[5] !== "" && Number.isFinite(Number(c[5])) ? Number(c[5]) : 1, order: Number(c[6]), frame: c[7] || "chip" };
-    rarityOrder.push(c[1]);
+  return { skills, skillOrder };
+}
+function readRarities(text) {
+  const rarities = {}, rarityOrder = [];
+  for (const r of csvTable(text, "rarities", ["Name", "EdgeR", "EdgeG", "EdgeB", "EquipmentAttachCost", "DisplayOrder"])) {
+    const cost = r.EquipmentAttachCost;
+    rarities[r.Name] = { name: r.Name, color: rgb(r.EdgeR, r.EdgeG, r.EdgeB), attachCost: cost !== "" && Number.isFinite(Number(cost)) ? Number(cost) : 1, order: Number(r.DisplayOrder), frame: r.Frame || "chip" };
+    rarityOrder.push(r.Name);
   }
-
+  return { rarities, rarityOrder };
+}
+function readFactions(text) {
   const factions = {};
-  for (const c of csvRows(CSV.factions)) {
-    factions[c[0]] = { id: c[0], name: c[1], color: rgb(c[2], c[3], c[4]), symbol: c[5], desc: c[6], order: Number(c[7]) };
+  for (const r of csvTable(text, "factions", ["FactionID", "Name", "ColorR", "ColorG", "ColorB"])) {
+    factions[r.FactionID] = { id: r.FactionID, name: r.Name, color: rgb(r.ColorR, r.ColorG, r.ColorB), symbol: r.SymbolKey, desc: r.Description, order: Number(r.DisplayOrder) };
   }
+  return factions;
+}
+// What's new (data/whats_new.csv): one entry per update, newest first. The newest is the version
+// the menu shows, and the one a bug report names.
+const readWhatsNew = text => csvTable(text, "whats_new", ["Update", "Date", "Changes"])
+  .map(r => ({ update: r.Update, date: r.Date || "", changes: (r.Changes || "").split("|").map(x => x.trim()).filter(Boolean) }));
 
+const CARD_TYPES = ["Character", "Spell", "Equipment", "Area"];
+const CARD_COLUMNS = ["CardID", "Cost", "Name", "Rarity", "Type", "Tribes", "Fracture", "Stats", "Skills", "Ability", "Description", "ArtKey", "Effect", "Classes"];
+
+// The cards (data/cards.csv), checked one by one. A typing mistake stops the game with a message
+// naming the card, the same way a mistake in a deck list or an Effect does. Without this, a
+// misspelled skill or faction was ignored without a word and the card just played wrong.
+function readCards(text, { rarities, rarityOrder, factions, skills, skillOrder }) {
   const statsOf = s => {
     // Attack+Health. An older third number (Speed, now removed) is ignored.
     const m = (s || "").match(/(-?\d+)\+(-?\d+)/);
     return m ? [Number(m[1]), Number(m[2])] : [0, 0];
   };
-  const skillsOf = s => (s || "").split("+").map(x => x.trim()).filter(x => x && x !== "---");
-  const namesOf = skillsOf;   // tribes and classes are written the same way: Human+Monkey
+  const namesOf = s => (s || "").split("+").map(x => x.trim()).filter(x => x && x !== "---");   // skills, tribes and classes: Human+Monkey
   const fracturesOf = s => { const l = namesOf(s); return l.length ? l : ["N/A"]; };
-
-  // A typing mistake in the card table stops the game with a message naming the card, the
-  // same way a mistake in a deck list or an Effect does. Without this, a misspelled skill or
-  // faction was ignored without a word and the card just played wrong.
-  const CARD_TYPES = ["Character", "Spell", "Equipment", "Area"];
+  const cardsById = {}, cardsByName = {}, cardList = [];
   const checkCard = card => {
     const bad = (what, value, list) => { throw new Error(`data/cards.csv, card ${card.id}: ${what} "${value}" is not known. Use one of: ${list.join(", ")}.`); };
     if (cardsById[card.id]) throw new Error(`data/cards.csv: the CardID ${card.id} is used twice.`);
@@ -116,40 +150,41 @@ function buildData(CSV) {
     if (card.type !== "Character" && (card.tribes.length || card.classes.length)) throw new Error(`data/cards.csv, card ${card.id}: only characters have tribes and classes. Use --- for a ${card.type}.`);
     for (const s of card.skills) if (!skills[s]) bad("the skill", s, skillOrder);
   };
-
-  const cardsById = {}, cardsByName = {}, cardList = [];
-  for (const c of csvRows(CSV.cards)) {
-    if (c.length < 8 || !c[0] || !c[2]) continue;
-    const [attack, health] = statsOf(c[7]);
-    const ability = c[9] && c[9] !== "---" ? c[9] : "";
+  for (const r of csvTable(text, "cards", CARD_COLUMNS)) {
+    if (!r.CardID || !r.Name || !r.Type) continue;
+    const [attack, health] = statsOf(r.Stats);
     const card = {
-      id: c[0], manaCost: Number(c[1]) || 0, name: c[2], rarity: c[3] || "Basic", type: c[4],
+      id: r.CardID, manaCost: Number(r.Cost) || 0, name: r.Name, rarity: r.Rarity || "Basic", type: r.Type,
       // Fracture (where it is from; a hybrid lists two, "Mortal+Wild"; the first sets its color),
       // tribes (species) and classes (job). The names in these three lists must not clash with a
       // CardID, so "allies.Human" can't mean a card.
-      group: fracturesOf(c[6])[0], groups: fracturesOf(c[6]), tribes: namesOf(c[5]), classes: namesOf(c[13]),
-      attack, health, skills: skillsOf(c[8]),
-      ability, description: c[10] || "", artKey: c[11] || c[0],
-      effect: (c[12] || "").trim(),   // what the card does, read by js/effects.js
+      group: fracturesOf(r.Fracture)[0], groups: fracturesOf(r.Fracture), tribes: namesOf(r.Tribes), classes: namesOf(r.Classes),
+      attack, health, skills: namesOf(r.Skills),
+      ability: r.Ability && r.Ability !== "---" ? r.Ability : "", description: r.Description || "", artKey: r.ArtKey || r.CardID,
+      effect: (r.Effect || "").trim(),   // what the card does, read by js/effects.js
     };
     checkCard(card);
     cardsById[card.id] = card;
     cardsByName[card.name] = card;
     cardList.push(card);
   }
+  return { cardsById, cardsByName, cardList };
+}
 
+// The starter decks (data/decks.csv). A broken entry stops the game; breaking the deck-building
+// rules from the design sheet is only reported (warnings).
+function readDecks(text, cardsById, rules, warnings) {
   const decks = {}, deckOrder = [];
-  for (const c of csvRows(CSV.decks)) {
-    const id = c[0];
+  for (const r of csvTable(text, "decks", ["DeckID", "Name", "Faction", "Description", "IsPlayable", "IsAI", "CardList"])) {
+    const id = r.DeckID;
     if (!id) continue;
-    const deck = { id, name: c[1], faction: c[2], description: c[3], isPlayable: c[4] === "true", isAI: c[5] === "true", cards: [] };
-    for (const token of (c[6] || "").split("|").filter(Boolean)) {
+    const deck = { id, name: r.Name, faction: r.Faction, description: r.Description, isPlayable: r.IsPlayable === "true", isAI: r.IsAI === "true", cards: [] };
+    for (const token of (r.CardList || "").split("|").filter(Boolean)) {
       const m = token.match(/^([^:]+):(\d+)$/);
       if (!m || !cardsById[m[1]] || Number(m[2]) <= 0) throw new Error(`data/decks.csv, deck ${id}: "${token}" is not a valid entry. Use CardID:copies with a CardID from data/cards.csv.`);
       deck.cards.push({ cardId: m[1], quantity: Number(m[2]) });
     }
     if (!deck.cards.length) throw new Error(`data/decks.csv, deck ${id}: the CardList is empty.`);
-    // Deck-building rules from the design sheet. Problems are reported, not fatal.
     const size = deck.cards.reduce((n, e) => n + e.quantity, 0);
     if (size < (rules.min_deck_size ?? 0)) warnings.push(`data/decks.csv, deck ${id}: it has ${size} cards; the minimum is ${rules.min_deck_size}.`);
     for (const e of deck.cards) {
@@ -161,17 +196,21 @@ function buildData(CSV) {
     decks[id] = deck;
     deckOrder.push(id);
   }
+  return { decks, deckOrder };
+}
 
-  // What's new (data/whats_new.csv): one entry per update, newest first. The newest is the version
-  // the menu shows, and the one a bug report names.
-  const whatsNew = csvRows(CSV.whats_new || "").map(c => ({ update: c[0], date: c[1] || "", changes: (c[2] || "").split("|").map(x => x.trim()).filter(Boolean) }));
-  const version = whatsNew[0] ? `Update ${whatsNew[0].update}` : "";
-
+function buildData(CSV) {
+  const warnings = [];   // mistakes the game can live with; shown on the menu and failed by tools/data-test.js
+  const rules = readRules(CSV.game_rules);
+  const uiText = readUiText(CSV.ui_text);
+  const kinds = { ...readSkills(CSV.skills), ...readRarities(CSV.rarities), factions: readFactions(CSV.factions) };
+  const cards = readCards(CSV.cards, kinds);
+  const whatsNew = readWhatsNew(CSV.whats_new);
   return {
     warnings,
-    whatsNew, version,
-    rules, phases, uiText, events, eventOrder, championAbilities, skills, skillOrder, rarities, rarityOrder, factions,
-    cardsById, cardsByName, cardList, decks, deckOrder,
+    whatsNew, version: whatsNew[0] ? `Update ${whatsNew[0].update}` : "",
+    rules, phases: readPhases(CSV.phases), uiText, ...readEvents(CSV.events), championAbilities: readChampionAbilities(CSV.champion_abilities),
+    ...kinds, ...cards, ...readDecks(CSV.decks, cards.cardsById, rules, warnings),
     text: (id, fallback) => uiText[id] ?? fallback ?? id,
   };
 }

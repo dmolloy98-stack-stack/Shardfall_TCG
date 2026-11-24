@@ -14,6 +14,7 @@
 //   attacking(p, a, ch) one of this player's characters attacks (before the blow)
 //   fightWon(p, ch)     this player's character survived a fight and knocked the other one out
 //   hurt(p, ch)         this player just took damage
+//   turnEnd(p, ch)      this player's turn ends (after its end-of-turn abilities)
 //   extraDraws(p, ch)   how many extra cards to draw in the Draw phase
 //   shard(p, ch)        claiming the big shard: do the bonus and return what happened in words
 //   shardText           the shard bonus as the big shard's info window describes it
@@ -54,7 +55,6 @@ function championBonus(c) {
   const p = S.players[c.owner];
   const b = p && p.champ ? CHAMPION_RULES[p.champ.id]?.bonus?.(c, p, p.champ) : null;
   if (b) { a += b.a || 0; h += b.h || 0; }
-  a += c.bow || 0;   // The Bow, this turn
   h += grieveBonus(c);
   return { a, h };
 }
@@ -104,7 +104,7 @@ const CHAMPION_RULES = {
   // on your turn.
   the_man_ape: {
     bonus: (c, p) => (S.active === c.owner && chestThump(p) ? { a: 1 } : null),
-    attacking(p, a) { if (chestThump(p)) emit("text", { uid: a.uid, text: "CHEST THUMP +1", color: "#ffd27a" }); },
+    attacking(p, a) { if (chestThump(p)) emit("text", { uid: a.uid, say: "chestThump", n: 1 }); },
     status(p) {
       const foe = S.players[1 - p.idx];
       return { text: `${p.field.chars.length} vs ${foe.field.chars.length} characters${chestThump(p) ? " · +1 Attack" : ""}`, lit: chestThump(p) };
@@ -114,7 +114,7 @@ const CHAMPION_RULES = {
       c.owner = p.idx;
       if (!putOnField(c, p)) return "";
       c.attack += 1; c.baseAttack += 1;
-      emit("text", { uid: c.uid, text: "+1 ATTACK", color: "#ffd27a" });
+      emit("text", { uid: c.uid, say: "plusAttack", n: 1 });
       return `a 2/2 ${c.name} joins its side`;
     },
     shardText: "a free 2/2 Monkey (a Chimp with +1 Attack).",
@@ -123,9 +123,11 @@ const CHAMPION_RULES = {
   // The Bow: at the start of Battle the strongest ready attacker, or two once the ability has
   // leveled up (after 5 fights won), gets +2 Attack until the end of the turn.
   ip_man: {
+    bonus: c => (c.bow ? { a: c.bow } : null),
+    turnEnd() { for (const c of allChars()) c.bow = 0; },   // the +2 lasts until the end of the turn
     battleStart(p, ch) {
       const ready = p.field.chars.filter(canAttack).sort((x, y) => stats(y).a - stats(x).a || x.uid - y.uid).slice(0, ch.level >= 2 ? 2 : 1);
-      for (const c of ready) { c.bow = 2; emit("text", { uid: c.uid, text: "THE BOW +2", color: "#ffd27a" }); }
+      for (const c of ready) { c.bow = 2; emit("text", { uid: c.uid, say: "bow", n: 2 }); }
       if (ready.length) log(`${p.name} bows: ${ready.map(c => c.name).join(" and ")} gets +2 Attack this turn.`);
     },
     fightWon(p) { champProgress(p, 1); },
@@ -133,7 +135,7 @@ const CHAMPION_RULES = {
       const c = p.field.chars.slice().sort((x, y) => stats(y).a - stats(x).a || x.uid - y.uid)[0];
       if (!c) return "";
       if (!hasSkill(c, "Swift")) c.skills.push("Swift");
-      emit("text", { uid: c.uid, text: "» SWIFT", color: "#9fe7ff" });
+      emit("text", { uid: c.uid, say: "gainSwift" });
       return `${c.name} gets Swift for the rest of the match`;
     },
     shardText: "your strongest character gets Swift for the rest of the match.",

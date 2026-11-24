@@ -91,3 +91,6 @@ Left to tune when Play a Friend is built (Claude's guesses, the owner can overru
 5. Undo and the Testing tools are switched off online.
 6. Tests: two pretend browsers in Node play a match through a pretend database and must end in
    the same position.
+
+- The Testing tools' moves (`testMana`, `testDraw` in `MOVES`, `js/engine.js`) are real moves, so a
+  friend's browser could send them. Refuse them in online matches (found by the code review, Nov 2026).

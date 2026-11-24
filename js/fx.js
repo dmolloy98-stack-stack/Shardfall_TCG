@@ -289,9 +289,8 @@ function shockwave(x, y) {
 }
 
 // Skill spotlight: the skill's icon pops above the card when it takes effect.
-const SKILL_TEXT = { "LEVEL UP": "Level Up", "EVOLVE!": "Evolve", "TRANSFORM!": "Transform", "REANIMATE": "Reanimate", "» NO REPLY": "Swift" };
-function skillSpotlight(uid, text) {
-  const skill = SKILL_TEXT[text];
+// A skill named for a moment over the character using it (which floating words bring one: FLOATS in js/table-effects.js).
+function skillSpotlight(uid, skill) {
   if (!skill || REDUCED_MOTION) return;
   const p = charCenter(uid);
   fxDiv("skill-pop", `left:${p.x}px;top:${p.y - 30}px`, 1400).innerHTML = `<span>${esc(DATA.skills[skill]?.icon || "✦")}</span><b>${esc(skill)}</b>`;
@@ -318,7 +317,7 @@ function creditFight(victimUid, amount) {
   const st = U.stats;
   if (!st || performance.now() - U.lungeAt > 80 || !U.lastAttacker) return;
   const dealer = victimUid === U.lastAttacker ? U.lastTarget : U.lastAttacker;
-  const c = dealer != null ? findCardAnywhere(dealer) : null;
+  const c = dealer != null ? findCard(dealer) : null;
   if (!c || c.owner !== viewIdx()) return;
   const e = st.byCard[dealer] || (st.byCard[dealer] = { name: c.name, n: 0 });
   e.n += amount;
@@ -407,15 +406,12 @@ function attackParts(c) {
   const parts = [];
   const add = (n, label) => { if (n) parts.push({ n, label }); };
   const printed = DATA.cardsById[c.id]?.attack ?? c.attack;
-  add(c.attack - printed, c.levelUpCount ? "Levels" : "Grown");
-  add(equipBonuses(c).a + (c.equipped || []).reduce((n, x) => n + lordBonusOf(x), 0), "Equipment");
-  add(lordBonusOf(c), "Lord");
-  add(c.rallyBonus || 0, "Rally");
-  add(auraBonus(c, ownerOf(c)).a, "Aura");
-  const champ = championBonus(c).a - (c.bow || 0);
   const ch = ownerOf(c).champ;
-  add(champ, ch ? DATA.championAbilities[ch.id]?.name || "Champion" : "Champion");
-  add(c.bow || 0, "The Bow");
+  const LABELS = { equipment: "Equipment", lord: "Lord", rally: "Rally", aura: "Aura", champion: ch ? DATA.championAbilities[ch.id]?.name || "Champion" : "Champion" };
+  for (const s of statSources(c)) {   // the same parts the rules add up (js/engine.js)
+    if (s.kind === "card") add(s.a - printed, c.levelUpCount ? "Levels" : "Grown");
+    else add(s.a, LABELS[s.kind] || "Other");
+  }
   const total = stats(c).a;
   add(total - printed - parts.reduce((n, p) => n + p.n, 0), "Other");   // anything not named above
   return { printed, parts, total };
@@ -515,7 +511,7 @@ function eotBadge(c, owner) {
 // Cards on the table react: allies flinch when one of theirs falls, and a Zombie leans
 // toward an enemy that dies.
 function reactToDeath(uid, delay) {
-  const c = findCardAnywhere(uid);
+  const c = findCard(uid);
   if (!c || REDUCED_MOTION) return;
   later(delay + 120, () => {
     for (const ally of S.players[c.owner]?.field.chars || []) flashCard(ally.uid, "flinch");

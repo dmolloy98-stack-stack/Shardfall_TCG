@@ -1,7 +1,7 @@
 // Random events: the rules. (Their names and descriptions are data/events.csv.)
 //
 // ADDING AN EVENT: add a row to data/events.csv, add its EventID to EVENT_IDS below, and say what it
-// does: something that happens once when it lands goes in EVENT_ON_START; something that holds
+// does: something that happens once when it lands goes in EVENT_ON_START (and once when it ends, EVENT_ON_END); something that holds
 // while it lasts checks eventNow("its_id") where that rule lives (costs and area bonuses are in
 // js/effects.js). Then add a check to tools/events-test.js.
 
@@ -14,6 +14,10 @@ const eventNow = id => !!S.event && S.event.id === id;   // used by costFromEffe
 const EVENT_ON_START = {
   tremor() { for (const c of allChars().slice()) if (ownerOf(c).field.chars.includes(c)) dealDamageToCharacter(c, 1); },
   windfall() { for (const p of S.players) if (p.deck.length && p.hand.length < RULES.maxHand) drawCard(p); },   // a full hand or empty deck is skipped, never punished
+};
+// Something that happens once when it is over.
+const EVENT_ON_END = {
+  amplified_areas() { sweepDeaths(); },   // bonuses that doubled are gone again
 };
 // spell_surge (js/effects.js costFromEffect) and amplified_areas (auraBonus) work while the event lasts.
 const EVENT_IDS = ["spell_surge", "tremor", "windfall", "amplified_areas"];
@@ -30,7 +34,7 @@ function updateEvent() {
     const gone = S.event; S.event = null;
     log(`${DATA.events[gone.id].name} is over.`);
     emit("eventEnd", { id: gone.id });
-    if (gone.id === "amplified_areas") sweepDeaths();   // bonuses that doubled are gone again
+    EVENT_ON_END[gone.id]?.();
   }
   const at = nextEventRound(r + (S.event ? 1 : 0));
   if (!S.upcoming && at - r <= RULES.eventWarn) {

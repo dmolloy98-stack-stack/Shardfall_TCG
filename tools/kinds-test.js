@@ -80,5 +80,11 @@ const put = (p, name) => { const c = cardByName(name); c.owner = p.idx; putOnFie
   ok('allies.Martial Artist', sel('allies.Martial Artist') === 2, sel('allies.Martial Artist'));
   ok('allies.Human', sel('allies.Human') === 1, sel('allies.Human'));
 }
+{ // a misspelt word in an Effect stops the game with a message, instead of quietly matching nothing
+  const stops = t => { try { compileEffect(t, 'test'); return false; } catch (e) { return /test:/.test(e.message); } };
+  ok('a misspelt tribe in an Effect is caught', stops('aura: buff allies.Monky 1 0'));
+  ok('a misspelt skill after has: is caught', stops('play: damage enemies.has:Swfit 1'));
+  ok('a correct Effect still reads', !stops('play: damage enemies.Monkey.not:tower 1'));
+}
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');
 `);

@@ -39,6 +39,8 @@ added, split or renamed, or the flow between them changes.
 1. **Rules talk to the screen through events.** The engine calls `emit("name", data)`; the
    screen listens with `onGameEvent((type, data) => …)` (effects in `js/fx.js`, travel in
    `js/motion.js`, speech in `js/campaign.js`). Don't call screen code from the engine.
+   A word that floats up from a character is `emit("text", { uid, say: "id" })`, with its words in
+   `data/ui_text.csv` (`float_id`) and its colour in `FLOATS` (`js/table-effects.js`).
    Existing events include play, lunge, clash, death, reanimate, charDamage, playerDamage, playerHeal,
    draw, handAdd, phase, turn, log, gameOver, shardFall, eventStart.
 2. **Fast redraws.** `render()` describes the whole board as HTML, split into regions with

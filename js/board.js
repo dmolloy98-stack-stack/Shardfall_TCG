@@ -274,7 +274,7 @@ function render() {
   const forced = guards(them);
   // "All attack": every character that can still attack goes for the player (see attackAllFace).
   const readyN = human && S.phase === PHASE.BATTLE && !S.pending ? me.field.chars.filter(canAttack).length : 0;
-  const allLethal = readyN > 1 && simulate(() => { const g = actionGuard; actionGuard = null; try { attackAllFace(); } finally { actionGuard = g; } return S.over && S.winner === S.active; });
+  const allLethal = readyN > 1 && lethalNow();
   const allBtn = (style = "") => `<button type="button" class="face-btn all${allLethal ? " lethal" : ""}" data-act="faceall" style="${style}">${allLethal ? "☠ LETHAL: all attack" : "⚔ All attack"} ${esc(them.name)} (${readyN})</button>`;
   if (U.selected && human) {
     h += forced.length
@@ -437,7 +437,7 @@ function renderPrompt() {
     msg = `${pd.source.name}${redirect ? ` (${S.players[pd.owner].name})` : ""}: choose ${what}`;
     cancel = !pd.required;
   } else if (U.armed) {
-    const c = findCardAnywhere(U.armed.uid);
+    const c = findCard(U.armed.uid);
     msg = `Choose one of your characters to equip ${c ? c.name : "it"}`;
   }
   el.hidden = !msg;
@@ -453,10 +453,11 @@ function bladeButton(c) {
   return `<button type="button" class="blade-btn" data-act="blade" data-uid="${c.uid}" title="${esc(T("blade_tip", vars))}">${esc(T("blade_button", vars))}</button>`;
 }
 
-function findCardAnywhere(uid) {
-  for (const p of S.players) for (const list of [p.hand, p.field.equips, p.field.areas, p.field.chars, p.grave]) {
-    const c = list.find(x => x.uid === uid);
-    if (c) return c;
-  }
-  return null;
+// The LETHAL button's question, asked once per game position rather than on every redraw.
+let lethalSeen = { s: null, key: "", wins: false };
+function lethalNow() {
+  const key = `${S.moves.length}|${S.round}|${S.phase}|${S.active}`;
+  if (lethalSeen.s !== S || lethalSeen.key !== key) lethalSeen = { s: S, key, wins: allAttackWins() };
+  return lethalSeen.wins;
 }
+

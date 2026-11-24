@@ -16,7 +16,7 @@ function equipCost(c, owner, target, fromField) {
 
 // When cards can be played and stored equipment attached: in Setup, and in Battle if the
 // card has Flash.
-const playWindowOpen = c => S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && hasSkill(c, "Flash"));
+const playWindowOpen = c => S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && skillNow(c, "Flash"));
 
 function playCost(c, p) {
   p = p || active();
@@ -119,7 +119,7 @@ function attach(e, target) {
   // given back to a character that has already used all its levels.
   const teach = cardRule(e, "teach")?.[0];
   if (teach && !hasSkill(target, teach) && (teach !== "Level Up" || (target.levelUpCount || 0) < levelCap(target))) target.skills.push(teach);
-  emit("text", { uid: target.uid, text: "EQUIP", color: "#7fd6ff" });
+  emit("text", { uid: target.uid, say: "equip" });
 }
 
 // Equip a card stored on the backline onto one of your characters.
@@ -235,7 +235,7 @@ const CHOICES = {
       const g = pd.gain;
       shep.attack += g.a; shep.currentHealth += g.h;
       shep.baseAttack += g.a; shep.baseHealth += g.h;
-      emit("text", { uid: shep.uid, text: `+${g.a}/+${g.h}`, color: "#8dff8d" });
+      emit("text", { uid: shep.uid, say: "absorb", a: g.a, h: g.h });
       log(`${pd.source.name} absorbs ${dead?.name || "the fallen card"}.`);
     }
   } },
@@ -261,7 +261,7 @@ const CHOICES = {
       ape.attack++; ape.health++;
       ape.baseAttack++; ape.baseHealth++;
       ape.currentHealth = ape.baseHealth + equipBonuses(ape).h;   // fully healed
-      emit("text", { uid: ape.uid, text: "+1 ALL", color: "#ffd25e" });
+      emit("text", { uid: ape.uid, say: "plusAll", n: 1 });
     }
   } },
 };

@@ -159,7 +159,7 @@ $("#board").addEventListener("contextmenu", e => {
   e.preventDefault();
   if (cancelSomething()) return;
   const el = e.target.closest("[data-uid]");
-  const c = el && findCardAnywhere(Number(el.dataset.uid));
+  const c = el && findCard(Number(el.dataset.uid));
   if (c) showDetail(c, { field: !!findChar(c.uid) });
 });
 $("#prompt").addEventListener("click", e => { if (e.target.closest('[data-act="cancel"]')) cancelSomething(); });
