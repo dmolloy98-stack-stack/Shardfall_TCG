@@ -154,6 +154,7 @@ later), but **a deck holds only one champion card** (one kind, at most 2 copies)
 | Campaign, The Simplistic's scene | The turnip rows are perfectly straight, every one exactly the same | Made, not grown |
 | Campaign, IP Man's scene | One stone in the courtyard is cracked in a perfect square | A pixel: the break came from something digital |
 | Campaign, Boss Level's scene | For a blink, a progress bar hangs at 99% | The "level up" it was attempting |
+| The Protected look, every match (24 Nov 2026, owner's pick) | The ring of light around a Protected card fills like a progress bar and always stops at 99%; in the shell on a Protected player's health gem, one shard never lights | The same unfinished "level up": Protection itself carries Boss Level's failed attempt |
 | Campaign, Soul Shepard's scene | "They say I started all this. I only tend what's left." | The Zombies are blamed, and are victims |
 
 ## Card stories

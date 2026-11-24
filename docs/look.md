@@ -31,8 +31,11 @@ yet, so anything not marked "owner" is Claude's reading of the game as it is.
   boards in Settings: Stained Glass, Crystal Altar, Shattered Battlefield, War Map.
 - **Players:** blue (`#4cc9f0`) and pink (`#ff5d8f`). Health is a life crystal: green from 75%,
   orange down to 35%, then red and cracked, beating like a heart when low.
-- **Protected** (half damage): a shell of 24 pale-blue shards on the health gem, and a ring of
-  blue runes circling a Protected card. The runes are placeholders (see "Open questions").
+- **Protected** (half damage): a shell of 24 pale-blue shards on the health gem that light one by
+  one (one never lights), and a band of light that fills the ring around a Protected card and
+  stops at 99%, with small tick marks travelling round it.
+- **Calm over busy:** the owner worries about visual clutter (24 Nov 2026). Claude's reading, for
+  the owner to confirm: a new look should replace movement rather than add to it where it can.
 - **Movement:** big moments get big motion (entrances scale with a card's cost, the big shard
   cracks the table). Looping effects rest when Heavy effects are off (phones start with them
   off) and when the game dozes; big movement respects "reduce motion".
@@ -54,6 +57,10 @@ Time*. Not Legends of Runeterra or Gwent (not played). Ideas are for inspiration
 
 ## Decisions (newest first)
 
+- 24 Nov 2026: **Protected is the "loading ring"** (owner's pick of three, option B). A band of
+  light fills the ring around a Protected card and stops at 99%; tick marks replace the runes; the
+  shell's shards light one by one and one never lights. Owner's reason: it cuts visual clutter.
+  The hint is Boss Level's failed "level up" (clue log in `docs/world.md`).
 - 24 Nov 2026: the owner asked for a look advisor that brings options and inspiration; this book
   started.
 - 16 Nov 2026: Protected is a shell of shards on the health gem and a crystal rim on Protected
@@ -64,6 +71,4 @@ Time*. Not Legends of Runeterra or Gwent (not played). Ideas are for inspiration
 
 ## Open questions
 
-- **Protected look that hints at the Shardfall** (owner's idea). Three options offered on
-  24 Nov 2026: pixel runes, a loading ring that stops at 99%, level-up marks. Page:
-  https://claude.ai/artifact/Dx8gNozoyzmjKntUztDwGK. Waiting for the owner's pick.
+- None right now.

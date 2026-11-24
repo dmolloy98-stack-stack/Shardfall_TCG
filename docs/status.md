@@ -4,11 +4,11 @@ Written by `node tools/make-status.js` from the project's own files: don't edit 
 Read this first in a new session; then CLAUDE.md, and the files it points to as the task needs.
 
 ## Version
-Update 31: **Update 31** (2026-11-23): If the card tables have a mistake, the game now says what it is and where, instead of failing to load or blaming old files.
+Update 34: **Update 34** (2026-11-24): Protected has a calmer new look: a band of light fills the ring around a Protected card, and the shards around a Protected player's health gem light up one by one.
+
+**Update 31** (2026-11-23): If the card tables have a mistake, the game now says what it is and where, instead of failing to load or blaming old files.
 
 **Update 30** (2026-11-22): The menu shows which update you have; tap it to see what changed. Keyboard players can scroll the What's new list and the battle log, and screen readers announce the computer thinking.
-
-**Update 29** (2026-11-20): Save code in Settings: copy your progress and load it on another device. If the game hits a problem, a window offers a bug report to copy and send. Plays offline after one visit, and can be added to a phone's home screen. The computer's surprise moves no longer change a match's luck.
 
 ## Waiting on the owner
 - **Real phone testing** (round two, step 9). The owner applies for BrowserStack's free open-source account (steps in `docs/real-phones.md`), then does the 15-minute phone checklist there before big releases. Once the account exists, Claude can add automatic runs.

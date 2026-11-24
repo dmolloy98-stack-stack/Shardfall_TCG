@@ -5,6 +5,16 @@ stays short. Each entry keeps the owner's decisions, because they explain why th
 they are. (What changed for players is `data/whats_new.csv`; why the code is built as it is,
 `docs/how-it-was-built.md`.)
 
+## Protected look that hints at the Shardfall — owner's idea, built 24 Nov
+
+The owner's idea: the Protected runes and the shell on the health gem should hint at what caused
+the Shardfall, and clearly belong together. The look advisor offered three versions on
+https://claude.ai/artifact/Dx8gNozoyzmjKntUztDwGK (A pixel runes, B loading ring, C level-up
+marks). **The owner picked B**, because it cuts visual clutter. A band of light fills the ring
+around a Protected card and stops at 99%; tick marks replace the runes; the shell's shards light
+one by one and one never lights. Logged in the clue log (`docs/world.md`) and the look book
+(`docs/look.md`).
+
 ## Round three — chosen by the owner (23 Nov), built
 
 The owner picked 5 to 18 of the "what's next" list. Nothing here changes how the game plays.
