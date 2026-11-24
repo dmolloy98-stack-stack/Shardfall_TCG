@@ -81,6 +81,9 @@ an entry in `CHAMPION_RULES` in `js/rules-champions.js`, which also holds its sh
 `js/champions.js` (`story-writing` for the words), a campaign stage if the owner wants one
 (`js/campaign.js`), and tests in `tools/champions-test.js`. Two champions of one tribe can't
 share a deck (the one-champion rule already enforces it).
+Everything names a champion by its card's CardID (`CHAMPIONS`, `CAMPAIGN`'s `champion`, the
+Almanac's `CHAMP_GUIDE`), so **renaming a champion is only a change to its Name in
+`data/cards.csv`** (plus the story text that mentions it).
 
 ## Checking a rename or addition
 

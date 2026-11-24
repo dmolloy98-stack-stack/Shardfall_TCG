@@ -24,12 +24,12 @@ function startTutorial() {
   const [me, tr] = S.players;
   tr.name = "Trainer"; tr.faction = "Training"; tr.deckLabel = "Training deck";
   tr.health = tr.maxHealth = TUT_TRAINER_HEALTH;
-  const make = names => names.map(n => cardByName(n));
+  const make = ids => ids.map(cardById);   // by CardID, so renaming a card keeps the lessons working
   // Hands are fixed, and decks are drawn from the end, so every lesson happens on cue.
-  me.hand = make(["Simple Farmer", "Simple Barkeep", "Simplify"]);
-  me.deck = make(["Simple Swordsman", "Herd", "Simple Farmer", "Simple Wizard", "Slap", "Sword"]);
-  tr.hand = make(["Patched Husk", "Simple Bowman", "Breathing Wall"]);
-  tr.deck = make(["Simple Swordsman", "Simple Wanderer", "Helm", "Bow", "Simple Farmer"]);
+  me.hand = make(["simple_farmer", "simple_barkeep", "simplify"]);
+  me.deck = make(["simple_swordsman", "herd", "simple_farmer", "simple_wizard", "slap", "sword"]);
+  tr.hand = make(["patched_husk", "simple_bowman", "breathing_wall"]);
+  tr.deck = make(["simple_swordsman", "simple_wanderer", "helm", "bow", "simple_farmer"]);
   TUT.ids = {
     farmerA: me.hand[0].uid, barkeep: me.hand[1].uid, simplify: me.hand[2].uid,
     farmerB: me.deck[2].uid, slap: me.deck[4].uid, sword: me.deck[5].uid,
@@ -99,7 +99,7 @@ const TUT_STEPS = [
   {
     title: "Reading a card",
     wide: true,
-    text: () => `${anatomyHTML(cardByName("Simple Bowman"))}
+    text: () => `${anatomyHTML(cardById("simple_bowman"))}
       <p>Most cards are <b>characters</b>, who fight for you. The three numbers at the bottom are their stats. Tap any card during a game to read its full ability text.</p>`,
     next: true,
   },

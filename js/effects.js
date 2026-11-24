@@ -280,7 +280,7 @@ function parseAction(text, where) {
   });
   def[2]?.(args, where);   // an action's own check of how it is written
   const test = cond ? parseNumber(cond, where) : null;
-  return { name, args: parsed, test, run: ctx => { if (!test || test(ctx) > 0) def[1](ctx, ...parsed); } };
+  return { name, args: parsed, kinds: sig.map(x => x.k), test, run: ctx => { if (!test || test(ctx) > 0) def[1](ctx, ...parsed); } };
 }
 
 // Turn a card's Effect text into { play, enter, endTurn, ..., cost, aura, grants }.
@@ -394,6 +394,16 @@ function runHook(c, when, ctx) {
   if (!c || c.disabled) return;
   const block = CARD_FX[c.id]?.[when];
   if (block?.steps) runSteps(block.steps, { card: c, ...ctx });
+}
+
+// The number an action in a card's play clause uses right now, for words on the screen, so they
+// follow the card table: playAmount(blade, "damage") is 3 for Kenshi's Blade. Null when the play
+// clause has no such action.
+function playAmount(c, action) {
+  const step = CARD_FX[c.id]?.play?.steps.find(s => s.name === action);
+  const k = step ? step.kinds.indexOf("n") : -1;
+  if (k < 0) return null;
+  return step.args[k]({ card: c, owner: S.players[c.owner ?? S.active] });
 }
 
 // A card's special rule from its Effect ("rule: defend 10" gives ["10"]), or undefined when it

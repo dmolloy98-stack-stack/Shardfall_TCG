@@ -73,6 +73,7 @@ function checkDeath(c) {
     c.currentHealth = c.baseHealth; c.attack = c.baseAttack;
     runHook(c, "reanimate", { owner: p });
     triggerEvolve(c); // "After returning from the Graveyard to the Field, Evolve"
+    emit("reanimate", { uid: c.uid, player: p.idx });
     emit("text", { uid: c.uid, text: "REANIMATE", color: "#8dff8d" });
     log(`${c.name} reanimates.`);
     if (rawStats(c).h <= 0) sendToGraveyard(p, c);

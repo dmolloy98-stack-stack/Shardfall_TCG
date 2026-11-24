@@ -27,8 +27,9 @@
 //              late      { round, ...tweaks } changes from that round on
 //              hurt      { below, ...tweaks } changes when its health fraction is below that
 
+// Keyed by the champion card's CardID (data/cards.csv), so the card can be renamed freely.
 const CHAMPIONS = {
-  "The Simplistic": {
+  the_simplistic: {
     tag: "A cheerful homebody who insists everything was fine before.",
     lines: {
       start: ["Nice turnips. Nice day. Why fight?"],
@@ -48,7 +49,7 @@ const CHAMPIONS = {
     // Steady and unhurried: plans one play at a time, and does not chase the player.
     ai: { face: 0.85, board: 1, hand: 0.7, depth: 1 },
   },
-  "The Man Ape": {
+  the_man_ape: {
     tag: "A loud troop boss who hoards shards like bananas.",
     lines: {
       start: ["My jungle. My shards."],
@@ -70,7 +71,7 @@ const CHAMPIONS = {
     // (and faster to attack) the more you hurt it.
     ai: { face: 0.85, board: 1.3, hand: 0.45, wild: 0.25, sac: -1.5, hurt: { below: 0.5, face: 1.5, board: 1.1 } },
   },
-  "IP Man": {
+  ip_man: {
     tag: "A calm, polite master who bows before every fight.",
     lines: {
       start: ["*bows* Please, begin."],
@@ -90,7 +91,7 @@ const CHAMPIONS = {
     // Patient: waits for a clean exchange, and keeps IP Man himself at home for his redirect.
     ai: { face: 0.7, board: 1.05, hand: 0.8, patience: 2, champMargin: 4, depth: 3 },
   },
-  "Boss Level": {
+  boss_level: {
     tag: "A smug final boss that narrates its own phases.",
     lines: {
       start: ["LEVEL 1. BEGIN."],
@@ -110,7 +111,7 @@ const CHAMPIONS = {
     // Confident early (grows its team), scary late (goes for the player from round 5).
     ai: { face: 0.8, board: 1.35, hand: 0.4, late: { round: 5, face: 1.6, board: 1.0 } },
   },
-  "Soul Shepard": {
+  soul_shepard: {
     tag: "A gentle keeper of the fallen. It never argues.",
     lines: {
       start: ["Come in. There's room."],

@@ -105,3 +105,8 @@ end_menu,Main menu,End screen
 curtain_pass,Pass the device to,Board
 curtain_start,Start turn,Board
 curtain_round,{deck} · Round {round},Board
+blade_button,⚔ Strike {damage},Board
+blade_tip,"{card}: deal {damage} damage to an enemy character, once per Battle",Board
+target_redirect,an enemy character or player to take the {amount} damage instead,Board
+target_strike,an enemy character to take {damage} damage,Board
+target_data_transfer,one of your characters to lose a Level (you gain {heal} HP),Board

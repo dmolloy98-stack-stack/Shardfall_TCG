@@ -74,36 +74,37 @@ function showGrave(p) {
     <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
 }
 
+// The "choose a card" window. Its clicks are handled by the one #modal handler below (data-pick,
+// data-opt); what has been picked so far lives in openModal.choose while the window is open.
 function showChoose() {
-  const pd = S.pending;
-  openModal.choose = true;
-  const picked = new Set();
-  const max = pd.pick || 1;
-  const draw = () => {
-    const options = pd.options || [{ id: "ok", label: "Confirm" }];
-    const needPick = CHOICES[pd.resolve]?.needsPick !== false;
-    $("#modal-content").innerHTML = `<h2 id="modal-title">${esc(pd.title)}</h2><p class="sub">${esc(pd.prompt)}</p>
+  openModal("", { dismissable: false });
+  openModal.choose = { picked: new Set() };
+  drawChoose();
+}
+function drawChoose() {
+  const pd = S.pending, picked = openModal.choose.picked;
+  const options = pd.options || [{ id: "ok", label: "Confirm" }];
+  const needPick = CHOICES[pd.resolve]?.needsPick !== false;
+  $("#modal-content").innerHTML = `<h2 id="modal-title">${esc(pd.title)}</h2><p class="sub">${esc(pd.prompt)}</p>
       <div class="modal-cards">${pd.cards.map(c => `<button type="button" class="${picked.has(c.uid) ? "picked" : ""}" data-pick="${c.uid}">${cardHTML(c)}</button>`).join("")}</div>
       <div class="detail-actions" style="margin-top:16px">${options.map(o => `<button type="button" class="btn${o === options[0] ? " btn-primary" : ""}" data-opt="${o.id}" ${needPick && !picked.size && pd.required ? "disabled" : ""}>${esc(o.label)}</button>`).join("")}
       ${pd.required ? "" : `<button type="button" class="btn btn-small" data-opt="__skip">Skip</button>`}</div>`;
-  };
-  openModal("", { dismissable: false });
-  draw();
-  $("#modal-content").onclick = e => {
-    const pick = e.target.closest("[data-pick]");
-    if (pick) {
-      const uid = Number(pick.dataset.pick);
-      if (picked.has(uid)) picked.delete(uid);
-      else { if (picked.size >= max) picked.delete(picked.values().next().value); picked.add(uid); }
-      draw(); return;
-    }
-    const opt = e.target.closest("[data-opt]");
-    if (!opt) return;
-    $("#modal-content").onclick = null;
-    closeModal();
-    if (opt.dataset.opt === "__skip") act(() => move("choose", [], null));
-    else act(() => move("choose", [...picked], opt.dataset.opt));
-  };
+}
+function chooseClick(t) {
+  const pd = S.pending, picked = openModal.choose.picked;
+  const pick = t.closest("[data-pick]");
+  if (pick) {
+    const uid = Number(pick.dataset.pick);
+    if (picked.has(uid)) picked.delete(uid);
+    else { if (picked.size >= (pd.pick || 1)) picked.delete(picked.values().next().value); picked.add(uid); }
+    drawChoose(); return;
+  }
+  const opt = t.closest("[data-opt]");
+  if (!opt) return;
+  const picks = [...picked];
+  closeModal();
+  if (opt.dataset.opt === "__skip") act(() => move("choose", [], null));
+  else act(() => move("choose", picks, opt.dataset.opt));
 }
 
 // Settings: beginner hints and the board skin. Opened from the main menu or the game menu.
@@ -188,14 +189,12 @@ function showBugReport(err) {
     <p id="bug-msg" class="save-code-msg" role="status"></p>
     <div class="detail-actions"><button type="button" class="btn" data-bug="copy">${esc(T("bug_copy"))}</button><button type="button" class="btn btn-primary" data-bug="close">${esc(T("bug_close"))}</button></div>`);
 }
-document.addEventListener("click", async e => {
-  const b = e.target.closest("[data-bug]");
-  if (!b) return;
+async function bugClick(b) {
   if (b.dataset.bug === "close") { closeModal(); return; }
   const box = byId("bug-report");
   try { await navigator.clipboard.writeText(box.value); } catch { box.select(); try { document.execCommand("copy"); } catch { /* selected for copying by hand */ } }
   byId("bug-msg").textContent = T("bug_copied");
-});
+}
 window.addEventListener("error", e => { if (e.error) showBugReport(e.error); });
 window.addEventListener("unhandledrejection", e => showBugReport(e.reason));
 
@@ -228,8 +227,22 @@ function showGameMenu() {
     </div></div>`);
 }
 
+// The pop-up window's one click handler: one branch per kind of button, whichever file opened the
+// window. Each branch calls a function that lives with its window (the deck builder's in
+// js/decks.js, the campaign's in js/campaign.js). Add a branch here for a new kind of button;
+// never a second click handler on the window (a duplicate once made a click count twice).
 $("#modal").addEventListener("click", e => {
-  if (e.target.closest("[data-close]") && $("#modal").dataset.dismissable) { closeModal(); return; }
+  const t = e.target;
+  if (t.closest("[data-close]") && $("#modal").dataset.dismissable) { closeModal(); return; }
+  if (openModal.choose && t.closest("[data-pick],[data-opt]")) { chooseClick(t); return; }
+  const bug = t.closest("[data-bug]");
+  if (bug) { bugClick(bug); return; }
+  const nd = t.closest("[data-new]");   // "Create your own deck" (js/decks.js)
+  if (nd) { newDeckFrom(nd.dataset.new); return; }
+  const bld = t.closest("[data-bld]");   // deck builder: save, discard or delete (js/decks.js)
+  if (bld) { builderChoice(bld.dataset.bld); return; }
+  const camp = t.closest("[data-camp],[data-camp-go],[data-camp-back],[data-camp-close],[data-camp-deck],[data-camp-reset]");
+  if (camp) { campaignClick(camp); return; }   // the campaign windows (js/campaign.js)
   const w = e.target.closest("[data-w]");   // the welcome window (showWelcome() in js/help.js)
   if (w) { closeModal(); if (w.dataset.w === "tutorial") startTutorial(); else showGuide(); return; }
   const skin = e.target.closest("[data-skin]");

@@ -39,7 +39,7 @@ added, split or renamed, or the flow between them changes.
 1. **Rules talk to the screen through events.** The engine calls `emit("name", data)`; the
    screen listens with `onGameEvent((type, data) => …)` (effects in `js/fx.js`, travel in
    `js/motion.js`, speech in `js/campaign.js`). Don't call screen code from the engine.
-   Existing events include play, lunge, clash, death, charDamage, playerDamage, playerHeal,
+   Existing events include play, lunge, clash, death, reanimate, charDamage, playerDamage, playerHeal,
    draw, handAdd, phase, turn, log, gameOver, shardFall, eventStart.
 2. **Fast redraws.** `render()` describes the whole board as HTML, split into regions with
    `RG("name")`. `renderRegions()` skips any region whose HTML didn't change, and
@@ -51,6 +51,8 @@ added, split or renamed, or the flow between them changes.
    - an animation started on an element survives redraws only if the element's HTML didn't change.
 3. **Clicks** go through one handler per area: `#board` uses `data-act="…"`
    (`js/input.js`, "Board input"), Settings uses `data-set="…"` and the game menu `data-m="…"` (both in `js/panels.js`).
+   The pop-up window has one handler too, in `js/panels.js`: a window opened from another file gets a
+   branch there that calls a function in its own file.
    **Add a new branch; don't add a second handler or a second branch for an existing act.**
    (A duplicate branch once stopped played cards from being counted.)
 4. **Saved settings:** `PREFS.get(key, fallback)` / `PREFS.set(key, value)` (`js/saves.js`; wrapped,
