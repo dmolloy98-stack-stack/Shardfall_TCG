@@ -34,13 +34,13 @@ const WHEN = {
 };
 
 // The special rules a "rule:" clause can switch on, and what must follow each name.
-// The rules themselves are in js/engine.js; search there for the name in quotes.
+// The rules themselves are in js/engine.js and the js/rules-*.js files; search there for the name in quotes.
 const RULE_WORDS = {
-  lord: "<Faction> <n>: while on the field, that faction's cards get +n, its spells +n, and curses can't target its cards",
+  lord: "<Fracture> <n>: while on the field, that faction's cards get +n, its spells +n, and curses can't target its cards",
   redirect: ": once per turn, the first damage to it or its player goes to an enemy of its player's choice",
-  shepherd: "<Faction>: when another card of that faction dies, absorb its stats or return it to hand",
+  shepherd: "<Kind>: when another card of that faction dies, absorb its stats or return it to hand",
   defend: "<n>: +n to all stats while defending",
-  sacrifice: "<Faction>: after its owner's Battle phase, may sacrifice one of that faction for +1 to all stats and a full heal",
+  sacrifice: "<Kind>: after its owner's Battle phase, may sacrifice one of that faction for +1 to all stats and a full heal",
   freeEquip: ": its owner's equipment costs nothing",
   equipCostMax: "<n>: equipping this character costs at most n",
   levelGain: "<attack> <health>: what each Level Up gives it",
@@ -49,7 +49,7 @@ const RULE_WORDS = {
   activate: ": an area whose play effect can be used once in each of its owner's Setup phases",
   strike: ": equipment whose play effect its holder can use once per Battle phase",
   teach: "<Skill>: equipment that gives its holder the skill for good",
-  grieve: "<Tribe>: this card gets +1 Health each time a character of that tribe dies (either side), counted from the start of the match wherever the card is",
+  grieve: "<Kind>: this card gets +1 Health each time a character of that tribe dies (either side), counted from the start of the match wherever the card is",
 };
 
 // ---------------------------------------------------------------------------
@@ -190,61 +190,62 @@ function convertToZombie(ctx, t, givesReanimate) {
 }
 
 // Each action: what it needs (s = selector, n = number, w = word, c = CardID) and what it does.
-const chars = list => list.filter(x => x && !x.isPlayer && !S.players.includes(x));
-const players = list => list.filter(x => x && (x.isPlayer || S.players.includes(x))).map(x => (x.isPlayer ? S.players[x.idx] : x));
+// The characters, and the players, in a list an action was given (a list can hold both).
+const charsIn = list => list.filter(x => x && !x.isPlayer && !S.players.includes(x));
+const playersIn = list => list.filter(x => x && (x.isPlayer || S.players.includes(x))).map(x => (x.isPlayer ? S.players[x.idx] : x));
 const ACTIONS = {
   // damage and stats
   damage: ["sn", (ctx, who, n) => {
     const amt = n(ctx), list = who(ctx);
-    for (const c of chars(list)) dealDamageToCharacter(c, amt);
-    for (const p of players(list)) dealDamageToPlayer(p, amt);
+    for (const c of charsIn(list)) dealDamageToCharacter(c, amt);
+    for (const p of playersIn(list)) dealDamageToPlayer(p, amt);
   }],
   damageAll: ["nw?", (ctx, n, other) => damageEverything(n(ctx), other === "other" ? ctx.card : null)],   // "other": not this card
-  buff: ["snn", (ctx, who, a, h) => { for (const c of chars(who(ctx))) { c.attack += a(ctx); c.currentHealth += h(ctx); } }],
+  buff: ["snn", (ctx, who, a, h) => { for (const c of charsIn(who(ctx))) { c.attack += a(ctx); c.currentHealth += h(ctx); } }],
   shrink: ["sn", (ctx, who, n) => {   // loses attack and health
     const amt = n(ctx);
-    const hit = chars(who(ctx));
+    const hit = charsIn(who(ctx));
     for (const c of hit) { c.attack -= amt; c.currentHealth -= amt; }   // all of them first, then who died
     for (const c of hit) { emit("charDamage", { uid: c.uid, amount: amt }); checkDeath(c); }
   }],
-  setStats: ["snn", (ctx, who, a, h) => { for (const c of chars(who(ctx))) { c.attack = a(ctx); c.currentHealth = h(ctx); } }],
-  loseAttack: ["sn", (ctx, who, n) => { for (const c of chars(who(ctx))) c.attack = Math.max(0, c.attack - n(ctx)); }],
-  grow: ["sn", (ctx, who, n) => { for (const c of chars(who(ctx))) { c.currentHealth += n(ctx); c.baseHealth += n(ctx); } }],
-  levelUp: ["sn", (ctx, who, n) => { for (const c of chars(who(ctx))) levelUp(c, n(ctx)); }],
-  levelDown: ["s", (ctx, who) => { for (const c of chars(who(ctx))) levelDown(c); }],   // takes back one Level Up
-  destroy: ["s", (ctx, who) => { for (const c of chars(who(ctx))) destroyCharacter(c); }],
+  setStats: ["snn", (ctx, who, a, h) => { for (const c of charsIn(who(ctx))) { c.attack = a(ctx); c.currentHealth = h(ctx); } }],
+  loseAttack: ["sn", (ctx, who, n) => { for (const c of charsIn(who(ctx))) c.attack = Math.max(0, c.attack - n(ctx)); }],
+  grow: ["sn", (ctx, who, n) => { for (const c of charsIn(who(ctx))) { c.currentHealth += n(ctx); c.baseHealth += n(ctx); } }],
+  levelUp: ["sn", (ctx, who, n) => { for (const c of charsIn(who(ctx))) levelUp(c, n(ctx)); }],
+  levelDown: ["s", (ctx, who) => { for (const c of charsIn(who(ctx))) levelDown(c); }],   // takes back one Level Up
+  destroy: ["s", (ctx, who) => { for (const c of charsIn(who(ctx))) destroyCharacter(c); }],
   destroyArea: ["s", (ctx, who) => {
     for (const a of who(ctx)) { const f = findArea(a.uid); if (f) { f.p.field.areas.splice(f.i, 1); f.p.grave.push(a); log(`${a.name} was destroyed.`); } }
     sweepDeaths();
   }],
   // skills
   grant: ["sww?", (ctx, who, skill, temp) => {
-    for (const c of chars(who(ctx))) {
+    for (const c of charsIn(who(ctx))) {
       if (hasSkill(c, skill)) continue;
       c.skills.push(skill);
       if (skill === "Reanimate") c.reanimated = false;
       if (temp === "temp") (c.tempSkills = c.tempSkills || []).push(skill);
     }
   }],
-  removeSkill: ["sw", (ctx, who, skill) => { for (const c of chars(who(ctx))) removeSkill(c, skill); }],
+  removeSkill: ["sw", (ctx, who, skill) => { for (const c of charsIn(who(ctx))) removeSkill(c, skill); }],
   disable: ["s", (ctx, who) => {
-    for (const c of chars(who(ctx))) { c.skills = []; c.disabled = true; c.ability = ""; updateRally(ownerOf(c)); emit("text", { uid: c.uid, say: "disabled" }); }
+    for (const c of charsIn(who(ctx))) { c.skills = []; c.disabled = true; c.ability = ""; updateRally(ownerOf(c)); emit("text", { uid: c.uid, say: "disabled" }); }
     sweepDeaths();
   }],
   convert: ["sw?", (ctx, who, extra) => {
-    for (const c of chars(who(ctx))) convertToZombie(ctx, c, extra === "reanimate");
+    for (const c of charsIn(who(ctx))) convertToZombie(ctx, c, extra === "reanimate");
     // Changing faction or side can take away a bonus that was keeping a character alive
     // (The Simplistic's +3, an area). Without this check it stayed on the table at 0 health.
     sweepDeaths();
   }],
-  transform: ["sc", (ctx, who, id) => { for (const c of chars(who(ctx))) transformCharacter(c, id); }],
+  transform: ["sc", (ctx, who, id) => { for (const c of charsIn(who(ctx))) transformCharacter(c, id); }],
   // players and cards
-  heal: ["sn", (ctx, who, n) => { for (const p of players(who(ctx))) healPlayer(p, n(ctx)); }],
+  heal: ["sn", (ctx, who, n) => { for (const p of playersIn(who(ctx))) healPlayer(p, n(ctx)); }],
   maxMana: ["sn", (ctx, who, n) => {
-    for (const p of players(who(ctx))) { const k = n(ctx); p.manaMax = Math.max(0, p.manaMax + k); p.mana = k > 0 ? p.mana + k : Math.min(p.mana, p.manaMax); }
+    for (const p of playersIn(who(ctx))) { const k = n(ctx); p.manaMax = Math.max(0, p.manaMax + k); p.mana = k > 0 ? p.mana + k : Math.min(p.mana, p.manaMax); }
   }],
-  draw: ["sn", (ctx, who, n) => { for (const p of players(who(ctx))) for (let k = n(ctx); k > 0; k--) drawCard(p); }],
-  discardHand: ["s", (ctx, who) => { for (const p of players(who(ctx))) while (p.hand.length) p.grave.push(p.hand.pop()); }],
+  draw: ["sn", (ctx, who, n) => { for (const p of playersIn(who(ctx))) for (let k = n(ctx); k > 0; k--) drawCard(p); }],
+  discardHand: ["s", (ctx, who) => { for (const p of playersIn(who(ctx))) while (p.hand.length) p.grave.push(p.hand.pop()); }],
   fetch: ["c", (ctx, id) => { const c = takeFromDeck(ctx.owner, x => x.id === id); if (c) addToHand(ctx.owner, c); }],
   shuffle: ["", ctx => shuffle(ctx.owner.deck)],
   summon: ["cn", (ctx, id, n) => {   // a card from cards.csv, or a token from TOKENS
@@ -255,7 +256,7 @@ const ACTIONS = {
     const c = takeFromDeck(ctx.owner, x => x.id === id);
     if (c) { putOnField(c, ctx.owner); log(`${c.name} comes to the field from ${ctx.owner.name}'s deck.`); }
   }],
-  drainLife: ["s", (ctx, who) => { for (const c of chars(who(ctx))) { const st = stats(c); healPlayer(ctx.owner, st.a + st.h); } }],
+  drainLife: ["s", (ctx, who) => { for (const c of charsIn(who(ctx))) { const st = stats(c); healPlayer(ctx.owner, st.a + st.h); } }],
   // cards from piles: pick (the player chooses) and take (from the top of the deck, no choice)
   pick: ["snww?", (ctx, pile, n, to, prompt) => {
     const cards = pile(ctx), p = ctx.owner, k = n(ctx);
@@ -283,7 +284,7 @@ const ACTIONS = {
     if (ctx.owner.hand.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: ctx.card.name, prompt: prompt || "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" });
   }],
   flag: ["w", (ctx, name) => { ctx.owner[name] = true; }],
-  say: ["sww?", (ctx, who, text, color) => { for (const c of chars(who(ctx))) emit("text", { uid: c.uid, text, color: color || "#ffffff" }); }],
+  say: ["sww?", (ctx, who, text, color) => { for (const c of charsIn(who(ctx))) emit("text", { uid: c.uid, text, color: color || "#ffffff" }); }],
   script: ["w", (ctx, name) => SCRIPTS[name](ctx)],
   // cost clauses only
   reduce: ["n", null], set: ["n", null],

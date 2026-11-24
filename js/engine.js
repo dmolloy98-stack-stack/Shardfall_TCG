@@ -1,4 +1,4 @@
-// Shardfall rules engine: a port of the game logic in main.lua.
+// Shardfall rules engine (it began as a port of the game logic in main.lua, the first version).
 // The engine holds all game state in S and never touches the DOM. The UI listens
 // for events sent through emit() to play effects (damage numbers, shakes, banners).
 // Cards on the battlefield store their owner as a player index (0 or 1) instead of

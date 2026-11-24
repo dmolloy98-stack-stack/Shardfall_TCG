@@ -158,11 +158,15 @@ function showSaveCode() {
     <p id="save-code-msg" class="save-code-msg" role="status"></p>
     <div class="detail-actions"><button type="button" class="btn" data-set="loadcode">${esc(T("save_load"))}</button><button type="button" class="btn btn-primary" data-set="settings">${esc(T("save_back"))}</button></div>`);
 }
+// Copies a text box's words. If the browser won't allow it, the text is left selected to copy by hand.
+async function copyFromBox(box) {
+  try { await navigator.clipboard.writeText(box.value); }
+  catch { box.select(); try { document.execCommand("copy"); } catch { /* selected for copying by hand */ } }
+}
 function saveCodeMessage(text) { const m = byId("save-code-msg"); if (m) m.textContent = text; }
 async function copySaveCode() {
   const box = byId("save-code-out");
-  try { await navigator.clipboard.writeText(box.value); }
-  catch { box.select(); try { document.execCommand("copy"); } catch { /* the code stays selected to copy by hand */ } }
+  await copyFromBox(box);
   saveCodeMessage(T("save_copied"));
 }
 function loadSaveCode(btn) {
@@ -211,7 +215,7 @@ function showBugReport(err) {
 async function bugClick(b) {
   if (b.dataset.bug === "close") { closeModal(); return; }
   const box = byId("bug-report");
-  try { await navigator.clipboard.writeText(box.value); } catch { box.select(); try { document.execCommand("copy"); } catch { /* selected for copying by hand */ } }
+  await copyFromBox(box);
   byId("bug-msg").textContent = T("bug_copied");
 }
 window.addEventListener("error", e => { if (e.error) showBugReport(e.error); });

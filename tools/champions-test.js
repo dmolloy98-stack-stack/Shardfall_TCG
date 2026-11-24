@@ -1,12 +1,11 @@
 const fs = require('fs');
 // Checks the champion abilities (data/champion_abilities.csv, js/rules-champions.js): node tools/champions-test.js .
 const dir = process.argv[2] || '.';
-eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
-let fails = 0;
-const ok = (name, cond, extra) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); if (!cond) fails++; };
+const rulesCode = require(require('path').join(__dirname, 'rules-code'));
+eval(rulesCode(dir, ['champions', 'ai']) + rulesCode.kit + `
 const find = pred => Object.values(DATA.cardsById).find(pred);
 const game = (deck, opp, opts) => { newGame({ deckId: deck, opponentDeckId: opp || 'zombie_starter', mode: 'hotseat', seed: 11, ...opts }); for (const p of S.players) { p.field.chars.length = 0; p.field.areas.length = 0; } S.phase = PHASE.SETUP; return S.players[0]; };
-const put = (p, id) => { const c = newCard(DATA.cardsById[id]); c.owner = p.idx; putOnField(c, p); return c; };
+const put = (p, id) => putCard(p, id);
 const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
 
 { // who gets an ability
@@ -114,6 +113,16 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   ok('Soul Shepard: a living character dying changes nothing', rawStats(onField).h === h0 + 2);
   ok('Soul Shepard: it gains no Attack', rawStats(onField).a === card.attack);
   ok('Soul Shepard: it is bigger in the hand too, before it is played', grieveBonus(inHand) === 2);
+}
+{ // every champion is complete: a new champion touches five places, and none may be forgotten
+  const campaign = fs.readFileSync(dir + '/js/campaign.js', 'utf8'), menu = fs.readFileSync(dir + '/js/menu.js', 'utf8');
+  for (const id of Object.keys(DATA.championAbilities)) {
+    ok(id + ': its card exists (data/cards.csv)', !!DATA.cardsById[id]);
+    ok(id + ': its rules entry (CHAMPION_RULES, js/rules-champions.js)', !!CHAMPION_RULES[id]);
+    ok(id + ': its lines and play style (CHAMPIONS, js/champions.js)', !!CHAMPIONS[id]);
+    ok(id + ': its campaign stage (CAMPAIGN, js/campaign.js)', campaign.includes('champion: "' + id + '"'));
+    ok(id + ': its Almanac notes (CHAMP_GUIDE, js/menu.js)', menu.includes('  ' + id + ': {'));
+  }
 }
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');
 process.exit(fails ? 1 : 0);

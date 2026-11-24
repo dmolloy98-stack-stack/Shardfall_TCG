@@ -164,12 +164,12 @@ $("#board").addEventListener("contextmenu", e => {
 });
 $("#prompt").addEventListener("click", e => { if (e.target.closest('[data-act="cancel"]')) cancelSomething(); });
 
-const hand = $("#hand-layer");
-hand.addEventListener("pointerdown", handDown);
-hand.addEventListener("pointermove", handMove);
-hand.addEventListener("pointerup", handUp);
-hand.addEventListener("pointercancel", e => { if (drag) { drag.ghost?.remove(); drag.hint?.remove(); setPlacing(null); drag.el.classList.remove("dragging", "held"); drag = null; } });
-hand.addEventListener("contextmenu", e => {
+const handLayer = $("#hand-layer");
+handLayer.addEventListener("pointerdown", handDown);
+handLayer.addEventListener("pointermove", handMove);
+handLayer.addEventListener("pointerup", handUp);
+handLayer.addEventListener("pointercancel", e => { if (drag) { drag.ghost?.remove(); drag.hint?.remove(); setPlacing(null); drag.el.classList.remove("dragging", "held"); drag = null; } });
+handLayer.addEventListener("contextmenu", e => {
   e.preventDefault();
   const el = e.target.closest(".hand-card");
   const c = el && S.players[viewIdx()].hand.find(x => x.uid === Number(el.dataset.uid));
@@ -194,3 +194,37 @@ document.addEventListener("keydown", e => {
   if (!$("#modal").hidden) { if ($("#modal").dataset.dismissable) closeModal(); return; }
   if (U.screen === "game") cancelSomething();
 });
+
+// ---------------------------------------------------------------------------
+// Drag to attack (moved here from js/fx.js)
+// ---------------------------------------------------------------------------
+// Drag to attack: press one of your ready characters, drag onto an enemy, let go.
+// Tapping the attacker and then the target still works.
+let dragAtk = null;
+document.getElementById("board").addEventListener("pointerdown", e => {
+  const el = e.target.closest('.field-card[data-side="bottom"]');
+  if (!el || e.button === 2 || !humanTurn() || S.phase !== PHASE.BATTLE || S.pending) return;
+  const c = active().field.chars.find(x => x.uid === Number(el.dataset.uid));
+  if (!c || !canAttack(c)) return;
+  dragAtk = { uid: c.uid, x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
+});
+addEventListener("pointermove", e => {
+  if (!dragAtk || e.pointerId !== dragAtk.id) return;
+  if (!dragAtk.moved && Math.hypot(e.clientX - dragAtk.x, e.clientY - dragAtk.y) > 12) {
+    dragAtk.moved = true;
+    if (U.selected !== dragAtk.uid) { U.selected = dragAtk.uid; render(); }
+  }
+  if (dragAtk.moved) trackAim(e);
+});
+addEventListener("pointerup", e => {
+  if (e.pointerType === "touch") { AIM.on = false; drawAim(); }
+  if (!dragAtk || e.pointerId !== dragAtk.id) return;
+  const d = dragAtk; dragAtk = null;
+  if (!d.moved) return;
+  U.dragAttackAt = performance.now();   // the click that follows this release is ignored
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.field-card.attackable, .plate.attackable, .face-btn, .shard-rock.attackable');
+  if (!over || U.selected !== d.uid) return;
+  U.selected = null;
+  act(() => move("attack", d.uid, over.classList.contains("shard-rock") ? "shard" : over.classList.contains("field-card") ? Number(over.dataset.uid) : null));
+});
+addEventListener("pointercancel", () => { dragAtk = null; });

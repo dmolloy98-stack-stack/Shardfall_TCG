@@ -133,23 +133,23 @@ the campaign and the "choose a card" window had each added their own), so the ru
 handler is in `js/panels.js`, and a window from another file gets a branch there that calls a named
 function in its own file (`newDeckFrom()`, `builderChoice()`, `campaignClick()`). Calls happen at
 click time, so the load order doesn't matter. `tools/screen-test.js` clicks through the choose
-window to prove it works (25 Nov 2026).
+window to prove it works (24 Nov 2026).
 
 **Special card rules are switched on by words, not names.** A card that bends the core rules has a
 `rule:` clause, and the engine checks for that word, never for a card's name. Renaming a card then
 can't break its rule. The same goes for champions: the campaign, the champions' lines
 (`CHAMPIONS`), the computer's champion and the tutorial's hands all name cards by CardID, and show
-the card's own name, so renaming a champion card changes it everywhere at once (25 Nov 2026).
+the card's own name, so renaming a champion card changes it everywhere at once (24 Nov 2026).
 
 **A skill counts wherever it comes from.** Every skill checked during play asks `skillNow()`
 (`js/engine.js`): printed on the card, or given by equipment or an aura. Before, only Swift and Parry
-looked at given skills, so a future card giving Pierce or Cloak would have done nothing (25 Nov 2026).
+looked at given skills, so a future card giving Pierce or Cloak would have done nothing (24 Nov 2026).
 
 **One list of where a character's stats come from.** `statSources()` (`js/engine.js`) lists the parts
 (the card, equipment, lord, Rally, aura, champion); the rules add them up and the wind-up on screen
 names them. A new kind of bonus is added there once. A champion's own short-lived bonus (The Bow's
 +2) lives in its entry in `js/rules-champions.js`, with a `turnEnd` moment to clear it, not in the
-core turn code (25 Nov 2026).
+core turn code (24 Nov 2026).
 
 **Numbers a designer tunes live in data files, and the sheet shows them.** Trophy goals and words
 (`data/trophies.csv`), mastery titles (`data/mastery.csv`) and points (`mastery_*` rows), and how the
@@ -161,7 +161,7 @@ the campaign's story text and the champions' lines, stay in code: story text has
 **The data tables are read by column name.** `csvTable()` (`js/data.js`) names each value by its
 header, so a column can be moved or added in the card sheet without the game reading the wrong one;
 a missing column stops the game with a message naming it. Rule numbers a designer might tune (Evolve,
-Level Up's limit, Rally, the mana token) are rows in `data/game_rules.csv` (25 Nov 2026).
+Level Up's limit, Rally, the mana token) are rows in `data/game_rules.csv` (24 Nov 2026).
 
 ## The screen
 
@@ -232,6 +232,15 @@ checked automatically and is judged by eye. (Nov 2026)
 
 **A test is never switched off to get a green mark.** A red test means something changed; find out
 what.
+
+**Page helpers every screen file uses live in `js/dom.js`,** loaded before all of them (`$`, `byId`,
+`esc`). A screen file never defines its own copy; the deck builder and the tutorial each had one
+(24 Nov 2026).
+
+**Every test file runs by itself, and the rules tests share one kit.** `tools/test-all.js` runs every
+`tools/*-test.js` (the browser ones run on GitHub), so a new test can't be forgotten. The rules
+tests start from `rulesCode.kit` (`ok()`, `putCard()`) in `tools/rules-code.js` instead of each
+keeping its own copy, which had started to differ (24 Nov 2026).
 
 ## Working together
 
@@ -305,4 +314,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-25, pull request #38.
+Last checked: 2026-11-24, pull request #39.

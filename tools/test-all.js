@@ -13,6 +13,7 @@
 const EXPECTED = { ai: 1727378807, rand: 1933343540 };
 
 const { execFileSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 const root = path.join(__dirname, '..');
 const run = args => {
@@ -23,7 +24,14 @@ const run = args => {
 let failed = 0;
 const report = (name, ok, detail) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`); if (!ok) failed++; };
 
-for (const t of ['data', 'kinds', 'events', 'protected', 'shard', 'champions', 'replay', 'cards', 'saves', 'words']) {
+// Every tools/*-test.js runs, so a new test file is never forgotten: these first, in this order,
+// then any others alphabetically. The browser tests (screen, picture) run on GitHub instead.
+const FIRST = ['data', 'kinds', 'events', 'protected', 'shard', 'champions', 'replay', 'cards', 'saves', 'words'];
+const BROWSER_TESTS = ['screen', 'picture'];
+const found = fs.readdirSync(path.join(__dirname)).filter(f => f.endsWith('-test.js')).map(f => f.slice(0, -8));
+const TESTS = [...FIRST.filter(t => found.includes(t)), ...found.filter(t => !FIRST.includes(t) && !BROWSER_TESTS.includes(t)).sort()];
+for (const t of FIRST.filter(t => !found.includes(t))) report(`${t}-test`, false, `tools/${t}-test.js is missing (renamed or deleted? update FIRST in tools/test-all.js)`);
+for (const t of TESTS) {
   const { out, code } = run([`tools/${t}-test.js`, '.']);
   const ok = code === 0 && /ALL PASSED\s*$/.test(out.trim());
   report(`${t}-test`, ok, ok ? '' : '\n' + out.split('\n').filter(l => /FAIL|Error/.test(l)).slice(0, 15).join('\n'));

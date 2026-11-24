@@ -1,8 +1,8 @@
 // The big shard fall: the rules. (The numbers are in data/game_rules.csv; the crystal on the table
-// and its info window are in js/ui.js.)
+// and its info window are in js/board-marks.js.)
 
 // Once a match, at the start of round RULES.shardRound (8), a big shard crashes into the middle of
-// the table with RULES.shardHealth (10) health: S.shard = { health, max }. In Battle, characters
+// the table with RULES.shardHealth health (10 today): S.shard = { health, max }. In Battle, characters
 // can attack it like a target (attack(uid, "shard")): it never hits back, Challenge and Tower don't
 // guard it, and spells can't touch it. Its health is shared, so whoever deals the blow that breaks
 // it claims it: they draw RULES.shardDraw card and get their champion's shard bonus below, or draw

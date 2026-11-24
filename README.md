@@ -86,6 +86,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
 | `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |
 | `js/cards.js` | How a card is drawn: frames, art, badges, names |
+| `js/dom.js` | Small page helpers every screen file uses (`$`, `byId`, `esc`), loaded before them |
 | `js/ui.js` | The screen's core: its state, fast redraws, actions (Undo), screens and phone layout |
 | `js/board.js` | Everything drawn on the table: players' plates, health, mana, the battle log, turn history and the hand |
 | `js/board-marks.js` | Special pieces drawn on the table: the big shard and its cracks, the Protected shell on the health gem, the rune ring on Protected cards |
@@ -96,12 +97,13 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/storm.js` | The falling-shards animation behind the main menu |
 | `js/boot.js` | Starts the game once every script has loaded |
 | `js/champions.js` | The five champions: their one-line tags, their spoken lines (including reactions to the shard, near defeat, and the end-screen line that remembers the match) and how the computer plays each (plain data) |
-| `js/tutorial.js` | The tutorial: scripted steps, coach box, spotlight and arrows |
+| `js/tutorial.js` | The tutorial's machinery: the Trainer, coach box, spotlight and arrows |
+| `js/tutorial-steps.js` | The tutorial's lessons, one entry per step |
 | `js/help.js` | Beginner hints, the first-visit welcome, the in-game guide screen |
 | `js/decks.js` | The deck builder, saved custom decks and its walkthrough |
 | `js/intro.js` | The stained-glass cold open before the main menu |
 | `js/campaign.js` | The campaign: one match against each faction's champion, with its story text, saved progress and the champions' speech bubbles (in normal matches too, as the champion of the computer's deck) |
-| `js/progress.js` | Progress earned in matches: deck mastery points and titles, each deck's record, card stories and trophies |
+| `js/progress.js` | Progress earned in matches: deck mastery points and titles, each deck's record, card stories, trophies, and the end screen's numbers and badges |
 | `docs/code-map.md` | How the files fit together: diagrams of the big picture, one move's path and the screens, plus where to change things |
 | `docs/play-numbers.md` | A plan for anonymous play numbers (not built, nothing collected): what could be counted, the owner's decisions, a draft privacy note |
 | `docs/real-phones.md` | How to check the game on real phones (a free device cloud for open-source projects) and a checklist of what to look at |
@@ -111,7 +113,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `docs/how-it-was-built.md` | Why the code is built the way it is, the owner's decisions that shape it, and traps already fallen into. Checked with every change (its top says what belongs in it) |
 | `docs/look.md` | The look book: the owner's vision for how the game looks, today's look, the rules every new look keeps, and look decisions |
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
-| `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |
+| `js/fx.js` | Game feel: aiming line, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, wind-ups and the final blow |
+| `js/previews.js` | What an attack or spell would do, shown on its target before you commit, and the end-of-turn hint |
 | `js/motion.js` | Cards that travel: drawn cards slide out of the deck, played cards fly from the hand to the table (the computer's from its hidden hand), cards drift into the graveyard, the hand closes up smoothly, a cast spell is shown in the middle of the table, and health counts down instead of jumping |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
 | `tools/test-all.js` | Runs every test below in one go and says whether all passed: `node tools/test-all.js`. GitHub runs it on every push and pull request (`.github/workflows/tests.yml`) |

@@ -181,8 +181,8 @@ their own story or coaching, then hand over to the same engine.
 | Spots that light up while you drag a card | `setPlacing()` in `js/input.js` (stage classes `placing-…` in `css/style.css`) |
 | Health bar and big hits (white chunk, red screen edges, fresh cracks) | `hpBarHTML()`, `bigHit()`, `BIG_HIT` in `js/board.js`; the chunk drains in `js/motion.js` |
 | The computer aims before it acts | `aiDecide()` in `js/ai.js` picks the move without making it (`aiStep()` is decide-and-do); `scheduleAI()` in `js/ui.js` shows `aiAim()` (`js/fx.js`) first |
-| Heavy attacks wind up, bonuses add up, LETHAL, the killing blow | `windUp()`, `attackParts()`, `fightPreview()` (lethal), `finale()` in `js/fx.js` |
-| Spell previews on targets, end-of-turn hourglass, cards reacting to deaths | `targetPreview()`, `eotBadge()`, `reactToDeath()` in `js/fx.js` |
+| Heavy attacks wind up, bonuses add up, LETHAL, the killing blow | `windUp()`, `attackParts()`, `finale()` in `js/fx.js`; `fightPreview()` (lethal) in `js/previews.js`; the end screen's numbers and badges in `js/progress.js` |
+| Spell previews on targets, end-of-turn hourglass, cards reacting to deaths | `targetPreview()`, `eotBadge()` in `js/previews.js`; `reactToDeath()` in `js/fx.js` |
 | Draw and skip by themselves, ask before passing early, keyboard shortcuts | `autoFlow()` and `passTurn()` in `js/ui.js`, the `keydown` handler in `js/input.js`; both settings are in Settings |
 | Champions speaking in every match against the computer, the end-screen line, deck mastery titles | `championSay()`, `speakerName()`, `recallHTML()`, `MASTERY_TITLES` and `masteryHTML()` in `js/progress.js` (titles: `data/mastery.csv`); the lines are in `js/champions.js` |
 | Turn history (icons along the top of the battle log) | `histAdd()`, `histHTML()`, `showHist()` in `js/board.js` |
@@ -197,7 +197,7 @@ their own story or coaching, then hand over to the same engine.
 | Colours and sizes | `css/style.css` |
 | A new menu button | `index.html`, then `js/menu.js` |
 | Intro wording | `js/intro.js` |
-| Tutorial steps | `js/tutorial.js` |
+| Tutorial steps | `js/tutorial-steps.js` (`TUT_STEPS`); the Trainer and coach box are `js/tutorial.js` |
 | Campaign order and story | `js/campaign.js` |
 | Deck-building rules | `js/decks.js` and `data/game_rules.csv` |
 | Hint wording and settings | `js/help.js` |
@@ -224,9 +224,9 @@ their own story or coaching, then hand over to the same engine.
 
 ## Size and shape
 
-About 7,800 lines of JavaScript in 31 files (November 2026). The largest are `js/tutorial.js` at about
-570, `js/fx.js` at about 520 and `js/engine.js` at about 500; `js/board.js` is about 450 since the big
-shard, the Protected shell and the rune ring moved to `js/board-marks.js` (the rules were split into seven files in Nov 2026; `js/ui.js`, also split, is about 350). The menu, the Almanac, the menu background and the
+About 7,900 lines of JavaScript in 34 files (November 2026). Small page helpers (`$`, `byId`, `esc`) are `js/dom.js`, loaded before every screen file. The largest are `js/engine.js` at about
+515, `js/effects.js` at about 490 and `js/board.js` at about 460 (the big
+shard, the Protected shell and the rune ring are in `js/board-marks.js`; the fight and spell previews moved from `js/fx.js` to `js/previews.js`, and the tutorial's lessons to `js/tutorial-steps.js`, in Nov 2026) (the rules were split into seven files in Nov 2026; `js/ui.js`, also split, is about 350). The menu, the Almanac, the menu background and the
 start-up code used to live in `ui.js`; they are now `menu.js`, `storm.js` and `boot.js`. In
 November 2026 the card drawing (`cards.js`), the table effects (`table-effects.js`) and the pop-up
 windows and Settings (`panels.js`) moved out of it too. The scripts

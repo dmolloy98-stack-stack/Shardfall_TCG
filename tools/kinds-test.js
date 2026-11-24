@@ -1,11 +1,10 @@
 const fs = require('fs');
 // Checks the fracture, tribe and class rules and the cards built on them: node tools/kinds-test.js .
 const dir = process.argv[2] || '.';
-eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
-let fails = 0;
-const ok = (name, cond, extra) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); if (!cond) fails++; };
+const rulesCode = require(require('path').join(__dirname, 'rules-code'));
+eval(rulesCode(dir, ['champions', 'ai']) + rulesCode.kit + `
 const fresh = () => { newGame({ deckId: 'fighter_starter', opponentDeckId: 'zombie_starter', mode: 'ai', seed: 5 }); const p = S.players[0]; p.field.chars.length = 0; S.players[1].field.chars.length = 0; p.field.areas.length = 0; return p; };
-const put = (p, name) => { const c = cardByName(name); c.owner = p.idx; putOnField(c, p); return c; };
+const put = (p, name) => putCard(p, name);
 
 { // Speedrunner: +1 attack per other Swift character
   const p = fresh(); const sr = put(p, 'Speedrunner'); const base = stats(sr).a;

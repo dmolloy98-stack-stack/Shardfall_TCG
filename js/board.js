@@ -285,7 +285,7 @@ function render() {
   } else if (readyN > 0 && !forced.length && !S.over) {
     h += allBtn();
   } else if (!S.over) {
-    const instr = active().isAI ? `${active().name === "Computer" ? "The computer" : active().name} is taking its turn…` : DATA.phases[S.phase]?.instruction || "";
+    const instr = active().isAI ? `${thinkerName(active())} is taking its turn…` : DATA.phases[S.phase]?.instruction || "";
     h += `<div class="instruction">${esc(instr)}</div>`;
   }
 

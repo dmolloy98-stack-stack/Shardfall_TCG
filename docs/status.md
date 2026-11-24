@@ -41,12 +41,12 @@ Average game: 13.9 turns (both players' turns counted)
 <!-- /winrates -->
 
 ## Safety nets
-- `node tools/test-all.js` must end EVERYTHING PASSED. It runs: data, kinds, events, protected, shard, champions, replay, cards, saves, words, every Effect explained, and the automatic games.
+- `node tools/test-all.js` must end EVERYTHING PASSED. It runs: , every Effect explained, and the automatic games.
 - Play fingerprints: computer games (ai 2) **1727378807**, random games (rand 300) **1933343540**. They change only when play is meant to change (`node tools/update-expected.js --write`).
 - On every pull request GitHub also runs the balance check, screen tests, picture comparison, speed budget and accessibility check (`ci-check` skill to read them).
 
 ## Code
-- 30 game scripts, loaded in this order: saves.js, engine.js, rules-combat.js, rules-turns.js, rules-play.js, rules-champions.js, rules-events.js, rules-shard.js, effects.js, ai.js, tutorial.js, help.js, guide.js, decks.js, fx.js, motion.js, intro.js, cards.js, ui.js, board.js, board-marks.js, input.js, table-effects.js, panels.js, menu.js, storm.js, champions.js, campaign.js, progress.js, boot.js.
+- 33 game scripts, loaded in this order: saves.js, engine.js, rules-combat.js, rules-turns.js, rules-play.js, rules-champions.js, rules-events.js, rules-shard.js, effects.js, ai.js, dom.js, tutorial.js, tutorial-steps.js, help.js, guide.js, decks.js, fx.js, previews.js, motion.js, intro.js, cards.js, ui.js, board.js, board-marks.js, input.js, table-effects.js, panels.js, menu.js, storm.js, champions.js, campaign.js, progress.js, boot.js.
 - 37 tools in `tools/` (the README's file table lists them).
 - Map: `docs/code-map.md` (where things are); why: `docs/how-it-was-built.md`.
 

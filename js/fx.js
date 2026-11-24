@@ -1,7 +1,7 @@
-// Game feel: aiming with fight previews, heavier impacts, big entrances for expensive
-// cards, skill spotlights, a board that reacts to the game, and the final blow.
-// Everything here is for looks; the rules live in engine.js. ui.js calls in from
-// render() and its game event handler.
+// Game feel: the aiming line, heavier impacts, big entrances for expensive cards, skill
+// spotlights, a board that reacts to the game, wind-ups, the computer aiming, and the final blow.
+// Everything here is for looks; the rules live in js/engine.js and js/rules-*.js. The previews on
+// targets are js/previews.js, the end screen's numbers js/progress.js, and drag-to-attack js/input.js.
 
 // While a showcase or the finale plays, the computer waits before its next move.
 function fxBusy(ms) { U.busyUntil = Math.max(U.busyUntil || 0, performance.now() + ms); }
@@ -18,46 +18,6 @@ function fxDiv(cls, css, ms) {
 }
 // Runs fn after ms, unless a new game has started in the meantime.
 function later(ms, fn) { const game = S; setTimeout(() => { if (S === game) fn(); }, ms); }
-
-// ---------------------------------------------------------------------------
-// Fight preview: what happens if the selected character attacks this target.
-// The attack is played out on a copy of the game (simulate), so the preview always
-// matches the real rules, skills and abilities included.
-// ---------------------------------------------------------------------------
-function fightPreview(aUid, tUid) {
-  const a = findChar(aUid)?.c;
-  if (!a) return null;
-  const t = tUid != null ? findChar(tUid)?.c : null;
-  // Swift strikes first; otherwise both characters hit at the same time.
-  const first = !t || (isSwift(a) && !isSwift(t));
-  const theirs = !!t && isSwift(t) && !isSwift(a);
-  return simulate(() => {
-    const foe = S.players[1 - S.active];
-    const hp0 = foe.health;
-    const th0 = t ? rawStats(findChar(tUid).c).h : 0;
-    // the tutorial's guard would nudge the player about this make-believe attack
-    const guard = actionGuard;
-    actionGuard = null;
-    let ok;
-    try { ok = attack(aUid, tUid ?? null); } finally { actionGuard = guard; }
-    if (!ok) return null;
-    const alive = uid => !!findChar(uid);
-    const tAlive = t && alive(tUid);
-    return {
-      first, theirs, aDies: !alive(aUid), tDies: !!t && !tAlive,
-      lethal: S.over && S.winner === S.active,   // this blow wins the match
-      dmg: t ? th0 - (tAlive ? Math.max(0, rawStats(findChar(tUid).c).h) : 0) : hp0 - foe.health,
-    };
-  });
-}
-function previewBadge(pv, face) {
-  if (!pv) return "";
-  if (pv.lethal) return `<div class="fight-badge lethal${face ? " face" : ""}" title="This attack wins the match">☠ LETHAL</div>`;
-  if (face) return `<div class="fight-badge face">−${pv.dmg}${pv.aDies ? " · yours falls" : ""}</div>`;
-  const [cls, text] = pv.tDies && !pv.aDies ? ["win", "Defeats it"] : pv.tDies ? ["trade", "Both fall"] : pv.aDies ? ["lose", "Yours falls"] : ["even", `−${pv.dmg} ♥`];
-  const title = pv.first ? "Swift: your character strikes first" : pv.theirs ? "Swift: this enemy strikes first" : "Both strike at the same time";
-  return `<div class="fight-badge ${cls}" title="${title}">${pv.first ? "» " : ""}${text}</div>`;
-}
 
 // ---------------------------------------------------------------------------
 // Aiming line: from the chosen attacker (or the hand, for a spell's target) to the
@@ -107,37 +67,6 @@ function trackAim(e) {
 }
 document.getElementById("stage").addEventListener("pointermove", trackAim);
 document.getElementById("stage").addEventListener("pointerleave", () => { AIM.on = false; drawAim(); });
-
-// Drag to attack: press one of your ready characters, drag onto an enemy, let go.
-// Tapping the attacker and then the target still works.
-let dragAtk = null;
-document.getElementById("board").addEventListener("pointerdown", e => {
-  const el = e.target.closest('.field-card[data-side="bottom"]');
-  if (!el || e.button === 2 || !humanTurn() || S.phase !== PHASE.BATTLE || S.pending) return;
-  const c = active().field.chars.find(x => x.uid === Number(el.dataset.uid));
-  if (!c || !canAttack(c)) return;
-  dragAtk = { uid: c.uid, x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
-});
-addEventListener("pointermove", e => {
-  if (!dragAtk || e.pointerId !== dragAtk.id) return;
-  if (!dragAtk.moved && Math.hypot(e.clientX - dragAtk.x, e.clientY - dragAtk.y) > 12) {
-    dragAtk.moved = true;
-    if (U.selected !== dragAtk.uid) { U.selected = dragAtk.uid; render(); }
-  }
-  if (dragAtk.moved) trackAim(e);
-});
-addEventListener("pointerup", e => {
-  if (e.pointerType === "touch") { AIM.on = false; drawAim(); }
-  if (!dragAtk || e.pointerId !== dragAtk.id) return;
-  const d = dragAtk; dragAtk = null;
-  if (!d.moved) return;
-  U.dragAttackAt = performance.now();   // the click that follows this release is ignored
-  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.field-card.attackable, .plate.attackable, .face-btn, .shard-rock.attackable');
-  if (!over || U.selected !== d.uid) return;
-  U.selected = null;
-  act(() => move("attack", d.uid, over.classList.contains("shard-rock") ? "shard" : over.classList.contains("field-card") ? Number(over.dataset.uid) : null));
-});
-addEventListener("pointercancel", () => { dragAtk = null; });
 
 // ---------------------------------------------------------------------------
 // Impacts
@@ -305,49 +234,11 @@ function spawnClass(sp) {
 }
 
 // ---------------------------------------------------------------------------
-// The match: running totals for the end screen, and the final blow.
+// The final blow (the end screen's numbers are in js/progress.js).
 // ---------------------------------------------------------------------------
-function resetMatchStats() {
-  U.stats = { played: [0, 0], dealt: [0, 0], biggest: 0, low: [1, 1], byCard: {} };
-  U.endBadges = [];
-}
-// Damage from a fight is credited to the card that dealt it (the attacker, or the defender
-// hitting back), for the champion's line on the end screen.
-function creditFight(victimUid, amount) {
-  const st = U.stats;
-  if (!st || performance.now() - U.lungeAt > 80 || !U.lastAttacker) return;
-  const dealer = victimUid === U.lastAttacker ? U.lastTarget : U.lastAttacker;
-  const c = dealer != null ? findCard(dealer) : null;
-  if (!c || c.owner !== viewIdx()) return;
-  const e = st.byCard[dealer] || (st.byCard[dealer] = { name: c.name, n: 0 });
-  e.n += amount;
-}
-function countDamage(victimIdx, amount) {
-  const st = U.stats;
-  if (!st) return;
-  st.dealt[1 - victimIdx] += amount;
-  st.biggest = Math.max(st.biggest, amount);
-}
-
 function finale(winner) {
   const game = S;
-  const st = U.stats || {};
-  // little achievements, shown on the end screen
-  const badges = [];
-  if (winner != null) {
-    const w = S.players[winner];
-    if (w.health >= w.maxHealth) badges.push(["Flawless", "Won without taking a hit"]);
-    if ((st.low?.[winner] ?? 1) < 0.35) badges.push(["Comeback", "Won from red health"]);
-    if (S.mode === "ai" && winner === 0 && !U.tutorial) {
-      const wins = PREFS.get("wins", {}) || {};
-      const id = S.players[0].deckId;
-      if (!wins[id]) badges.push(["First win", `with ${DATA.decks[id]?.name || "this deck"}`]);
-      wins[id] = (wins[id] || 0) + 1;
-      PREFS.set("wins", wins);
-    }
-  }
-  if (st.biggest >= 8) badges.push(["Massive hit", `${st.biggest} damage in one blow`]);
-  U.endBadges = badges;
+  U.endBadges = endBadges(winner);   // js/progress.js
 
   if (REDUCED_MOTION || U.tutorial) { U.ended = true; return; }
   fxBusy(2400);
@@ -371,17 +262,6 @@ function finale(winner) {
     shakeBy(16);
   });
   setTimeout(() => { if (S === game) { U.ended = true; render(); } }, 1900 + (U.lungeWind || 0));
-}
-
-function endStatsHTML() {
-  const st = U.stats;
-  if (!st) return "";
-  const [me, them] = [viewIdx(), 1 - viewIdx()];
-  const row = (label, a, b) => `<tr><th>${label}</th><td>${a}</td><td>${b}</td></tr>`;
-  return `<table class="end-stats"><tr><th></th><td>${esc(S.players[me].name)}</td><td>${esc(S.players[them].name)}</td></tr>
-    ${row("Cards played", st.played[me], st.played[them])}${row("Damage dealt", st.dealt[me], st.dealt[them])}</table>
-    <p class="end-sub">Biggest hit: ${st.biggest} · ${S.round} turn${S.round === 1 ? "" : "s"}</p>
-    ${U.endBadges?.length ? `<div class="end-badges">${U.endBadges.map(([t, s]) => `<div class="end-badge"><b>${esc(t)}</b><span>${esc(s)}</span></div>`).join("")}</div>` : ""}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -471,41 +351,6 @@ function aiAim(aim) {
 function clearAiAim() {
   document.querySelectorAll(".ai-aiming, .ai-aimed").forEach(el => el.classList.remove("ai-aiming", "ai-aimed"));
   document.querySelectorAll(".ai-aim").forEach(el => el.remove());
-}
-
-// ---------------------------------------------------------------------------
-// Spell previews: while you choose a target, each one shows what will happen to it, played
-// out on a copy of the game like the fight preview.
-// ---------------------------------------------------------------------------
-function targetPreview(ref) {
-  const pd = S.pending;
-  if (!pd || pd.kind !== "target") return null;
-  return simulate(() => {
-    const look = () => ref.isPlayer ? { hp: S.players[ref.idx].health } : (() => { const f = findChar(ref.uid); if (!f) return null; const r = rawStats(f.c); return { a: r.a, h: r.h }; })();
-    const before = look();
-    const g = actionGuard; actionGuard = null;
-    try { if (!chooseTarget(ref)) return null; } finally { actionGuard = g; }
-    const after = look();
-    if (ref.isPlayer) { const d = after.hp - before.hp; return d ? { text: d < 0 ? `−${-d}` : `+${d} ♥`, harm: d < 0 } : null; }
-    if (before && !after) return { text: "Falls", harm: true };
-    if (!before || !after) return null;
-    const da = after.a - before.a, dh = after.h - before.h;
-    if (!da && !dh) return null;
-    if (!da) return { text: `${dh > 0 ? "+" : "−"}${Math.abs(dh)} ♥`, harm: dh < 0 };
-    if (!dh) return { text: `${da > 0 ? "+" : "−"}${Math.abs(da)} ⚔`, harm: da < 0 };
-    return { text: `${da >= 0 ? "+" : "−"}${Math.abs(da)}/${dh >= 0 ? "+" : "−"}${Math.abs(dh)}`, harm: da + dh < 0 };
-  });
-}
-const targetBadge = pv => (pv ? `<div class="fight-badge spell-pv ${pv.harm ? "harm" : "help"}">${esc(pv.text)}</div>` : "");
-
-// End-of-turn hint: a card that does something at the end of its owner's turn (or holds
-// equipment that does) wears a small hourglass, which glows once that turn's Battle begins.
-const endsTurn = c => !!(CARD_FX[c.id]?.endTurn || (c.equipped || []).some(e => CARD_FX[e.id]?.endTurn));
-function eotBadge(c, owner) {
-  if (!endsTurn(c)) return "";
-  const what = [c, ...(c.equipped || [])].filter(x => CARD_FX[x.id]?.endTurn).map(x => `${x.name}: ${x.ability || ""}`).join("  ");
-  const soon = owner === S.active && S.phase >= PHASE.BATTLE && !S.over;
-  return `<div class="eot-badge${soon ? " soon" : ""}" title="At the end of its owner's turn. ${esc(what)}">⏳</div>`;
 }
 
 // Cards on the table react: allies flinch when one of theirs falls, and a Zombie leans
