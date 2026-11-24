@@ -230,6 +230,8 @@ function showGameMenu() {
 
 $("#modal").addEventListener("click", e => {
   if (e.target.closest("[data-close]") && $("#modal").dataset.dismissable) { closeModal(); return; }
+  const w = e.target.closest("[data-w]");   // the welcome window (showWelcome() in js/help.js)
+  if (w) { closeModal(); if (w.dataset.w === "tutorial") startTutorial(); else showGuide(); return; }
   const skin = e.target.closest("[data-skin]");
   if (skin) { setSkin(skin.dataset.skin); render(); showSettings(); return; }
   const set = e.target.closest("[data-set]");

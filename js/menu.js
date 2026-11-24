@@ -237,11 +237,13 @@ function renderAlmanac() {
   $("#alm-content").innerHTML = h + `</div>`;
 }
 document.querySelector(".tabs").addEventListener("click", e => { const t = e.target.closest("[data-tab]"); if (t) { U.almanacTab = t.dataset.tab; renderAlmanac(); } });
-$("#alm-filters").addEventListener("click", e => { const t = e.target.closest("[data-filter]"); if (t) { U.almanacFilter = t.dataset.filter; renderAlmanac(); } });
+// One handler for the three filter rows (Fracture, Tribe, Class); each button carries one of the markers.
 $("#alm-filters").addEventListener("click", e => {
-  const t = e.target.closest("[data-tribe],[data-class]");
+  const t = e.target.closest("[data-filter],[data-tribe],[data-class]");
   if (!t) return;
-  if (t.dataset.tribe) U.almanacTribe = t.dataset.tribe; else U.almanacClass = t.dataset.class;
+  if (t.dataset.filter) U.almanacFilter = t.dataset.filter;
+  else if (t.dataset.tribe) U.almanacTribe = t.dataset.tribe;
+  else U.almanacClass = t.dataset.class;
   renderAlmanac();
 });
 $("#alm-content").addEventListener("click", e => { const t = e.target.closest("[data-card]"); if (t) showDetail(DATA.cardsById[t.dataset.card]); });

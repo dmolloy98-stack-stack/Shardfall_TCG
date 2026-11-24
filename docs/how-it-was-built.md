@@ -120,6 +120,16 @@ damage, the shard). The core rules never name a champion; they ask `champHook()`
 big shard have their own files too. A new champion or event is new entries, not edits all over the
 core. (Nov 2026)
 
+**Every "choose a card" window is one entry in a table.** What each kind of window does is its entry
+in `CHOICES` (`js/rules-play.js`), and how the computer answers it is in `AI_CHOICES` (`js/ai.js`).
+Before, the same list of kinds was repeated as if-chains in four files, so a new pick-one card could
+easily miss one and leave the computer or the window doing the wrong thing. `tools/cards-test.js`
+fails if a window opened anywhere in the code has no entry. (24 Nov 2026)
+
+**One click handler per area, everywhere.** The Almanac's filter rows and the pop-up window
+(`#modal`) each had two handlers; they were merged so that every area has exactly one (24 Nov 2026,
+found by the `architect-review` agent).
+
 **Special card rules are switched on by words, not names.** A card that bends the core rules has a
 `rule:` clause, and the engine checks for that word, never for a card's name. Renaming a card then
 can't break its rule.

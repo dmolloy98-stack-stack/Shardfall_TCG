@@ -85,7 +85,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |
 | `js/cards.js` | How a card is drawn: frames, art, badges, names |
 | `js/ui.js` | The screen's core: its state, fast redraws, actions (Undo), screens and phone layout |
-| `js/board.js` | Everything drawn on the table: players' plates, health, mana, the big shard, the battle log, turn history and the hand |
+| `js/board.js` | Everything drawn on the table: players' plates, health, mana, the battle log, turn history and the hand |
+| `js/board-marks.js` | Special pieces drawn on the table: the big shard and its cracks, the Protected shell on the health gem, the rune ring on Protected cards |
 | `js/input.js` | Dragging cards from the hand, taps on the table, and keyboard shortcuts |
 | `js/table-effects.js` | Deaths, hits and other reactions on the table |
 | `js/panels.js` | Pop-up windows and Settings |
