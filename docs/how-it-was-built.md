@@ -206,6 +206,12 @@ history lives in `docs/done.md`, so `docs/todo.md` stays short to read. (Nov 202
 look and feel are the owner's: Claude offers two or three options and waits. How to build, split,
 test and name things in code are Claude's, and Claude says what was decided. See CLAUDE.md.
 
+**A code health review before structural pull requests.** The `architect-review` agent
+(`.claude/agents/architect-review.md`) reads a change and reports whether the layers stay apart,
+the patterns are kept, files are growing too big or tangled, and the docs are still true. It only
+reports and never edits. The owner picked it from buildwithclaude.com for the game's long-term
+health, and it was rebuilt around Shardfall's rules because the original was generic (24 Nov 2026).
+
 **Every change goes through a pull request,** merged once GitHub's tests pass, then backed up to
 Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main` after each merge.
 
