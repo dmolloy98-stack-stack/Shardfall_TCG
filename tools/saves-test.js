@@ -67,5 +67,17 @@ const future = 'SHARDFALL1:' + Buffer.from(JSON.stringify({ v: SAVE_VERSION + 1,
 ok('a code from a newer version is refused', /newer version/.test(g4.importSave(future) || ''));
 ok('refused codes change nothing', JSON.stringify(away.dump()) === before);
 
+// 4. A load that fails half way puts the old progress back.
+const start = { 'shardfall.campaign': '4', 'shardfall.hints': 'false', 'shardfall.saveVersion': String(SAVE_VERSION) };
+const full = fakeStorage(start);
+let failedOnce = false;   // storage runs out once, then (after the old values are put back) works
+const flaky = { ...full, setItem(k, v) { if (k === 'shardfall.hints' && !failedOnce) { failedOnce = true; throw new Error('storage full'); } return full.setItem(k, v); } };
+const g5 = load(fakeStorage({ 'shardfall.campaign': '7', 'shardfall.hints': 'true' }));
+const goodCode = g5.exportSave();
+const g6 = load(flaky);
+const msg = g6.importSave(goodCode);
+ok('a load that fails half way says so', /old progress was kept/.test(msg || ''));
+ok('a load that fails half way keeps the old progress', JSON.stringify(Object.entries(full.dump()).sort()) === JSON.stringify(Object.entries(start).sort()));
+
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');
 process.exit(fails ? 1 : 0);

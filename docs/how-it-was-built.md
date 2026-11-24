@@ -191,6 +191,10 @@ the browser. The save code carries exactly those, and a test fails if code saves
 the list. When the form of something saved changes, `SAVE_VERSION` goes up and an upgrade step is
 added, so nobody's progress breaks. (Nov 2026)
 
+**Loading a save code can't half-wipe a save.** `importSave` remembers the old values first and
+puts them back if any write fails (storage full, private window). A test fails storage on purpose
+to prove it. Any new "replace the saved data" code should do the same. (Nov 2026)
+
 **The offline helper asks the network first.** `sw.js` keeps a copy of every game file but always
 tries the network first, falling back to the copy after 2 seconds or with no internet. Updates
 therefore show at once, and an old cached copy can never be mixed with new files (that caused the
@@ -314,4 +318,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-24, pull request #39.
+Last checked: 2026-11-24, pull request #32 (brought up to date after #39).
