@@ -85,45 +85,55 @@ function aiPickTarget() {
   return best;
 }
 
-function aiResolveChoice() {
-  const pd = S.pending;
-  const me = pd.owner;
+// How the computer answers each kind of "choose" window (see CHOICES in js/rules-play.js).
+// Each entry returns [picks, option] for move("choose"). A kind without an entry takes the most
+// expensive cards it may (aiPickByCost).
+const AI_CHOICES = {
   // Soul Shepard and The Man Ape: try each answer on a copy of the game and take the best.
-  if (pd.resolve === "shepard") {
+  shepard(pd, me) {
     const score = o => simulate(() => { resolveChoice([], o); return evaluate(me); });
-    move("choose", [], score("absorb") >= score("hand") + (aiStyle(me).gather || 0) ? "absorb" : "hand");
-    return;
-  }
-  if (pd.resolve === "apeSacrifice") {
+    return [[], score("absorb") >= score("hand") + (aiStyle(me).gather || 0) ? "absorb" : "hand"];
+  },
+  apeSacrifice(pd, me) {
     let best = null, bestScore = simulate(() => { resolveChoice([], null); return evaluate(me); });
     for (const c of pd.cards) {
       const sc = simulate(() => { resolveChoice([c.uid], "sacrifice"); return evaluate(me); });
       if (sc > bestScore + (aiStyle(me).sac ?? 0.5)) { bestScore = sc; best = c.uid; }
     }
-    move("choose", best ? [best] : [], best ? "sacrifice" : null);
-    return;
-  }
+    return [best ? [best] : [], best ? "sacrifice" : null];
+  },
   // A counter spell: use one only when stopping the card is worth more than the counter costs,
   // so a 4-mana counter is not spent on a 1-mana character.
-  if (pd.resolve === "counter") {
+  counter(pd, me) {
     const letIt = simulate(() => { resolveChoice([], null); return evaluate(me); });
     let best = null, bestGain = 0;
     for (const c of pd.cards) {
       const gain = simulate(() => { resolveChoice([c.uid], "counter"); return evaluate(me); }) - letIt - playCost(c, S.players[me]) * 1.2;
       if (gain > bestGain) { bestGain = gain; best = c.uid; }
     }
-    move("choose", best ? [best] : [], best ? "counter" : null);
-    return;
-  }
-  if (pd.resolve === "messenger") {
+    return [best ? [best] : [], best ? "counter" : null];
+  },
+  messenger(pd) {
     const top = pd.cards[0];
-    move("choose", [], top && top.manaCost >= 3 ? "take" : "discard");
-    return;
-  }
+    return [[], top && top.manaCost >= 3 ? "take" : "discard"];
+  },
+  discardDraw: (pd, me) => aiPickByCost(pd, me, true),   // throw away the cheapest
+};
+
+// Take the most expensive cards allowed (or the cheapest), and bring a card back to the field
+// rather than the hand when that is offered and there is mana to spare.
+function aiPickByCost(pd, me, cheapest) {
   const sorted = pd.cards.slice().sort((a, b) => b.manaCost - a.manaCost);
-  if (pd.resolve === "discardDraw") sorted.reverse();
+  if (cheapest) sorted.reverse();
   const picks = sorted.slice(0, pd.pick || 1).map(c => c.uid);
   const option = pd.options?.some(o => o.id === "field") && S.players[me].mana >= 2 ? "field" : "hand";
+  return [picks, option];
+}
+
+function aiResolveChoice() {
+  const pd = S.pending;
+  const me = pd.owner;
+  const [picks, option] = (AI_CHOICES[pd.resolve] || aiPickByCost)(pd, me);
   move("choose", picks, option);
 }
 

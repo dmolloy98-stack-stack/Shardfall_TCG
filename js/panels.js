@@ -81,7 +81,7 @@ function showChoose() {
   const max = pd.pick || 1;
   const draw = () => {
     const options = pd.options || [{ id: "ok", label: "Confirm" }];
-    const needPick = pd.resolve !== "messenger" && pd.resolve !== "shepard";
+    const needPick = CHOICES[pd.resolve]?.needsPick !== false;
     $("#modal-content").innerHTML = `<h2 id="modal-title">${esc(pd.title)}</h2><p class="sub">${esc(pd.prompt)}</p>
       <div class="modal-cards">${pd.cards.map(c => `<button type="button" class="${picked.has(c.uid) ? "picked" : ""}" data-pick="${c.uid}">${cardHTML(c)}</button>`).join("")}</div>
       <div class="detail-actions" style="margin-top:16px">${options.map(o => `<button type="button" class="btn${o === options[0] ? " btn-primary" : ""}" data-opt="${o.id}" ${needPick && !picked.size && pd.required ? "disabled" : ""}>${esc(o.label)}</button>`).join("")}
@@ -230,6 +230,8 @@ function showGameMenu() {
 
 $("#modal").addEventListener("click", e => {
   if (e.target.closest("[data-close]") && $("#modal").dataset.dismissable) { closeModal(); return; }
+  const w = e.target.closest("[data-w]");   // the welcome window (showWelcome() in js/help.js)
+  if (w) { closeModal(); if (w.dataset.w === "tutorial") startTutorial(); else showGuide(); return; }
   const skin = e.target.closest("[data-skin]");
   if (skin) { setSkin(skin.dataset.skin); render(); showSettings(); return; }
   const set = e.target.closest("[data-set]");

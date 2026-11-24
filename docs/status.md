@@ -46,7 +46,7 @@ Average game: 13.9 turns (both players' turns counted)
 - On every pull request GitHub also runs the balance check, screen tests, picture comparison, speed budget and accessibility check (`ci-check` skill to read them).
 
 ## Code
-- 28 game scripts, loaded in this order: saves.js, engine.js, rules-combat.js, rules-turns.js, rules-play.js, rules-champions.js, rules-events.js, rules-shard.js, effects.js, ai.js, tutorial.js, help.js, guide.js, decks.js, fx.js, motion.js, intro.js, cards.js, ui.js, board.js, input.js, table-effects.js, panels.js, menu.js, storm.js, champions.js, campaign.js, boot.js.
+- 29 game scripts, loaded in this order: saves.js, engine.js, rules-combat.js, rules-turns.js, rules-play.js, rules-champions.js, rules-events.js, rules-shard.js, effects.js, ai.js, tutorial.js, help.js, guide.js, decks.js, fx.js, motion.js, intro.js, cards.js, ui.js, board.js, board-marks.js, input.js, table-effects.js, panels.js, menu.js, storm.js, champions.js, campaign.js, boot.js.
 - 36 tools in `tools/` (the README's file table lists them).
 - Map: `docs/code-map.md` (where things are); why: `docs/how-it-was-built.md`.
 
