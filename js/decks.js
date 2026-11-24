@@ -68,7 +68,6 @@ function deckProblem(deckId) {
 // Builder screen
 // ---------------------------------------------------------------------------
 const B = { id: null, name: "", cards: {}, saved: "", faction: "All", type: "All", sheet: false, walk: -1 };
-const byId = id => document.getElementById(id);
 const TYPES = ["Character", "Spell", "Equipment", "Area"];
 
 // Start a new deck: empty, or a copy of a starter deck to change.

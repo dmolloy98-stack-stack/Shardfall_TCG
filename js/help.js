@@ -9,7 +9,7 @@
 function hintText() {
   if (!S || S.over || U.curtain || U.tutorial) return null;
   const p = active();
-  if (p.isAI) return `${p.name === "Computer" ? "The computer" : p.name} is taking its turn. You can tap any card to read it while you wait.`;
+  if (p.isAI) return `${thinkerName(p)} is taking its turn. You can tap any card to read it while you wait.`;
   const pd = S.pending;
   if (pd?.kind === "choose") return null;
   if (pd?.kind === "target") {

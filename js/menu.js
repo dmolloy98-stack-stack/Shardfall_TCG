@@ -10,7 +10,7 @@
 U.menuView = "home";
 U.setupMode = "ai";
 U.oppDeckId = PREFS.get("opp", "random");   // the other side's deck: "random" or a deck id
-const SETUP = {
+const SETUP_MODES = {
   ai: { title: "door_quick", deck: "setup_ai_deck", opp: "setup_ai_opp", start: "menu_start_match" },
   hotseat: { title: "door_two", deck: "setup_hotseat_deck", opp: "setup_hotseat_opp", start: "menu_start_match" },
   campaign: { title: "setup_campaign_title", deck: "setup_ai_deck", opp: null, start: "setup_campaign_start" },
@@ -37,7 +37,7 @@ function renderDoors() {
 }
 
 function renderSetup() {
-  const mode = SETUP[U.setupMode] || SETUP.ai;
+  const mode = SETUP_MODES[U.setupMode] || SETUP_MODES.ai;
   $("#setup-title").textContent = T(mode.title);
   $("#deck-label").textContent = T(mode.deck);
   const tile = id => {

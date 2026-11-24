@@ -125,14 +125,14 @@ function bumpCount(key, n = 1) {
 }
 // What one match tracks for the trophies (the player at the bottom against the computer).
 const trophyMatch = () => S && S.mode === "ai" && !U.tutorial && !S.players[0].isAI;
-let TM = null;
+let TROPHY_MATCH = null;
 onGameEvent((type, d) => {
-  if (type === "newGame") { U.newTrophies = []; TM = { hurt: false, low: Infinity, spells: 0, grave: new Set() }; return; }
-  if (!trophyMatch() || !TM) return;
+  if (type === "newGame") { U.newTrophies = []; TROPHY_MATCH = { hurt: false, low: Infinity, spells: 0, grave: new Set() }; return; }
+  if (!trophyMatch() || !TROPHY_MATCH) return;
   const me = S.players[0];
-  if (type === "playerDamage" && d.player === 0) { TM.hurt = true; TM.low = Math.min(TM.low, me.health); }
+  if (type === "playerDamage" && d.player === 0) { TROPHY_MATCH.hurt = true; TROPHY_MATCH.low = Math.min(TROPHY_MATCH.low, me.health); }
   if ((type === "playerDamage" && d.player === 1 && d.amount >= goalOf("overkill")) || (type === "charDamage" && d.amount >= goalOf("overkill") && findChar(d.uid)?.p.idx === 1)) earnTrophy("overkill");
-  if (type === "play" && d.player === 0 && d.card.type === "Spell" && ++TM.spells >= goalOf("spell_slinger")) earnTrophy("spell_slinger");
+  if (type === "play" && d.player === 0 && d.card.type === "Spell" && ++TROPHY_MATCH.spells >= goalOf("spell_slinger")) earnTrophy("spell_slinger");
   if (type === "shardClaim" && d.player === 0) bumpCount("shards");
   if (type === "reanimate" && d.player === 0) bumpCount("revived");
   if (me.field.chars.length >= goalOf("full_house")) earnTrophy("full_house");
@@ -140,14 +140,14 @@ onGameEvent((type, d) => {
   // a character leaving your graveyard (back to your hand or the table) was brought back
   const now = new Set(me.grave.filter(c => c.type === "Character").map(c => c.uid));
   let back = 0;
-  for (const uid of TM.grave) if (!now.has(uid) && (me.hand.some(c => c.uid === uid) || me.field.chars.some(c => c.uid === uid))) back++;
-  TM.grave = now;
+  for (const uid of TROPHY_MATCH.grave) if (!now.has(uid) && (me.hand.some(c => c.uid === uid) || me.field.chars.some(c => c.uid === uid))) back++;
+  TROPHY_MATCH.grave = now;
   if (back) bumpCount("revived", back);
   if (type === "gameOver") {
     if (d.winner === 0) {
       if (me.field.chars.filter(c => hasTribe(c, "Monkey")).length >= goalOf("troop_night")) earnTrophy("troop_night");
-      if (!TM.hurt) earnTrophy("untouchable");
-      if (TM.low <= goalOf("brink")) earnTrophy("brink");
+      if (!TROPHY_MATCH.hurt) earnTrophy("untouchable");
+      if (TROPHY_MATCH.low <= goalOf("brink")) earnTrophy("brink");
       const rec = PREFS.get("record", {}) || {};
       if (STARTERS().every(id => rec[id]?.w > 0)) earnTrophy("five_worlds");
     }
@@ -173,4 +173,62 @@ function showTrophies() {
       return `<div class="trophy${got ? " got" : ""}"><span class="trophy-cup" aria-hidden="true">🏆</span><b>${esc(t.name)}</b><span>${esc(t.how)}${prog}</span>${got ? `<em>Earned ${esc(got)}</em>` : `<em>Not earned yet</em>`}</div>`;
     }).join("")}</div>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Close</button></div>`);
+}
+
+// ---------------------------------------------------------------------------
+// This match's numbers: running totals for the end screen (cards played, damage dealt, the biggest
+// hit), the card that dealt the most damage (for the champion's line), and the end screen's badges.
+// ---------------------------------------------------------------------------
+function resetMatchStats() {
+  U.stats = { played: [0, 0], dealt: [0, 0], biggest: 0, low: [1, 1], byCard: {} };
+  U.endBadges = [];
+}
+// Damage from a fight is credited to the card that dealt it (the attacker, or the defender
+// hitting back), for the champion's line on the end screen.
+function creditFight(victimUid, amount) {
+  const st = U.stats;
+  if (!st || performance.now() - U.lungeAt > 80 || !U.lastAttacker) return;
+  const dealer = victimUid === U.lastAttacker ? U.lastTarget : U.lastAttacker;
+  const c = dealer != null ? findCard(dealer) : null;
+  if (!c || c.owner !== viewIdx()) return;
+  const e = st.byCard[dealer] || (st.byCard[dealer] = { name: c.name, n: 0 });
+  e.n += amount;
+}
+function countDamage(victimIdx, amount) {
+  const st = U.stats;
+  if (!st) return;
+  st.dealt[1 - victimIdx] += amount;
+  st.biggest = Math.max(st.biggest, amount);
+}
+
+// Little achievements for the end screen ("Flawless", "First win", …).
+function endBadges(winner) {
+  const st = U.stats || {};
+  // little achievements, shown on the end screen
+  const badges = [];
+  if (winner != null) {
+    const w = S.players[winner];
+    if (w.health >= w.maxHealth) badges.push(["Flawless", "Won without taking a hit"]);
+    if ((st.low?.[winner] ?? 1) < 0.35) badges.push(["Comeback", "Won from red health"]);
+    if (S.mode === "ai" && winner === 0 && !U.tutorial) {
+      const wins = PREFS.get("wins", {}) || {};
+      const id = S.players[0].deckId;
+      if (!wins[id]) badges.push(["First win", `with ${DATA.decks[id]?.name || "this deck"}`]);
+      wins[id] = (wins[id] || 0) + 1;
+      PREFS.set("wins", wins);
+    }
+  }
+  if (st.biggest >= 8) badges.push(["Massive hit", `${st.biggest} damage in one blow`]);
+  return badges;
+}
+
+function endStatsHTML() {
+  const st = U.stats;
+  if (!st) return "";
+  const [me, them] = [viewIdx(), 1 - viewIdx()];
+  const row = (label, a, b) => `<tr><th>${label}</th><td>${a}</td><td>${b}</td></tr>`;
+  return `<table class="end-stats"><tr><th></th><td>${esc(S.players[me].name)}</td><td>${esc(S.players[them].name)}</td></tr>
+    ${row("Cards played", st.played[me], st.played[them])}${row("Damage dealt", st.dealt[me], st.dealt[them])}</table>
+    <p class="end-sub">Biggest hit: ${st.biggest} · ${S.round} turn${S.round === 1 ? "" : "s"}</p>
+    ${U.endBadges?.length ? `<div class="end-badges">${U.endBadges.map(([t, s]) => `<div class="end-badge"><b>${esc(t)}</b><span>${esc(s)}</span></div>`).join("")}</div>` : ""}`;
 }

@@ -5,7 +5,7 @@
 // and then starts the game scripts.
 
 const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events", "champion_abilities", "whats_new", "trophies", "mastery", "ai_styles"];
-const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/rules-combat.js", "js/rules-turns.js", "js/rules-play.js", "js/rules-champions.js", "js/rules-events.js", "js/rules-shard.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/board.js", "js/board-marks.js", "js/input.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/progress.js", "js/boot.js"];
+const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/rules-combat.js", "js/rules-turns.js", "js/rules-play.js", "js/rules-champions.js", "js/rules-events.js", "js/rules-shard.js", "js/effects.js", "js/ai.js", "js/dom.js", "js/tutorial.js", "js/tutorial-steps.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/previews.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/board.js", "js/board-marks.js", "js/input.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/progress.js", "js/boot.js"];
 let DATA = null;
 
 // Words players read (data/ui_text.csv). T("id") gives the text; T("id", { name: "Ann" }) fills in

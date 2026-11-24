@@ -4,10 +4,12 @@
 // ---------------------------------------------------------------------------
 // Players, decks, turns
 // ---------------------------------------------------------------------------
+// The name a computer player has unless the campaign or tutorial gives it one.
+const COMPUTER_NAME = "Computer";
 function makePlayer(idx, deckId, isAI) {
   const def = DATA.decks[deckId] || { faction: "Mixed", custom: true, name: "Replayed deck" };   // a replayed custom deck that isn't saved here
   return {
-    idx, name: isAI ? "Computer" : `Player ${idx + 1}`, isAI: !!isAI, deckId, faction: def.faction,
+    idx, name: isAI ? COMPUTER_NAME : `Player ${idx + 1}`, isAI: !!isAI, deckId, faction: def.faction,
     deckLabel: def.custom ? def.name : `${def.faction} deck`,
     mana: 0, manaMax: 0, turnsPlayed: 0, hasDrawn: false, ripen: false,
     deck: [], hand: [], grave: [],

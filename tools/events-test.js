@@ -1,11 +1,10 @@
 const fs = require('fs');
-// Checks the random events (data/events.csv, js/engine.js "Random events"): node tools/events-test.js .
+// Checks the random events (data/events.csv, js/rules-events.js): node tools/events-test.js .
 const dir = process.argv[2] || '.';
-eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
-let fails = 0;
-const ok = (name, cond, extra) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); if (!cond) fails++; };
+const rulesCode = require(require('path').join(__dirname, 'rules-code'));
+eval(rulesCode(dir, ['champions', 'ai']) + rulesCode.kit + `
 const fresh = opts => { newGame({ deckId: 'simple_starter', opponentDeckId: 'zombie_starter', mode: 'hotseat', seed: 7, abilities: false, ...opts }); for (const p of S.players) { p.field.chars.length = 0; p.field.areas.length = 0; } return S.players[0]; };
-const put = (p, name) => { const c = cardByName(name); c.owner = p.idx; putOnField(c, p); return c; };
+const put = (p, name) => putCard(p, name);
 // Play on to the start of round n: end the turn, draw the card.
 const toRound = n => { let guard = 0; while (S.round < n && guard++ < 50) { S.pending = null; S.phase = PHASE.SETUP; endTurn(); if (S.over) return; if (S.phase === PHASE.DRAW) doDraw(); } };
 
