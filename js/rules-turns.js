@@ -57,13 +57,13 @@ function startTurn(p) {
   }
 }
 
-// One-time bonus for the player who goes second: +1 mana this turn.
+// One-time bonus for the player who goes second: +RULES.manaToken mana this turn.
 function useManaToken() {
   if (!allowed("useManaToken")) return false;
   const p = active();
   if (S.over || !p.manaToken || S.pending) return false;
   p.manaToken = false;
-  p.mana += 1;
+  p.mana += RULES.manaToken;
   emit("manaToken", { player: p.idx });
   log(`${p.name} uses their bonus mana token.`);
   return true;
@@ -210,7 +210,7 @@ function endTurn() {
 
 function finishTurn() {
   endPhaseEffects(active());
-  for (const c of allChars()) c.bow = 0;   // The Bow lasts one turn
+  champHook(active(), "turnEnd");   // e.g. The Bow's +2 wears off
   S.active = 1 - S.active;
   S.phase = PHASE.DRAW;
   S.round++;

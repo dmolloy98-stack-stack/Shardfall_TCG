@@ -7,14 +7,14 @@
 // Protected: a player with RULES.protectAt or more characters, or with a character that has the
 // Protected skill, takes half damage, rounded up. An attacker with Pierce ignores it.
 function isProtected(p) {
-  return !!RULES.protectAt && (p.field.chars.length >= RULES.protectAt || p.field.chars.some(c => hasSkill(c, "Protected")));
+  return !!RULES.protectAt && (p.field.chars.length >= RULES.protectAt || p.field.chars.some(c => skillNow(c, "Protected")));
 }
 function dealDamageToPlayer(p, amount, source) {
   if (amount <= 0 || S.over) return;
   const ip = p.field.chars.find(x => cardRule(x, "redirect") && x.redirectRound !== S.round);
   if (ip) { redirectDamage(ip, amount); return; }
   if (isProtected(p)) {
-    if (source && hasSkill(source, "Pierce")) emit("text", { uid: source.uid, text: "PIERCE", color: "#ff9a6b" });
+    if (source && skillNow(source, "Pierce")) emit("text", { uid: source.uid, say: "pierce" });
     else {
       const half = Math.ceil(amount / 2);
       log(`${p.name} is Protected and takes ${half} instead of ${amount}.`);
@@ -74,7 +74,7 @@ function checkDeath(c) {
     runHook(c, "reanimate", { owner: p });
     triggerEvolve(c); // "After returning from the Graveyard to the Field, Evolve"
     emit("reanimate", { uid: c.uid, player: p.idx });
-    emit("text", { uid: c.uid, text: "REANIMATE", color: "#8dff8d" });
+    emit("text", { uid: c.uid, say: "reanimate" });
     log(`${c.name} reanimates.`);
     if (rawStats(c).h <= 0) sendToGraveyard(p, c);
   } else sendToGraveyard(p, c);
@@ -93,7 +93,7 @@ function dealDamageToCharacter(c, amount) {
 // its player goes to an enemy character or the enemy player instead. Its player picks which.
 function redirectDamage(ip, amount) {
   ip.redirectRound = S.round;
-  emit("text", { uid: ip.uid, text: "REDIRECT", color: "#ffd27a" });
+  emit("text", { uid: ip.uid, say: "redirect" });
   log(`${ip.name} redirects ${amount} damage.`);
   ask({ kind: "target", source: ip, owner: ip.owner, spell: false, targetType: "charOrPlayer", intent: "harm", required: true, amount });
 }
@@ -135,16 +135,16 @@ function deckOut(p) {
 // Combat (port of resolveCharacterAttack)
 // ---------------------------------------------------------------------------
 function canAttack(c) {
-  return S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active && !c.hasAttacked && !hasSkill(c, "Tower");
+  return S.phase === PHASE.BATTLE && !S.over && !S.pending && c.owner === S.active && !c.hasAttacked && !skillNow(c, "Tower");
 }
 
 // Guards: characters with Challenge or Tower must be attacked before anything else on
 // their side, including the player. With more than one, the attacker picks which.
-const isGuard = c => hasSkill(c, "Challenge") || hasSkill(c, "Tower");
+const isGuard = c => skillNow(c, "Challenge") || skillNow(c, "Tower");
 function guards(defender) { return defender.field.chars.filter(isGuard); }
 function forcedTarget(defender) { return guards(defender)[0] || null; }
 // The skill that makes a character a guard, for messages.
-const guardSkill = c => (hasSkill(c, "Challenge") ? "Challenge" : "Tower");
+const guardSkill = c => (skillNow(c, "Challenge") ? "Challenge" : "Tower");
 
 function attack(attackerUid, targetUid) {
   if (!allowed("attack", attackerUid, targetUid)) return false;
@@ -186,7 +186,7 @@ function attack(attackerUid, targetUid) {
   const hitTarget = () => {
     const hpBefore = rawStats(target).h + shield;
     dealDamageToCharacter(target, Math.max(0, as.a - shield));
-    if (hasSkill(a, "Overwhelm") && as.a > hpBefore) dealDamageToPlayer(defender, as.a - hpBefore, a);
+    if (skillNow(a, "Overwhelm") && as.a > hpBefore) dealDamageToPlayer(defender, as.a - hpBefore, a);
   };
   const alive = c => ownerOf(c).field.chars.includes(c);
 
@@ -205,7 +205,7 @@ function attack(attackerUid, targetUid) {
     hitTarget();
     if (alive(a)) dealDamageToCharacter(a, ta);
   }
-  if (first && alive(first) && !alive(first === a ? target : a)) emit("text", { uid: first.uid, text: "» NO REPLY", color: "#9fe7ff" });
+  if (first && alive(first) && !alive(first === a ? target : a)) emit("text", { uid: first.uid, say: "noReply" });
   recordCombatSurvival(a); recordCombatSurvival(target);
   // A fight won: its character lives and the enemy character is knocked out (IP Man counts these).
   if (alive(a) && !alive(target)) champHook(p, "fightWon");
@@ -214,7 +214,7 @@ function attack(attackerUid, targetUid) {
 }
 
 // Swift: the skill, or wearing equipment that grants it (Zippy Shoes, Bow).
-const isSwift = c => hasSkill(c, "Swift") || grantsSkill(c, "Swift");
+const isSwift = c => skillNow(c, "Swift");
 
 // "rule: survive <fights> <CardID>" (Black Belt Student): after living through that many
 // fights, the character transforms into that card.

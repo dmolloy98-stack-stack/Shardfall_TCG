@@ -158,7 +158,7 @@ their own story or coaching, then hand over to the same engine.
 | To change… | Go to |
 |---|---|
 | Card stats, costs, abilities, deck lists, rule numbers | `data/*.csv` (or the card and deck builder sheet) |
-| A new column in a table | `js/data.js` |
+| A new column in a table | `js/data.js` (one reader per table; columns are found by their header name) |
 | A new kind of card ability | `js/effects.js` |
 | A card's fracture, tribes or classes | the Fracture, Tribes and Classes columns of `data/cards.csv`; a bonus for a whole tribe or class is written like `allies.Student` in the Effect column |
 | A tribe family (none in use; Undead is now a fracture) | a `tribe_family_<Name>` row in `data/game_rules.csv`; `TRIBE_FAMILIES`, `hasTribe` and `tribesOf` in `js/engine.js`. Rules that name a kind of card (`rule: shepherd Undead`, `rule: sacrifice Monkey`) check it with `isKind` (fracture, then tribe, then class) |
@@ -175,7 +175,7 @@ their own story or coaching, then hand over to the same engine.
 | Deaths, hits and other table reactions to game events | `js/table-effects.js` (`DEATHS`: each world dies its own way) |
 | The main menu, deck choice or Almanac | `js/menu.js` |
 | The falling-shards menu background | `js/storm.js` |
-| Animations and feedback | `js/fx.js` and `css/style.css` |
+| Animations and feedback | `js/fx.js` and `css/style.css`; the words that float up from a character are `float_…` rows in `data/ui_text.csv`, their colours `FLOATS` in `js/table-effects.js` |
 | Cards moving between deck, hand, table and graveyard; health counting | `js/motion.js` (`motionAfterRender()`, called at the end of `render()`) |
 | Where things sit on the table, and card sizes | `L`, `FIELD_W`, `BACK_W` at the top of `js/ui.js` |
 | Spots that light up while you drag a card | `setPlacing()` in `js/input.js` (stage classes `placing-…` in `css/style.css`) |

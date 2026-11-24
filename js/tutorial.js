@@ -58,7 +58,7 @@ function endTutorial() {
 // Helpers for writing steps
 // ---------------------------------------------------------------------------
 const tid = key => TUT.ids[key];
-const tcard = key => findCardAnywhere(TUT.ids[key]);
+const tcard = key => findCard(TUT.ids[key]);
 const onField = key => !!findChar(TUT.ids[key]);
 const q = sel => document.querySelector(sel);
 const handEl = key => q(`.hand-card[data-uid="${tid(key)}"]`);

@@ -17,7 +17,8 @@ const files = [...fs.readdirSync(path.join(dir, 'js')).map(f => 'js/' + f), 'ind
 const asked = new Map(), mentioned = new Set();
 for (const f of files) {
   const text = fs.readFileSync(path.join(dir, f), 'utf8').split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');   // comments don't count
-  for (const m of text.matchAll(/\bT\(\s*"([A-Za-z0-9_]+)"/g)) asked.set(m[1], f);
+  for (const m of text.matchAll(/\bT\(\s*"([A-Za-z0-9_]+)"(\s*\+)?/g)) if (!m[2]) asked.set(m[1], f);   // T("float_" + id) is a family, checked below
+  for (const m of text.matchAll(/\bsay: "([A-Za-z0-9]+)"/g)) asked.set('float_' + m[1], f);   // floating words the rules send (FLOATS in js/table-effects.js)
   for (const m of text.matchAll(/data-t="([A-Za-z0-9_]+)"/g)) asked.set(m[1], f);
   for (const m of text.matchAll(/"([a-z][a-z0-9_]+)"/g)) if (have.has(m[1])) mentioned.add(m[1]);   // ids passed around, e.g. SETUP
   for (const m of text.matchAll(/DATA\.text\(\s*"([A-Za-z0-9_]+)"/g)) mentioned.add(m[1]);

@@ -15,3 +15,8 @@ shard_round,8,number,"The round the big shard falls into the middle of the table
 shard_health,10,number,Health of the big shard
 shard_draw,1,number,"Cards the player who breaks the big shard draws, on top of their champion's shard bonus"
 shard_draw_no_champion,2,number,Cards the player who breaks the big shard draws when their deck has no champion
+evolve_bonus,3,number,Attack and Health a character gains when it Evolves
+level_up_max,3,number,"How many times a Level Up character can level up (a card's ""rule: levelCap"" can change it)"
+rally_needed,3,number,How many Rally characters of one fracture a side needs before each gets the Rally bonus
+rally_bonus,1,number,Attack a Rally character gets once enough Rally characters of its fracture are out
+mana_token,1,number,Extra mana the second player's one-time bonus token gives

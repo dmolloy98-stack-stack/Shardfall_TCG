@@ -123,6 +123,30 @@ function turnHandover(player) {
   $("#fx-layer").appendChild(el);
   setTimeout(() => { el.remove(); land(); sparkle(70, 400, 12); }, 650);
 }
+// The words that float up from a character. The rules send which one ({ uid, say: "evolve" }, with
+// numbers like n when it has them); the words are "float_<say>" rows in data/ui_text.csv, and the
+// colour, and the skill spotlighted with it, are here. A card's own "say" action sends its words
+// and colour itself ({ uid, text, color }).
+const FLOATS = {
+  disabled: { color: "#c9c9c9" },
+  drain: { color: "#ff8a6b" },
+  evolve: { color: "#b98cff", skill: "Evolve" },
+  transform: { color: "#6fe3ff", skill: "Transform" },
+  levelUp: { color: "#ffd25e", skill: "Level Up" },
+  levelDown: { color: "#c9c9c9" },
+  infected: { color: "#8dff8d" },
+  chestThump: { color: "#ffd27a" },
+  plusAttack: { color: "#ffd27a" },
+  bow: { color: "#ffd27a" },
+  gainSwift: { color: "#9fe7ff" },
+  pierce: { color: "#ff9a6b" },
+  reanimate: { color: "#8dff8d", skill: "Reanimate" },
+  redirect: { color: "#ffd27a" },
+  noReply: { color: "#9fe7ff", skill: "Swift", afterBlow: true },
+  equip: { color: "#7fd6ff" },
+  absorb: { color: "#8dff8d" },
+  plusAll: { color: "#ffd25e" },
+};
 const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const SWIFT_GAP = 230;   // ms between a Swift blow and the reply
 
@@ -183,9 +207,10 @@ onGameEvent((type, d) => {
     floatText(p.x, p.y - 10, `+${d.amount}`, "#7be08f");
   } else if (type === "text") {
     const p = charCenter(d.uid);
-    // "» NO REPLY" (Swift won the fight untouched) shows once the blow has landed
-    const wait = d.text.startsWith("»") ? delay + SWIFT_GAP : 0;
-    later(wait, () => { floatText(p.x, p.y - 40, d.text, d.color, true); skillSpotlight(d.uid, d.text); });
+    const f = d.say ? FLOATS[d.say] || {} : {};
+    const text = d.say ? T("float_" + d.say, d) : d.text, color = d.say ? f.color : d.color;
+    const wait = f.afterBlow ? delay + SWIFT_GAP : 0;   // "» NO REPLY" (Swift won the fight untouched) shows once the blow has landed
+    later(wait, () => { floatText(p.x, p.y - 40, text, color, true); if (f.skill) skillSpotlight(d.uid, f.skill); });
   } else if (type === "enter") {
     U.spawn.set(d.uid, { cost: Math.min(7, Math.max(1, d.cost)), t: now, faction: findChar(d.uid)?.c.group });
   } else if (type === "lunge") {

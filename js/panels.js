@@ -107,18 +107,37 @@ function chooseClick(t) {
   else act(() => move("choose", picks, opt.dataset.opt));
 }
 
-// Settings: beginner hints and the board skin. Opened from the main menu or the game menu.
+// The on/off switches in Settings, in the order they show. Each one is a U field saved under the same
+// key (add the key to SAVE_KEYS in js/saves.js), its words in data/ui_text.csv ({state} is filled in),
+// and anything to do once it has flipped. A new switch is one entry here.
+const SWITCHES = [
+  { set: "hints", key: "hints", words: "settings_hints", flip: () => setHints(!U.hints) },
+  { set: "log", key: "showLog", words: "settings_log", state: on => T(on ? "shown" : "hidden"), after: () => { if (U.screen === "game") render(); } },
+  { set: "fx", key: "heavyFx", words: "settings_fx", tip: "settings_fx_tip", after: () => { applyHeavyFx(); if (U.screen === "menu") { storm.stop(); storm.start(); } } },
+  { set: "flow", key: "autoFlow", words: "settings_flow", tip: "settings_flow_tip" },
+  { set: "passcheck", key: "passCheck", words: "settings_passcheck", tip: "settings_passcheck_tip" },
+];
+function switchButton(w) {
+  const on = U[w.key], state = w.state ? w.state(on) : T(on ? "on" : "off");
+  return `<button type="button" class="btn" data-set="${w.set}" aria-pressed="${on}"${w.tip ? ` title="${esc(T(w.tip))}"` : ""}>${esc(T(w.words, { state }))}</button>`;
+}
+function flipSwitch(w) {
+  if (w.flip) w.flip();
+  else { U[w.key] = !U[w.key]; PREFS.set(w.key, U[w.key]); }
+  w.after?.();
+  showSettings();
+}
+
+// Settings: the switches, the computer's speed and the board skin. Opened from the main menu or the game menu.
 function showSettings() {
-  const onOff = on => T(on ? "on" : "off");
+  const sw = id => switchButton(SWITCHES.find(w => w.set === id));
   openModal(`<h2 id="modal-title">${esc(T("settings_title"))}</h2>
     <div class="menu-list">
-      <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">${esc(T("settings_hints", { state: onOff(U.hints) }))}</button>
-      <button type="button" class="btn" data-set="log" aria-pressed="${U.showLog}">${esc(T("settings_log", { state: T(U.showLog ? "shown" : "hidden") }))}</button>
+      ${sw("hints")}
+      ${sw("log")}
       <button type="button" class="btn" data-set="speed" title="${esc(T("settings_speed_tip"))}">${esc(T("settings_speed", { speed: AI_SPEEDS[U.aiSpeed].name }))}</button>
-      <button type="button" class="btn" data-set="fx" aria-pressed="${U.heavyFx}" title="${esc(T("settings_fx_tip"))}">${esc(T("settings_fx", { state: onOff(U.heavyFx) }))}</button>
-      <button type="button" class="btn" data-set="flow" aria-pressed="${U.autoFlow}" title="${esc(T("settings_flow_tip"))}">${esc(T("settings_flow", { state: onOff(U.autoFlow) }))}</button>
-      <button type="button" class="btn" data-set="passcheck" aria-pressed="${U.passCheck}" title="${esc(T("settings_passcheck_tip"))}">${esc(T("settings_passcheck", { state: onOff(U.passCheck) }))}</button>
-      ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">${esc(T("settings_readlog"))}</button>` : ""}
+      ${SWITCHES.filter(w => !["hints", "log"].includes(w.set)).map(switchButton).join("\n      ")}
+    ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">${esc(T("settings_readlog"))}</button>` : ""}
       ${U.screen === "menu" ? `<button type="button" class="btn" data-set="intro">${esc(T("settings_intro"))}</button>` : ""}
       <button type="button" class="btn" data-set="savecode" title="${esc(T("settings_savecode_tip"))}">${esc(T("settings_savecode"))}</button>
     </div>
@@ -249,13 +268,10 @@ $("#modal").addEventListener("click", e => {
   if (skin) { setSkin(skin.dataset.skin); render(); showSettings(); return; }
   const set = e.target.closest("[data-set]");
   if (set) {
-    if (set.dataset.set === "hints") { setHints(!U.hints); showSettings(); }
-    else if (set.dataset.set === "log") { U.showLog = !U.showLog; PREFS.set("showLog", U.showLog); if (U.screen === "game") render(); showSettings(); }
+    const w = SWITCHES.find(x => x.set === set.dataset.set);
+    if (w) flipSwitch(w);
     else if (set.dataset.set === "speed") { const ids = Object.keys(AI_SPEEDS); U.aiSpeed = ids[(ids.indexOf(U.aiSpeed) + 1) % ids.length]; PREFS.set("aiSpeed", U.aiSpeed); showSettings(); }
     else if (set.dataset.set === "readlog") showLog();
-    else if (set.dataset.set === "fx") { U.heavyFx = !U.heavyFx; PREFS.set("heavyFx", U.heavyFx); applyHeavyFx(); if (U.screen === "menu") { storm.stop(); storm.start(); } showSettings(); }
-    else if (set.dataset.set === "flow") { U.autoFlow = !U.autoFlow; PREFS.set("autoFlow", U.autoFlow); showSettings(); }
-    else if (set.dataset.set === "passcheck") { U.passCheck = !U.passCheck; PREFS.set("passCheck", U.passCheck); showSettings(); }
     else if (set.dataset.set === "intro") { closeModal(); playIntro(); }
     else if (set.dataset.set === "savecode") showSaveCode();
     else if (set.dataset.set === "copycode") copySaveCode();
@@ -268,7 +284,7 @@ $("#modal").addEventListener("click", e => {
   const b = e.target.closest("[data-m]");
   if (!b) return;
   const m = b.dataset.m, uid = Number(b.dataset.uid);
-  if (m === "detail") { const c = findCardAnywhere(uid); if (c) showDetail(c); return; }
+  if (m === "detail") { const c = findCard(uid); if (c) showDetail(c); return; }
   closeModal();
   if (m === "play") act(() => move("play", uid));
   else if (m === "arm") { U.armed = { uid, from: "hand" }; render(); }

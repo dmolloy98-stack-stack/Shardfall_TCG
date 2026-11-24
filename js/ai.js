@@ -64,7 +64,7 @@ function evaluate(me) {
   if (S.shardBy != null) score += S.shardBy === me ? SHARD_CLAIM : -SHARD_CLAIM;
   // Danger: the other side's attackers could finish me next turn and nothing guards me.
   if (!guards(mine).length) {
-    const threat = theirs.field.chars.reduce((n, c) => n + (hasSkill(c, "Tower") ? 0 : stats(c).a), 0);
+    const threat = theirs.field.chars.reduce((n, c) => n + (skillNow(c, "Tower") ? 0 : stats(c).a), 0);
     if (threat >= mine.health) score -= 25;
   }
   return score;
@@ -195,10 +195,9 @@ function aiPlanScore(me, depth) {
 let aiSeed = null, aiRng = 0;
 function aiRand() {
   if (aiSeed !== S.seed) { aiSeed = S.seed; aiRng = (S.seed ^ 0x9e3779b9) >>> 0; }
-  let t = (aiRng = (aiRng + 0x6d2b79f5) >>> 0);
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  const r = randomStep(aiRng);
+  aiRng = r.state;
+  return r.value;
 }
 
 // The setup play to make now: the first step of the best line of plays, or null to stop.
@@ -217,15 +216,8 @@ function aiPlanSetup() {
 // If attacking the enemy player with every ready character wins the game right now, returns
 // the first attacker to send. Otherwise null.
 function aiLethal() {
-  const me = S.active;
-  if (guards(opponent()).length) return null;
-  const order = active().field.chars.filter(canAttack).map(c => c.uid);
-  if (!order.length) return null;
-  const wins = simulate(() => {
-    for (const uid of order) { if (S.over || S.pending) break; attack(uid, null); }
-    return S.over && S.winner === me;
-  });
-  return wins ? order[0] : null;
+  const first = active().field.chars.find(canAttack);
+  return first && allAttackWins() ? first.uid : null;
 }
 
 function aiAttackActions() {
