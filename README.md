@@ -143,6 +143,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/speed-check.js` | Measures how smoothly the game runs on a slowed-down computer (like a phone), with Heavy effects on and off: `node tools/speed-check.js` |
 | `tools/readability.js` | Used by the browser check: finds text that is too small, overlapping or cut off |
 | `tools/look-mockup.js` | Look options for the owner: shows two or three versions of a look on the real game screen (injected into a test browser, never into the game) and takes close-up pictures; used by the look advisor |
+| `tools/build-single.js` | Packs the whole game into one HTML file that plays without a server (open it from a download folder or a USB stick): `node tools/build-single.js [out.html]`. With `--page out.html` it makes the page body only, for the claude.ai playable copy (the `backup` skill uses it) |
 | `tools/drive-bundle.js` | Makes the one-file Google Drive backups: the changes of a pull request, or a full snapshot |
 | `tools/serve.js` | Lets a test browser load the game straight from this folder, without a web server |
 | `.claude/skills/` | Step-by-step recipes Claude follows for routine jobs (Drive backup, pull requests, browser checks, balance tests, card changes, story writing and more) |
