@@ -47,7 +47,7 @@ Average game: 13.9 turns (both players' turns counted)
 
 ## Code
 - 29 game scripts, loaded in this order: saves.js, engine.js, rules-combat.js, rules-turns.js, rules-play.js, rules-champions.js, rules-events.js, rules-shard.js, effects.js, ai.js, tutorial.js, help.js, guide.js, decks.js, fx.js, motion.js, intro.js, cards.js, ui.js, board.js, board-marks.js, input.js, table-effects.js, panels.js, menu.js, storm.js, champions.js, campaign.js, boot.js.
-- 36 tools in `tools/` (the README's file table lists them).
+- 37 tools in `tools/` (the README's file table lists them).
 - Map: `docs/code-map.md` (where things are); why: `docs/how-it-was-built.md`.
 
 ## Skills (`.claude/skills/`)
@@ -74,6 +74,7 @@ General game-making skills, not Shardfall's own: audio-design, card-game, create
 - `docs/code-map.md`
 - `docs/done.md`
 - `docs/how-it-was-built.md`
+- `docs/look.md`
 - `docs/online-play.md`
 - `docs/play-numbers.md`
 - `docs/real-phones.md`

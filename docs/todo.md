@@ -112,16 +112,19 @@ changes into a stronger version. A deck may hold one kind of champion, or none.
 
 ## Protected look that hints at the Shardfall — the owner's idea, not designed yet
 
-- The runes that circle a Protected card (`RUNES` and `runeRingHTML()` in `js/board.js`) should
+- The runes that circle a Protected card (`RUNES` and `runeRingHTML()` in `js/board-marks.js`) should
   one day hint at what made the shards fall: the big event behind the Shardfall. The owner will
   design what that is, then it gets pulled into the runes.
 - The shell of shards on a Protected player's health gem (`WARD` and `wardHTML()` in
-  `js/board.js`) should carry the same hint, so the two Protected looks clearly belong together
+  `js/board-marks.js`) should carry the same hint, so the two Protected looks clearly belong together
   and nobody is confused.
 - Today the runes are placeholder shapes. The shell has no runes yet.
 - Keep the hint subtle, like the other clues; once it is designed, log it in the clue log in
   `docs/world.md`.
-- Not now: the owner will raise it when ready.
+- 24 Nov 2026: the owner asked for options. Three offered on
+  https://claude.ai/artifact/Dx8gNozoyzmjKntUztDwGK (A pixel runes, recommended; B loading ring
+  that stops at 99%; C level-up marks). Waiting for the owner's pick. The mock-up plan is not
+  kept in the repository; the look advisor can rebuild it from the page.
 
 ## Art: remind the owner about ComfyUI next time art comes up
 
