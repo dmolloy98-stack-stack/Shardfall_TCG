@@ -96,6 +96,14 @@ for (const tpl of cards) {
     if (why) bad(tpl, why); else passes++;
   } catch (e) { bad(tpl, 'crash: ' + e.message + ' ' + (e.stack || '').split('\\n')[1].trim()); }
 }
+{ // every kind of "choose" window the code opens has an entry in CHOICES (js/rules-play.js),
+  // and every computer answer in AI_CHOICES (js/ai.js) belongs to one
+  const used = new Set();
+  for (const f of fs.readdirSync(dir + '/js')) for (const m of fs.readFileSync(dir + '/js/' + f, 'utf8').matchAll(/resolve: "(\\w+)"/g)) used.add(m[1]);
+  for (const r of used) if (!CHOICES[r]) { console.log('FAIL choose window "' + r + '" has no entry in CHOICES (js/rules-play.js)'); fails++; }
+  for (const r of Object.keys(AI_CHOICES)) if (!CHOICES[r]) { console.log('FAIL AI_CHOICES has "' + r + '", which is not in CHOICES'); fails++; }
+  if (used.size < 7) { console.log('FAIL found only ' + used.size + ' kinds of choose window in the code; the search is broken'); fails++; }
+}
 console.log(passes + ' of ' + cards.length + ' cards played without a problem');
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');
 process.exit(fails ? 1 : 0);

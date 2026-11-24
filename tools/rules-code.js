@@ -14,3 +14,13 @@ module.exports = (dir, also = []) => {
   return data + ';DATA=buildData(Object.fromEntries(DATA_FILES.map(n=>[n,fs.readFileSync(dir+"/data/"+n+".csv","utf8")])));' +
     files.map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
 };
+
+// The shared start of every rules test, added after the rules code:
+//   eval(rulesCode(dir, [...]) + rulesCode.kit + `...the test...`)
+//   ok(name, passed, detail)   prints PASS or FAIL and counts failures (fails)
+//   putCard(p, idOrName)       a new copy of a card on p's frontline (by CardID, or by name)
+module.exports.kit = `
+let fails = 0;
+const ok = (name, cond, extra) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); if (!cond) fails++; };
+const putCard = (p, idOrName) => { const c = cardById(idOrName) || cardByName(idOrName); c.owner = p.idx; putOnField(c, p); return c; };
+`;

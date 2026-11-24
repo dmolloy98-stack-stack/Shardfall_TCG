@@ -38,7 +38,7 @@ Find them first: `grep -rnI "\bOldName\b" --exclude-dir=.git --exclude-dir=phone
 | `data/factions.csv` | FactionID, Name, colour, SymbolKey, Description |
 | `data/cards.csv` | Fracture column (hybrids `Mortal+Wild`) |
 | `data/decks.csv` | Faction column of each starter |
-| `js/ai.js` | `AI_STYLES` keys (how that world's deck plays) |
+| `data/ai_styles.csv` | the Fracture column (how that world's deck plays) |
 | `js/campaign.js` | `faction:` of each campaign stage |
 | `js/fx.js` | `FACTION_ENTRANCE` (how its cards enter the table) |
 | `js/cards.js` | `GLYPHS` (world medallion symbols) |
@@ -71,7 +71,7 @@ tribes in `js/effects.js` (Master Rat's turtles); `tools/kinds-test.js`; the gui
 
 Needs, besides cards: a `factions.csv` row (colour, symbol, description, order), a `GLYPHS`
 symbol, a `FACTION_ENTRANCE` animation, a `DEATHS` style (or it shatters like crystal), an
-`AI_STYLES` entry, a battlefield board colour, and a starter deck. Ask the owner for the name,
+`data/ai_styles.csv` row, a battlefield board colour, and a starter deck. Ask the owner for the name,
 colour and feel; Claude proposes the animations.
 
 ## Adding a new champion
@@ -81,6 +81,9 @@ an entry in `CHAMPION_RULES` in `js/rules-champions.js`, which also holds its sh
 `js/champions.js` (`story-writing` for the words), a campaign stage if the owner wants one
 (`js/campaign.js`), and tests in `tools/champions-test.js`. Two champions of one tribe can't
 share a deck (the one-champion rule already enforces it).
+Everything names a champion by its card's CardID (`CHAMPIONS`, `CAMPAIGN`'s `champion`, the
+Almanac's `CHAMP_GUIDE`), so **renaming a champion is only a change to its Name in
+`data/cards.csv`** (plus the story text that mentions it).
 
 ## Checking a rename or addition
 

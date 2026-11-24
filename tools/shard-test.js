@@ -1,9 +1,8 @@
 const fs = require('fs');
 // Checks the big shard fall (js/rules-shard.js): node tools/shard-test.js .
 const dir = process.argv[2] || '.';
-eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
-let fails = 0;
-const ok = (name, cond, extra) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); if (!cond) fails++; };
+const rulesCode = require(require('path').join(__dirname, 'rules-code'));
+eval(rulesCode(dir, ['champions', 'ai']) + rulesCode.kit + `
 const find = pred => Object.values(DATA.cardsById).find(pred);
 // A match with empty tables, where the big shard has just fallen and it is player 0's Battle phase.
 const game = (deck, opp, opts) => {

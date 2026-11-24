@@ -140,7 +140,21 @@ const TESTS = [
     await pg.click('[data-camp="0"]');
     await pg.click('[data-camp-go="0"]');
     await pg.waitForFunction(() => U.screen === 'game' && S && S.players[1].champion);
-    expect(await pg.evaluate(() => S.players[1].hand.some(c => c.name === S.players[1].champion)), 'the champion is not in its hand');
+    expect(await pg.evaluate(() => S.players[1].hand.some(c => c.id === S.players[1].champion)), 'the champion is not in its hand');
+  }],
+  ['choose window: pick a card and confirm it (one click handler for the window)', async ({ pg }) => {
+    await quickMatch(pg);
+    await pg.evaluate(() => {
+      const me = S.players[0], c = cardById('simple_farmer');
+      me.grave.push(c);
+      ask({ kind: 'choose', source: c, owner: 0, title: 'Test', prompt: 'Pick it', cards: [c], pick: 1, resolve: 'toHand' });
+      window.__uid = c.uid; render();
+    });
+    await pg.waitForSelector('#modal [data-pick]');
+    await pg.click('#modal [data-pick]');
+    await pg.click('#modal [data-opt="ok"]');
+    expect(!(await modalOpen(pg)), 'the window stayed open');
+    expect(await pg.evaluate(() => !S.pending && S.players[0].hand.some(c => c.name === 'Simple Farmer') && !S.players[0].grave.some(c => c.uid === window.__uid)), 'the card did not come back to the hand');
   }],
   ['tutorial: starts and the first lesson can be done', async ({ pg }) => {
     await pg.click('#btn-tutorial');

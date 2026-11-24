@@ -5,7 +5,8 @@
 // one entry per tab, each the "values" array of rows:
 //   { "Cards": [...], "Decks": [...], "Deck cards": [...], "Fractures": [...], "Skills": [...] }
 // Ranges to read: Cards!A1:Q400, Decks!A1:H100, 'Deck cards'!A1:E2000, Fractures!A1:G50,
-// Skills!A1:F100. How each tab maps to a file is in the sheet-sync skill.
+// Skills!A1:F100, and the mirror tabs listed in MIRRORS below. How each tab maps to a file is in the
+// sheet-sync skill.
 // Rows whose Status isn't "In game" (Draft, Ready) are listed as waiting, not compared.
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..');
@@ -132,6 +133,24 @@ else {
     field(`${who}, Description`, s.Description, r.Description);
   }
   for (const r of sSkills) if (r.SkillID && r.Status !== 'In game') waiting.push(`Skill "${r.Name || r.SkillID}" is ${r.Status || 'without a Status'}.`);
+}
+
+// Tabs that mirror a data file exactly, for the owner to read: the same columns, the same rows in the
+// same order (only rows the game reads; # comment lines are left out). Numbers are compared as numbers.
+const MIRRORS = { 'Game rules': 'game_rules', 'Champion abilities': 'champion_abilities', 'Random events': 'events', 'Trophies': 'trophies', 'Deck mastery': 'mastery', 'Computer styles': 'ai_styles' };
+for (const [tabName, file] of Object.entries(MIRRORS)) {
+  const rows = table(file), sRows = tab(tabName);
+  if (!sRows) { differ(`The ${tabName} tab is missing from the sheet file.`); continue; }
+  const cols = Object.keys(rows[0] || {}).filter(k => k !== '_line');
+  const sheetRows = sRows.filter(r => cols.some(c => r[c]));
+  if (sheetRows.length !== rows.length) differ(`${tabName}: the game has ${rows.length} rows, the sheet has ${sheetRows.length}.`);
+  rows.forEach((g, i) => {
+    const r = sheetRows[i] || {};
+    for (const c of cols) {
+      const a = g[c] ?? '', b = r[c] ?? '';
+      if (!(same(a, b) || (a !== '' && b !== '' && Number(a) === Number(b)))) differ(`${tabName}, row ${i + 2}, ${c}: the game has "${a}", the sheet has "${b}".`);
+    }
+  });
 }
 
 if (waiting.length) { console.log('Waiting in the sheet (not compared):'); for (const w of waiting) console.log('  ' + w); console.log(''); }

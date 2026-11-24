@@ -120,9 +120,48 @@ damage, the shard). The core rules never name a champion; they ask `champHook()`
 big shard have their own files too. A new champion or event is new entries, not edits all over the
 core. (Nov 2026)
 
+**Every "choose a card" window is one entry in a table.** What each kind of window does is its entry
+in `CHOICES` (`js/rules-play.js`), and how the computer answers it is in `AI_CHOICES` (`js/ai.js`).
+Before, the same list of kinds was repeated as if-chains in four files, so a new pick-one card could
+easily miss one and leave the computer or the window doing the wrong thing. `tools/cards-test.js`
+fails if a window opened anywhere in the code has no entry. (24 Nov 2026)
+
+**One click handler per area, everywhere.** The Almanac's filter rows and the pop-up window
+(`#modal`) each had two handlers; they were merged so that every area has exactly one (24 Nov 2026,
+found by the `architect-review` agent). The window still had four after that (the deck builder,
+the campaign and the "choose a card" window had each added their own), so the rule is now: the one
+handler is in `js/panels.js`, and a window from another file gets a branch there that calls a named
+function in its own file (`newDeckFrom()`, `builderChoice()`, `campaignClick()`). Calls happen at
+click time, so the load order doesn't matter. `tools/screen-test.js` clicks through the choose
+window to prove it works (24 Nov 2026).
+
 **Special card rules are switched on by words, not names.** A card that bends the core rules has a
 `rule:` clause, and the engine checks for that word, never for a card's name. Renaming a card then
-can't break its rule.
+can't break its rule. The same goes for champions: the campaign, the champions' lines
+(`CHAMPIONS`), the computer's champion and the tutorial's hands all name cards by CardID, and show
+the card's own name, so renaming a champion card changes it everywhere at once (24 Nov 2026).
+
+**A skill counts wherever it comes from.** Every skill checked during play asks `skillNow()`
+(`js/engine.js`): printed on the card, or given by equipment or an aura. Before, only Swift and Parry
+looked at given skills, so a future card giving Pierce or Cloak would have done nothing (24 Nov 2026).
+
+**One list of where a character's stats come from.** `statSources()` (`js/engine.js`) lists the parts
+(the card, equipment, lord, Rally, aura, champion); the rules add them up and the wind-up on screen
+names them. A new kind of bonus is added there once. A champion's own short-lived bonus (The Bow's
++2) lives in its entry in `js/rules-champions.js`, with a `turnEnd` moment to clear it, not in the
+core turn code (24 Nov 2026).
+
+**Numbers a designer tunes live in data files, and the sheet shows them.** Trophy goals and words
+(`data/trophies.csv`), mastery titles (`data/mastery.csv`) and points (`mastery_*` rows), and how the
+computer plays each world (`data/ai_styles.csv`) moved out of the code. Each has a read-only "mirror"
+tab in the card sheet that `tools/sheet-check.js` compares with the file. What a trophy checks, and
+the campaign's story text and the champions' lines, stay in code: story text has its own routine
+(`story-writing`) and changes with the story bible (owner left this to Claude, 24 Nov 2026).
+
+**The data tables are read by column name.** `csvTable()` (`js/data.js`) names each value by its
+header, so a column can be moved or added in the card sheet without the game reading the wrong one;
+a missing column stops the game with a message naming it. Rule numbers a designer might tune (Evolve,
+Level Up's limit, Rally, the mana token) are rows in `data/game_rules.csv` (24 Nov 2026).
 
 ## The screen
 
@@ -198,6 +237,15 @@ checked automatically and is judged by eye. (Nov 2026)
 **A test is never switched off to get a green mark.** A red test means something changed; find out
 what.
 
+**Page helpers every screen file uses live in `js/dom.js`,** loaded before all of them (`$`, `byId`,
+`esc`). A screen file never defines its own copy; the deck builder and the tutorial each had one
+(24 Nov 2026).
+
+**Every test file runs by itself, and the rules tests share one kit.** `tools/test-all.js` runs every
+`tools/*-test.js` (the browser ones run on GitHub), so a new test can't be forgotten. The rules
+tests start from `rulesCode.kit` (`ok()`, `putCard()`) in `tools/rules-code.js` instead of each
+keeping its own copy, which had started to differ (24 Nov 2026).
+
 ## Working together
 
 **One page to start from.** `docs/status.md` is written by `tools/make-status.js` from the
@@ -209,6 +257,18 @@ history lives in `docs/done.md`, so `docs/todo.md` stays short to read. (Nov 202
 **The owner decides what the game is; Claude decides how it's built.** Story, cards, characters,
 look and feel are the owner's: Claude offers two or three options and waits. How to build, split,
 test and name things in code are Claude's, and Claude says what was decided. See CLAUDE.md.
+
+**A code health review before structural pull requests.** The `architect-review` agent
+(`.claude/agents/architect-review.md`) reads a change and reports whether the layers stay apart,
+the patterns are kept, files are growing too big or tangled, and the docs are still true. It only
+reports and never edits. The owner picked it from buildwithclaude.com for the game's long-term
+health, and it was rebuilt around Shardfall's rules because the original was generic (24 Nov 2026).
+
+**Look choices are shown, not described.** The owner decides the look but wants options and
+inspiration, so the `look-advisor` agent builds two or three versions on the real game screen with
+`tools/look-mockup.js`, which injects each version into a test browser and photographs it; the game
+files are not touched until the owner picks. The owner's vision and decisions are kept in the look
+book, `docs/look.md`, so new options stay consistent (24 Nov 2026).
 
 **Every change goes through a pull request,** merged once GitHub's tests pass, then backed up to
 Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main` after each merge.
@@ -234,6 +294,17 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 - **The computer used the match's random numbers** for its own choices (fixed Nov 2026).
 - **A card-sheet cell starting with `+`, `-` or `=`** is read as a sum by Google Sheets and shows
   `#ERROR!`. Write it with a leading `'`.
+- **Words on the screen that repeat a card's numbers** ("Strike 3", "you gain 2 HP") go stale when
+  the card changes. Screen words that depend on a card take the number from its play clause
+  (`playAmount()` in `js/effects.js`) and their wording from `data/ui_text.csv` (Nov 2026).
+- **The rules choosing the words and colours on screen.** Floating words ("EVOLVE!") were written in
+  the rules with their colours, so they couldn't be reworded and the screen matched skills by their
+  words. The rules now send which one (`emit("text", { uid, say: "evolve" })`); the words are
+  `float_<say>` rows in `data/ui_text.csv` and the colours are `FLOATS` in `js/table-effects.js`.
+- **A misspelt word in an Effect matched nothing**, silently ("allies.Monky"). Each narrowing word
+  is now checked when the cards are read, and a mistake stops the game naming the card.
+- **Code that listens for the words shown on screen** breaks when they are reworded: the Grave Robber
+  trophy counted the floating word "REANIMATE". Listen for a game event instead (`reanimate`).
 - **Renaming a world or tribe** leaves old names in many places (pull request #27 found
   leftovers). Use the `worlds-and-tribes` skill's full list.
 - **A green GitHub check can hide a crash** when a step sends its output through `tee`: only the
@@ -247,4 +318,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-23, pull request #32.
+Last checked: 2026-11-24, pull request #32 (brought up to date after #39).

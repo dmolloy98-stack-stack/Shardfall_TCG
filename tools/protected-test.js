@@ -1,9 +1,8 @@
 const fs = require('fs');
-// Checks the Protected rule and the Pierce and Protected skills ("Protected" in js/engine.js): node tools/protected-test.js .
+// Checks the Protected rule and the Pierce and Protected skills ("Protected" in js/rules-combat.js): node tools/protected-test.js .
 const dir = process.argv[2] || '.';
-eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
-let fails = 0;
-const ok = (name, cond, extra) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); if (!cond) fails++; };
+const rulesCode = require(require('path').join(__dirname, 'rules-code'));
+eval(rulesCode(dir, ['champions', 'ai']) + rulesCode.kit + `
 const all = Object.values(DATA.cardsById);
 const game = () => { newGame({ deckId: 'simple_starter', opponentDeckId: 'fighter_starter', mode: 'hotseat', seed: 3, events: false, abilities: false }); for (const p of S.players) { p.field.chars.length = 0; p.field.areas.length = 0; } return S.players; };
 const put = (p, id) => { const c = newCard(DATA.cardsById[id]); c.owner = p.idx; putOnField(c, p); c.sick = false; c.summoningSick = false; c.hasAttacked = false; return c; };

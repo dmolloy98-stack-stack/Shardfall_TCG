@@ -10,7 +10,7 @@
 U.menuView = "home";
 U.setupMode = "ai";
 U.oppDeckId = PREFS.get("opp", "random");   // the other side's deck: "random" or a deck id
-const SETUP = {
+const SETUP_MODES = {
   ai: { title: "door_quick", deck: "setup_ai_deck", opp: "setup_ai_opp", start: "menu_start_match" },
   hotseat: { title: "door_two", deck: "setup_hotseat_deck", opp: "setup_hotseat_opp", start: "menu_start_match" },
   campaign: { title: "setup_campaign_title", deck: "setup_ai_deck", opp: null, start: "setup_campaign_start" },
@@ -27,7 +27,7 @@ function renderMenu() {
 function renderDoors() {
   const cleared = campaignCleared(), total = CAMPAIGN.length;
   const next = CAMPAIGN[Math.min(cleared, total - 1)];
-  const campChip = cleared >= total ? T("door_campaign_done") : T("door_campaign_next", { champion: next.champion, cleared, total });
+  const campChip = cleared >= total ? T("door_campaign_done") : T("door_campaign_next", { champion: champName(next.champion), cleared, total });
   const deck = DATA.decks[U.deckId], m = masteryOf(U.deckId);
   const door = (sym, chip, title, text, go) => `<span class="door-sym" aria-hidden="true">${sym}</span>${chip ? `<span class="door-chip">${esc(chip)}</span>` : ""}<span class="door-title">${title}</span><span class="door-text">${text}</span><span class="btn door-go">${go}</span>`;
   $("#btn-campaign").innerHTML = door("♛", campChip, esc(T("door_campaign")), esc(T("door_campaign_text")), esc(T(cleared ? "door_continue" : "door_begin")));
@@ -37,7 +37,7 @@ function renderDoors() {
 }
 
 function renderSetup() {
-  const mode = SETUP[U.setupMode] || SETUP.ai;
+  const mode = SETUP_MODES[U.setupMode] || SETUP_MODES.ai;
   $("#setup-title").textContent = T(mode.title);
   $("#deck-label").textContent = T(mode.deck);
   const tile = id => {
@@ -114,14 +114,17 @@ $("#alm-back").addEventListener("click", () => showScreen(U.almanacReturn === "g
 // the game itself (real cards and the real status line), so they always match the current look.
 // The words come from data/champion_abilities.csv. The notes and the before-and-after examples
 // are here; keep their numbers in step with js/rules-champions.js.
+// Numbers that come from the data are written as {goal} (the Goal in champion_abilities.csv),
+// {health} (the starting health) and {phase2} / {final} (where Boss Level's phases start), so the
+// Almanac stays right when the data changes. tools/champions-test.js checks no other number drifts.
 //   status   sample status lines, as they show under a player's name
 //   pairs    before -> after pictures: a card (pick: which card; change: what the ability changes)
 //            or two short labels (from, to), each with a caption
 const CHAMP_GUIDE = {
   the_simplistic: {
-    notes: ["Nothing happens until it levels up.", "It levels up at the start of the turn when you have 6 mana crystals. That is the same turn for every match, so you can plan for it.", "After that, every Simple character you have gets the bonus, and so does every Simple character you play later."],
-    status: ["Lv 1 · 4/6 max mana", "Lv 2 · Leveled up"],
-    pairs: [{ caption: "When you reach 6 mana crystals: every Simple character gets +1 Attack and +1 Health.", pick: c => c.id === "simple_farmer", change: { attack: 1, health: 1 } }],
+    notes: ["Nothing happens until it levels up.", "It levels up at the start of the turn when you have {goal} mana crystals. That is the same turn for every match, so you can plan for it.", "After that, every Simple character you have gets the bonus, and so does every Simple character you play later."],
+    status: ["Lv 1 · 4/{goal} max mana", "Lv 2 · Leveled up"],
+    pairs: [{ caption: "When you reach {goal} mana crystals: every Simple character gets +1 Attack and +1 Health.", pick: c => c.id === "simple_farmer", change: { attack: 1, health: 1 } }],
   },
   the_man_ape: {
     notes: ["It counts the characters on each side. With more than your opponent, every character you have gets +1 Attack, Monkey or not.", "It only works on your turn, when you attack. Your characters don't get it while defending.", "It switches on and off by itself as characters come and go, even in the middle of your attacks."],
@@ -129,12 +132,12 @@ const CHAMP_GUIDE = {
     pairs: [{ caption: "With more characters than your opponent, on your turn: +1 Attack.", pick: c => c.group === "Wild" && c.type === "Character" && c.manaCost === 2, change: { attack: 1 } }],
   },
   ip_man: {
-    notes: ["The bow happens by itself when you press To battle. The game picks your strongest character that can attack this turn.", "The +2 Attack lasts until the end of your turn.", "A fight counts as won when your character survives and the enemy character is knocked out. Attacks on the player don't count. Fights you win while defending count too.", "After 5 won fights, your two strongest attackers get the bow each turn."],
-    status: ["Lv 1 · 3/5 fights won", "Lv 2 · Leveled up"],
+    notes: ["The bow happens by itself when you press To battle. The game picks your strongest character that can attack this turn.", "The +2 Attack lasts until the end of your turn.", "A fight counts as won when your character survives and the enemy character is knocked out. Attacks on the player don't count. Fights you win while defending count too.", "After {goal} won fights, your two strongest attackers get the bow each turn."],
+    status: ["Lv 1 · 3/{goal} fights won", "Lv 2 · Leveled up"],
     pairs: [{ caption: "At the start of your Battle phase: your strongest ready attacker gets +2 Attack this turn.", pick: c => c.group === "Mortal" && c.type === "Character" && c.manaCost === 2, change: { attack: 2 } }],
   },
   boss_level: {
-    notes: ["It works from your starting health: with 25, PHASE 2 starts at 16 health or less and FINAL PHASE at 8 or less.", "In PHASE 2 you draw 2 cards in your Draw phase instead of 1.", "FINAL PHASE keeps the extra card and gives every character you have +1 Attack and +1 Health, Digital or not.", "Healing never takes you back to an earlier phase."],
+    notes: ["It works from your starting health: with {health}, PHASE 2 starts at {phase2} health or less and FINAL PHASE at {final} or less.", "In PHASE 2 you draw 2 cards in your Draw phase instead of 1.", "FINAL PHASE keeps the extra card and gives every character you have +1 Attack and +1 Health, Digital or not.", "Healing never takes you back to an earlier phase."],
     status: ["Phase 1", "Phase 2", "Final phase"],
     pairs: [
       { caption: "PHASE 2: 1 extra card each turn.", from: "🂠 1", to: "🂠 2" },
@@ -147,7 +150,14 @@ const CHAMP_GUIDE = {
     pairs: [{ caption: "After 3 Undead characters have died: Soul Shepard has +3 Health, even in your hand.", pick: c => c.id === "soul_shepard", change: { health: 3 } }],
   },
 };
+// Fills {goal}, {health}, {phase2} and {final} in a champion's Almanac notes.
+function champGuideText(id, text) {
+  const h = RULES.startingHealth;
+  const vars = { goal: DATA.championAbilities[id]?.goal, health: h, phase2: Math.floor(h * 2 / 3), final: Math.floor(h / 3) };
+  return text.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
+}
 function championsHTML() {
+  let fill = t => t;
   const pairHTML = pr => {
     let a, b, chg = "";
     if (pr.pick) {
@@ -158,10 +168,11 @@ function championsHTML() {
       a = cardHTML(card);
       b = cardHTML(after, pr.change.cost ? { costOverride: card.manaCost + pr.change.cost } : {});
     } else { a = `<span class="champ-big">${esc(pr.from)}</span>`; b = `<span class="champ-big">${esc(pr.to)}</span>`; }
-    return `<figure class="champ-pair"><div class="champ-pics"><div><small>Before</small>${a}</div><span class="champ-arrow" aria-hidden="true">→</span><div class="${chg.trim()}"><small>After</small>${b}</div></div><figcaption>${esc(pr.caption)}</figcaption></figure>`;
+    return `<figure class="champ-pair"><div class="champ-pics"><div><small>Before</small>${a}</div><span class="champ-arrow" aria-hidden="true">→</span><div class="${chg.trim()}"><small>After</small>${b}</div></div><figcaption>${esc(fill(pr.caption))}</figcaption></figure>`;
   };
   const one = id => {
     const info = DATA.championAbilities[id], card = DATA.cardsById[id], g = CHAMP_GUIDE[id] || { notes: [], status: [], pairs: [] };
+    fill = t => champGuideText(id, t);
     if (!card) return "";
     const grows = !info.goal;
     return `<article class="champ-entry" style="--fc:${DATA.factions[card.group]?.color || "#c9b48d"}">
@@ -174,10 +185,10 @@ function championsHTML() {
           ${grows ? "" : `<dt>Levels up when</dt><dd>${esc(info.when)}</dd><dt>After leveling up</dt><dd>${esc(info.then)}</dd>`}
         </dl>
         <h3>Good to know</h3>
-        <ul>${g.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>
+        <ul>${g.notes.map(n => `<li>${esc(fill(n))}</li>`).join("")}</ul>
         <h3>What you see in a match</h3>
         <p class="sub">Under your name, a line shows the ability${grows ? "" : ", its level"} and its progress. Tap it to read the ability.</p>
-        <div class="champ-status">${g.status.map((s, i) => `<span class="champ-line${i > 0 ? " lv2" : ""}">★ ${esc(grows ? info.name : info.name)} · ${esc(s)}</span>`).join("")}</div>
+        <div class="champ-status">${g.status.map((s, i) => `<span class="champ-line${i > 0 ? " lv2" : ""}">★ ${esc(info.name)} · ${esc(fill(s))}</span>`).join("")}</div>
         <div class="champ-pairs">${g.pairs.map(pairHTML).join("")}</div>
       </div>
     </article>`;
@@ -237,11 +248,13 @@ function renderAlmanac() {
   $("#alm-content").innerHTML = h + `</div>`;
 }
 document.querySelector(".tabs").addEventListener("click", e => { const t = e.target.closest("[data-tab]"); if (t) { U.almanacTab = t.dataset.tab; renderAlmanac(); } });
-$("#alm-filters").addEventListener("click", e => { const t = e.target.closest("[data-filter]"); if (t) { U.almanacFilter = t.dataset.filter; renderAlmanac(); } });
+// One handler for the three filter rows (Fracture, Tribe, Class); each button carries one of the markers.
 $("#alm-filters").addEventListener("click", e => {
-  const t = e.target.closest("[data-tribe],[data-class]");
+  const t = e.target.closest("[data-filter],[data-tribe],[data-class]");
   if (!t) return;
-  if (t.dataset.tribe) U.almanacTribe = t.dataset.tribe; else U.almanacClass = t.dataset.class;
+  if (t.dataset.filter) U.almanacFilter = t.dataset.filter;
+  else if (t.dataset.tribe) U.almanacTribe = t.dataset.tribe;
+  else U.almanacClass = t.dataset.class;
   renderAlmanac();
 });
 $("#alm-content").addEventListener("click", e => { const t = e.target.closest("[data-card]"); if (t) showDetail(DATA.cardsById[t.dataset.card]); });

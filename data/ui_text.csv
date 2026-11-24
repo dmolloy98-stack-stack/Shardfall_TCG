@@ -105,3 +105,26 @@ end_menu,Main menu,End screen
 curtain_pass,Pass the device to,Board
 curtain_start,Start turn,Board
 curtain_round,{deck} · Round {round},Board
+blade_button,⚔ Strike {damage},Board
+blade_tip,"{card}: deal {damage} damage to an enemy character, once per Battle",Board
+target_redirect,an enemy character or player to take the {amount} damage instead,Board
+target_strike,an enemy character to take {damage} damage,Board
+target_data_transfer,one of your characters to lose a Level (you gain {heal} HP),Board
+float_disabled,DISABLED,Floating word
+float_drain,-{n} ATK,Floating word
+float_evolve,EVOLVE!,Floating word
+float_transform,TRANSFORM!,Floating word
+float_levelUp,LEVEL UP,Floating word
+float_levelDown,LEVEL DOWN,Floating word
+float_infected,INFECTED,Floating word
+float_chestThump,CHEST THUMP +{n},Floating word
+float_plusAttack,+{n} ATTACK,Floating word
+float_bow,THE BOW +{n},Floating word
+float_gainSwift,» SWIFT,Floating word
+float_pierce,PIERCE,Floating word
+float_reanimate,REANIMATE,Floating word
+float_redirect,REDIRECT,Floating word
+float_noReply,» NO REPLY,Floating word
+float_equip,EQUIP,Floating word
+float_absorb,+{a}/+{h},Floating word
+float_plusAll,+{n} ALL,Floating word

@@ -114,6 +114,11 @@ the steps out again:
   `code-map` (the written map and the claude.ai map pages), `worlds-and-tribes`
   (renaming or adding a world, tribe or champion), `tool-check` ("is this useful?")
 
+Project agents in `.claude/agents/`: `architect-review` (read-only code health check before a
+pull request that changes the shape of the code; when to use it is in `pr-cycle`) and
+`look-advisor` (look options and inspiration for the owner, as mock-ups on the real screen; the
+owner picks). The owner's look decisions live in the look book, `docs/look.md`.
+
 ## Links
 
 - Play (GitHub Pages): https://dmolloy98-stack-stack.github.io/Shardfall_TCG/ (`#menu` skips the

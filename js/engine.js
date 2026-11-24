@@ -1,4 +1,4 @@
-// Shardfall rules engine: a port of the game logic in main.lua.
+// Shardfall rules engine (it began as a port of the game logic in main.lua, the first version).
 // The engine holds all game state in S and never touches the DOM. The UI listens
 // for events sent through emit() to play effects (damage numbers, shakes, banners).
 // Cards on the battlefield store their owner as a player index (0 or 1) instead of
@@ -14,7 +14,7 @@
 
 const PHASE = { DRAW: 0, SETUP: 1, BATTLE: 2, END: 3 };
 const RULES = {
-  startingHealth: DATA.rules.starting_player_health ?? 20,
+  startingHealth: DATA.rules.starting_player_health ?? 25,
   startingHand: DATA.rules.starting_hand_size ?? 6,
   manaGrowth: DATA.rules.mana_growth_per_turn ?? 1,
   maxChars: DATA.rules.max_field_characters ?? Infinity,   // no limit unless game_rules.csv sets one
@@ -27,11 +27,17 @@ const RULES = {
   eventWarn: DATA.rules.event_warning_rounds ?? 2,
   // The big shard fall: the round it lands (0 = never), its health, and what breaking it gives.
   shardRound: DATA.rules.shard_round ?? 0,
-  shardHealth: DATA.rules.shard_health ?? 15,
+  shardHealth: DATA.rules.shard_health ?? 10,
   shardDraw: DATA.rules.shard_draw ?? 1,
   shardDrawNoChamp: DATA.rules.shard_draw_no_champion ?? 2,
   // A player with this many characters (or one with the Protected skill) takes half damage, rounded up. 0 = off.
   protectAt: DATA.rules.protected_min_characters ?? 0,
+  // Skill numbers (data/skills.csv describes them in words; keep the two in step).
+  evolveBonus: DATA.rules.evolve_bonus ?? 3,
+  levelUpMax: DATA.rules.level_up_max ?? 3,
+  rallyNeeded: DATA.rules.rally_needed ?? 3,
+  rallyBonus: DATA.rules.rally_bonus ?? 1,
+  manaToken: DATA.rules.mana_token ?? 1,
 };
 const BACKLINE = () => DATA.text("zone_backline", "Backline");
 const backlineCount = p => p.field.areas.length + p.field.equips.length;
@@ -134,6 +140,10 @@ function attackAllFace() {
   return any;
 }
 
+// Would "All attack" win the game right now? Tried on a copy, so nothing changes. The computer
+// (aiLethal) and the board's LETHAL button both ask this.
+const allAttackWins = () => !guards(opponent()).length && simulate(() => { attackAllFace(); return S.over && S.winner === S.active; });
+
 // A whole match as text-friendly data: how it was set up, and every move since.
 const matchRecord = () => ({ setup: S.setup, moves: S.moves });
 
@@ -152,7 +162,13 @@ function replayMatch(rec) {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-const hasSkill = (c, n) => (c.skills || []).includes(n);
+const hasSkill = (c, n) => (c.skills || []).includes(n);   // printed on the card, or given for good
+// A skill a character has right now: its own, or one given while it lasts by equipment it holds or
+// an aura on its side (grantsSkill in js/effects.js). Every skill that is checked during play (Swift,
+// Parry, Protected, Pierce, Cloak, Challenge, Tower, Overwhelm, Flash) asks this, so a new card can
+// grant any of them. Skills that do something once (Level Up, Reanimate, Evolve, Signal, Rush, Rally)
+// stay printed skills.
+const skillNow = (c, n) => hasSkill(c, n) || (GRANTABLE.has(n) && c.owner != null && grantsSkill(c, n));
 // Where a card is from (its Fracture; a hybrid has two), what it is (tribes) and what it does
 // (classes). A card can have one or two of each. c.group is the first fracture: it sets the color.
 const groupsOf = c => c.groups || [c.group];
@@ -180,19 +196,25 @@ function newCard(template) {
   c.uid = S.nextUid++;
   return c;
 }
+// A new copy of a card. By CardID in game code (a card can be renamed freely); by name only in tests.
+function cardById(id) { return DATA.cardsById[id] ? newCard(DATA.cardsById[id]) : null; }
 function cardByName(name) { return DATA.cardsByName[name] ? newCard(DATA.cardsByName[name]) : null; }
 
-function findChar(uid) {
+// Finding a card by its uid: on the frontline (findChar), among the areas (findArea), or anywhere at
+// all (findCard: hand, backline, frontline, graveyard). The first two say whose side and where.
+function findOnField(uid, zone) {
   for (const p of S.players) {
-    const i = p.field.chars.findIndex(c => c.uid === uid);
-    if (i >= 0) return { c: p.field.chars[i], p, i };
+    const i = p.field[zone].findIndex(c => c.uid === uid);
+    if (i >= 0) return { c: p.field[zone][i], p, i };
   }
   return null;
 }
-function findArea(uid) {
-  for (const p of S.players) {
-    const i = p.field.areas.findIndex(c => c.uid === uid);
-    if (i >= 0) return { c: p.field.areas[i], p, i };
+const findChar = uid => findOnField(uid, "chars");
+const findArea = uid => findOnField(uid, "areas");
+function findCard(uid) {
+  for (const p of S.players) for (const list of [p.hand, p.field.equips, p.field.areas, p.field.chars, p.grave]) {
+    const c = list.find(x => x.uid === uid);
+    if (c) return c;
   }
   return null;
 }
@@ -200,11 +222,18 @@ function allChars() { return S.players.flatMap(p => p.field.chars); }
 // The game's own random numbers. They come from the match seed (S.seed), and the generator's
 // state lives in S.rng, so the same seed and the same moves always replay the same game.
 // AI look-ahead runs on a copy of S, so it never changes the real game's draws.
-function rand() {
-  let t = (S.rng = (S.rng + 0x6d2b79f5) >>> 0);
-  t = Math.imul(t ^ (t >>> 15), t | 1);
+// The generator itself (mulberry32): from a state, the next state and a number from 0 up to 1. The
+// computer's own dice (aiRand in js/ai.js) use it too, with their own state.
+function randomStep(state) {
+  const next = (state + 0x6d2b79f5) >>> 0;
+  let t = Math.imul(next ^ (next >>> 15), next | 1);
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  return { state: next, value: ((t ^ (t >>> 14)) >>> 0) / 4294967296 };
+}
+function rand() {
+  const r = randomStep(S.rng);
+  S.rng = r.state;
+  return r.value;
 }
 const newSeed = () => (Math.random() * 4294967296) >>> 0;
 function shuffle(arr) {
@@ -287,26 +316,39 @@ function equipBonuses(c) {
   return { a, h };
 }
 
+// Where a character's stats come from, part by part: [{ kind, a, h }]. rawStats() adds them up, and
+// the screen's wind-up names them (attackParts in js/fx.js), so a new kind of bonus is added here
+// once and shows up in both. Kinds: card (its own attack and current health), equipment, lord,
+// rally, aura, champion.
+// (eachStatSource calls part(kind, attack, health) for each one without building a list, since
+// rawStats runs thousands of times while the computer thinks.)
+function eachStatSource(c, part) {
+  const p = ownerOf(c);
+  const lord = lordBonusOf(c);
+  // A lord's faction's equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
+  let gear = 0;
+  for (const x of c.equipped || []) gear += lordBonusOf(x);
+  // "aura:" effects from this side's characters and areas (js/effects.js), like "aura: buff allies.Monkey 1 0".
+  const aura = auraBonus(c, p);
+  const ch = championBonus(c);   // a champion's ability, and Soul Shepard's growing health
+  part("card", c.attack, c.currentHealth);
+  part("equipment", equipBonuses(c).a + gear, gear);   // equipment health is already in currentHealth
+  part("lord", lord, lord);
+  part("rally", c.rallyBonus || 0, 0);
+  part("aura", aura.a, aura.h);
+  part("champion", ch.a, ch.h);
+}
+function statSources(c) {
+  const out = [];
+  eachStatSource(c, (kind, a, h) => out.push({ kind, a, h }));
+  return out;
+}
 // Effective stats including equipment, areas, synergies and Rally. Health can be
 // negative here; display code clamps it.
 function rawStats(c) {
-  const p = ownerOf(c);
-  const e = equipBonuses(c);
-  let buff = 0;
-  // "aura:" effects from this side's characters and areas (js/effects.js). An area's bonus
-  // is written in its Effect column, like "aura: buff allies.Monkey 1 0".
-  const aura = auraBonus(c, p);
-  const extraA = aura.a, extraH = aura.h;
-  buff += lordBonusOf(c);
-  // A lord's faction's equipment is boosted too. Its own health is already in currentHealth, so the bonus is added here.
-  const simpleGear = (c.equipped || []).reduce((n, x) => n + lordBonusOf(x), 0);
-  const rally = c.rallyBonus || 0;
-  const ch = championBonus(c);   // a champion's ability, and Soul Shepard's growing health
-  return {
-    a: c.attack + e.a + buff + rally + extraA + simpleGear + ch.a,
-    h: c.currentHealth + buff + extraH + simpleGear + ch.h,
-    parry: hasSkill(c, "Parry") || grantsSkill(c, "Parry"),
-  };
+  let a = 0, h = 0;
+  eachStatSource(c, (k, x, y) => { a += x; h += y; });
+  return { a, h, parry: skillNow(c, "Parry") };
 }
 function stats(c) {
   const r = rawStats(c);
@@ -316,7 +358,7 @@ function stats(c) {
 function updateRally(p) {
   const count = {};
   for (const c of p.field.chars) if (hasSkill(c, "Rally")) for (const g of groupsOf(c)) count[g] = (count[g] || 0) + 1;
-  for (const c of p.field.chars) c.rallyBonus = hasSkill(c, "Rally") && groupsOf(c).some(g => (count[g] || 0) >= 3) ? 1 : 0;
+  for (const c of p.field.chars) c.rallyBonus = hasSkill(c, "Rally") && groupsOf(c).some(g => (count[g] || 0) >= RULES.rallyNeeded) ? RULES.rallyBonus : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -324,8 +366,8 @@ function updateRally(p) {
 // ---------------------------------------------------------------------------
 function triggerEvolve(c) {
   if (hasSkill(c, "Evolve") && !c.hasEvolved) {
-    c.attack += 3; c.currentHealth += 3; c.hasEvolved = true; removeSkill(c, "Evolve");
-    emit("text", { uid: c.uid, text: "EVOLVE!", color: "#b98cff" });
+    c.attack += RULES.evolveBonus; c.currentHealth += RULES.evolveBonus; c.hasEvolved = true; removeSkill(c, "Evolve");
+    emit("text", { uid: c.uid, say: "evolve" });
   }
 }
 
@@ -340,17 +382,17 @@ function transformCharacter(c, newId) {
   n.combatSurvived = 0;
   Object.assign(c, n);
   c.baseAttack = c.attack; c.baseHealth = c.health;
-  emit("text", { uid: c.uid, text: "TRANSFORM!", color: "#6fe3ff" });
+  emit("text", { uid: c.uid, say: "transform" });
   log(`${t.name} appears through Transform.`);
 }
 
-// Level Up: +1 to all stats, up to 3 times, then the skill is used up. Each Level Up also
+// Level Up: +1 to all stats, up to RULES.levelUpMax (3) times, then the skill is used up. Each Level Up also
 // heals the character fully. "rule: levelCap none" lifts the limit (Boss Level) and
 // "rule: levelGain <attack> <health>" changes what a level gives (Pesky Programmer: 2 0).
 // A Data Collector gains +1 Health when another of your characters levels up.
 const levelCap = c => {
   const r = cardRule(c, "levelCap");
-  return !r ? 3 : r[0] === "none" ? Infinity : Number(r[0]);
+  return !r ? RULES.levelUpMax : r[0] === "none" ? Infinity : Number(r[0]);
 };
 const levelGains = c => { const r = cardRule(c, "levelGain"); return r ? [Number(r[0]), Number(r[1])] : [1, 1]; };
 function levelUp(c, times = 1) {
@@ -362,7 +404,7 @@ function levelUp(c, times = 1) {
     c.levelHealth = (c.levelHealth || 0) + gains[1];
     c.keptLevels = (c.keptLevels || 0) + 1;   // levels whose stats this character holds
     healFully(c);
-    emit("text", { uid: c.uid, text: "LEVEL UP", color: "#ffd25e" });
+    emit("text", { uid: c.uid, say: "levelUp" });
     const owner = ownerOf(c);
     for (const x of owner.field.chars.slice()) if (x !== c) runHook(x, "allyLevelUp", { owner });
     if (c.levelUpCount >= levelCap(c)) {
@@ -387,7 +429,7 @@ function levelDown(c) {
   c.attack -= atk; c.currentHealth -= hp;
   c.levelHealth = Math.max(0, (c.levelHealth || 0) - hp);
   if (!hasSkill(c, "Level Up")) c.skills.push("Level Up");
-  emit("text", { uid: c.uid, text: "LEVEL DOWN", color: "#c9c9c9" });
+  emit("text", { uid: c.uid, say: "levelDown" });
   checkDeath(c);
   return true;
 }
@@ -435,29 +477,6 @@ function damageEverything(n, spare = null) {   // spare: a character left out (Z
   }
 }
 
-// An infected character gains the Zombie tribe on top of the tribes it had, so cards that care
-// about Zombies reach it. It keeps its own fracture (the owner's choice: it doesn't join the
-// Undead world) and its class.
-function makeZombie(t) {
-  if (!(t.tribes || []).includes("Zombie")) t.tribes = [...(t.tribes || []), "Zombie"];
-}
-
-function convertToZombie(ctx, t, givesReanimate) {
-  const foe = foeOf(ctx.owner);
-  if (t.owner !== foe.idx || ctx.owner.field.chars.length >= RULES.maxChars) {
-    if (givesReanimate || t.owner === ctx.owner.idx) makeZombie(t);
-    return;
-  }
-  foe.field.chars.splice(foe.field.chars.indexOf(t), 1);
-  makeZombie(t);
-  t.owner = ctx.owner.idx; t.rallyBonus = 0;
-  if (givesReanimate && !hasSkill(t, "Reanimate")) { t.skills.push("Reanimate"); t.reanimated = false; }
-  ctx.owner.field.chars.push(t);
-  updateRally(ctx.owner); updateRally(foe);
-  emit("text", { uid: t.uid, text: "INFECTED", color: "#8dff8d" });
-  log(`${ctx.owner.name} takes control of ${t.name}.`);
-}
-
 function effectFor(c) { return c.disabled ? null : EFFECTS[c.id] || null; }
 
 // Signal abilities fire when the character enters the field.
@@ -476,7 +495,7 @@ function triggerSignal(c, owner) {
 function validTargets(fx, ctx) {
   const cursed = c => ctx.spell && !isBuff(fx) && shieldedFromCurses(c);
   if (fx.target === "area") return S.players.flatMap(p => p.field.areas).filter(a => !cursed(a));
-  const chars = allChars().filter(c => !(ctx.spell && hasSkill(c, "Cloak")) && !cursed(c) && !(c === ctx.card && fx.intent !== "help") && (!fx.filter || fx.filter(c, ctx)));
+  const chars = allChars().filter(c => !(ctx.spell && skillNow(c, "Cloak")) && !cursed(c) && !(c === ctx.card && fx.intent !== "help") && (!fx.filter || fx.filter(c, ctx)));
   if (fx.target === "charOrPlayer") return [...chars, ...S.players.filter(p => !fx.players || fx.players(p.idx, ctx)).map(p => ({ isPlayer: true, idx: p.idx }))];
   return chars;
 }

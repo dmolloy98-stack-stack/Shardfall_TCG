@@ -24,6 +24,12 @@ them; nothing is lost while they wait.
   device" screen and the end of a match. Still in the code, one screen at a time: the deck
   builder, the Almanac and card details, the battle log and hints, the board's buttons and
   prompts, the campaign and trophies, the champions' lines, the tutorial, and the intro.
+- **Small code tidying left from the code review** (24 Nov, Claude's own housekeeping, no play
+  change): the board's positions in `render()` (`js/board.js`) are numbers in the HTML and could
+  move into `L` or the style sheet; the board-skin styles could become `css/skins.css` (needs the
+  loader, `tools/build-single.js` and `sw.js` changed too); `tools/cards-test.js` and
+  `tools/card-equivalence.js` share a small table set-up that could move into the test kit
+  (`rules-code.js`); every field of the screen state `U` could be declared in one place in `js/ui.js`.
 - **Simple Messenger and Digital Drainage** keep their own code (round two, step 4): truly
   one-of-a-kind. Nothing to do unless a future card shares their pattern.
 
@@ -109,19 +115,6 @@ changes into a stronger version. A deck may hold one kind of champion, or none.
 - Areas that **change a rule for both players**, not only +stats (today only Whirlpool does).
 - A general area that gives stats or bonuses **by tribe** played, so it works in mixed decks.
 - Cards are the owner's design. Claude builds and tests them once they are written in the sheet.
-
-## Protected look that hints at the Shardfall — the owner's idea, not designed yet
-
-- The runes that circle a Protected card (`RUNES` and `runeRingHTML()` in `js/board.js`) should
-  one day hint at what made the shards fall: the big event behind the Shardfall. The owner will
-  design what that is, then it gets pulled into the runes.
-- The shell of shards on a Protected player's health gem (`WARD` and `wardHTML()` in
-  `js/board.js`) should carry the same hint, so the two Protected looks clearly belong together
-  and nobody is confused.
-- Today the runes are placeholder shapes. The shell has no runes yet.
-- Keep the hint subtle, like the other clues; once it is designed, log it in the clue log in
-  `docs/world.md`.
-- Not now: the owner will raise it when ready.
 
 ## Art: remind the owner about ComfyUI next time art comes up
 

@@ -66,8 +66,8 @@ If a value has a comma in it (any effect with two actions), the whole Effect cel
 | `gearEnters` | Equipment enters its owner's field |
 | `maxLevel` | The character reaches its last level |
 | `cost` | Changes the card's mana cost: `reduce <number>` or `set <number>` |
-| `aura` | A lasting bonus while the character or area is on the field: `aura: buff <who> <attack> <health>`, or a skill: `aura: grant <who> <Skill>` (Parry and Swift). This is how an area boosts characters, for example `aura: buff allies.Monkey 1 0` |
-| `grants` | Equipment only: the holder has these skills, for example `grants: Swift` |
+| `aura` | A lasting bonus while the character or area is on the field: `aura: buff <who> <attack> <health>`, or a skill: `aura: grant <who> <Skill>` (any skill checked during play: Swift, Parry, Protected, Pierce, Cloak, Challenge, Tower, Overwhelm, Flash). This is how an area boosts characters, for example `aura: buff allies.Monkey 1 0` |
+| `grants` | Equipment only: the holder has these skills, for example `grants: Swift` (the same skills as `aura: grant`) |
 | `counter` | Makes the card a counter spell and says what it can stop: `character`, `spell`, `spellSingle` (a spell aimed at one character or area) or `spellMany` (a spell not aimed at one thing). For example `counter: character spell`. A counter is not played on your own turn: when the other player plays a card it can stop, the game asks you, and it costs mana you left unspent |
 | `rule` | Switches on one of the game's special rules for this card (table below), for example `rule: redirect` |
 

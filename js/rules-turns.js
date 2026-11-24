@@ -4,10 +4,12 @@
 // ---------------------------------------------------------------------------
 // Players, decks, turns
 // ---------------------------------------------------------------------------
+// The name a computer player has unless the campaign or tutorial gives it one.
+const COMPUTER_NAME = "Computer";
 function makePlayer(idx, deckId, isAI) {
   const def = DATA.decks[deckId] || { faction: "Mixed", custom: true, name: "Replayed deck" };   // a replayed custom deck that isn't saved here
   return {
-    idx, name: isAI ? "Computer" : `Player ${idx + 1}`, isAI: !!isAI, deckId, faction: def.faction,
+    idx, name: isAI ? COMPUTER_NAME : `Player ${idx + 1}`, isAI: !!isAI, deckId, faction: def.faction,
     deckLabel: def.custom ? def.name : `${def.faction} deck`,
     mana: 0, manaMax: 0, turnsPlayed: 0, hasDrawn: false, ripen: false,
     deck: [], hand: [], grave: [],
@@ -57,13 +59,13 @@ function startTurn(p) {
   }
 }
 
-// One-time bonus for the player who goes second: +1 mana this turn.
+// One-time bonus for the player who goes second: +RULES.manaToken mana this turn.
 function useManaToken() {
   if (!allowed("useManaToken")) return false;
   const p = active();
   if (S.over || !p.manaToken || S.pending) return false;
   p.manaToken = false;
-  p.mana += 1;
+  p.mana += RULES.manaToken;
   emit("manaToken", { player: p.idx });
   log(`${p.name} uses their bonus mana token.`);
   return true;
@@ -91,11 +93,11 @@ function activateArea(uid) {
 // missing from a match saved by an older version of the game (the hosted page keeps a match
 // going across updates), so a newer rule never meets a match that lacks its part.
 const baseState = () => ({ players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], nextUid: 1, log: [],
-  moves: [], setup: null, event: null, upcoming: null, lastEvent: null, noEvents: false, noAbilities: false, noShard: false, shard: null, shardFell: false, shardChip: [0, 0], died: {} });
+  moves: [], setup: null, event: null, upcoming: null, lastEvent: null, noEvents: false, noAbilities: false, noShard: false, shard: null, shardFell: false, shardChip: [0, 0], shardBy: null, passAfterChoice: false, died: {} });
 
 // A new match. Everything needed to replay it is kept in S.setup: these same settings, the seed,
 // and both deck lists (so a replay works even where a custom deck isn't saved).
-//   foeChampion  campaign: the second player is this champion, who starts with its card in hand
+//   foeChampion  campaign: the second player is this champion (its CardID), who starts with its card in hand
 //   lists        [deck list, deck list] to use instead of the saved decks (replays)
 //   randPick     a replay of a match whose opponent deck was picked at random
 function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard, foeChampion, lists, randPick }) {
@@ -132,11 +134,16 @@ function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard,
 
 // A campaign match: the second player is a champion, who starts with its own card in hand so it
 // shows up in the match. (Its lines and how the computer plays it are in js/champions.js.)
-function campaignChampion(foe, name) {
+// The champion is named by its CardID. Matches recorded before November 2026 named it by the card's
+// name, so a name is still understood.
+function campaignChampion(foe, champion) {
+  const card = DATA.cardsById[champion] || DATA.cardsByName[champion];
+  if (!card) return;
+  const id = card.id, name = card.name;
   foe.name = name;
-  foe.champion = name;
-  const k = foe.deck.findIndex(c => c.name === name);
-  if (k >= 0 && !foe.hand.some(c => c.name === name)) {
+  foe.champion = id;
+  const k = foe.deck.findIndex(c => c.id === id);
+  if (k >= 0 && !foe.hand.some(c => c.id === id)) {
     const champ = foe.deck.splice(k, 1)[0];
     foe.deck.unshift(foe.hand.pop());
     foe.hand.push(champ);
@@ -205,7 +212,7 @@ function endTurn() {
 
 function finishTurn() {
   endPhaseEffects(active());
-  for (const c of allChars()) c.bow = 0;   // The Bow lasts one turn
+  champHook(active(), "turnEnd");   // e.g. The Bow's +2 wears off
   S.active = 1 - S.active;
   S.phase = PHASE.DRAW;
   S.round++;

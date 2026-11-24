@@ -19,7 +19,6 @@ const L = {
   handY: 770,
 };
 
-const $ = sel => document.querySelector(sel);
 // Heavy effects off (Settings): the html element gets "light-fx", and css/style.css stops the
 // looping background effects. js/storm.js holds the menu's falling shards still too.
 const applyHeavyFx = () => document.documentElement.classList.toggle("light-fx", !U.heavyFx);
@@ -92,7 +91,6 @@ function patchChildren(box, html) {
   for (const el of [...box.children]) if (!keep.has(el)) el.remove();
   want.forEach((el, i) => { if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null); });
 }
-const esc = s => String(s ?? "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 
 const U = {
   screen: "menu",
@@ -165,13 +163,22 @@ function scheduleAI() {
   }, (S.phase === PHASE.DRAW ? 900 : 750) * AI_SPEEDS[U.aiSpeed].k + wait);
 }
 
+// The screen's state for one match, cleared before a new one (a match, the campaign or the tutorial).
+// A new per-match field in U is reset here.
+function resetMatchScreen() {
+  clearTimeout(U.aiTimer);
+  Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
+  U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
+}
+
+// Who is taking its turn, as a sentence starts: "The computer", or a champion's or the Trainer's name.
+const thinkerName = p => (p.name === COMPUTER_NAME ? "The computer" : p.name);
+
 // opts.opponentDeckId and opts.foeChampion are used by the campaign (js/campaign.js).
 function startGame(opts = {}) {
   if (deckProblem(U.deckId)) { showScreen("menu"); return; }
   endTutorial();
-  clearTimeout(U.aiTimer);
-  Object.assign(U, { selected: null, armed: null, curtain: false, ended: false, undo: [], turnColor: null });
-  U.spawn.clear(); U.hits.clear(); U.lunges.clear(); U.drawn.clear();
+  resetMatchScreen();
   U.campaign = opts.campaign ?? null;
   newGame({ deckId: U.deckId, opponentDeckId: opts.opponentDeckId, mode: U.campaign ? "ai" : U.mode, foeChampion: opts.foeChampion });
   showScreen("game");
@@ -195,7 +202,7 @@ function onPhaseButton() {
 function passTurn() {
   const p = active();
   const playable = S.phase === PHASE.SETUP ? p.hand.filter(c => canPlay(c, p)).length : 0;
-  const ready = S.phase <= PHASE.BATTLE ? p.field.chars.filter(c => !c.hasAttacked && !hasSkill(c, "Tower")).length : 0;
+  const ready = S.phase <= PHASE.BATTLE ? p.field.chars.filter(c => !c.hasAttacked && !skillNow(c, "Tower")).length : 0;
   if (!U.passCheck || U.tutorial || (!playable && !ready)) { act(() => move("end")); return; }
   const left = [playable && `${p.mana} mana and ${playable} card${playable > 1 ? "s" : ""} you can play`, ready && `${ready} character${ready > 1 ? "s" : ""} that can still attack`].filter(Boolean).join(", and ");
   openModal(`<h2 id="modal-title">Pass your turn?</h2><p>You still have ${esc(left)}.</p>
@@ -220,9 +227,6 @@ function autoFlow() {
   }
 }
 
-// With two or more guards (Challenge or Tower) the attacker's player picks which one to hit.
-// The rules send an attack aimed anywhere else to the first guard, which is right when there
-// is only one. With several, that took the choice away, so such a tap now asks for a guard.
 // "All attack": the rules are in js/engine.js. The blows come in one rush, without wind-ups,
 // and one Undo takes the whole attack back.
 function attackAllFaceMove() {
@@ -230,6 +234,9 @@ function attackAllFaceMove() {
   try { return move("allFace"); } finally { U.multiAttack = false; }
 }
 
+// With two or more guards (Challenge or Tower) the attacker's player picks which one to hit.
+// The rules send an attack aimed anywhere else to the first guard, which is right when there
+// is only one. With several, that took the choice away, so such a tap now asks for a guard.
 function mustPickGuard(target) {
   const g = guards(opponent());
   if (g.length < 2 || g.includes(target)) return false;

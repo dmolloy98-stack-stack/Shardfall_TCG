@@ -11,18 +11,12 @@
 //     Otherwise it looks a few attacks ahead and takes the first step of the best line.
 //   - Each faction has a style (AI_STYLES) that changes what it values.
 
-// How each faction's computer player likes to play:
+// How each fracture's computer player likes to play is data/ai_styles.csv (DATA.aiStyles):
 //   face   how much it values hurting the enemy player      board  its own characters
 //   hand   cards kept in hand                               wild   how often it takes its
 //                                                                  second-best idea instead
-const AI_STYLES = {
-  Mortal:  { face: 1.35, board: 0.95, hand: 0.4, wild: 0 },    // rushes the player down
-  Wild:    { face: 1.1,  board: 1,    hand: 0.5, wild: 0.25 }, // unpredictable
-  Undead:  { face: 0.9,  board: 1.15, hand: 0.6, wild: 0 },    // builds a swarm, strikes late
-  Cyber:   { face: 1,    board: 1.1,  hand: 0.5, wild: 0 },    // grows its characters
-  Simple:  { face: 1,    board: 1,    hand: 0.5, wild: 0 },    // steady
-};
-const AI_PLAIN = { face: 1, board: 1, hand: 0.5, wild: 0 };
+const AI_STYLES = DATA.aiStyles;
+const AI_PLAIN = DATA.aiStyles.default || { face: 1, board: 1, hand: 0.5, wild: 0 };
 // A champion (campaign only, see js/champions.js) adds its own tweaks on top of its faction's
 // style, and some of them change as the match goes on.
 function aiStyle(idx) {
@@ -64,7 +58,7 @@ function evaluate(me) {
   if (S.shardBy != null) score += S.shardBy === me ? SHARD_CLAIM : -SHARD_CLAIM;
   // Danger: the other side's attackers could finish me next turn and nothing guards me.
   if (!guards(mine).length) {
-    const threat = theirs.field.chars.reduce((n, c) => n + (hasSkill(c, "Tower") ? 0 : stats(c).a), 0);
+    const threat = theirs.field.chars.reduce((n, c) => n + (skillNow(c, "Tower") ? 0 : stats(c).a), 0);
     if (threat >= mine.health) score -= 25;
   }
   return score;
@@ -85,45 +79,55 @@ function aiPickTarget() {
   return best;
 }
 
-function aiResolveChoice() {
-  const pd = S.pending;
-  const me = pd.owner;
+// How the computer answers each kind of "choose" window (see CHOICES in js/rules-play.js).
+// Each entry returns [picks, option] for move("choose"). A kind without an entry takes the most
+// expensive cards it may (aiPickByCost).
+const AI_CHOICES = {
   // Soul Shepard and The Man Ape: try each answer on a copy of the game and take the best.
-  if (pd.resolve === "shepard") {
+  shepard(pd, me) {
     const score = o => simulate(() => { resolveChoice([], o); return evaluate(me); });
-    move("choose", [], score("absorb") >= score("hand") + (aiStyle(me).gather || 0) ? "absorb" : "hand");
-    return;
-  }
-  if (pd.resolve === "apeSacrifice") {
+    return [[], score("absorb") >= score("hand") + (aiStyle(me).gather || 0) ? "absorb" : "hand"];
+  },
+  apeSacrifice(pd, me) {
     let best = null, bestScore = simulate(() => { resolveChoice([], null); return evaluate(me); });
     for (const c of pd.cards) {
       const sc = simulate(() => { resolveChoice([c.uid], "sacrifice"); return evaluate(me); });
       if (sc > bestScore + (aiStyle(me).sac ?? 0.5)) { bestScore = sc; best = c.uid; }
     }
-    move("choose", best ? [best] : [], best ? "sacrifice" : null);
-    return;
-  }
+    return [best ? [best] : [], best ? "sacrifice" : null];
+  },
   // A counter spell: use one only when stopping the card is worth more than the counter costs,
   // so a 4-mana counter is not spent on a 1-mana character.
-  if (pd.resolve === "counter") {
+  counter(pd, me) {
     const letIt = simulate(() => { resolveChoice([], null); return evaluate(me); });
     let best = null, bestGain = 0;
     for (const c of pd.cards) {
       const gain = simulate(() => { resolveChoice([c.uid], "counter"); return evaluate(me); }) - letIt - playCost(c, S.players[me]) * 1.2;
       if (gain > bestGain) { bestGain = gain; best = c.uid; }
     }
-    move("choose", best ? [best] : [], best ? "counter" : null);
-    return;
-  }
-  if (pd.resolve === "messenger") {
+    return [best ? [best] : [], best ? "counter" : null];
+  },
+  messenger(pd) {
     const top = pd.cards[0];
-    move("choose", [], top && top.manaCost >= 3 ? "take" : "discard");
-    return;
-  }
+    return [[], top && top.manaCost >= 3 ? "take" : "discard"];
+  },
+  discardDraw: (pd, me) => aiPickByCost(pd, me, true),   // throw away the cheapest
+};
+
+// Take the most expensive cards allowed (or the cheapest), and bring a card back to the field
+// rather than the hand when that is offered and there is mana to spare.
+function aiPickByCost(pd, me, cheapest) {
   const sorted = pd.cards.slice().sort((a, b) => b.manaCost - a.manaCost);
-  if (pd.resolve === "discardDraw") sorted.reverse();
+  if (cheapest) sorted.reverse();
   const picks = sorted.slice(0, pd.pick || 1).map(c => c.uid);
   const option = pd.options?.some(o => o.id === "field") && S.players[me].mana >= 2 ? "field" : "hand";
+  return [picks, option];
+}
+
+function aiResolveChoice() {
+  const pd = S.pending;
+  const me = pd.owner;
+  const [picks, option] = (AI_CHOICES[pd.resolve] || aiPickByCost)(pd, me);
   move("choose", picks, option);
 }
 
@@ -185,10 +189,9 @@ function aiPlanScore(me, depth) {
 let aiSeed = null, aiRng = 0;
 function aiRand() {
   if (aiSeed !== S.seed) { aiSeed = S.seed; aiRng = (S.seed ^ 0x9e3779b9) >>> 0; }
-  let t = (aiRng = (aiRng + 0x6d2b79f5) >>> 0);
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  const r = randomStep(aiRng);
+  aiRng = r.state;
+  return r.value;
 }
 
 // The setup play to make now: the first step of the best line of plays, or null to stop.
@@ -207,15 +210,8 @@ function aiPlanSetup() {
 // If attacking the enemy player with every ready character wins the game right now, returns
 // the first attacker to send. Otherwise null.
 function aiLethal() {
-  const me = S.active;
-  if (guards(opponent()).length) return null;
-  const order = active().field.chars.filter(canAttack).map(c => c.uid);
-  if (!order.length) return null;
-  const wins = simulate(() => {
-    for (const uid of order) { if (S.over || S.pending) break; attack(uid, null); }
-    return S.over && S.winner === me;
-  });
-  return wins ? order[0] : null;
+  const first = active().field.chars.find(canAttack);
+  return first && allAttackWins() ? first.uid : null;
 }
 
 function aiAttackActions() {
@@ -273,7 +269,7 @@ function aiPlanBattle() {
   const st = aiStyle(me);
   // A patient champion only attacks when it clearly gains, and keeps its champion card at home
   // unless the gain is bigger still.
-  const champ = championOf(active()) ? active().field.chars.find(c => c.name === active().champion) : null;
+  const champ = championOf(active()) ? active().field.chars.find(c => c.id === active().champion) : null;
   let best = null, bestScore = base + (st.patience || 0);
   for (const a of aiAttackActions().slice(0, BATTLE_WIDTH + 1)) {
     const score = simulate(() => { aiStrike(a); return aiBattleScore(me, BATTLE_DEPTH - 1); });

@@ -74,50 +74,70 @@ function showGrave(p) {
     <div class="detail-actions" style="margin-top:16px"><button type="button" class="btn btn-small" data-close>Close</button></div>`);
 }
 
+// The "choose a card" window. Its clicks are handled by the one #modal handler below (data-pick,
+// data-opt); what has been picked so far lives in openModal.choose while the window is open.
 function showChoose() {
-  const pd = S.pending;
-  openModal.choose = true;
-  const picked = new Set();
-  const max = pd.pick || 1;
-  const draw = () => {
-    const options = pd.options || [{ id: "ok", label: "Confirm" }];
-    const needPick = pd.resolve !== "messenger" && pd.resolve !== "shepard";
-    $("#modal-content").innerHTML = `<h2 id="modal-title">${esc(pd.title)}</h2><p class="sub">${esc(pd.prompt)}</p>
+  openModal("", { dismissable: false });
+  openModal.choose = { picked: new Set() };
+  drawChoose();
+}
+function drawChoose() {
+  const pd = S.pending, picked = openModal.choose.picked;
+  const options = pd.options || [{ id: "ok", label: "Confirm" }];
+  const needPick = CHOICES[pd.resolve]?.needsPick !== false;
+  $("#modal-content").innerHTML = `<h2 id="modal-title">${esc(pd.title)}</h2><p class="sub">${esc(pd.prompt)}</p>
       <div class="modal-cards">${pd.cards.map(c => `<button type="button" class="${picked.has(c.uid) ? "picked" : ""}" data-pick="${c.uid}">${cardHTML(c)}</button>`).join("")}</div>
       <div class="detail-actions" style="margin-top:16px">${options.map(o => `<button type="button" class="btn${o === options[0] ? " btn-primary" : ""}" data-opt="${o.id}" ${needPick && !picked.size && pd.required ? "disabled" : ""}>${esc(o.label)}</button>`).join("")}
       ${pd.required ? "" : `<button type="button" class="btn btn-small" data-opt="__skip">Skip</button>`}</div>`;
-  };
-  openModal("", { dismissable: false });
-  draw();
-  $("#modal-content").onclick = e => {
-    const pick = e.target.closest("[data-pick]");
-    if (pick) {
-      const uid = Number(pick.dataset.pick);
-      if (picked.has(uid)) picked.delete(uid);
-      else { if (picked.size >= max) picked.delete(picked.values().next().value); picked.add(uid); }
-      draw(); return;
-    }
-    const opt = e.target.closest("[data-opt]");
-    if (!opt) return;
-    $("#modal-content").onclick = null;
-    closeModal();
-    if (opt.dataset.opt === "__skip") act(() => move("choose", [], null));
-    else act(() => move("choose", [...picked], opt.dataset.opt));
-  };
+}
+function chooseClick(t) {
+  const pd = S.pending, picked = openModal.choose.picked;
+  const pick = t.closest("[data-pick]");
+  if (pick) {
+    const uid = Number(pick.dataset.pick);
+    if (picked.has(uid)) picked.delete(uid);
+    else { if (picked.size >= (pd.pick || 1)) picked.delete(picked.values().next().value); picked.add(uid); }
+    drawChoose(); return;
+  }
+  const opt = t.closest("[data-opt]");
+  if (!opt) return;
+  const picks = [...picked];
+  closeModal();
+  if (opt.dataset.opt === "__skip") act(() => move("choose", [], null));
+  else act(() => move("choose", picks, opt.dataset.opt));
 }
 
-// Settings: beginner hints and the board skin. Opened from the main menu or the game menu.
+// The on/off switches in Settings, in the order they show. Each one is a U field saved under the same
+// key (add the key to SAVE_KEYS in js/saves.js), its words in data/ui_text.csv ({state} is filled in),
+// and anything to do once it has flipped. A new switch is one entry here.
+const SWITCHES = [
+  { set: "hints", key: "hints", words: "settings_hints", flip: () => setHints(!U.hints) },
+  { set: "log", key: "showLog", words: "settings_log", state: on => T(on ? "shown" : "hidden"), after: () => { if (U.screen === "game") render(); } },
+  { set: "fx", key: "heavyFx", words: "settings_fx", tip: "settings_fx_tip", after: () => { applyHeavyFx(); if (U.screen === "menu") { storm.stop(); storm.start(); } } },
+  { set: "flow", key: "autoFlow", words: "settings_flow", tip: "settings_flow_tip" },
+  { set: "passcheck", key: "passCheck", words: "settings_passcheck", tip: "settings_passcheck_tip" },
+];
+function switchButton(w) {
+  const on = U[w.key], state = w.state ? w.state(on) : T(on ? "on" : "off");
+  return `<button type="button" class="btn" data-set="${w.set}" aria-pressed="${on}"${w.tip ? ` title="${esc(T(w.tip))}"` : ""}>${esc(T(w.words, { state }))}</button>`;
+}
+function flipSwitch(w) {
+  if (w.flip) w.flip();
+  else { U[w.key] = !U[w.key]; PREFS.set(w.key, U[w.key]); }
+  w.after?.();
+  showSettings();
+}
+
+// Settings: the switches, the computer's speed and the board skin. Opened from the main menu or the game menu.
 function showSettings() {
-  const onOff = on => T(on ? "on" : "off");
+  const sw = id => switchButton(SWITCHES.find(w => w.set === id));
   openModal(`<h2 id="modal-title">${esc(T("settings_title"))}</h2>
     <div class="menu-list">
-      <button type="button" class="btn" data-set="hints" aria-pressed="${U.hints}">${esc(T("settings_hints", { state: onOff(U.hints) }))}</button>
-      <button type="button" class="btn" data-set="log" aria-pressed="${U.showLog}">${esc(T("settings_log", { state: T(U.showLog ? "shown" : "hidden") }))}</button>
+      ${sw("hints")}
+      ${sw("log")}
       <button type="button" class="btn" data-set="speed" title="${esc(T("settings_speed_tip"))}">${esc(T("settings_speed", { speed: AI_SPEEDS[U.aiSpeed].name }))}</button>
-      <button type="button" class="btn" data-set="fx" aria-pressed="${U.heavyFx}" title="${esc(T("settings_fx_tip"))}">${esc(T("settings_fx", { state: onOff(U.heavyFx) }))}</button>
-      <button type="button" class="btn" data-set="flow" aria-pressed="${U.autoFlow}" title="${esc(T("settings_flow_tip"))}">${esc(T("settings_flow", { state: onOff(U.autoFlow) }))}</button>
-      <button type="button" class="btn" data-set="passcheck" aria-pressed="${U.passCheck}" title="${esc(T("settings_passcheck_tip"))}">${esc(T("settings_passcheck", { state: onOff(U.passCheck) }))}</button>
-      ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">${esc(T("settings_readlog"))}</button>` : ""}
+      ${SWITCHES.filter(w => !["hints", "log"].includes(w.set)).map(switchButton).join("\n      ")}
+    ${U.screen === "game" ? `<button type="button" class="btn" data-set="readlog">${esc(T("settings_readlog"))}</button>` : ""}
       ${U.screen === "menu" ? `<button type="button" class="btn" data-set="intro">${esc(T("settings_intro"))}</button>` : ""}
       <button type="button" class="btn" data-set="savecode" title="${esc(T("settings_savecode_tip"))}">${esc(T("settings_savecode"))}</button>
     </div>
@@ -138,11 +158,15 @@ function showSaveCode() {
     <p id="save-code-msg" class="save-code-msg" role="status"></p>
     <div class="detail-actions"><button type="button" class="btn" data-set="loadcode">${esc(T("save_load"))}</button><button type="button" class="btn btn-primary" data-set="settings">${esc(T("save_back"))}</button></div>`);
 }
+// Copies a text box's words. If the browser won't allow it, the text is left selected to copy by hand.
+async function copyFromBox(box) {
+  try { await navigator.clipboard.writeText(box.value); }
+  catch { box.select(); try { document.execCommand("copy"); } catch { /* selected for copying by hand */ } }
+}
 function saveCodeMessage(text) { const m = byId("save-code-msg"); if (m) m.textContent = text; }
 async function copySaveCode() {
   const box = byId("save-code-out");
-  try { await navigator.clipboard.writeText(box.value); }
-  catch { box.select(); try { document.execCommand("copy"); } catch { /* the code stays selected to copy by hand */ } }
+  await copyFromBox(box);
   saveCodeMessage(T("save_copied"));
 }
 function loadSaveCode(btn) {
@@ -188,14 +212,12 @@ function showBugReport(err) {
     <p id="bug-msg" class="save-code-msg" role="status"></p>
     <div class="detail-actions"><button type="button" class="btn" data-bug="copy">${esc(T("bug_copy"))}</button><button type="button" class="btn btn-primary" data-bug="close">${esc(T("bug_close"))}</button></div>`);
 }
-document.addEventListener("click", async e => {
-  const b = e.target.closest("[data-bug]");
-  if (!b) return;
+async function bugClick(b) {
   if (b.dataset.bug === "close") { closeModal(); return; }
   const box = byId("bug-report");
-  try { await navigator.clipboard.writeText(box.value); } catch { box.select(); try { document.execCommand("copy"); } catch { /* selected for copying by hand */ } }
+  await copyFromBox(box);
   byId("bug-msg").textContent = T("bug_copied");
-});
+}
 window.addEventListener("error", e => { if (e.error) showBugReport(e.error); });
 window.addEventListener("unhandledrejection", e => showBugReport(e.reason));
 
@@ -228,19 +250,32 @@ function showGameMenu() {
     </div></div>`);
 }
 
+// The pop-up window's one click handler: one branch per kind of button, whichever file opened the
+// window. Each branch calls a function that lives with its window (the deck builder's in
+// js/decks.js, the campaign's in js/campaign.js). Add a branch here for a new kind of button;
+// never a second click handler on the window (a duplicate once made a click count twice).
 $("#modal").addEventListener("click", e => {
-  if (e.target.closest("[data-close]") && $("#modal").dataset.dismissable) { closeModal(); return; }
+  const t = e.target;
+  if (t.closest("[data-close]") && $("#modal").dataset.dismissable) { closeModal(); return; }
+  if (openModal.choose && t.closest("[data-pick],[data-opt]")) { chooseClick(t); return; }
+  const bug = t.closest("[data-bug]");
+  if (bug) { bugClick(bug); return; }
+  const nd = t.closest("[data-new]");   // "Create your own deck" (js/decks.js)
+  if (nd) { newDeckFrom(nd.dataset.new); return; }
+  const bld = t.closest("[data-bld]");   // deck builder: save, discard or delete (js/decks.js)
+  if (bld) { builderChoice(bld.dataset.bld); return; }
+  const camp = t.closest("[data-camp],[data-camp-go],[data-camp-back],[data-camp-close],[data-camp-deck],[data-camp-reset]");
+  if (camp) { campaignClick(camp); return; }   // the campaign windows (js/campaign.js)
+  const w = e.target.closest("[data-w]");   // the welcome window (showWelcome() in js/help.js)
+  if (w) { closeModal(); if (w.dataset.w === "tutorial") startTutorial(); else showGuide(); return; }
   const skin = e.target.closest("[data-skin]");
   if (skin) { setSkin(skin.dataset.skin); render(); showSettings(); return; }
   const set = e.target.closest("[data-set]");
   if (set) {
-    if (set.dataset.set === "hints") { setHints(!U.hints); showSettings(); }
-    else if (set.dataset.set === "log") { U.showLog = !U.showLog; PREFS.set("showLog", U.showLog); if (U.screen === "game") render(); showSettings(); }
+    const w = SWITCHES.find(x => x.set === set.dataset.set);
+    if (w) flipSwitch(w);
     else if (set.dataset.set === "speed") { const ids = Object.keys(AI_SPEEDS); U.aiSpeed = ids[(ids.indexOf(U.aiSpeed) + 1) % ids.length]; PREFS.set("aiSpeed", U.aiSpeed); showSettings(); }
     else if (set.dataset.set === "readlog") showLog();
-    else if (set.dataset.set === "fx") { U.heavyFx = !U.heavyFx; PREFS.set("heavyFx", U.heavyFx); applyHeavyFx(); if (U.screen === "menu") { storm.stop(); storm.start(); } showSettings(); }
-    else if (set.dataset.set === "flow") { U.autoFlow = !U.autoFlow; PREFS.set("autoFlow", U.autoFlow); showSettings(); }
-    else if (set.dataset.set === "passcheck") { U.passCheck = !U.passCheck; PREFS.set("passCheck", U.passCheck); showSettings(); }
     else if (set.dataset.set === "intro") { closeModal(); playIntro(); }
     else if (set.dataset.set === "savecode") showSaveCode();
     else if (set.dataset.set === "copycode") copySaveCode();
@@ -253,7 +288,7 @@ $("#modal").addEventListener("click", e => {
   const b = e.target.closest("[data-m]");
   if (!b) return;
   const m = b.dataset.m, uid = Number(b.dataset.uid);
-  if (m === "detail") { const c = findCardAnywhere(uid); if (c) showDetail(c); return; }
+  if (m === "detail") { const c = findCard(uid); if (c) showDetail(c); return; }
   closeModal();
   if (m === "play") act(() => move("play", uid));
   else if (m === "arm") { U.armed = { uid, from: "hand" }; render(); }

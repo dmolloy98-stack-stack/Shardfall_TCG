@@ -68,7 +68,6 @@ function deckProblem(deckId) {
 // Builder screen
 // ---------------------------------------------------------------------------
 const B = { id: null, name: "", cards: {}, saved: "", faction: "All", type: "All", sheet: false, walk: -1 };
-const byId = id => document.getElementById(id);
 const TYPES = ["Character", "Spell", "Equipment", "Area"];
 
 // Start a new deck: empty, or a copy of a starter deck to change.
@@ -81,15 +80,14 @@ function createDeck() {
       ${starters.map(id => `<button type="button" class="btn" data-new="${id}">Copy the ${esc(DATA.decks[id].name)}</button>`).join("")}
     </div>`);
 }
-byId("modal").addEventListener("click", e => {
-  const b = e.target.closest("[data-new]");
-  if (!b) return;
+// "Create your own deck": the choice made (its click comes through the #modal handler in js/panels.js).
+function newDeckFrom(deckId) {
   closeModal();
-  const from = DATA.decks[b.dataset.new];
+  const from = DATA.decks[deckId];
   const cards = {};
   for (const en of from?.cards || []) if (buildable(DATA.cardsById[en.cardId])) cards[en.cardId] = en.quantity;
   openBuilder({ id: null, name: from ? `My ${from.faction} deck` : "My deck", cards });
-});
+}
 
 function editDeck(id) {
   const d = savedDecks().find(x => x.id === id);
@@ -236,11 +234,9 @@ function leaveBuilder() {
   openModal(`<h2 id="modal-title">Save your changes?</h2>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-bld="save">Save deck</button><button type="button" class="btn" data-bld="discard">Leave without saving</button><button type="button" class="btn" data-close>Keep building</button></div>`);
 }
-byId("modal").addEventListener("click", e => {
-  const b = e.target.closest("[data-bld]");
-  if (!b) return;
+// Save, discard or delete, answered in a pop-up window (its click comes through js/panels.js).
+function builderChoice(what) {
   closeModal();
-  const what = b.dataset.bld;
   if (what === "save") saveDeck();
   else if (what === "discard") showScreen("menu");
   else if (what === "delete") {
@@ -250,7 +246,7 @@ byId("modal").addEventListener("click", e => {
     if (U.deckId === B.id) U.deckId = DATA.deckOrder[0];
     showScreen("menu");
   }
-});
+}
 
 byId("builder").addEventListener("click", e => {
   const t = e.target;

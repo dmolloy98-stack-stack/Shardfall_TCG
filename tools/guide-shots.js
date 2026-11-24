@@ -4,27 +4,17 @@
 //   node tools/guide-shots.js
 //
 // Needs Node.js and Playwright (npm install playwright, then npx playwright install chromium).
-// It serves this folder itself, sets up each scene with the real game code, draws the
+// It loads this folder straight from disk (tools/serve.js), sets up each scene with the real game code, draws the
 // boxes, numbers and arrows on top, and takes the screenshot.
 
-const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright");
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "guide");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".csv": "text/csv", ".png": "image/png", ".jpg": "image/jpeg" };
+const serve = require("./serve");   // loads the game from disk at http://game.local/ (no web server needed)
 
-function serve() {
-  const server = http.createServer((req, res) => {
-    const file = path.join(ROOT, decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"));
-    if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end(); return; }
-    res.writeHead(200, { "Content-Type": TYPES[path.extname(file)] || "application/octet-stream" });
-    fs.createReadStream(file).pipe(res);
-  });
-  return new Promise(resolve => server.listen(0, () => resolve(server)));
-}
 
 // Runs in the page: draws numbered boxes, labels and arrows over the board.
 // Each mark is { box: selectors | [x,y,w,h], n, label, at, arrow: { from: [x,y], to: selector | [x,y] } }.
@@ -115,11 +105,12 @@ function showDiagram(html) {
 }
 
 (async () => {
-  const server = await serve();
-  const url = `http://localhost:${server.address().port}/index.html#menu`;
+  const url = "http://game.local/index.html#menu";
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch();
-  let page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  await serve(ctx);
+  let page = await ctx.newPage();
   await page.addInitScript(() => { try { localStorage.setItem("shardfall.welcomed", "true"); } catch {} });
   const fresh = async () => { await page.goto(url); await page.waitForFunction(() => typeof startGame === "function"); await page.evaluate(() => document.fonts.ready); };
   const jpg = (name, clip) => page.screenshot({ path: path.join(OUT, name), type: "jpeg", quality: 84, clip });
@@ -178,7 +169,9 @@ function showDiagram(html) {
 
   // The diagrams are taken at double resolution so their small text stays sharp.
   await page.close();
-  page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 });
+  const ctx2 = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 });
+  await serve(ctx2);
+  page = await ctx2.newPage();
   await page.addInitScript(() => { try { localStorage.setItem("shardfall.welcomed", "true"); } catch {} });
 
   // 4. Card anatomy.
@@ -222,6 +215,5 @@ function showDiagram(html) {
   await (await page.$("#diagram")).screenshot({ path: path.join(OUT, "equip.png") });
 
   await browser.close();
-  server.close();
   console.log("Saved pictures in", OUT);
 })().catch(err => { console.error(err); process.exit(1); });

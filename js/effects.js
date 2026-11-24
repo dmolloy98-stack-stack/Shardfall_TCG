@@ -34,13 +34,13 @@ const WHEN = {
 };
 
 // The special rules a "rule:" clause can switch on, and what must follow each name.
-// The rules themselves are in js/engine.js; search there for the name in quotes.
+// The rules themselves are in js/engine.js and the js/rules-*.js files; search there for the name in quotes.
 const RULE_WORDS = {
-  lord: "<Faction> <n>: while on the field, that faction's cards get +n, its spells +n, and curses can't target its cards",
+  lord: "<Fracture> <n>: while on the field, that faction's cards get +n, its spells +n, and curses can't target its cards",
   redirect: ": once per turn, the first damage to it or its player goes to an enemy of its player's choice",
-  shepherd: "<Faction>: when another card of that faction dies, absorb its stats or return it to hand",
+  shepherd: "<Kind>: when another card of that faction dies, absorb its stats or return it to hand",
   defend: "<n>: +n to all stats while defending",
-  sacrifice: "<Faction>: after its owner's Battle phase, may sacrifice one of that faction for +1 to all stats and a full heal",
+  sacrifice: "<Kind>: after its owner's Battle phase, may sacrifice one of that faction for +1 to all stats and a full heal",
   freeEquip: ": its owner's equipment costs nothing",
   equipCostMax: "<n>: equipping this character costs at most n",
   levelGain: "<attack> <health>: what each Level Up gives it",
@@ -49,7 +49,7 @@ const RULE_WORDS = {
   activate: ": an area whose play effect can be used once in each of its owner's Setup phases",
   strike: ": equipment whose play effect its holder can use once per Battle phase",
   teach: "<Skill>: equipment that gives its holder the skill for good",
-  grieve: "<Tribe>: this card gets +1 Health each time a character of that tribe dies (either side), counted from the start of the match wherever the card is",
+  grieve: "<Kind>: this card gets +1 Health each time a character of that tribe dies (either side), counted from the start of the match wherever the card is",
 };
 
 // ---------------------------------------------------------------------------
@@ -73,15 +73,17 @@ const words = text => (text.match(/"[^"]*"|\S+/g) || []).map(w => w.replace(/^"|
 // Piles never hold tokens (cards made during play, like Master Rat's Turtles).
 const PILE_BASES = ["grave", "graves", "deck", "hand"];
 const SELECTOR_BASES = ["self", "target", "holder", "allies", "enemies", "everyone", "me", "foe", "gear", ...PILE_BASES];
+// Each narrowing word is worked out once, here, when the cards are read (not each time the action
+// runs), and a word that is nothing known stops the game with a message naming the card.
 function parseSelector(text, where) {
   const [base, ...filters] = text.split(".");
   if (!SELECTOR_BASES.includes(base)) throw new Error(`${where}: "${text}" is not someone an action can affect. Use one of: ${SELECTOR_BASES.join(", ")}.`);
-  return { base, filters };
+  return { base, filters, fns: filters.map(f => selectorFilter(f, where)).filter(Boolean), strongest: filters.includes("strongest") };
 }
 const ALL_TRIBES = new Set(), ALL_CLASSES = new Set();
 for (const card of DATA.cardList) { card.tribes.forEach(t => ALL_TRIBES.add(t)); card.classes.forEach(k => ALL_CLASSES.add(k)); }
 for (const f of Object.keys(TRIBE_FAMILIES)) ALL_TRIBES.add(f);   // tribe families, if game_rules.csv defines any
-function selectorFilter(f) {
+function selectorFilter(f, where) {
   if (f === "other") return (c, ctx) => c !== ctx.card;
   if (f === "leveler") return c => hasSkill(c, "Level Up");
   if (f === "levels") return c => c.keptLevels > 0;
@@ -89,14 +91,14 @@ function selectorFilter(f) {
   if (f === "mine") return (c, ctx) => c.owner === ctx.owner.idx;
   if (f === "strongest") return null;   // handled after filtering
   if (f === "swift") return c => isSwift(c);
-  if (f === "tower") return c => hasSkill(c, "Tower");
+  if (f === "tower") return c => skillNow(c, "Tower");
   const has = f.match(/^has:(.+)$/);                                                               // has:Reanimate: has that skill
-  if (has) return c => hasSkill(c, has[1]);
+  if (has) { if (where && !DATA.skills[has[1]]) throw new Error(`${where}: "${has[1]}" is not a skill (in "${f}").`); return c => hasSkill(c, has[1]); }
   if (["character", "spell", "equipment", "area"].includes(f)) return c => c.type.toLowerCase() === f;   // a kind of card
   const cost = f.match(/^cost(<=|>=|=)(\d+)$/);                                                     // cost<=2: by printed mana cost
   if (cost) { const n = Number(cost[2]); return { "<=": c => c.manaCost <= n, ">=": c => c.manaCost >= n, "=": c => c.manaCost === n }[cost[1]]; }
   const not = f.match(/^not:(.+)$/);                                                               // not:primate: anything but that
-  if (not) { const fn = selectorFilter(not[1]); return fn ? (c, ctx) => !fn(c, ctx) : null; }
+  if (not) { const fn = selectorFilter(not[1], where); return fn ? (c, ctx) => !fn(c, ctx) : null; }
   // Fracture, tribe or class, written plainly (allies.Undead, allies.Monkey, allies.Student) or with
   // its kind in front (allies.class:Fighter). Use the kind if a name is ever two things; the plain
   // word means the fracture first, then the tribe, then the class.
@@ -105,7 +107,9 @@ function selectorFilter(f) {
   if (DATA.factions[f]) return c => inGroup(c, f);
   if (ALL_TRIBES.has(f)) return c => hasTribe(c, f);
   if (ALL_CLASSES.has(f)) return c => hasClass(c, f);
-  return c => c.id === f;                             // a CardID
+  // a CardID (or a token's id); anything else is a typing mistake, which used to match nothing
+  if (where && !DATA.cardsById[f] && !TOKENS[f]) throw new Error(`${where}: "${f}" is not a fracture, tribe, class, CardID or narrowing word (data/README.md lists them).`);
+  return c => c.id === f;
 }
 function select(sel, ctx) {
   let list;
@@ -124,8 +128,8 @@ function select(sel, ctx) {
     case "deck": list = ctx.owner.deck.filter(c => !c.token); break;
     case "hand": list = ctx.owner.hand.filter(c => !c.token); break;
   }
-  for (const f of sel.filters) { const fn = selectorFilter(f); if (fn) list = list.filter(c => !c.isPlayer && fn(c, ctx)); }
-  if (sel.filters.includes("strongest") && list.length) list = [list.reduce((a, b) => (stats(b).a > stats(a).a ? b : a))];
+  for (const fn of sel.fns) list = list.filter(c => !c.isPlayer && fn(c, ctx));
+  if (sel.strongest && list.length) list = [list.reduce((a, b) => (stats(b).a > stats(a).a ? b : a))];
   return list;
 }
 
@@ -161,62 +165,87 @@ function parseNumber(text, where) {
   return ctx => terms.reduce((n, f) => n + f(ctx), 0);
 }
 
+// "convert": infection, the Undead world's ability (the core rules don't name a tribe).
+// An infected character gains the Zombie tribe on top of the tribes it had, so cards that care
+// about Zombies reach it. It keeps its own fracture (the owner's choice: it doesn't join the
+// Undead world) and its class.
+function makeZombie(t) {
+  if (!(t.tribes || []).includes("Zombie")) t.tribes = [...(t.tribes || []), "Zombie"];
+}
+
+function convertToZombie(ctx, t, givesReanimate) {
+  const foe = foeOf(ctx.owner);
+  if (t.owner !== foe.idx || ctx.owner.field.chars.length >= RULES.maxChars) {
+    if (givesReanimate || t.owner === ctx.owner.idx) makeZombie(t);
+    return;
+  }
+  foe.field.chars.splice(foe.field.chars.indexOf(t), 1);
+  makeZombie(t);
+  t.owner = ctx.owner.idx; t.rallyBonus = 0;
+  if (givesReanimate && !hasSkill(t, "Reanimate")) { t.skills.push("Reanimate"); t.reanimated = false; }
+  ctx.owner.field.chars.push(t);
+  updateRally(ctx.owner); updateRally(foe);
+  emit("text", { uid: t.uid, say: "infected" });
+  log(`${ctx.owner.name} takes control of ${t.name}.`);
+}
+
 // Each action: what it needs (s = selector, n = number, w = word, c = CardID) and what it does.
-const chars = list => list.filter(x => x && !x.isPlayer && !S.players.includes(x));
-const players = list => list.filter(x => x && (x.isPlayer || S.players.includes(x))).map(x => (x.isPlayer ? S.players[x.idx] : x));
+// The characters, and the players, in a list an action was given (a list can hold both).
+const charsIn = list => list.filter(x => x && !x.isPlayer && !S.players.includes(x));
+const playersIn = list => list.filter(x => x && (x.isPlayer || S.players.includes(x))).map(x => (x.isPlayer ? S.players[x.idx] : x));
 const ACTIONS = {
   // damage and stats
   damage: ["sn", (ctx, who, n) => {
     const amt = n(ctx), list = who(ctx);
-    for (const c of chars(list)) dealDamageToCharacter(c, amt);
-    for (const p of players(list)) dealDamageToPlayer(p, amt);
+    for (const c of charsIn(list)) dealDamageToCharacter(c, amt);
+    for (const p of playersIn(list)) dealDamageToPlayer(p, amt);
   }],
   damageAll: ["nw?", (ctx, n, other) => damageEverything(n(ctx), other === "other" ? ctx.card : null)],   // "other": not this card
-  buff: ["snn", (ctx, who, a, h) => { for (const c of chars(who(ctx))) { c.attack += a(ctx); c.currentHealth += h(ctx); } }],
+  buff: ["snn", (ctx, who, a, h) => { for (const c of charsIn(who(ctx))) { c.attack += a(ctx); c.currentHealth += h(ctx); } }],
   shrink: ["sn", (ctx, who, n) => {   // loses attack and health
     const amt = n(ctx);
-    const hit = chars(who(ctx));
+    const hit = charsIn(who(ctx));
     for (const c of hit) { c.attack -= amt; c.currentHealth -= amt; }   // all of them first, then who died
     for (const c of hit) { emit("charDamage", { uid: c.uid, amount: amt }); checkDeath(c); }
   }],
-  setStats: ["snn", (ctx, who, a, h) => { for (const c of chars(who(ctx))) { c.attack = a(ctx); c.currentHealth = h(ctx); } }],
-  loseAttack: ["sn", (ctx, who, n) => { for (const c of chars(who(ctx))) c.attack = Math.max(0, c.attack - n(ctx)); }],
-  grow: ["sn", (ctx, who, n) => { for (const c of chars(who(ctx))) { c.currentHealth += n(ctx); c.baseHealth += n(ctx); } }],
-  levelUp: ["sn", (ctx, who, n) => { for (const c of chars(who(ctx))) levelUp(c, n(ctx)); }],
-  levelDown: ["s", (ctx, who) => { for (const c of chars(who(ctx))) levelDown(c); }],   // takes back one Level Up
-  destroy: ["s", (ctx, who) => { for (const c of chars(who(ctx))) destroyCharacter(c); }],
+  setStats: ["snn", (ctx, who, a, h) => { for (const c of charsIn(who(ctx))) { c.attack = a(ctx); c.currentHealth = h(ctx); } }],
+  loseAttack: ["sn", (ctx, who, n) => { for (const c of charsIn(who(ctx))) c.attack = Math.max(0, c.attack - n(ctx)); }],
+  grow: ["sn", (ctx, who, n) => { for (const c of charsIn(who(ctx))) { c.currentHealth += n(ctx); c.baseHealth += n(ctx); } }],
+  levelUp: ["sn", (ctx, who, n) => { for (const c of charsIn(who(ctx))) levelUp(c, n(ctx)); }],
+  levelDown: ["s", (ctx, who) => { for (const c of charsIn(who(ctx))) levelDown(c); }],   // takes back one Level Up
+  destroy: ["s", (ctx, who) => { for (const c of charsIn(who(ctx))) destroyCharacter(c); }],
   destroyArea: ["s", (ctx, who) => {
     for (const a of who(ctx)) { const f = findArea(a.uid); if (f) { f.p.field.areas.splice(f.i, 1); f.p.grave.push(a); log(`${a.name} was destroyed.`); } }
     sweepDeaths();
   }],
   // skills
   grant: ["sww?", (ctx, who, skill, temp) => {
-    for (const c of chars(who(ctx))) {
+    for (const c of charsIn(who(ctx))) {
       if (hasSkill(c, skill)) continue;
       c.skills.push(skill);
       if (skill === "Reanimate") c.reanimated = false;
       if (temp === "temp") (c.tempSkills = c.tempSkills || []).push(skill);
     }
   }],
-  removeSkill: ["sw", (ctx, who, skill) => { for (const c of chars(who(ctx))) removeSkill(c, skill); }],
+  removeSkill: ["sw", (ctx, who, skill) => { for (const c of charsIn(who(ctx))) removeSkill(c, skill); }],
   disable: ["s", (ctx, who) => {
-    for (const c of chars(who(ctx))) { c.skills = []; c.disabled = true; c.ability = ""; updateRally(ownerOf(c)); emit("text", { uid: c.uid, text: "DISABLED", color: "#c9c9c9" }); }
+    for (const c of charsIn(who(ctx))) { c.skills = []; c.disabled = true; c.ability = ""; updateRally(ownerOf(c)); emit("text", { uid: c.uid, say: "disabled" }); }
     sweepDeaths();
   }],
   convert: ["sw?", (ctx, who, extra) => {
-    for (const c of chars(who(ctx))) convertToZombie(ctx, c, extra === "reanimate");
+    for (const c of charsIn(who(ctx))) convertToZombie(ctx, c, extra === "reanimate");
     // Changing faction or side can take away a bonus that was keeping a character alive
     // (The Simplistic's +3, an area). Without this check it stayed on the table at 0 health.
     sweepDeaths();
   }],
-  transform: ["sc", (ctx, who, id) => { for (const c of chars(who(ctx))) transformCharacter(c, id); }],
+  transform: ["sc", (ctx, who, id) => { for (const c of charsIn(who(ctx))) transformCharacter(c, id); }],
   // players and cards
-  heal: ["sn", (ctx, who, n) => { for (const p of players(who(ctx))) healPlayer(p, n(ctx)); }],
+  heal: ["sn", (ctx, who, n) => { for (const p of playersIn(who(ctx))) healPlayer(p, n(ctx)); }],
   maxMana: ["sn", (ctx, who, n) => {
-    for (const p of players(who(ctx))) { const k = n(ctx); p.manaMax = Math.max(0, p.manaMax + k); p.mana = k > 0 ? p.mana + k : Math.min(p.mana, p.manaMax); }
+    for (const p of playersIn(who(ctx))) { const k = n(ctx); p.manaMax = Math.max(0, p.manaMax + k); p.mana = k > 0 ? p.mana + k : Math.min(p.mana, p.manaMax); }
   }],
-  draw: ["sn", (ctx, who, n) => { for (const p of players(who(ctx))) for (let k = n(ctx); k > 0; k--) drawCard(p); }],
-  discardHand: ["s", (ctx, who) => { for (const p of players(who(ctx))) while (p.hand.length) p.grave.push(p.hand.pop()); }],
+  draw: ["sn", (ctx, who, n) => { for (const p of playersIn(who(ctx))) for (let k = n(ctx); k > 0; k--) drawCard(p); }],
+  discardHand: ["s", (ctx, who) => { for (const p of playersIn(who(ctx))) while (p.hand.length) p.grave.push(p.hand.pop()); }],
   fetch: ["c", (ctx, id) => { const c = takeFromDeck(ctx.owner, x => x.id === id); if (c) addToHand(ctx.owner, c); }],
   shuffle: ["", ctx => shuffle(ctx.owner.deck)],
   summon: ["cn", (ctx, id, n) => {   // a card from cards.csv, or a token from TOKENS
@@ -227,7 +256,7 @@ const ACTIONS = {
     const c = takeFromDeck(ctx.owner, x => x.id === id);
     if (c) { putOnField(c, ctx.owner); log(`${c.name} comes to the field from ${ctx.owner.name}'s deck.`); }
   }],
-  drainLife: ["s", (ctx, who) => { for (const c of chars(who(ctx))) { const st = stats(c); healPlayer(ctx.owner, st.a + st.h); } }],
+  drainLife: ["s", (ctx, who) => { for (const c of charsIn(who(ctx))) { const st = stats(c); healPlayer(ctx.owner, st.a + st.h); } }],
   // cards from piles: pick (the player chooses) and take (from the top of the deck, no choice)
   pick: ["snww?", (ctx, pile, n, to, prompt) => {
     const cards = pile(ctx), p = ctx.owner, k = n(ctx);
@@ -255,7 +284,7 @@ const ACTIONS = {
     if (ctx.owner.hand.length) ask({ kind: "choose", source: ctx.card, owner: ctx.owner.idx, title: ctx.card.name, prompt: prompt || "Pick a card from your hand to discard. Then you draw a card.", cards: ctx.owner.hand.slice(), pick: 1, required: true, resolve: "discardDraw" });
   }],
   flag: ["w", (ctx, name) => { ctx.owner[name] = true; }],
-  say: ["sww?", (ctx, who, text, color) => { for (const c of chars(who(ctx))) emit("text", { uid: c.uid, text, color: color || "#ffffff" }); }],
+  say: ["sww?", (ctx, who, text, color) => { for (const c of charsIn(who(ctx))) emit("text", { uid: c.uid, text, color: color || "#ffffff" }); }],
   script: ["w", (ctx, name) => SCRIPTS[name](ctx)],
   // cost clauses only
   reduce: ["n", null], set: ["n", null],
@@ -280,7 +309,7 @@ function parseAction(text, where) {
   });
   def[2]?.(args, where);   // an action's own check of how it is written
   const test = cond ? parseNumber(cond, where) : null;
-  return { name, args: parsed, test, run: ctx => { if (!test || test(ctx) > 0) def[1](ctx, ...parsed); } };
+  return { name, args: parsed, kinds: sig.map(x => x.k), test, run: ctx => { if (!test || test(ctx) > 0) def[1](ctx, ...parsed); } };
 }
 
 // Turn a card's Effect text into { play, enter, endTurn, ..., cost, aura, grants }.
@@ -318,7 +347,7 @@ function compileEffect(text, where) {
         const [kind, ...filters] = (w[1] || "").split(".");
         if (!TARGET_KINDS[kind] || !["harm", "help", "steal"].includes(w[2])) throw new Error(`${where}: write a target as "target character|characterOrPlayer|area harm|help|steal".`);
         block.target = TARGET_KINDS[kind]; block.intent = w[2];
-        const fs = filters.map(selectorFilter).filter(Boolean);
+        const fs = filters.map(f => selectorFilter(f, where)).filter(Boolean);
         if (fs.length) block.filter = (c, ctx) => fs.every(f => f(c, ctx));
         if (filters.includes("enemy")) block.players = (idx, ctx) => idx !== ctx.owner.idx;
       } else if (when === "aura") {
@@ -353,7 +382,7 @@ const SCRIPTS = {
     if (!alive.length) return;
     const top = alive.reduce((a, b) => (stats(b).a > stats(a).a ? b : a));
     const drain = top.levelUpCount || 0;
-    for (const c of foeOf(ctx.owner).field.chars) { c.attack -= drain; emit("text", { uid: c.uid, text: `-${drain} ATK`, color: "#ff8a6b" }); }
+    for (const c of foeOf(ctx.owner).field.chars) { c.attack -= drain; emit("text", { uid: c.uid, say: "drain", n: drain }); }
   },
 };
 
@@ -396,6 +425,16 @@ function runHook(c, when, ctx) {
   if (block?.steps) runSteps(block.steps, { card: c, ...ctx });
 }
 
+// The number an action in a card's play clause uses right now, for words on the screen, so they
+// follow the card table: playAmount(blade, "damage") is 3 for Kenshi's Blade. Null when the play
+// clause has no such action.
+function playAmount(c, action) {
+  const step = CARD_FX[c.id]?.play?.steps.find(s => s.name === action);
+  const k = step ? step.kinds.indexOf("n") : -1;
+  if (k < 0) return null;
+  return step.args[k]({ card: c, owner: S.players[c.owner ?? S.active] });
+}
+
 // A card's special rule from its Effect ("rule: defend 10" gives ["10"]), or undefined when it
 // doesn't have that rule. A disabled card has none.
 const cardRule = (c, name) => (c && !c.disabled ? CARD_FX[c.id]?.rule?.[name] : undefined);
@@ -433,9 +472,13 @@ function auraBonus(c, p) {
   return { a, h };
 }
 
+// The skills some card in the game can give (grants: or aura: grant). skillNow() only looks for a
+// given skill when it is one of these, which keeps the common checks (Tower, Challenge) fast.
+const GRANTABLE = new Set(Object.values(CARD_FX).flatMap(fx => [...(fx.grants || []), ...(fx.aura?.grants || []).map(g => g.skill)]));
+
 // A skill a character has without it being printed on the card: from equipment it holds
 // ("grants: Swift") or from an aura on its side ("aura: grant allies.Fighter Parry", Fighter being a class).
-// The rules look here for Swift and Parry.
+// The rules ask through skillNow() in js/engine.js.
 function grantsSkill(c, skill) {
   if ((c.equipped || []).some(e => !e.disabled && CARD_FX[e.id]?.grants?.includes(skill))) return true;
   const p = ownerOf(c);

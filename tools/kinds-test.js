@@ -1,11 +1,10 @@
 const fs = require('fs');
 // Checks the fracture, tribe and class rules and the cards built on them: node tools/kinds-test.js .
 const dir = process.argv[2] || '.';
-eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
-let fails = 0;
-const ok = (name, cond, extra) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); if (!cond) fails++; };
+const rulesCode = require(require('path').join(__dirname, 'rules-code'));
+eval(rulesCode(dir, ['champions', 'ai']) + rulesCode.kit + `
 const fresh = () => { newGame({ deckId: 'fighter_starter', opponentDeckId: 'zombie_starter', mode: 'ai', seed: 5 }); const p = S.players[0]; p.field.chars.length = 0; S.players[1].field.chars.length = 0; p.field.areas.length = 0; return p; };
-const put = (p, name) => { const c = cardByName(name); c.owner = p.idx; putOnField(c, p); return c; };
+const put = (p, name) => putCard(p, name);
 
 { // Speedrunner: +1 attack per other Swift character
   const p = fresh(); const sr = put(p, 'Speedrunner'); const base = stats(sr).a;
@@ -79,6 +78,12 @@ const put = (p, name) => { const c = cardByName(name); c.owner = p.idx; putOnFie
   ok('allies.Student.class:Fighter', sel('allies.Student.class:Fighter') === 1, sel('allies.Student.class:Fighter'));
   ok('allies.Martial Artist', sel('allies.Martial Artist') === 2, sel('allies.Martial Artist'));
   ok('allies.Human', sel('allies.Human') === 1, sel('allies.Human'));
+}
+{ // a misspelt word in an Effect stops the game with a message, instead of quietly matching nothing
+  const stops = t => { try { compileEffect(t, 'test'); return false; } catch (e) { return /test:/.test(e.message); } };
+  ok('a misspelt tribe in an Effect is caught', stops('aura: buff allies.Monky 1 0'));
+  ok('a misspelt skill after has: is caught', stops('play: damage enemies.has:Swfit 1'));
+  ok('a correct Effect still reads', !stops('play: damage enemies.Monkey.not:tower 1'));
 }
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');
 `);

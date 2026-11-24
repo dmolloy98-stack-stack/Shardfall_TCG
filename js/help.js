@@ -9,7 +9,7 @@
 function hintText() {
   if (!S || S.over || U.curtain || U.tutorial) return null;
   const p = active();
-  if (p.isAI) return `${p.name === "Computer" ? "The computer" : p.name} is taking its turn. You can tap any card to read it while you wait.`;
+  if (p.isAI) return `${thinkerName(p)} is taking its turn. You can tap any card to read it while you wait.`;
   const pd = S.pending;
   if (pd?.kind === "choose") return null;
   if (pd?.kind === "target") {
@@ -217,12 +217,7 @@ function showWelcome() {
     </div>
     <button type="button" class="link-btn" data-close>Skip, I know how to play</button></div>`);
 }
-document.getElementById("modal").addEventListener("click", e => {
-  const b = e.target.closest("[data-w]");
-  if (!b) return;
-  closeModal();
-  if (b.dataset.w === "tutorial") startTutorial(); else showGuide();
-});
+// Its buttons (data-w) are answered by the one #modal click handler in js/panels.js.
 
 // ---------------------------------------------------------------------------
 // How to play: guide.html is the one copy of the guide. It opens as its own page

@@ -16,7 +16,7 @@ function equipCost(c, owner, target, fromField) {
 
 // When cards can be played and stored equipment attached: in Setup, and in Battle if the
 // card has Flash.
-const playWindowOpen = c => S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && hasSkill(c, "Flash"));
+const playWindowOpen = c => S.phase === PHASE.SETUP || (S.phase === PHASE.BATTLE && skillNow(c, "Flash"));
 
 function playCost(c, p) {
   p = p || active();
@@ -119,7 +119,7 @@ function attach(e, target) {
   // given back to a character that has already used all its levels.
   const teach = cardRule(e, "teach")?.[0];
   if (teach && !hasSkill(target, teach) && (teach !== "Level Up" || (target.levelUpCount || 0) < levelCap(target))) target.skills.push(teach);
-  emit("text", { uid: target.uid, text: "EQUIP", color: "#7fd6ff" });
+  emit("text", { uid: target.uid, say: "equip" });
 }
 
 // Equip a card stored on the backline onto one of your characters.
@@ -157,14 +157,14 @@ function chooseTarget(target) {
   const fx = pendingEffect(pd);
   const owner = S.players[pd.owner];
   const t = target.isPlayer ? target : (pd.targetType === "area" ? findArea(target.uid)?.c : findChar(target.uid)?.c);
-  if (!t) return false;
+  // Everything that can refuse is checked before anything changes (a rule must not change the game
+  // and then report "refused"). The spell is found by its uid, so a copied state still finds it.
+  const i = pd.cast ? owner.hand.findIndex(c => c.uid === pd.source.uid) : -1;
+  if (!t || (pd.cast && i < 0)) return false;
   S.pending = null;
   if (pd.cast) {   // a spell waiting in hand for its target: pay for it and cast it now
-    const i = owner.hand.indexOf(pd.source);
-    if (i < 0) return false;
     owner.mana -= pd.cast.cost;
-    owner.hand.splice(i, 1);
-    owner.grave.push(pd.source);
+    owner.grave.push(owner.hand.splice(i, 1)[0]);
     emit("play", { card: pd.source, player: owner.idx });
     log(`${owner.name} casts ${pd.source.name}.`);
     // the other player may counter it before it takes effect
@@ -179,7 +179,7 @@ function chooseTarget(target) {
 
 function cancelPending() {
   if (!allowed("cancelPending")) return false;
-  if (!S.pending || S.pending.required || S.pending.resolve === "counter") return false;
+  if (!S.pending || S.pending.required || CHOICES[S.pending.resolve]?.noCancel) return false;
   if (S.pending.source?.type === "Area") S.pending.source.usedRound = null;   // cancelling Data Transfer keeps its use
   if (cardRule(S.pending.source, "strike")) S.pending.source.bladeRound = null;   // and a cancelled strike
   S.pending = null;
@@ -187,52 +187,59 @@ function cancelPending() {
   return true;
 }
 
-// Resolve a "choose" dialog. picks = array of card uids, option = option id.
-function resolveChoice(picks, option) {
-  if (!allowed("resolveChoice", picks, option)) return false;
-  const pd = S.pending;
-  if (!pd || pd.kind !== "choose") return false;
-  const owner = S.players[pd.owner];
-  const picked = pd.cards.filter(c => picks.includes(c.uid)).slice(0, pd.pick || 1);
-  S.pending = null;
-  const removeFromGrave = c => { for (const q of S.players) { const i = q.grave.findIndex(x => x.uid === c.uid); if (i >= 0) q.grave.splice(i, 1); } };
-  // A card leaving the graveyard comes back as a clean copy, without damage or buffs.
-  const fresh = c => newCard(DATA.cardsById[c.id] || c);
+// A card leaving the graveyard: take it out of whichever graveyard holds it.
+function takeFromGrave(c) { for (const q of S.players) { const i = q.grave.findIndex(x => x.uid === c.uid); if (i >= 0) q.grave.splice(i, 1); } }
+// A card leaving the graveyard comes back as a clean copy, without damage or buffs.
+function freshCopy(c) { return newCard(DATA.cardsById[c.id] || c); }
 
-  if (pd.resolve === "messenger") {
+// Every kind of "choose" window, in one place, named by the window's `resolve`.
+//   run(pd, owner, picked, option): what happens when it is answered.
+//   needsPick: false when the option buttons work without picking a card first (default true).
+//   noCancel: true when the player can't back out with cancelPending() (default false).
+// The computer's answers are in AI_CHOICES in js/ai.js. A new "pick one" ability adds one entry
+// here, and one there unless "take the most expensive cards" is the right answer for the computer.
+// tools/cards-test.js checks that every resolve used in the code has an entry.
+const CHOICES = {
+  messenger: { needsPick: false, run(pd, owner, picked, option) {
     const foe = foeOf(owner);
     const top = foe.deck.pop();
     if (top) {
       if (option === "take") { owner.deck.push(top); log(`${owner.name} takes ${top.name} onto their deck.`); }
       else { foe.grave.push(top); log(`${top.name} is discarded from ${foe.name}'s deck.`); }
     }
-  } else if (pd.resolve === "toHand") {
-    for (const c of picked) { removeFromGrave(c); if (addToHand(owner, fresh(c))) log(`${c.name} returns to ${owner.name}'s hand.`); }
-  } else if (pd.resolve === "discardDraw") {
+  } },
+  toHand: { run(pd, owner, picked) {
+    for (const c of picked) { takeFromGrave(c); if (addToHand(owner, freshCopy(c))) log(`${c.name} returns to ${owner.name}'s hand.`); }
+  } },
+  discardDraw: { run(pd, owner, picked) {
     const c = picked[0];
-    if (c) { owner.hand.splice(owner.hand.findIndex(x => x.uid === c.uid), 1); owner.grave.push(c); }
+    const i = c ? owner.hand.findIndex(x => x.uid === c.uid) : -1;
+    if (i >= 0) owner.grave.push(owner.hand.splice(i, 1)[0]);   // never splice(-1): that would take the last card
     drawCard(owner);
-  } else if (pd.resolve === "rise") {
+  } },
+  rise: { run(pd, owner, picked) {
     const c = picked[0];
     if (c) {
-      removeFromGrave(c);
+      takeFromGrave(c);
       log(`${c.name} rises onto the field.`);
-      putOnField(fresh(c), owner);
+      putOnField(freshCopy(c), owner);
     }
-  } else if (pd.resolve === "shepard") {
+  } },
+  shepard: { needsPick: false, run(pd, owner, picked, option) {
     const dead = owner.grave.find(x => x.uid === pd.deadUid);
     const shep = findChar(pd.shepardUid)?.c;
     if (option === "hand" && dead) {
-      removeFromGrave(dead);
-      if (addToHand(owner, fresh(dead))) log(`${pd.source.name} returns ${dead.name} to ${owner.name}'s hand.`);
+      takeFromGrave(dead);
+      if (addToHand(owner, freshCopy(dead))) log(`${pd.source.name} returns ${dead.name} to ${owner.name}'s hand.`);
     } else if (option === "absorb" && shep) {
       const g = pd.gain;
       shep.attack += g.a; shep.currentHealth += g.h;
       shep.baseAttack += g.a; shep.baseHealth += g.h;
-      emit("text", { uid: shep.uid, text: `+${g.a}/+${g.h}`, color: "#8dff8d" });
+      emit("text", { uid: shep.uid, say: "absorb", a: g.a, h: g.h });
       log(`${pd.source.name} absorbs ${dead?.name || "the fallen card"}.`);
     }
-  } else if (pd.resolve === "counter") {
+  } },
+  counter: { noCancel: true, run(pd, owner, picked, option) {
     const held = pd.held, caster = S.players[held.owner];
     const want = option === "counter" ? picked[0] || (pd.cards.length === 1 ? pd.cards[0] : null) : null;
     const i = want ? owner.hand.findIndex(x => x.uid === want.uid) : -1;
@@ -244,7 +251,8 @@ function resolveChoice(picks, option) {
       emit("countered", { card: held.card, by: counter, player: owner.idx });
       log(`${owner.name} casts ${counter.name}: ${held.card.name} is countered.`);
     } else finishPlay(held);
-  } else if (pd.resolve === "apeSacrifice") {
+  } },
+  apeSacrifice: { run(pd, owner, picked) {
     const ape = findChar(pd.apeUid)?.c;
     const monkey = picked[0] && findChar(picked[0].uid)?.c;
     if (ape && monkey && monkey !== ape) {
@@ -253,9 +261,20 @@ function resolveChoice(picks, option) {
       ape.attack++; ape.health++;
       ape.baseAttack++; ape.baseHealth++;
       ape.currentHealth = ape.baseHealth + equipBonuses(ape).h;   // fully healed
-      emit("text", { uid: ape.uid, text: "+1 ALL", color: "#ffd25e" });
+      emit("text", { uid: ape.uid, say: "plusAll", n: 1 });
     }
-  }
+  } },
+};
+
+// Resolve a "choose" dialog. picks = array of card uids, option = option id.
+function resolveChoice(picks, option) {
+  if (!allowed("resolveChoice", picks, option)) return false;
+  const pd = S.pending;
+  if (!pd || pd.kind !== "choose") return false;
+  const owner = S.players[pd.owner];
+  const picked = pd.cards.filter(c => picks.includes(c.uid)).slice(0, pd.pick || 1);
+  S.pending = null;
+  CHOICES[pd.resolve]?.run(pd, owner, picked, option);
   settle();
   return true;
 }

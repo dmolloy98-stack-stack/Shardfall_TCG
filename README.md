@@ -48,9 +48,11 @@ All cards, decks, skills and balance numbers are CSV files in the [`data/`](data
 | [`data/cards.csv`](data/cards.csv) | Every card: cost, stats, skills, rarity, ability text, and the Effect that makes it work |
 | [`data/decks.csv`](data/decks.csv) | The starter decks and their card lists |
 | [`data/skills.csv`](data/skills.csv) | Skill keywords and their descriptions |
-| [`data/game_rules.csv`](data/game_rules.csv) | Starting health, hand size, mana growth, field limits, deck-building rules |
+| [`data/game_rules.csv`](data/game_rules.csv) | Starting health, hand size, mana growth, field limits, deck-building rules, skill numbers (Evolve, Level Up, Rally), mastery points |
 | [`data/whats_new.csv`](data/whats_new.csv) | The "What's new" list: one row per update, newest first; the top row is the version shown on the menu |
-| [`data/events.csv`](data/events.csv) | The random events: their names and descriptions (what they do is in `js/engine.js`) |
+| [`data/events.csv`](data/events.csv) | The random events: their names and descriptions (what they do is in `js/rules-events.js`) |
+| [`data/trophies.csv`](data/trophies.csv), [`data/mastery.csv`](data/mastery.csv) | Trophy names, wording and goal numbers; each deck's five mastery titles (the points are `mastery_*` rows in `game_rules.csv`) |
+| [`data/ai_styles.csv`](data/ai_styles.csv) | How the computer plays each fracture's deck: how much it values attacking, its own characters and cards in hand |
 | [`data/champion_abilities.csv`](data/champion_abilities.csv) | The champions' abilities: names, what they do, when they level up (the rules are in `js/engine.js`) |
 | [`data/rarities.csv`](data/rarities.csv), [`data/factions.csv`](data/factions.csv) | Colors, symbols, equipment attach costs |
 | [`data/phases.csv`](data/phases.csv), [`data/ui_text.csv`](data/ui_text.csv) | Phase names, on-screen instructions, button labels |
@@ -84,8 +86,10 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/effects.js` | Reads each card's Effect from cards.csv, checks it, and runs it; also holds the few one-off card scripts |
 | `js/ai.js` | Computer opponent: plans its Setup plays and its attacks a few steps ahead, checks for a winning attack, and plays each faction in its own style. `aiDecide()` says what it will do before doing it, so the screen can show it aiming |
 | `js/cards.js` | How a card is drawn: frames, art, badges, names |
+| `js/dom.js` | Small page helpers every screen file uses (`$`, `byId`, `esc`), loaded before them |
 | `js/ui.js` | The screen's core: its state, fast redraws, actions (Undo), screens and phone layout |
-| `js/board.js` | Everything drawn on the table: players' plates, health, mana, the big shard, the battle log, turn history and the hand |
+| `js/board.js` | Everything drawn on the table: players' plates, health, mana, the battle log, turn history and the hand |
+| `js/board-marks.js` | Special pieces drawn on the table: the big shard and its cracks, the Protected shell on the health gem, the rune ring on Protected cards |
 | `js/input.js` | Dragging cards from the hand, taps on the table, and keyboard shortcuts |
 | `js/table-effects.js` | Deaths, hits and other reactions on the table |
 | `js/panels.js` | Pop-up windows and Settings |
@@ -93,11 +97,13 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/storm.js` | The falling-shards animation behind the main menu |
 | `js/boot.js` | Starts the game once every script has loaded |
 | `js/champions.js` | The five champions: their one-line tags, their spoken lines (including reactions to the shard, near defeat, and the end-screen line that remembers the match) and how the computer plays each (plain data) |
-| `js/tutorial.js` | The tutorial: scripted steps, coach box, spotlight and arrows |
+| `js/tutorial.js` | The tutorial's machinery: the Trainer, coach box, spotlight and arrows |
+| `js/tutorial-steps.js` | The tutorial's lessons, one entry per step |
 | `js/help.js` | Beginner hints, the first-visit welcome, the in-game guide screen |
 | `js/decks.js` | The deck builder, saved custom decks and its walkthrough |
 | `js/intro.js` | The stained-glass cold open before the main menu |
-| `js/campaign.js` | The campaign: one match against each faction's champion, with its story text, saved progress and the champions' speech bubbles (in normal matches too, as the champion of the computer's deck); deck mastery points and titles |
+| `js/campaign.js` | The campaign: one match against each faction's champion, with its story text, saved progress and the champions' speech bubbles (in normal matches too, as the champion of the computer's deck) |
+| `js/progress.js` | Progress earned in matches: deck mastery points and titles, each deck's record, card stories, trophies, and the end screen's numbers and badges |
 | `docs/code-map.md` | How the files fit together: diagrams of the big picture, one move's path and the screens, plus where to change things |
 | `docs/play-numbers.md` | A plan for anonymous play numbers (not built, nothing collected): what could be counted, the owner's decisions, a draft privacy note |
 | `docs/real-phones.md` | How to check the game on real phones (a free device cloud for open-source projects) and a checklist of what to look at |
@@ -105,8 +111,10 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `docs/todo.md` | What is still to do: waiting on the owner, the current round, ideas and what was turned down |
 | `docs/done.md` | The history of finished work, with the owner's decisions behind it |
 | `docs/how-it-was-built.md` | Why the code is built the way it is, the owner's decisions that shape it, and traps already fallen into. Checked with every change (its top says what belongs in it) |
+| `docs/look.md` | The look book: the owner's vision for how the game looks, today's look, the rules every new look keeps, and look decisions |
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
-| `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |
+| `js/fx.js` | Game feel: aiming line, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, wind-ups and the final blow |
+| `js/previews.js` | What an attack or spell would do, shown on its target before you commit, and the end-of-turn hint |
 | `js/motion.js` | Cards that travel: drawn cards slide out of the deck, played cards fly from the hand to the table (the computer's from its hidden hand), cards drift into the graveyard, the hand closes up smoothly, a cast spell is shown in the middle of the table, and health counts down instead of jumping |
 | `js/guide.js` | Fills the guide's rule numbers, skills, rarities and decks from the CSV files |
 | `tools/test-all.js` | Runs every test below in one go and says whether all passed: `node tools/test-all.js`. GitHub runs it on every push and pull request (`.github/workflows/tests.yml`) |
@@ -140,6 +148,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/speed-budget.js` | Speed budget: measures an older version and this one side by side on a slowed processor (loading, starting a match, redrawing, the computer's turn, download size) and warns if this one is more than 15% slower: `node tools/speed-budget.js <older game folder>`. GitHub runs it on every pull request against `main` |
 | `tools/speed-check.js` | Measures how smoothly the game runs on a slowed-down computer (like a phone), with Heavy effects on and off: `node tools/speed-check.js` |
 | `tools/readability.js` | Used by the browser check: finds text that is too small, overlapping or cut off |
+| `tools/look-mockup.js` | Look options for the owner: shows two or three versions of a look on the real game screen (injected into a test browser, never into the game) and takes close-up pictures; used by the look advisor |
+| `tools/build-single.js` | Packs the whole game into one HTML file that plays without a server (open it from a download folder or a USB stick): `node tools/build-single.js [out.html]`. With `--page out.html` it makes the page body only, for the claude.ai playable copy (the `backup` skill uses it) |
 | `tools/drive-bundle.js` | Makes the one-file Google Drive backups: the changes of a pull request, or a full snapshot |
 | `tools/serve.js` | Lets a test browser load the game straight from this folder, without a web server |
 | `.claude/skills/` | Step-by-step recipes Claude follows for routine jobs (Drive backup, pull requests, browser checks, balance tests, card changes, story writing and more) |

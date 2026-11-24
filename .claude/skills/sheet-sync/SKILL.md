@@ -27,6 +27,12 @@ The game files are the master copy: if cards change in code, update the sheet to
 - **Fractures → `data/factions.csv`** (the tab was called Factions). Color is hex; convert to
   0–1 RGB.
 - **Skills → `data/skills.csv`.**
+- **Mirror tabs (for the owner to read):** Game rules → `data/game_rules.csv`, Champion abilities →
+  `data/champion_abilities.csv`, Random events → `data/events.csv`, Trophies → `data/trophies.csv`,
+  Deck mastery → `data/mastery.csv`, Computer styles → `data/ai_styles.csv`. Same columns, same rows
+  in the same order. Whenever one of those files changes, rewrite its whole tab with one
+  `update_values` call (header row included). The owner asks for changes to them in words; they
+  have no Status column.
 - The three "DRAFT …" tabs are the owner's review notes, not game data.
 
 - **Lists** holds the dropdown choices and deck rules (cells H2–H5, read by the Decks check),
@@ -50,8 +56,8 @@ Watch out: a cell starting with `+`, `-` or `=` is taken as a sum by Google Shee
 `#ERROR!`. Write it with a leading `'` (for example `'+1 Attack ...`).
 
 What the tool compares, for reference: Cards (all columns, row = cards.csv line), Decks and Deck
-cards (0-copy rows are deliberate), Fractures (hex vs 0–1 colours), Skills, Lists, and the two
-guide tabs. The game files win. The sheet's Check columns must all say OK afterwards.
+cards (0-copy rows are deliberate), Fractures (hex vs 0–1 colours), Skills, Lists, the two
+guide tabs, and the mirror tabs (`MIRRORS` in the tool). The game files win. The sheet's Check columns must all say OK afterwards.
 
 ## Many cards changed at once (a rename, a new tribe list)
 
