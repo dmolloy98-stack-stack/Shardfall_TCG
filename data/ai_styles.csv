@@ -1,0 +1,11 @@
+# How the computer plays each fracture's deck (js/ai.js). Bigger numbers mean it cares more:
+# Face = hurting the enemy player, Board = its own characters, Hand = cards kept in hand,
+# Wild = how often (0 to 1) it takes its second-best idea instead. A fracture not listed plays
+# the "default" row. A campaign champion adds its own tweaks on top (js/champions.js).
+Fracture,Face,Board,Hand,Wild,Style
+Mortal,1.35,0.95,0.4,0,Rushes the player down
+Wild,1.1,1,0.5,0.25,Unpredictable
+Undead,0.9,1.15,0.6,0,"Builds a swarm, strikes late"
+Cyber,1,1.1,0.5,0,Grows its characters
+Simple,1,1,0.5,0,Steady
+default,1,1,0.5,0,Plain

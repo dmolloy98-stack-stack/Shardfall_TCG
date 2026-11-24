@@ -151,6 +151,13 @@ names them. A new kind of bonus is added there once. A champion's own short-live
 +2) lives in its entry in `js/rules-champions.js`, with a `turnEnd` moment to clear it, not in the
 core turn code (25 Nov 2026).
 
+**Numbers a designer tunes live in data files, and the sheet shows them.** Trophy goals and words
+(`data/trophies.csv`), mastery titles (`data/mastery.csv`) and points (`mastery_*` rows), and how the
+computer plays each world (`data/ai_styles.csv`) moved out of the code. Each has a read-only "mirror"
+tab in the card sheet that `tools/sheet-check.js` compares with the file. What a trophy checks, and
+the campaign's story text and the champions' lines, stay in code: story text has its own routine
+(`story-writing`) and changes with the story bible (owner left this to Claude, 24 Nov 2026).
+
 **The data tables are read by column name.** `csvTable()` (`js/data.js`) names each value by its
 header, so a column can be moved or added in the card sheet without the game reading the wrong one;
 a missing column stops the game with a message naming it. Rule numbers a designer might tune (Evolve,
@@ -298,4 +305,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-25, pull request #37.
+Last checked: 2026-11-25, pull request #38.

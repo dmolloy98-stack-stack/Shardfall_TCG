@@ -1,0 +1,10 @@
+# Deck mastery: the five titles a deck earns as its mastery points grow (the points needed and how
+# many a match gives are mastery_* rows in data/game_rules.csv). DeckID "custom" is for decks a
+# player builds. Reaching a starter deck's top title also earns a trophy named after it.
+DeckID,Title1,Title2,Title3,Title4,Title5
+simple_starter,Turnip Picker,Field Hand,Village Regular,Simple Elder,The Simplest
+monkey_starter,Banana Fetcher,Troop Cousin,Branch Swinger,Silverback,Jungle King
+zombie_starter,Fresh Corpse,Shambler,Grave Walker,Horde Caller,Soul Keeper
+fighter_starter,White Belt,Yellow Belt,Black Belt,Sensei,Grandmaster
+digital_starter,Noob,Casual,Speedrunner,Pro Gamer,Final Boss
+custom,Novice,Adept,Veteran,Master,Legend

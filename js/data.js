@@ -4,8 +4,8 @@
 // see data/README.md for what each column means. This script loads them, checks them,
 // and then starts the game scripts.
 
-const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events", "champion_abilities", "whats_new"];
-const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/rules-combat.js", "js/rules-turns.js", "js/rules-play.js", "js/rules-champions.js", "js/rules-events.js", "js/rules-shard.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/board.js", "js/board-marks.js", "js/input.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/boot.js"];
+const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events", "champion_abilities", "whats_new", "trophies", "mastery", "ai_styles"];
+const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/rules-combat.js", "js/rules-turns.js", "js/rules-play.js", "js/rules-champions.js", "js/rules-events.js", "js/rules-shard.js", "js/effects.js", "js/ai.js", "js/tutorial.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/board.js", "js/board-marks.js", "js/input.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/progress.js", "js/boot.js"];
 let DATA = null;
 
 // Words players read (data/ui_text.csv). T("id") gives the text; T("id", { name: "Ann" }) fills in
@@ -123,6 +123,22 @@ function readFactions(text) {
 const readWhatsNew = text => csvTable(text, "whats_new", ["Update", "Date", "Changes"])
   .map(r => ({ update: r.Update, date: r.Date || "", changes: (r.Changes || "").split("|").map(x => x.trim()).filter(Boolean) }));
 
+// Trophies (data/trophies.csv): names, words and goal numbers. What each one checks is js/progress.js.
+const readTrophies = text => csvTable(text, "trophies", ["TrophyID", "Name", "How", "Goal"])
+  .map(r => ({ id: r.TrophyID, name: r.Name, how: r.How, goal: r.Goal === "" ? null : Number(r.Goal) }));
+// Deck mastery titles (data/mastery.csv): DeckID -> five titles.
+function readMastery(text) {
+  const out = {};
+  for (const r of csvTable(text, "mastery", ["DeckID", "Title1", "Title2", "Title3", "Title4", "Title5"])) out[r.DeckID] = [1, 2, 3, 4, 5].map(k => r["Title" + k]);
+  return out;
+}
+// How the computer plays each fracture (data/ai_styles.csv): Fracture -> { face, board, hand, wild }.
+function readAiStyles(text) {
+  const out = {};
+  for (const r of csvTable(text, "ai_styles", ["Fracture", "Face", "Board", "Hand", "Wild"])) out[r.Fracture] = { face: Number(r.Face), board: Number(r.Board), hand: Number(r.Hand), wild: Number(r.Wild) || 0 };
+  return out;
+}
+
 const CARD_TYPES = ["Character", "Spell", "Equipment", "Area"];
 const CARD_COLUMNS = ["CardID", "Cost", "Name", "Rarity", "Type", "Tribes", "Fracture", "Stats", "Skills", "Ability", "Description", "ArtKey", "Effect", "Classes"];
 
@@ -211,6 +227,7 @@ function buildData(CSV) {
     whatsNew, version: whatsNew[0] ? `Update ${whatsNew[0].update}` : "",
     rules, phases: readPhases(CSV.phases), uiText, ...readEvents(CSV.events), championAbilities: readChampionAbilities(CSV.champion_abilities),
     ...kinds, ...cards, ...readDecks(CSV.decks, cards.cardsById, rules, warnings),
+    trophies: readTrophies(CSV.trophies), mastery: readMastery(CSV.mastery), aiStyles: readAiStyles(CSV.ai_styles),
     text: (id, fallback) => uiText[id] ?? fallback ?? id,
   };
 }

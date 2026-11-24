@@ -48,9 +48,11 @@ All cards, decks, skills and balance numbers are CSV files in the [`data/`](data
 | [`data/cards.csv`](data/cards.csv) | Every card: cost, stats, skills, rarity, ability text, and the Effect that makes it work |
 | [`data/decks.csv`](data/decks.csv) | The starter decks and their card lists |
 | [`data/skills.csv`](data/skills.csv) | Skill keywords and their descriptions |
-| [`data/game_rules.csv`](data/game_rules.csv) | Starting health, hand size, mana growth, field limits, deck-building rules |
+| [`data/game_rules.csv`](data/game_rules.csv) | Starting health, hand size, mana growth, field limits, deck-building rules, skill numbers (Evolve, Level Up, Rally), mastery points |
 | [`data/whats_new.csv`](data/whats_new.csv) | The "What's new" list: one row per update, newest first; the top row is the version shown on the menu |
-| [`data/events.csv`](data/events.csv) | The random events: their names and descriptions (what they do is in `js/engine.js`) |
+| [`data/events.csv`](data/events.csv) | The random events: their names and descriptions (what they do is in `js/rules-events.js`) |
+| [`data/trophies.csv`](data/trophies.csv), [`data/mastery.csv`](data/mastery.csv) | Trophy names, wording and goal numbers; each deck's five mastery titles (the points are `mastery_*` rows in `game_rules.csv`) |
+| [`data/ai_styles.csv`](data/ai_styles.csv) | How the computer plays each fracture's deck: how much it values attacking, its own characters and cards in hand |
 | [`data/champion_abilities.csv`](data/champion_abilities.csv) | The champions' abilities: names, what they do, when they level up (the rules are in `js/engine.js`) |
 | [`data/rarities.csv`](data/rarities.csv), [`data/factions.csv`](data/factions.csv) | Colors, symbols, equipment attach costs |
 | [`data/phases.csv`](data/phases.csv), [`data/ui_text.csv`](data/ui_text.csv) | Phase names, on-screen instructions, button labels |
@@ -98,7 +100,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `js/help.js` | Beginner hints, the first-visit welcome, the in-game guide screen |
 | `js/decks.js` | The deck builder, saved custom decks and its walkthrough |
 | `js/intro.js` | The stained-glass cold open before the main menu |
-| `js/campaign.js` | The campaign: one match against each faction's champion, with its story text, saved progress and the champions' speech bubbles (in normal matches too, as the champion of the computer's deck); deck mastery points and titles |
+| `js/campaign.js` | The campaign: one match against each faction's champion, with its story text, saved progress and the champions' speech bubbles (in normal matches too, as the champion of the computer's deck) |
+| `js/progress.js` | Progress earned in matches: deck mastery points and titles, each deck's record, card stories and trophies |
 | `docs/code-map.md` | How the files fit together: diagrams of the big picture, one move's path and the screens, plus where to change things |
 | `docs/play-numbers.md` | A plan for anonymous play numbers (not built, nothing collected): what could be counted, the owner's decisions, a draft privacy note |
 | `docs/real-phones.md` | How to check the game on real phones (a free device cloud for open-source projects) and a checklist of what to look at |

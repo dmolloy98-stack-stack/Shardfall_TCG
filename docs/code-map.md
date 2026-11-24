@@ -48,7 +48,7 @@ few plays, then the best few follow-ups to each, and takes the first step of the
 Undo works the same way: `act()` saves a copy of `S` before every move.
 
 Kept in the player's browser: settings and hints (`js/help.js`), custom decks
-(`js/decks.js`) and campaign progress (`js/campaign.js`). Every saved item is listed in
+(`js/decks.js`), campaign progress (`js/campaign.js`), and mastery, card stories and trophies (`js/progress.js`). Every saved item is listed in
 `SAVE_KEYS` in `js/saves.js`, which also holds the save version (`SAVE_VERSION`, with an upgrade
 step per version in `SAVE_UPGRADES`) and the save code (`exportSave()`, `importSave()`; the window
 is `showSaveCode()` in `js/panels.js`).
@@ -167,7 +167,7 @@ their own story or coaching, then hand over to the same engine.
 | An area's bonus, or a skill an area grants | the area's `aura:` clause in the Effect column |
 | A counter spell | its `counter:` clause in the Effect column; the window is `offerCounter()` in `js/engine.js` |
 | How the game plays: turns, phases, combat, winning | turns and phases `js/rules-turns.js`; attacks, damage and winning `js/rules-combat.js`; playing cards and choices `js/rules-play.js`; the core `js/engine.js` |
-| How smart the computer is, or how each world's deck plays | `js/ai.js` (`PLAN_DEPTH`, `BATTLE_DEPTH`, `AI_STYLES`) |
+| How smart the computer is, or how each world's deck plays | `js/ai.js` (`PLAN_DEPTH`, `BATTLE_DEPTH`); each world's style is `data/ai_styles.csv` |
 | What a champion says, or how the computer plays it | `js/champions.js` (`CHAMPIONS`, keyed by the champion card's CardID); the speech bubbles are in `js/campaign.js` |
 | Layout, phone layout | `js/ui.js` (the screen state `U`, screens, phone layout); what is drawn on the table is `js/board.js` (special pieces: `js/board-marks.js`), taps and drags `js/input.js` |
 | How a card looks (frames, art, badges, name fitting) | `cardHTML()` and the rest of `js/cards.js` |
@@ -184,11 +184,11 @@ their own story or coaching, then hand over to the same engine.
 | Heavy attacks wind up, bonuses add up, LETHAL, the killing blow | `windUp()`, `attackParts()`, `fightPreview()` (lethal), `finale()` in `js/fx.js` |
 | Spell previews on targets, end-of-turn hourglass, cards reacting to deaths | `targetPreview()`, `eotBadge()`, `reactToDeath()` in `js/fx.js` |
 | Draw and skip by themselves, ask before passing early, keyboard shortcuts | `autoFlow()` and `passTurn()` in `js/ui.js`, the `keydown` handler in `js/input.js`; both settings are in Settings |
-| Champions speaking in every match against the computer, the end-screen line, deck mastery titles | `championSay()`, `speakerName()`, `recallHTML()`, `MASTERY_TITLES` and `masteryHTML()` in `js/campaign.js`; the lines are in `js/champions.js` |
+| Champions speaking in every match against the computer, the end-screen line, deck mastery titles | `championSay()`, `speakerName()`, `recallHTML()`, `MASTERY_TITLES` and `masteryHTML()` in `js/progress.js` (titles: `data/mastery.csv`); the lines are in `js/champions.js` |
 | Turn history (icons along the top of the battle log) | `histAdd()`, `histHTML()`, `showHist()` in `js/board.js` |
-| A deck's record and average cost | `deckRecord()` in `js/campaign.js` (saved with mastery); shown by `masteryLine()` and the deck builder (`js/decks.js`) |
-| Card stories (unlock on first play), the end screen's "new stories" line, the Almanac count | `loreHTML()`, `newLoreHTML()`, `loreCount()` in `js/campaign.js`; the text is the Description column of `data/cards.csv` |
-| Trophies and the Trophy case | `TROPHIES`, `earnTrophy()`, `showTrophies()` in `js/campaign.js`; the Trophies button is on the start menu |
+| A deck's record and average cost | `deckRecord()` in `js/progress.js` (saved with mastery); shown by `masteryLine()` and the deck builder (`js/decks.js`) |
+| Card stories (unlock on first play), the end screen's "new stories" line, the Almanac count | `loreHTML()`, `newLoreHTML()`, `loreCount()` in `js/progress.js`; the text is the Description column of `data/cards.csv` |
+| Trophies and the Trophy case | names, words and goal numbers in `data/trophies.csv`; what each checks, `earnTrophy()` and `showTrophies()` in `js/progress.js`; the Trophies button is on the start menu |
 | Campaign story cards (scene and the champion's words) | `CAMPAIGN` in `js/campaign.js` |
 | Drawing the board quickly (only changed pieces are replaced) | `renderRegions()` and `patchChildren()` in `js/ui.js`; `render()` (`js/board.js`) marks regions with `RG(name)` |
 | Dozing (all looping effects pause after 20 seconds with nothing happening) | `wake()` and `DOZE_MS` in `js/ui.js`; `html.doze` in `css/style.css` |
@@ -224,7 +224,7 @@ their own story or coaching, then hand over to the same engine.
 
 ## Size and shape
 
-About 7,650 lines of JavaScript in 30 files (November 2026). The largest are `js/tutorial.js` at about
+About 7,800 lines of JavaScript in 31 files (November 2026). The largest are `js/tutorial.js` at about
 570, `js/fx.js` at about 520 and `js/engine.js` at about 500; `js/board.js` is about 450 since the big
 shard, the Protected shell and the rune ring moved to `js/board-marks.js` (the rules were split into seven files in Nov 2026; `js/ui.js`, also split, is about 350). The menu, the Almanac, the menu background and the
 start-up code used to live in `ui.js`; they are now `menu.js`, `storm.js` and `boot.js`. In

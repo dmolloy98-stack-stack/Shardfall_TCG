@@ -20,3 +20,7 @@ level_up_max,3,number,"How many times a Level Up character can level up (a card'
 rally_needed,3,number,How many Rally characters of one fracture a side needs before each gets the Rally bonus
 rally_bonus,1,number,Attack a Rally character gets once enough Rally characters of its fracture are out
 mana_token,1,number,Extra mana the second player's one-time bonus token gives
+mastery_steps,100|300|600|1000|1500,text,"Mastery points a deck needs for each of its five titles (data/mastery.csv), separated by |"
+mastery_win,100,number,Mastery points a deck earns for a win against the computer
+mastery_loss,40,number,Mastery points a deck earns for a loss against the computer
+mastery_shard,20,number,Extra mastery points for breaking the big shard in that match
