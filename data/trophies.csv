@@ -1,0 +1,15 @@
+# Trophies: things to achieve in matches against the computer. Name and How are what players read;
+# {goal} in How is filled in with Goal, the number the game checks. What each trophy checks is
+# written in js/progress.js, keyed by its TrophyID, so a new trophy needs a line of code there.
+TrophyID,Name,How,Goal
+troop_night,Troop Night,Win with {goal} or more Monkeys on your side,5
+shardbreaker,Shardbreaker,Break the big shard {goal} times,3
+untouchable,Untouchable,Win without taking any damage,
+brink,Back from the Brink,Win after dropping to {goal} health or less,5
+overkill,Overkill,Deal {goal} or more damage in one hit,10
+spell_slinger,Spell Slinger,Cast {goal} spells in one match,5
+full_house,Full House,Have {goal} characters on your side at once,7
+maxed_out,Maxed Out,Get a character to Level {goal},3
+grave_robber,Grave Robber,Bring {goal} characters back from the graveyard,5
+five_worlds,Five Worlds,Win at least once with each starter deck,
+shardkeeper,Shardkeeper,Beat the Campaign,

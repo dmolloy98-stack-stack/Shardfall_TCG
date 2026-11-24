@@ -11,18 +11,12 @@
 //     Otherwise it looks a few attacks ahead and takes the first step of the best line.
 //   - Each faction has a style (AI_STYLES) that changes what it values.
 
-// How each faction's computer player likes to play:
+// How each fracture's computer player likes to play is data/ai_styles.csv (DATA.aiStyles):
 //   face   how much it values hurting the enemy player      board  its own characters
 //   hand   cards kept in hand                               wild   how often it takes its
 //                                                                  second-best idea instead
-const AI_STYLES = {
-  Mortal:  { face: 1.35, board: 0.95, hand: 0.4, wild: 0 },    // rushes the player down
-  Wild:    { face: 1.1,  board: 1,    hand: 0.5, wild: 0.25 }, // unpredictable
-  Undead:  { face: 0.9,  board: 1.15, hand: 0.6, wild: 0 },    // builds a swarm, strikes late
-  Cyber:   { face: 1,    board: 1.1,  hand: 0.5, wild: 0 },    // grows its characters
-  Simple:  { face: 1,    board: 1,    hand: 0.5, wild: 0 },    // steady
-};
-const AI_PLAIN = { face: 1, board: 1, hand: 0.5, wild: 0 };
+const AI_STYLES = DATA.aiStyles;
+const AI_PLAIN = DATA.aiStyles.default || { face: 1, board: 1, hand: 0.5, wild: 0 };
 // A champion (campaign only, see js/champions.js) adds its own tweaks on top of its faction's
 // style, and some of them change as the match goes on.
 function aiStyle(idx) {
