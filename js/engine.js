@@ -180,6 +180,8 @@ function newCard(template) {
   c.uid = S.nextUid++;
   return c;
 }
+// A new copy of a card. By CardID in game code (a card can be renamed freely); by name only in tests.
+function cardById(id) { return DATA.cardsById[id] ? newCard(DATA.cardsById[id]) : null; }
 function cardByName(name) { return DATA.cardsByName[name] ? newCard(DATA.cardsByName[name]) : null; }
 
 function findChar(uid) {

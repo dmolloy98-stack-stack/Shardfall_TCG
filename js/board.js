@@ -193,7 +193,7 @@ function fieldHTML(p, side) {
     if ((U.arriving.get(c.uid) ?? 0) > performance.now()) cls.push("arriving");
     const tgt = humanPending && pd.kind === "target" && pd.targetType !== "area" && isValidTarget({ uid: c.uid });
     const preview = attackable && human ? previewBadge(fightPreview(U.selected, c.uid)) : tgt ? targetBadge(targetPreview({ uid: c.uid })) : "";
-    const blade = side === "bottom" && human && canUseBlade(c) ? `<button type="button" class="blade-btn" data-act="blade" data-uid="${c.uid}" title="Kenshi's Blade: deal 3 damage to an enemy character, once per Battle">⚔ Strike 3</button>` : "";
+    const blade = side === "bottom" && human && canUseBlade(c) ? bladeButton(c) : "";
     h += `<div class="${cls.join(" ")}" data-act="char" data-uid="${c.uid}" data-side="${side}" style="left:${charX(i, n)}px;top:${y.chars}px;${vars}">${cardHTML(c, { field: true })}${hasSkill(c, "Protected") ? runeRingHTML(recent(U.hits, c.uid, 450)) : ""}${eotBadge(c, p.idx)}${preview}${blade}</div>`;
   });
   return h;
@@ -425,11 +425,14 @@ function renderPrompt() {
   let msg = null, cancel = true;
   if (U.curtain || U.ended) msg = null;
   else if (pd?.kind === "target" && !S.players[pd.owner].isAI) {
-    // Wording for the special rules (js/engine.js), then the general cases.
+    // Wording for one card (a "target_<CardID>" row in data/ui_text.csv), then the special rules, then
+    // the general cases. {damage} and {heal} are the numbers in the card's play clause.
     const redirect = pd.amount != null;
-    const what = pd.source.id === "data_transfer" ? "one of your characters to lose a Level (you gain 2 HP)"
-      : redirect ? `an enemy character or player to take the ${pd.amount} damage instead`
-      : cardRule(pd.source, "strike") ? "an enemy character to take 3 damage"
+    const nums = { damage: playAmount(pd.source, "damage"), heal: playAmount(pd.source, "heal"), amount: pd.amount };
+    const own = DATA.uiText["target_" + pd.source.id];
+    const what = own != null ? own.replace(/\{(\w+)\}/g, (m, k) => nums[k] ?? m)
+      : redirect ? T("target_redirect", nums)
+      : cardRule(pd.source, "strike") ? T("target_strike", nums)
       : pd.targetType === "area" ? "an area" : pd.targetType === "charOrPlayer" ? "a character or player" : "a character";
     msg = `${pd.source.name}${redirect ? ` (${S.players[pd.owner].name})` : ""}: choose ${what}`;
     cancel = !pd.required;
@@ -441,6 +444,13 @@ function renderPrompt() {
   if (msg) el.innerHTML = `<span>${esc(msg)}</span>${cancel ? `<button type="button" class="btn" data-act="cancel">Cancel</button>` : ""}`;
 
   if (pd?.kind === "choose" && !S.players[pd.owner].isAI && !U.curtain && !openModal.choose) showChoose();
+}
+
+// The Strike button on a character holding equipment with "rule: strike" (Kenshi's Blade). Its words
+// come from data/ui_text.csv and its number from the equipment's play clause.
+function bladeButton(c) {
+  const blade = bladeOf(c), vars = { card: blade.name, damage: playAmount(blade, "damage") ?? "" };
+  return `<button type="button" class="blade-btn" data-act="blade" data-uid="${c.uid}" title="${esc(T("blade_tip", vars))}">${esc(T("blade_button", vars))}</button>`;
 }
 
 function findCardAnywhere(uid) {

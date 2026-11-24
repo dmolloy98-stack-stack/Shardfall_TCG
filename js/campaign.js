@@ -4,39 +4,39 @@
 // in a match and how the computer plays them is in js/champions.js; the story is docs/world.md.
 // Adding a champion: add a stage here, an entry in CHAMPIONS, and a starter deck for its faction.
 
-// Each stage: the champion's fracture and name, the story card before the match (intro, then a
+// Each stage: the champion's fracture and champion card (its CardID; the name shown is the card's), the story card before the match (intro, then a
 // short scene and the champion's words to the Shardkeeper), and the line after a win.
 const CAMPAIGN = [
   {
-    faction: "Simple", champion: "The Simplistic",
+    faction: "Simple", champion: "the_simplistic",
     scene: "The turnip rows are perfectly straight, every one exactly the same.",
     says: "Nice turnips. Nice day. Why fight?",
     intro: "A shard comes down in a quiet turnip field. The Simplistic is already standing over it, insisting everything was fine before all this.",
     win: "The Simplistic shrugs and steps aside. \"Keep it simple,\" it says. \"Start small, then level up.\" It says it exactly as it said it before.",
   },
   {
-    faction: "Wild", champion: "The Man Ape",
+    faction: "Wild", champion: "the_man_ape",
     scene: "The Man Ape peels a banana on top of its shard pile.",
     says: "My jungle. My shards. You want some? Earn them.",
     intro: "Deep in a jungle that wasn't there last week, The Man Ape sits on a pile of shards like a hoard of bananas. The troop watches from the trees. The ground still hums where the jungle first appeared.",
     win: "The troop scatters. The Man Ape lets the shard go, but keeps one eye on it.",
   },
   {
-    faction: "Mortal", champion: "IP Man",
+    faction: "Mortal", champion: "ip_man",
     scene: "He is sweeping the courtyard. One stone is cracked in a perfect square.",
     says: "*bows* Every fight is a lesson. Shall we study?",
     intro: "Since his world broke, IP Man has trained on a cliff edge above the falling shards. He bows before every fight and expects a bow back. He swears the sky flickered, just once, a moment before the break.",
     win: "IP Man bows once more. \"Again tomorrow,\" he says, and he means it.",
   },
   {
-    faction: "Cyber", champion: "Boss Level",
+    faction: "Cyber", champion: "boss_level",
     scene: "The air hums like a computer fan. For a blink, a progress bar hangs at 99%.",
     says: "PLAYER 2 HAS ENTERED. Difficulty: adjusting…",
     intro: "A shard has landed in a server room humming in the middle of nowhere. Boss Level loads in with a health bar nobody has seen the end of. Its desktop wallpaper is a quiet turnip field.",
     win: "Boss Level flickers. GAME OVER, the screens read, though nobody is sure for whom. Somewhere in the code, a turnip field keeps loading.",
   },
   {
-    faction: "Undead", champion: "Soul Shepard",
+    faction: "Undead", champion: "soul_shepard",
     scene: "Grey stones, quiet. Soul Shepard walks among them, humming.",
     says: "They say I started all this. I only tend what's left.",
     intro: "The other champions all say the Zombies caused the Shardfall. Soul Shepard waits among the graves, gathering the fallen, and does not argue.",
@@ -44,6 +44,8 @@ const CAMPAIGN = [
   },
 ];
 
+// A champion's name as players read it: its card's name, so renaming the card renames it everywhere.
+const champName = id => DATA.cardsById[id]?.name || id;
 const NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 const campaignCleared = () => Math.max(0, Math.min(CAMPAIGN.length, PREFS.get("campaign", 0) || 0));
 const campaignDeck = faction => DATA.deckOrder.find(id => DATA.decks[id].isPlayable && DATA.decks[id].faction === faction);
@@ -59,7 +61,7 @@ function showCampaign() {
       ? `<button type="button" class="btn btn-small${state === "next" ? " btn-primary" : ""}" data-camp="${i}">${state === "cleared" ? "Replay" : "Fight"}</button>` : "";
     return `<li class="camp-stage ${state}" style="--fc:${DATA.factions[st.faction]?.color || "#888"}">
       ${medal(st.faction, "camp-medal")}
-      <div class="camp-who"><b>${i + 1}. ${esc(st.champion)}</b><span>${esc(st.faction)} champion · ${label}</span></div>
+      <div class="camp-who"><b>${i + 1}. ${esc(champName(st.champion))}</b><span>${esc(st.faction)} champion · ${label}</span></div>
       ${play}</li>`;
   }).join("");
   const done = cleared >= CAMPAIGN.length
@@ -82,7 +84,7 @@ function playCampaignMatch(i) {
   openModal(`<div class="camp-intro" style="--fc:${DATA.factions[st.faction]?.color || "#888"}">
       ${medal(st.faction, "camp-medal big")}
       <p class="camp-step">Match ${i + 1} of ${CAMPAIGN.length}</p>
-      <h2 id="modal-title">${esc(st.champion)}</h2>
+      <h2 id="modal-title">${esc(champName(st.champion))}</h2>
       ${CHAMPIONS[st.champion] ? `<p class="camp-tag">${esc(CHAMPIONS[st.champion].tag)}</p>` : ""}
       <p class="camp-story">${esc(st.intro)}</p>
       ${st.scene ? `<p class="camp-scene">${esc(st.scene)}</p>` : ""}
@@ -112,10 +114,10 @@ function campaignNext() {
 function campaignEndHTML(won) {
   const i = U.campaign.stage, st = CAMPAIGN[i];
   const last = i === CAMPAIGN.length - 1;
-  const story = won ? `<p class="camp-story end">${esc(st.win)}</p>` : `<p class="camp-story end">${esc(st.champion)} holds on to the shard. Try again?</p>`;
+  const story = won ? `<p class="camp-story end">${esc(st.win)}</p>` : `<p class="camp-story end">${esc(champName(st.champion))} holds on to the shard. Try again?</p>`;
   const actions = won
     ? (last ? `<button type="button" class="btn btn-primary" data-act="camp-map">Campaign complete</button>`
-            : `<button type="button" class="btn btn-primary" data-act="camp-next">Next: ${esc(CAMPAIGN[i + 1].champion)}</button>`)
+            : `<button type="button" class="btn btn-primary" data-act="camp-next">Next: ${esc(champName(CAMPAIGN[i + 1].champion))}</button>`)
       + `<button type="button" class="btn" data-act="tomenu">Main menu</button>`
     : `<button type="button" class="btn btn-primary" data-act="again">Try again</button><button type="button" class="btn" data-act="camp-map">Campaign</button><button type="button" class="btn" data-act="tomenu">Main menu</button>`;
   return { story, actions };
@@ -128,20 +130,20 @@ onGameEvent((type, d) => {
 });
 
 document.getElementById("btn-campaign").addEventListener("click", showCampaign);
-document.getElementById("modal-content").addEventListener("click", e => {
-  const t = e.target;
-  if (t.closest("[data-camp]")) playCampaignMatch(Number(t.closest("[data-camp]").dataset.camp));
-  else if (t.closest("[data-camp-go]")) beginCampaignMatch(Number(t.closest("[data-camp-go]").dataset.campGo));
-  else if (t.closest("[data-camp-back]")) showCampaign();
-  else if (t.closest("[data-camp-close]")) closeModal();
-  else if (t.closest("[data-camp-deck]")) { closeModal(); showScreen("menu"); showSetup("campaign"); }
-  else if (t.closest("[data-camp-reset]")) {
+// The campaign windows' buttons (their clicks come through the #modal handler in js/panels.js).
+function campaignClick(b) {
+  const d = b.dataset;
+  if (d.camp != null) playCampaignMatch(Number(d.camp));
+  else if (d.campGo != null) beginCampaignMatch(Number(d.campGo));
+  else if (d.campBack != null) showCampaign();
+  else if (d.campClose != null) closeModal();
+  else if (d.campDeck != null) { closeModal(); showScreen("menu"); showSetup("campaign"); }
+  else if (d.campReset != null) {
     // Ask once more on the button itself before wiping progress.
-    const b = t.closest("[data-camp-reset]");
-    if (b.dataset.sure) { PREFS.set("campaign", 0); showCampaign(); }
-    else { b.dataset.sure = "1"; b.textContent = "Tap again to lock all champions"; }
+    if (d.sure) { PREFS.set("campaign", 0); showCampaign(); }
+    else { d.sure = "1"; b.textContent = "Tap again to lock all champions"; }
   }
-});
+}
 
 // ---------------------------------------------------------------------------
 // Speech: the champion says a line in the match log and in a bubble by its health plate.
@@ -149,12 +151,12 @@ document.getElementById("modal-content").addEventListener("click", e => {
 // campaign, and in any match against the computer as the champion of the computer's deck.
 // ---------------------------------------------------------------------------
 const SAY = { at: 0, n: 0, said: new Set() };
-// The champion speaking for the computer: its campaign champion, or its deck's champion card.
+// The champion speaking for the computer (its CardID): its campaign champion, or its deck's champion card.
 // (Only for speech: how the computer plays is unchanged, see championOf in js/champions.js.)
 function speakerName(foe) {
   if (foe.champion && CHAMPIONS[foe.champion]) return foe.champion;
-  const name = foe.champ ? DATA.cardsById[foe.champ.id]?.name : null;
-  return name && CHAMPIONS[name] ? name : null;
+  const id = foe.champ?.id;
+  return id && CHAMPIONS[id] ? id : null;
 }
 const speaking = () => typeof S !== "undefined" && S && S.mode === "ai" && !U.tutorial && S.players[1].isAI;
 function championSay(key, { force = false, once = false } = {}) {
@@ -169,7 +171,7 @@ function championSay(key, { force = false, once = false } = {}) {
   if (!force && (now - SAY.at < 7000 || SAY.n >= 8)) return;
   SAY.at = now; SAY.n++; SAY.said.add(key);
   const line = lines[Math.floor(Math.random() * lines.length)];
-  log(`${who}: "${line}"`);
+  log(`${champName(who)}: "${line}"`);
   const p = plateCenter(1);
   const el = fxDiv("champ-say", `left:${p.x + 185}px;top:${p.y + 40}px`, 4200);
   el.textContent = line;
@@ -187,7 +189,7 @@ function recallHTML() {
     if (!best) return "";
     line = line.replaceAll("{card}", best.name).replaceAll("{n}", best.n);
   }
-  return `<p class="recall">"${esc(line)}" <span>${esc(who)}</span></p>`;
+  return `<p class="recall">"${esc(line)}" <span>${esc(champName(who))}</span></p>`;
 }
 
 function championMatchStarts() {
@@ -200,13 +202,13 @@ onGameEvent((type, d) => {
   const foe = S.players[1];
   const who = speakerName(foe);
   if (!who) return;
-  if (type === "play" && d.player === 1 && d.card.name === who) {
+  if (type === "play" && d.player === 1 && d.card.id === who) {
     championSay("champion", { force: true, once: true });
   } else if (type === "shardClaim") {
     championSay(d.player === 1 ? "shardWon" : "shardLost", { force: true, once: true });
-  } else if (type === "death" && foe.grave.some(c => c.uid === d.uid && c.name === who)) {
+  } else if (type === "death" && foe.grave.some(c => c.uid === d.uid && c.id === who)) {
     championSay("fell", { force: true, once: true });
-  } else if (type === "turn" && d.player === 1 && who === "The Man Ape" && chestThump(foe)) {
+  } else if (type === "turn" && d.player === 1 && foe.field.chars.length > S.players[0].field.chars.length) {   // only champions with an "outnumber" line say it
     championSay("outnumber", { once: true });
   } else if (type === "playerDamage" && d.player === 1 && foe.health > 0) {   // the killing blow has its own moment
     if (foe.health <= 5) championSay("brink", { once: true, force: true });
@@ -361,7 +363,7 @@ onGameEvent((type, d) => {
   if ((type === "playerDamage" && d.player === 1 && d.amount >= 10) || (type === "charDamage" && d.amount >= 10 && findChar(d.uid)?.p.idx === 1)) earnTrophy("overkill");
   if (type === "play" && d.player === 0 && d.card.type === "Spell" && ++TM.spells >= 5) earnTrophy("spell_slinger");
   if (type === "shardClaim" && d.player === 0) bumpCount("shards");
-  if (type === "text" && d.text === "REANIMATE" && findChar(d.uid)?.p.idx === 0) bumpCount("revived");
+  if (type === "reanimate" && d.player === 0) bumpCount("revived");
   if (me.field.chars.length >= 7) earnTrophy("full_house");
   if (me.field.chars.some(c => (c.levelUpCount || 0) >= 3)) earnTrophy("maxed_out");
   // a character leaving your graveyard (back to your hand or the table) was brought back

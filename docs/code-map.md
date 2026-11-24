@@ -92,18 +92,18 @@ spells have one extra stop: the other player may counter them.
 ```mermaid
 flowchart LR
   a["1. You drag a card<br/>ui.js"] --> b["2. Save a copy for Undo<br/>ui.js · act()"]
-  b --> c[["3. Check mana, pay for it<br/>engine.js"]]
+  b --> c[["3. Check mana, pay for it<br/>rules-play.js"]]
   c --> k[["4. Other side may counter<br/>engine.js · offerCounter()"]]
   k --> d["5. Its ability runs<br/>effects.js"]
   d --> e["6. Hits shake, numbers pop<br/>fx.js"]
-  e --> f["7. Board is redrawn<br/>ui.js · render()"]
+  e --> f["7. Board is redrawn<br/>board.js · render()"]
   f --> g["8. Computer's turn? It moves<br/>ai.js"]
   k -.->|countered: to the graveyard, nothing happens| f
   g -.->|back through the rules| c
 ```
 
 Steps 3 and 4 are the only place the rules for playing a card live. If a card does the wrong
-thing, the fix is in `engine.js` or the card's Effect text. If it looks wrong, the fix is in
+thing, the fix is in the rules files (`rules-play.js` for playing it) or the card's Effect text. If it looks wrong, the fix is in
 `ui.js`, `fx.js` or `css/style.css`.
 
 **The counter stop.** If the other player holds a counter spell that can stop the card and has
@@ -168,7 +168,7 @@ their own story or coaching, then hand over to the same engine.
 | A counter spell | its `counter:` clause in the Effect column; the window is `offerCounter()` in `js/engine.js` |
 | How the game plays: turns, phases, combat, winning | turns and phases `js/rules-turns.js`; attacks, damage and winning `js/rules-combat.js`; playing cards and choices `js/rules-play.js`; the core `js/engine.js` |
 | How smart the computer is, or how each world's deck plays | `js/ai.js` (`PLAN_DEPTH`, `BATTLE_DEPTH`, `AI_STYLES`) |
-| What a champion says, or how the computer plays it | `js/champions.js` (`CHAMPIONS`); the speech bubbles are in `js/campaign.js` |
+| What a champion says, or how the computer plays it | `js/champions.js` (`CHAMPIONS`, keyed by the champion card's CardID); the speech bubbles are in `js/campaign.js` |
 | Layout, phone layout | `js/ui.js` (the screen state `U`, screens, phone layout); what is drawn on the table is `js/board.js` (special pieces: `js/board-marks.js`), taps and drags `js/input.js` |
 | How a card looks (frames, art, badges, name fitting) | `cardHTML()` and the rest of `js/cards.js` |
 | Pop-up windows: card details, game menu, choices, full log, Settings | `js/panels.js` (`openModal()`, `showDetail()`, `showSettings()`) |

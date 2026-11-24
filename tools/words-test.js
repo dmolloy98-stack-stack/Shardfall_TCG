@@ -24,6 +24,9 @@ for (const f of files) {
 }
 const missing = [...asked].filter(([id]) => !have.has(id));
 ok('every word the code asks for is in data/ui_text.csv', !missing.length, missing.map(([id, f]) => `${id} (${f})`).join(', '));
+// "target_<CardID>" rows are one card's target prompt (renderPrompt in js/board.js).
+const cardIds = new Set(fs.readFileSync(path.join(dir, 'data/cards.csv'), 'utf8').split(/\r?\n/).map(l => l.split(',')[0]));
+for (const id of ids) if (id.startsWith('target_') && cardIds.has(id.slice(7))) mentioned.add(id);
 const unused = ids.filter(id => !asked.has(id) && !mentioned.has(id));
 if (unused.length) console.log(`note: rows nothing uses yet: ${unused.join(', ')}`);
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');

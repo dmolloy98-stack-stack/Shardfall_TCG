@@ -157,14 +157,14 @@ function chooseTarget(target) {
   const fx = pendingEffect(pd);
   const owner = S.players[pd.owner];
   const t = target.isPlayer ? target : (pd.targetType === "area" ? findArea(target.uid)?.c : findChar(target.uid)?.c);
-  if (!t) return false;
+  // Everything that can refuse is checked before anything changes (a rule must not change the game
+  // and then report "refused"). The spell is found by its uid, so a copied state still finds it.
+  const i = pd.cast ? owner.hand.findIndex(c => c.uid === pd.source.uid) : -1;
+  if (!t || (pd.cast && i < 0)) return false;
   S.pending = null;
   if (pd.cast) {   // a spell waiting in hand for its target: pay for it and cast it now
-    const i = owner.hand.indexOf(pd.source);
-    if (i < 0) return false;
     owner.mana -= pd.cast.cost;
-    owner.hand.splice(i, 1);
-    owner.grave.push(pd.source);
+    owner.grave.push(owner.hand.splice(i, 1)[0]);
     emit("play", { card: pd.source, player: owner.idx });
     log(`${owner.name} casts ${pd.source.name}.`);
     // the other player may counter it before it takes effect
@@ -213,7 +213,8 @@ const CHOICES = {
   } },
   discardDraw: { run(pd, owner, picked) {
     const c = picked[0];
-    if (c) { owner.hand.splice(owner.hand.findIndex(x => x.uid === c.uid), 1); owner.grave.push(c); }
+    const i = c ? owner.hand.findIndex(x => x.uid === c.uid) : -1;
+    if (i >= 0) owner.grave.push(owner.hand.splice(i, 1)[0]);   // never splice(-1): that would take the last card
     drawCard(owner);
   } },
   rise: { run(pd, owner, picked) {

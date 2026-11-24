@@ -283,7 +283,7 @@ function aiPlanBattle() {
   const st = aiStyle(me);
   // A patient champion only attacks when it clearly gains, and keeps its champion card at home
   // unless the gain is bigger still.
-  const champ = championOf(active()) ? active().field.chars.find(c => c.name === active().champion) : null;
+  const champ = championOf(active()) ? active().field.chars.find(c => c.id === active().champion) : null;
   let best = null, bestScore = base + (st.patience || 0);
   for (const a of aiAttackActions().slice(0, BATTLE_WIDTH + 1)) {
     const score = simulate(() => { aiStrike(a); return aiBattleScore(me, BATTLE_DEPTH - 1); });

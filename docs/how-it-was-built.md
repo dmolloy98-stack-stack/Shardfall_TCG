@@ -128,11 +128,18 @@ fails if a window opened anywhere in the code has no entry. (24 Nov 2026)
 
 **One click handler per area, everywhere.** The Almanac's filter rows and the pop-up window
 (`#modal`) each had two handlers; they were merged so that every area has exactly one (24 Nov 2026,
-found by the `architect-review` agent).
+found by the `architect-review` agent). The window still had four after that (the deck builder,
+the campaign and the "choose a card" window had each added their own), so the rule is now: the one
+handler is in `js/panels.js`, and a window from another file gets a branch there that calls a named
+function in its own file (`newDeckFrom()`, `builderChoice()`, `campaignClick()`). Calls happen at
+click time, so the load order doesn't matter. `tools/screen-test.js` clicks through the choose
+window to prove it works (25 Nov 2026).
 
 **Special card rules are switched on by words, not names.** A card that bends the core rules has a
 `rule:` clause, and the engine checks for that word, never for a card's name. Renaming a card then
-can't break its rule.
+can't break its rule. The same goes for champions: the campaign, the champions' lines
+(`CHAMPIONS`), the computer's champion and the tutorial's hands all name cards by CardID, and show
+the card's own name, so renaming a champion card changes it everywhere at once (25 Nov 2026).
 
 ## The screen
 
@@ -252,6 +259,11 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 - **The computer used the match's random numbers** for its own choices (fixed Nov 2026).
 - **A card-sheet cell starting with `+`, `-` or `=`** is read as a sum by Google Sheets and shows
   `#ERROR!`. Write it with a leading `'`.
+- **Words on the screen that repeat a card's numbers** ("Strike 3", "you gain 2 HP") go stale when
+  the card changes. Screen words that depend on a card take the number from its play clause
+  (`playAmount()` in `js/effects.js`) and their wording from `data/ui_text.csv` (Nov 2026).
+- **Code that listens for the words shown on screen** breaks when they are reworded: the Grave Robber
+  trophy counted the floating word "REANIMATE". Listen for a game event instead (`reanimate`).
 - **Renaming a world or tribe** leaves old names in many places (pull request #27 found
   leftovers). Use the `worlds-and-tribes` skill's full list.
 - **A green GitHub check can hide a crash** when a step sends its output through `tee`: only the
@@ -265,4 +277,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-24, pull request #35.
+Last checked: 2026-11-25, pull request #36.
