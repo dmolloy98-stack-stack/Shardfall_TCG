@@ -222,6 +222,12 @@ the patterns are kept, files are growing too big or tangled, and the docs are st
 reports and never edits. The owner picked it from buildwithclaude.com for the game's long-term
 health, and it was rebuilt around Shardfall's rules because the original was generic (24 Nov 2026).
 
+**Look choices are shown, not described.** The owner decides the look but wants options and
+inspiration, so the `look-advisor` agent builds two or three versions on the real game screen with
+`tools/look-mockup.js`, which injects each version into a test browser and photographs it; the game
+files are not touched until the owner picks. The owner's vision and decisions are kept in the look
+book, `docs/look.md`, so new options stay consistent (24 Nov 2026).
+
 **Every change goes through a pull request,** merged once GitHub's tests pass, then backed up to
 Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main` after each merge.
 
@@ -259,4 +265,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-24, pull request #33.
+Last checked: 2026-11-24, pull request #34.

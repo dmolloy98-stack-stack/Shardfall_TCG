@@ -220,6 +220,7 @@ their own story or coaching, then hand over to the same engine.
 | Checking a screen change in a browser | `node tools/browser-check.js` (uses `tools/serve.js` to load the game from disk and `tools/readability.js` for the "can you read it?" check); the `browser-check` skill in `.claude/skills/` |
 | Deck win rates and game length | `node tools/winrates.js` (plays `tools/selftest.js` games and sums them up) |
 | How smoothly the game runs | `node tools/speed-check.js` |
+| Showing the owner look options | the `look-advisor` agent; `node tools/look-mockup.js <plan> <out>` shows versions on the real screen without changing the game; decisions go in `docs/look.md` |
 
 ## Size and shape
 

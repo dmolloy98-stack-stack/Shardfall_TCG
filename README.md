@@ -106,6 +106,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `docs/todo.md` | What is still to do: waiting on the owner, the current round, ideas and what was turned down |
 | `docs/done.md` | The history of finished work, with the owner's decisions behind it |
 | `docs/how-it-was-built.md` | Why the code is built the way it is, the owner's decisions that shape it, and traps already fallen into. Checked with every change (its top says what belongs in it) |
+| `docs/look.md` | The look book: the owner's vision for how the game looks, today's look, the rules every new look keeps, and look decisions |
 | `docs/world.md` | The story bible: the Shardfall, Shardkeepers, factions and champions, tone, and the hidden-clue log |
 | `js/fx.js` | Game feel: aiming line and fight previews, impacts sized small, medium or large (shake, hit-stop, rings), Swift blows landing before the reply, big entrances, skill spotlights, the final blow and end-screen stats |
 | `js/motion.js` | Cards that travel: drawn cards slide out of the deck, played cards fly from the hand to the table (the computer's from its hidden hand), cards drift into the graveyard, the hand closes up smoothly, a cast spell is shown in the middle of the table, and health counts down instead of jumping |
@@ -141,6 +142,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/speed-budget.js` | Speed budget: measures an older version and this one side by side on a slowed processor (loading, starting a match, redrawing, the computer's turn, download size) and warns if this one is more than 15% slower: `node tools/speed-budget.js <older game folder>`. GitHub runs it on every pull request against `main` |
 | `tools/speed-check.js` | Measures how smoothly the game runs on a slowed-down computer (like a phone), with Heavy effects on and off: `node tools/speed-check.js` |
 | `tools/readability.js` | Used by the browser check: finds text that is too small, overlapping or cut off |
+| `tools/look-mockup.js` | Look options for the owner: shows two or three versions of a look on the real game screen (injected into a test browser, never into the game) and takes close-up pictures; used by the look advisor |
 | `tools/drive-bundle.js` | Makes the one-file Google Drive backups: the changes of a pull request, or a full snapshot |
 | `tools/serve.js` | Lets a test browser load the game straight from this folder, without a web server |
 | `.claude/skills/` | Step-by-step recipes Claude follows for routine jobs (Drive backup, pull requests, browser checks, balance tests, card changes, story writing and more) |

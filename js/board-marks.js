@@ -113,17 +113,19 @@ function wardBreak(i) {
   }
 }
 
-// A card with the Protected skill: a ring of glowing blue runes travels around it. The runes are
-// drawn here (not a font), so every device shows the same shapes. The ring is 9px outside the
-// card (95 x 135); its timing comes from the clock, so redrawing the table doesn't restart it.
-const RUNES = ["M2 1v8M2 3l5-2M2 6l5-2", "M2 9V1l5 4-5 4", "M5 1v8M1 3l4 2 4-2M2 9l3-3 3 3", "M1 1l8 8M9 1L1 9M5 1v2M5 7v2",
-  "M2 1v8h6M2 5l6-4", "M1 9l4-8 4 8M3 6h4", "M5 1L1 5l4 4 4-4zM5 3v4", "M2 1h6M5 1v8M2 9h6M2 5h6"];
+// A card with the Protected skill: the "loading ring" (owner's pick, 24 Nov 2026). A band of light
+// fills the ring like a progress bar, always stops at 99%, and starts again; small tick marks
+// travel around it. The shell on a Protected player's health gem matches (see .ward in
+// css/style.css): its shards light one after another and one never does. The hint is Boss Level's
+// failed "level up" (docs/world.md, clue log). The ring is 9px outside the card (95 x 135); its
+// timing comes from the clock, so redrawing the table doesn't restart it.
+const RUNES = ["M5 2v6", "M4 2v6M6 2v6", "M5 2v6", "M5 3v4"];   // the tick marks
 const RING_PATH = "M15 3H98A12 12 0 0 1 110 15V138A12 12 0 0 1 98 150H15A12 12 0 0 1 3 138V15A12 12 0 0 1 15 3Z";
-const RING_N = 18, RING_S = 18;   // runes on the ring, seconds per lap
+const RING_N = 18, RING_S = 18;   // ticks on the ring, seconds per lap (a multiple of the 6 s fill)
 function runeRingHTML(flash) {
   const ph = -(performance.now() % (RING_S * 1000)) / 1000;
   const runes = Array.from({ length: RING_N }, (_, k) =>
     `<i style="animation-delay:${(ph - k * RING_S / RING_N).toFixed(2)}s"><svg viewBox="0 0 10 10"><path d="${RUNES[k % RUNES.length]}"/></svg></i>`).join("");
   return `<div class="rune-ring${flash ? " flash" : ""}" style="--ph:${ph.toFixed(2)}s" aria-hidden="true">
-    <svg class="track" viewBox="0 0 113 153"><path class="t" d="${RING_PATH}"/><path class="sweep" pathLength="100" d="${RING_PATH}"/><path class="sweep two" pathLength="100" d="${RING_PATH}"/></svg>${runes}</div>`;
+    <svg class="track" viewBox="0 0 113 153"><path class="t" d="${RING_PATH}"/><path class="load" pathLength="100" d="${RING_PATH}"/></svg>${runes}</div>`;
 }
