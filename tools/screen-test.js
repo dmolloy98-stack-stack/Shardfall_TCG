@@ -54,6 +54,7 @@ const TESTS = [
     await pg.waitForSelector('.whats-new li');
     await pg.click('#modal-content [data-close]');
     expect(!(await modalOpen(pg)), 'the window did not close');
+    expect(await pg.evaluate(() => document.activeElement?.id) === 'btn-version', 'keyboard focus did not go back to the version button');
   }],
   ['settings: a switch changes and is remembered', async ({ pg }) => {
     await pg.click('#btn-settings');

@@ -318,4 +318,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-24, pull request #32 (brought up to date after #39).
+Last checked: 2026-11-25, daily run (pop-ups give keyboard focus back; nothing new to record).
