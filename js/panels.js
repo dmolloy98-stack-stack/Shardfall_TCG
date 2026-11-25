@@ -4,7 +4,9 @@
 // ---------------------------------------------------------------------------
 // Modals
 // ---------------------------------------------------------------------------
+let modalOpener = null;   // what had keyboard focus before the pop-up opened, so closing can give it back
 function openModal(html, { dismissable = true } = {}) {
+  if ($("#modal").hidden) modalOpener = document.activeElement;   // a pop-up replacing a pop-up keeps the first opener
   $("#modal-content").innerHTML = html;
   $("#modal").hidden = false;
   $("#modal").dataset.dismissable = dismissable ? "1" : "";
@@ -15,6 +17,8 @@ function closeModal() {
   $("#modal").hidden = true;
   $("#modal-content").innerHTML = "";
   openModal.choose = false;
+  const back = modalOpener; modalOpener = null;
+  if (back && back !== document.body && document.contains(back)) back.focus({ preventScroll: true });
 }
 
 function skillRows(c) {
