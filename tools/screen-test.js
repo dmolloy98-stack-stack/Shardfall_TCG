@@ -56,6 +56,17 @@ const TESTS = [
     expect(!(await modalOpen(pg)), 'the window did not close');
     expect(await pg.evaluate(() => document.activeElement?.id) === 'btn-version', 'keyboard focus did not go back to the version button');
   }],
+  ['menu: Tab stays inside an open pop-up', async ({ pg }) => {
+    await pg.click('#btn-version');
+    await pg.waitForSelector('.whats-new li');
+    for (let i = 0; i < 25; i++) {
+      await pg.keyboard.press('Tab');
+      expect(await pg.evaluate(() => !!document.activeElement?.closest('#modal')), 'Tab moved keyboard focus out of the pop-up');
+    }
+    await pg.keyboard.press('Shift+Tab');
+    expect(await pg.evaluate(() => !!document.activeElement?.closest('#modal')), 'Shift+Tab moved keyboard focus out of the pop-up');
+    await pg.click('#modal-content [data-close]');
+  }],
   ['settings: a switch changes and is remembered', async ({ pg }) => {
     await pg.click('#btn-settings');
     const btn = '[data-set="hints"]';
