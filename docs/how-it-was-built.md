@@ -318,4 +318,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-25, daily run (pop-ups give keyboard focus back; nothing new to record).
+Last checked: 2026-11-26, daily run (Tab stays inside pop-ups; nothing new to record).

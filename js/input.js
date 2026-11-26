@@ -190,6 +190,15 @@ document.addEventListener("keydown", e => {
     if (e.key === " ") { press("phase"); return; }
     if (e.key === "e" || e.key === "E") { press("pass"); return; }
   }
+  if (e.key === "Tab" && !$("#modal").hidden) {   // keep Tab inside an open pop-up, not on the board behind it
+    const items = [...$("#modal").querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")].filter(x => !x.disabled && x.offsetParent !== null);
+    if (!items.length) { e.preventDefault(); return; }
+    const first = items[0], last = items[items.length - 1], now = document.activeElement;
+    if (!$("#modal").contains(now)) { e.preventDefault(); first.focus(); }
+    else if (e.shiftKey && now === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && now === last) { e.preventDefault(); first.focus(); }
+    return;
+  }
   if (e.key !== "Escape") return;
   if (!$("#modal").hidden) { if ($("#modal").dataset.dismissable) closeModal(); return; }
   if (U.screen === "game") cancelSomething();
