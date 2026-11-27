@@ -5,6 +5,14 @@ stays short. Each entry keeps the owner's decisions, because they explain why th
 they are. (What changed for players is `data/whats_new.csv`; why the code is built as it is,
 `docs/how-it-was-built.md`.)
 
+## Zombie balance — chosen by the owner (27 Nov), built
+
+With random events off, Zombie won only 38%. Of six changes tested, the owner picked both of the
+two that helped: Sneaky Skinbag costs 3 (was 4) and Hungry Corpse is 2/2 (was 2/1). In 2,000
+games every starter now wins 45–53% (Digital 53.3, Zombie 52.3, Monkey 52.0, Simple 47.8,
+Fighter 44.8); the first player wins 57.2%. Champion leveling was also settled: the passive
+abilities level up, the champion cards don't (see docs/todo.md).
+
 ## Events off, deck codes and code tidying — chosen by the owner (27 Nov), built
 
 - **Random events off in normal play.** Campaign, Play vs Computer and Two players have no mini
