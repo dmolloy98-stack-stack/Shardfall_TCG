@@ -44,8 +44,8 @@ Find them first: `grep -rnI "\bOldName\b" --exclude-dir=.git --exclude-dir=phone
 | `js/cards.js` | `GLYPHS` (world medallion symbols) |
 | `js/table-effects.js` | `DEATHS` (how its cards die) |
 | `js/menu.js` | champion ability examples (`c.group === "…"`) |
-| `css/style.css` | `.skin-battlefield .side[data-faction="…"]` board colours |
-| `js/engine.js` / `js/effects.js` | any script or rule naming it (`inGroup(c, "…")`) |
+| `css/skins.css` | `.skin-battlefield .side[data-faction="…"]` board colours |
+| `js/rules-champions.js` (and any rules file) | any rule naming it (`inGroup(c, "…")`; today the one use is The Simplistic's bonus) |
 | `tools/*-test.js` | tests that pick cards by `c.group` |
 | `guide.html`, `README.md`, `data/README.md`, `docs/code-map.md` | player and builder docs |
 | `docs/world.md` | "Fractures, tribes and classes", the champions table, the clue log |

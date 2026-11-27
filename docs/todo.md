@@ -42,6 +42,34 @@ them; nothing is lost while they wait.
   owner could design a card for it.
 - The big shard could carry the hint about what caused the Shardfall (see the Protected item below).
 
+## Growth review (27 Nov): offered, not picked yet
+
+A whole-codebase review for long-term growth (more worlds, champions, game modes, Play a Friend).
+Nothing here changes play; each is Claude's technical housekeeping, waiting for the owner's go.
+1. **"Whose seat is at this screen"**: about 15 places assume "not the computer" means "the person
+   here". Play a Friend needs one helper for who controls each seat. Medium.
+2. **Match types in one table** (against the computer, two players, campaign, tutorial, later
+   shake-up and online): today they are spread over `S.mode`, `U.campaign`, `U.tutorial` and three
+   switches, and a new mode touches about 6 files. Medium.
+3. **Campaign progress saved as "stages won"**: a new world's champion placed anywhere but last
+   would shift players' progress. Save the champions beaten instead (with a save upgrade). Small.
+4. **Random events as data**: an Effect column in `data/events.csv` in the card ability language,
+   instead of code in 2 or 3 files per event. Ready for the shake-up mode. Medium.
+5. **A world's look from `data/factions.csv`** (its symbol, entrance and death), and its Name shown
+   on cards: a new world touches about 8 files instead of 11. Small to medium.
+6. **A champion's campaign stage and Almanac notes inside its own entry**: a new champion touches
+   2 game files instead of 4. Medium.
+7. **The Turtle token as a row in `data/cards.csv`**, so tokens are card data like every other card. Small.
+8. **One description per ability word** (effects.js and `tools/explain-effect.js` keep near-copies). Small.
+9. Smaller: one click handler for the main menu; the balance check samples opponents once there are
+   many worlds; `js/effects.js` splits when it passes about 600 lines.
+
+Owner's decisions these touch (no answers assumed): what the shake-up mode holds and whether its
+wins and Play a Friend wins count toward trophies and mastery; where new worlds' champions go in
+the campaign and whether a finished campaign opens new stages; whether tokens appear in the
+Almanac and the card sheet; the words "Unbound" and "Mixed"; the balance target once there are
+many pairings.
+
 ## Offered, not picked yet (23 Nov)
 
 From the "what's next" list; the owner may pick them later.
