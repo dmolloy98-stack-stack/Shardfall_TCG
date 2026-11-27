@@ -1,0 +1,302 @@
+/* Shardfall's board skins: how the table itself looks in each look chosen in Settings
+   (Shattered Crystal, Stained Glass, Crystal Altar, Shattered Battlefield, War Map). The cards,
+   buttons, panels and the skin picker are in css/style.css, which loads first: this file loads
+   right after it (index.html, tools/build-single.js, sw.js), so its rules still win a tie, as they
+   did when they sat in style.css. The two long images (the glass window and the crystal cracks)
+   are redrawn by tools/make-glass.js and tools/make-crystal.js. */
+:root {
+  /* glass-window:start */
+  --glass-window: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 1000' preserveAspectRatio='none'%3E%3Cpath d='M98 0L275 0L249 149ZM275 0L384 118L249 149ZM562 0L588 123L478 156ZM750 0L686 147L588 123ZM1044 0L1048 121L933 167ZM0 128L116 129L129 287ZM384 118L348 234L220 258ZM1288 136L1293 244L1207 249ZM220 258L348 234L380 408ZM584 220L751 261L612 404ZM1059 287L1055 356L945 409ZM945 409L1046 490L962 486ZM241 522L260 653L127 588ZM631 474L595 668L443 647ZM1046 490L1232 602L1118 584ZM595 668L755 598L719 793ZM1440 662L1440 772L1315 722ZM565 738L719 793L612 872ZM814 755L961 742L919 900ZM814 755L919 900L855 858ZM1315 722L1440 772L1440 915ZM0 897L114 841L0 1000ZM612 872L701 861L722 1000ZM612 872L722 1000L563 1000ZM919 900L1085 884L1115 1000Z' fill='hsla(265,70%,55%,.30)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M369 0L516 0L384 118ZM1044 0L1241 0L1196 91ZM1360 0L1440 0L1288 136ZM588 123L751 261L584 220ZM933 167L1048 121L1059 287ZM933 167L1059 287L959 222ZM0 214L129 287L0 331ZM348 234L481 269L469 367ZM751 261L830 293L720 373ZM830 293L945 409L864 415ZM0 331L136 398L0 529ZM136 398L142 475L0 529ZM210 379L353 485L241 522ZM720 373L864 415L835 480ZM864 415L945 409L835 480ZM1055 356L1238 394L1197 522ZM0 529L142 475L0 641ZM353 485L443 647L365 656ZM1350 524L1440 477L1440 662ZM0 641L127 588L0 779ZM365 656L443 647L449 773ZM443 647L595 668L449 773ZM822 655L814 755L719 793ZM320 707L449 773L367 845ZM719 793L814 755L855 858ZM1215 727L1315 722L1302 849Z' fill='hsla(215,75%,50%,.26)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M275 0L369 0L384 118ZM828 0L868 113L686 147ZM116 129L249 149L129 287ZM478 156L588 123L481 269ZM868 113L830 293L751 261ZM1048 121L1196 91L1207 249ZM1196 91L1288 136L1207 249ZM1288 136L1440 149L1293 244ZM220 258L210 379L136 398ZM220 258L380 408L210 379ZM830 293L959 222L945 409ZM959 222L1059 287L945 409ZM1059 287L1207 249L1238 394ZM1207 249L1293 244L1238 394ZM945 409L1055 356L1046 490ZM1238 394L1296 336L1350 524ZM1296 336L1440 357L1440 477ZM353 485L468 474L443 647ZM631 474L735 517L755 598ZM735 517L835 480L822 655ZM735 517L822 655L755 598ZM962 486L1118 584L986 667ZM127 588L260 653L132 755ZM755 598L822 655L719 793ZM1118 584L1215 727L1083 711ZM1232 602L1360 602L1315 722ZM0 779L132 755L114 841ZM229 723L367 845L275 839ZM449 773L565 738L612 872ZM612 872L563 1000L482 1000ZM919 900L1115 1000L954 1000ZM1302 849L1440 915L1361 1000Z' fill='hsla(175,65%,40%,.20)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M0 0L98 0L116 129ZM516 0L562 0L478 156ZM562 0L750 0L588 123ZM828 0L922 0L933 167ZM249 149L384 118L220 258ZM129 287L220 258L136 398ZM1059 287L1238 394L1055 356ZM1293 244L1440 222L1440 357ZM1293 244L1440 357L1296 336ZM210 379L380 408L353 485ZM945 409L962 486L835 480ZM142 475L241 522L127 588ZM1046 490L1197 522L1232 602ZM1350 524L1360 602L1232 602ZM127 588L132 755L0 779ZM260 653L229 723L132 755ZM260 653L365 656L229 723ZM595 668L719 793L565 738ZM822 655L961 742L814 755ZM132 755L275 839L114 841ZM229 723L320 707L367 845ZM449 773L509 864L367 845ZM719 793L855 858L701 861ZM855 858L954 1000L874 1000ZM1440 915L1440 1000L1361 1000Z' fill='hsla(330,65%,52%,.24)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M516 0L478 156L384 118ZM922 0L1044 0L933 167ZM1360 0L1288 136L1196 91ZM1440 0L1440 149L1288 136ZM1440 149L1440 222L1293 244ZM348 234L469 367L380 408ZM751 261L720 373L612 404ZM1293 244L1296 336L1238 394ZM380 408L469 367L468 474ZM612 404L720 373L735 517ZM1296 336L1440 477L1350 524ZM142 475L127 588L0 641ZM835 480L962 486L986 667ZM835 480L986 667L822 655ZM365 656L449 773L320 707ZM595 668L565 738L449 773ZM986 667L1118 584L1083 711ZM1232 602L1315 722L1215 727ZM1360 602L1440 662L1315 722ZM0 779L114 841L0 897ZM449 773L612 872L509 864ZM1083 711L1215 727L1222 878ZM1215 727L1302 849L1222 878ZM275 839L367 845L345 1000ZM275 839L345 1000L200 1000Z' fill='hsla(40,85%,50%,.16)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M750 0L828 0L686 147ZM1241 0L1360 0L1196 91ZM384 118L478 156L481 269ZM868 113L933 167L830 293ZM933 167L959 222L830 293ZM1048 121L1207 249L1059 287ZM481 269L584 220L612 404ZM830 293L864 415L720 373ZM380 408L468 474L353 485ZM469 367L612 404L468 474ZM612 404L735 517L631 474ZM720 373L835 480L735 517ZM1238 394L1350 524L1197 522ZM241 522L365 656L260 653ZM468 474L631 474L443 647ZM822 655L986 667L961 742ZM1118 584L1232 602L1215 727ZM719 793L701 861L612 872ZM961 742L1085 884L919 900ZM114 841L200 1000L144 1000ZM367 845L509 864L345 1000ZM509 864L612 872L482 1000ZM855 858L874 1000L722 1000ZM1085 884L1222 878L1159 1000ZM1085 884L1159 1000L1115 1000Z' fill='hsla(265,70%,55%,.12)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M0 0L116 129L0 128ZM98 0L249 149L116 129ZM828 0L933 167L868 113ZM1044 0L1196 91L1048 121ZM0 128L129 287L0 214ZM249 149L220 258L129 287ZM384 118L481 269L348 234ZM588 123L584 220L481 269ZM588 123L686 147L751 261ZM686 147L868 113L751 261ZM129 287L136 398L0 331ZM481 269L612 404L469 367ZM136 398L210 379L241 522ZM136 398L241 522L142 475ZM612 404L631 474L468 474ZM1055 356L1197 522L1046 490ZM241 522L353 485L365 656ZM631 474L755 598L595 668ZM962 486L1046 490L1118 584ZM1197 522L1350 524L1232 602ZM1350 524L1440 662L1360 602ZM365 656L320 707L229 723ZM986 667L1083 711L961 742ZM132 755L229 723L275 839ZM961 742L1083 711L1085 884ZM1083 711L1222 878L1085 884ZM1315 722L1440 915L1302 849ZM114 841L144 1000L0 1000ZM114 841L275 839L200 1000ZM509 864L482 1000L345 1000ZM701 861L855 858L722 1000ZM855 858L919 900L954 1000ZM1222 878L1302 849L1159 1000ZM1302 849L1361 1000L1159 1000Z' fill='hsla(215,75%,50%,.12)' stroke='%2304020a' stroke-width='6' stroke-linejoin='round'/%3E%3C/svg%3E");
+  /* glass-window:end */
+  /* crystal-cracks:start */
+  --crystal-cracks: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 1000' preserveAspectRatio='none'%3E%3Cpath d='M195.2137583156148 371.89698609714384L148 403L91 449L38 503M136.20298780446132 318.72134909410744L99 318L18 296L-19 291L-54 297M-22.891101960452723 145.09061968557583L-53 70M316.8 400L268 399L230 389L195 372L136 319L97 297L51 231L24 196L-23 145L-80 94M265.59009501969473 403.62508170245786L229 439L197 497L170 534L162 576M184.42773064839272 452.7038661344296L154 497L91 542M126.00625764258808 498.24858448548093L119 591M316.8 400L266 404L184 453L126 498L85 524L47 538L1 555L-60 570M748.0453360794302 254.96373680642543L708 209L642 146M712.4023839379207 327.47417915438814L741 293L748 255L787 174L812 138M631.9244277650349 148.613421641433L573 101M720 400L712 327L687 276L658 217L632 149L586 82L549 13M613.4694388578716 481.3786255972474L558 460M701.7880147221449 449.8530327656623L613 481L541 544L504 566M856.2166135312254 605.0329697625247L918 565M720 400L702 450L706 521L726 553L779 594L813 604L856 605L909 616L988 609M1195.6146318360313 354.7992786992533L1214 292L1251 209L1299 150L1326 118M1123.2 400L1196 355L1221 327L1301 287L1335 277L1426 292L1476 291L1550 281M1195.1426526788975 541.9657089588121L1162 619L1105 670M1123.2 400L1163 448L1191 491L1195 542L1201 593L1214 641L1229 711L1239 750' fill='none' stroke='rgb(205,232,255)' stroke-opacity='0.07' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M195.2137583156148 371.89698609714384L148 403L91 449L38 503M136.20298780446132 318.72134909410744L99 318L18 296L-19 291L-54 297M-22.891101960452723 145.09061968557583L-53 70M316.8 400L268 399L230 389L195 372L136 319L97 297L51 231L24 196L-23 145L-80 94M265.59009501969473 403.62508170245786L229 439L197 497L170 534L162 576M184.42773064839272 452.7038661344296L154 497L91 542M126.00625764258808 498.24858448548093L119 591M316.8 400L266 404L184 453L126 498L85 524L47 538L1 555L-60 570M748.0453360794302 254.96373680642543L708 209L642 146M712.4023839379207 327.47417915438814L741 293L748 255L787 174L812 138M631.9244277650349 148.613421641433L573 101M720 400L712 327L687 276L658 217L632 149L586 82L549 13M613.4694388578716 481.3786255972474L558 460M701.7880147221449 449.8530327656623L613 481L541 544L504 566M856.2166135312254 605.0329697625247L918 565M720 400L702 450L706 521L726 553L779 594L813 604L856 605L909 616L988 609M1195.6146318360313 354.7992786992533L1214 292L1251 209L1299 150L1326 118M1123.2 400L1196 355L1221 327L1301 287L1335 277L1426 292L1476 291L1550 281M1195.1426526788975 541.9657089588121L1162 619L1105 670M1123.2 400L1163 448L1191 491L1195 542L1201 593L1214 641L1229 711L1239 750' fill='none' stroke='rgb(205,232,255)' stroke-opacity='0.2' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M195.2137583156148 371.89698609714384L148 403L91 449L38 503M136.20298780446132 318.72134909410744L99 318L18 296L-19 291L-54 297M-22.891101960452723 145.09061968557583L-53 70M316.8 400L268 399L230 389L195 372L136 319L97 297L51 231L24 196L-23 145L-80 94M265.59009501969473 403.62508170245786L229 439L197 497L170 534L162 576M184.42773064839272 452.7038661344296L154 497L91 542M126.00625764258808 498.24858448548093L119 591M316.8 400L266 404L184 453L126 498L85 524L47 538L1 555L-60 570M748.0453360794302 254.96373680642543L708 209L642 146M712.4023839379207 327.47417915438814L741 293L748 255L787 174L812 138M631.9244277650349 148.613421641433L573 101M720 400L712 327L687 276L658 217L632 149L586 82L549 13M613.4694388578716 481.3786255972474L558 460M701.7880147221449 449.8530327656623L613 481L541 544L504 566M856.2166135312254 605.0329697625247L918 565M720 400L702 450L706 521L726 553L779 594L813 604L856 605L909 616L988 609M1195.6146318360313 354.7992786992533L1214 292L1251 209L1299 150L1326 118M1123.2 400L1196 355L1221 327L1301 287L1335 277L1426 292L1476 291L1550 281M1195.1426526788975 541.9657089588121L1162 619L1105 670M1123.2 400L1163 448L1191 491L1195 542L1201 593L1214 641L1229 711L1239 750' fill='none' stroke='rgb(205,232,255)' stroke-opacity='0.85' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  /* crystal-cracks:end */
+}
+
+/* ============================================================ skin: Shattered Battlefield
+   Two floating islands over a glowing shard rift. Each island's ground follows
+   that player's deck: farmland, jungle, graveyard, dojo or circuit board. */
+#stage.skin-battlefield #board { background: radial-gradient(ellipse 80% 30% at 50% 50%, #2c1452, #0a0616 75%); }
+.skin-battlefield .scene {
+  background:
+    radial-gradient(1.5px 1.5px at 12% 46%, #fff, transparent), radial-gradient(1px 1px at 33% 52%, #d9ccff, transparent),
+    radial-gradient(1.5px 1.5px at 58% 44%, #fff, transparent), radial-gradient(1px 1px at 77% 55%, #d9ccff, transparent),
+    radial-gradient(1px 1px at 90% 47%, #fff, transparent), radial-gradient(1px 1px at 4% 53%, #fff, transparent);
+}
+.skin-battlefield .side { --rock: #3b2a22; --rock-dark: #241812; }
+.skin-battlefield .side.top {
+  height: 316px;
+  clip-path: polygon(0 0, 100% 0, 100% 91%, 97% 95%, 93% 92%, 88% 97%, 82% 93%, 76% 98%, 70% 94%, 63% 97%, 57% 93%, 50% 98%, 44% 94%, 37% 97%, 31% 93%, 24% 98%, 18% 94%, 11% 97%, 6% 93%, 0 96%);
+}
+.skin-battlefield .side.bottom {
+  top: 420px; height: 514px;
+  clip-path: polygon(0 3%, 5% 1%, 11% 3.5%, 17% 0.5%, 24% 3%, 30% 1%, 37% 3.5%, 43% 0.5%, 50% 3%, 56% 1%, 63% 3.5%, 69% 0.5%, 76% 3%, 82% 1%, 88% 3.5%, 94% 0.5%, 100% 2.5%, 100% 100%, 0 100%);
+}
+/* the island's rocky edge facing the rift */
+.skin-battlefield .side::after { content: ""; position: absolute; left: 0; right: 0; height: 26px; background: linear-gradient(var(--rock), var(--rock-dark)); }
+.skin-battlefield .side.top::after { bottom: 0; }
+.skin-battlefield .side.bottom::after { top: 0; background: linear-gradient(var(--rock-dark), var(--rock)); }
+.skin-battlefield .side {
+  background:
+    radial-gradient(ellipse 30% 40% at 20% 30%, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(#55704a, #3f5a36);
+}
+.skin-battlefield .side[data-faction="Simple"] {
+  background:
+    radial-gradient(ellipse 22% 30% at 78% 35%, rgba(230, 200, 90, 0.35), transparent),
+    radial-gradient(ellipse 18% 28% at 15% 70%, rgba(230, 200, 90, 0.28), transparent),
+    repeating-linear-gradient(-8deg, rgba(40, 60, 20, 0.22) 0 10px, transparent 10px 26px),
+    linear-gradient(#6f9443, #557a33);
+}
+.skin-battlefield .side[data-faction="Wild"] {
+  background:
+    radial-gradient(circle 60px at 8% 25%, #2f7a3a, transparent), radial-gradient(circle 80px at 92% 70%, #2a6d34, transparent),
+    radial-gradient(circle 50px at 60% 15%, #3a8a44, transparent), radial-gradient(circle 70px at 35% 85%, #24622f, transparent),
+    radial-gradient(ellipse 30% 20% at 50% 50%, rgba(255, 220, 120, 0.12), transparent),
+    linear-gradient(#1f4d29, #173d20);
+}
+.skin-battlefield .side[data-faction="Undead"] {
+  background:
+    radial-gradient(ellipse 40% 25% at 30% 40%, rgba(200, 230, 200, 0.14), transparent),
+    radial-gradient(ellipse 35% 20% at 75% 65%, rgba(200, 230, 200, 0.12), transparent),
+    repeating-linear-gradient(90deg, transparent 0 140px, rgba(0, 0, 0, 0.18) 140px 146px),
+    linear-gradient(#3b4536, #2a3127);
+}
+.skin-battlefield .side[data-faction="Mortal"] {
+  background:
+    repeating-linear-gradient(0deg, rgba(90, 60, 20, 0.08) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(90deg, transparent 0 236px, #3b2a1a 236px 242px),
+    linear-gradient(#cdb977, #b9a265);
+}
+.skin-battlefield .side[data-faction="Cyber"] {
+  background:
+    radial-gradient(circle 3px at 50% 50%, rgba(90, 220, 255, 0.8), transparent) 0 0 / 120px 80px,
+    repeating-linear-gradient(0deg, rgba(64, 200, 255, 0.14) 0 2px, transparent 2px 80px),
+    repeating-linear-gradient(90deg, rgba(64, 200, 255, 0.1) 0 2px, transparent 2px 120px),
+    linear-gradient(#0f2a3a, #0a1c28);
+}
+.skin-battlefield .side[data-faction="Cyber"], .skin-battlefield .side[data-faction="Undead"] { --rock: #2c2a3a; --rock-dark: #1a1824; }
+.skin-battlefield .rift { background: radial-gradient(ellipse 55% 34% at 50% 50%, rgba(200, 150, 255, 0.55), rgba(110, 50, 200, 0.18) 60%, transparent 75%); }
+.skin-battlefield .rift::before {
+  content: ""; position: absolute; left: 4%; right: 4%; top: 46%; height: 6px;
+  background: linear-gradient(90deg, transparent, #e9dcff 20%, #ffffff 50%, #e9dcff 80%, transparent);
+  clip-path: polygon(0 50%, 10% 0, 20% 70%, 30% 10%, 42% 80%, 50% 0, 60% 90%, 70% 20%, 80% 80%, 90% 10%, 100% 50%, 90% 100%, 80% 100%, 70% 70%, 60% 100%, 50% 60%, 40% 100%, 30% 60%, 20% 100%, 10% 60%);
+  filter: drop-shadow(0 0 6px #b58cff);
+}
+.skin-battlefield .lane.front { background: rgba(10, 6, 2, 0.16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
+.skin-battlefield .lane.back { background: rgba(10, 6, 2, 0.22); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
+.skin-battlefield .bar { background: linear-gradient(#1c1430, #120c20); border-color: #6d4fc2; }
+.skin-battlefield .zone-label, .skin-battlefield .slot { text-shadow: 0 1px 2px #000; }
+.skin-battlefield .zone-label { color: rgba(255, 255, 255, 0.7); }
+.skin-battlefield .slot { border-color: rgba(255, 255, 255, 0.28); background: rgba(0, 0, 0, 0.12); }
+
+/* ============================================================ skin: Crystal Altar
+   A carved stone altar floating under the falling shards. */
+#stage.skin-altar #board {
+  background:
+    radial-gradient(1.5px 1.5px at 7% 12%, #fff, transparent), radial-gradient(1px 1px at 21% 44%, #d9ccff, transparent),
+    radial-gradient(1.5px 1.5px at 48% 8%, #fff, transparent), radial-gradient(1px 1px at 66% 40%, #d9ccff, transparent),
+    radial-gradient(1px 1px at 88% 20%, #fff, transparent), radial-gradient(1.5px 1.5px at 95% 60%, #fff, transparent),
+    radial-gradient(ellipse 70% 40% at 50% 50%, #2a1650, #07040f 80%);
+}
+.skin-altar .scene i {
+  display: block; position: absolute; top: -40px; width: 10px; height: 14px;
+  background: linear-gradient(135deg, #fff, #a78bfa);
+  clip-path: polygon(50% 0, 100% 30%, 80% 80%, 50% 100%, 20% 80%, 0 30%);
+  filter: drop-shadow(0 0 6px #b58cff);
+  animation: altar-fall 9s linear infinite;
+}
+.skin-altar .scene i:nth-child(1) { left: 6%; animation-delay: -1s; }
+.skin-altar .scene i:nth-child(2) { left: 22%; animation-delay: -5s; animation-duration: 11s; }
+.skin-altar .scene i:nth-child(3) { left: 41%; animation-delay: -3s; animation-duration: 8s; }
+.skin-altar .scene i:nth-child(4) { left: 63%; animation-delay: -7s; animation-duration: 12s; }
+.skin-altar .scene i:nth-child(5) { left: 80%; animation-delay: -2s; }
+.skin-altar .scene i:nth-child(6) { left: 96%; animation-delay: -6s; animation-duration: 10s; }
+@keyframes altar-fall { to { transform: translate(-140px, 1080px) rotate(540deg); } }
+.skin-altar .side {
+  left: 12px; right: 12px; border-radius: 22px;
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 7px),
+    radial-gradient(ellipse at 50% 40%, #403a50, #2a2536 75%);
+  border: 2px solid rgba(170, 130, 255, 0.55);
+  box-shadow: 0 0 30px rgba(140, 90, 255, 0.35), inset 0 0 50px rgba(0, 0, 0, 0.6);
+}
+.skin-altar .side::before { content: ""; position: absolute; inset: 9px; border-radius: 16px; border: 1px dashed rgba(190, 160, 255, 0.35); }
+.skin-altar .side.top { height: 300px; }
+.skin-altar .side.bottom { top: 432px; height: 498px; }
+.skin-altar .rift::before {
+  content: ""; position: absolute; left: 140px; right: 140px; top: 36px; height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, #b48cff 15%, #fff 50%, #b48cff 85%, transparent);
+  box-shadow: 0 0 14px #9b6bff, 0 0 30px #7c3aed;
+}
+.skin-altar .lane { background: rgba(0, 0, 0, 0.28); box-shadow: inset 0 3px 12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(170, 140, 255, 0.35), 0 0 12px rgba(140, 90, 255, 0.18); }
+.skin-altar .slot { border: 1px solid rgba(170, 140, 255, 0.35); background: rgba(10, 5, 25, 0.35); box-shadow: inset 0 0 10px rgba(140, 90, 255, 0.25); }
+.skin-altar .bar { background: linear-gradient(#17112a, #0c0818); border-color: #8a6cf0; }
+.skin-altar .zone-label { color: rgba(220, 205, 255, 0.65); }
+
+/* ============================================================ skin: War Map
+   An inked battle map spread on a table by candlelight. */
+#stage.skin-warmap #board { background: radial-gradient(ellipse at 50% 50%, #5a3a22, #2a170c 80%); }
+.skin-warmap .side {
+  left: 14px; right: 14px; border-radius: 6px;
+  background:
+    repeating-linear-gradient(0deg, rgba(90, 60, 30, 0.08) 0 1px, transparent 1px 52px),
+    repeating-linear-gradient(90deg, rgba(90, 60, 30, 0.08) 0 1px, transparent 1px 52px),
+    radial-gradient(ellipse at 50% 50%, #f1e5c3, #dcc596 65%, #b8955a 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), inset 0 0 60px rgba(110, 70, 20, 0.55);
+}
+.skin-warmap .side.top { top: 72px; height: 328px; border-radius: 6px 6px 0 0; }
+.skin-warmap .side.bottom { top: 400px; height: 528px; border-radius: 0 0 6px 6px; }
+.skin-warmap .rift { top: 384px; height: 32px; }
+.skin-warmap .rift::before {
+  content: ""; position: absolute; left: 14px; right: 14px; top: 13px; height: 6px;
+  background: rgba(60, 100, 130, 0.55);
+  clip-path: polygon(0 40%, 8% 10%, 17% 60%, 26% 20%, 36% 70%, 46% 30%, 56% 80%, 66% 20%, 76% 60%, 86% 10%, 100% 50%, 100% 100%, 86% 70%, 76% 100%, 66% 60%, 56% 100%, 46% 70%, 36% 100%, 26% 70%, 17% 100%, 8% 60%, 0 90%);
+}
+.skin-warmap .lane { border: 2px dashed rgba(80, 45, 15, 0.5); background: rgba(120, 80, 30, 0.07); }
+.skin-warmap .slot { border-color: rgba(80, 45, 15, 0.4); }
+.skin-warmap .zone-label { color: rgba(70, 40, 15, 0.8); }
+.skin-warmap .turn-info { color: #3b2412; }
+.skin-warmap .turn-info b { color: #7a3f12; }
+.skin-warmap .turn-info span { filter: brightness(0.6) saturate(1.4); }
+.skin-warmap .instruction { color: #3b2412; }
+.skin-warmap .phase-step { background: rgba(70, 40, 15, 0.14); color: rgba(60, 35, 15, 0.65); }
+.skin-warmap .phase-step.on { background: #7a3f12; color: #f6ead0; }
+
+/* Each side of the altar glows in its deck's color, brighter as its mana grows. */
+.skin-altar .side {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 50%, color-mix(in srgb, var(--fc, #8a6cf0) calc(8% + 14% * var(--mana, 0)), transparent), transparent 75%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 7px),
+    radial-gradient(ellipse at 50% 40%, #403a50, #2a2536 75%);
+  border-color: color-mix(in srgb, var(--fc, #8a6cf0) 45%, rgba(170, 130, 255, 0.55));
+  box-shadow: 0 0 calc(18px + 30px * var(--mana, 0)) color-mix(in srgb, var(--fc, #8a6cf0) calc(25% + 35% * var(--mana, 0)), transparent), inset 0 0 50px rgba(0, 0, 0, 0.6);
+  transition: box-shadow 0.8s, background 0.8s;
+}
+
+/* the Glass board */
+#stage.skin-glass #board {
+  background:
+    var(--glass-window) 0 0 / 100% 100% no-repeat,
+    radial-gradient(ellipse 75% 34% at 50% 0%, rgba(150, 110, 255, 0.28), transparent 72%),
+    radial-gradient(ellipse 75% 34% at 50% 100%, rgba(255, 190, 120, 0.2), transparent 72%),
+    radial-gradient(ellipse 60% 30% at 50% 50%, rgba(255, 255, 255, 0.07), transparent 75%),
+    #090614;
+}
+/* Falling shards, slow and glassy, and a sweep of light that crosses the window now and then. */
+.skin-glass .scene i {
+  display: block; position: absolute; top: -40px; width: 12px; height: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(167, 139, 250, 0.7) 60%, rgba(90, 60, 170, 0.5));
+  clip-path: polygon(50% 0, 100% 34%, 76% 100%, 24% 88%, 0 30%);
+  filter: drop-shadow(0 0 5px rgba(190, 160, 255, 0.8));
+  animation: altar-fall 16s linear infinite;
+}
+.skin-glass .scene i:nth-child(1) { left: 6%; animation-delay: -2s; }
+.skin-glass .scene i:nth-child(2) { left: 24%; animation-delay: -9s; animation-duration: 19s; }
+.skin-glass .scene i:nth-child(3) { left: 43%; animation-delay: -5s; animation-duration: 14s; }
+.skin-glass .scene i:nth-child(4) { left: 64%; animation-delay: -12s; animation-duration: 20s; }
+.skin-glass .scene i:nth-child(5) { left: 82%; animation-delay: -7s; }
+.skin-glass .scene i:nth-child(6) { left: 96%; animation-delay: -14s; animation-duration: 18s; }
+.skin-glass .scene::after {
+  content: ""; position: absolute; inset: -20% 0; pointer-events: none; mix-blend-mode: screen;
+  background: linear-gradient(105deg, transparent 40%, rgba(190, 160, 255, 0.16) 47%, rgba(255, 255, 255, 0.22) 50%, rgba(190, 160, 255, 0.16) 53%, transparent 60%) -120% 0 / 60% 100% no-repeat;
+  animation: glass-sweep 18s ease-in-out infinite;
+}
+@keyframes glass-sweep { 0%, 62% { background-position: -120% 0; } 100% { background-position: 260% 0; } }
+/* Each player's half is a slab of glass lit in their fracture's colour. */
+.skin-glass .side {
+  left: 12px; right: 12px; border-radius: 10px;
+  background:
+    radial-gradient(ellipse 80% 90% at 50% 100%, color-mix(in srgb, var(--fc) 30%, transparent), transparent 75%),
+    linear-gradient(rgba(10, 6, 22, 0.42), rgba(10, 6, 22, 0.55));
+  border: 3px solid var(--lead);
+  box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.35), inset 0 0 60px rgba(0, 0, 0, 0.5), 0 0 26px color-mix(in srgb, var(--fc) 40%, transparent);
+}
+.skin-glass .side.top { height: 300px; background: radial-gradient(ellipse 80% 90% at 50% 0%, color-mix(in srgb, var(--fc) 30%, transparent), transparent 75%), linear-gradient(rgba(10, 6, 22, 0.42), rgba(10, 6, 22, 0.55)); }
+.skin-glass .side.bottom { top: 432px; height: 498px; }
+/* The crack where the two worlds meet. */
+.skin-glass .rift::before {
+  content: ""; position: absolute; left: 20px; right: 20px; top: 33px; height: 10px;
+  background: linear-gradient(90deg, transparent, #b9a0ff 12%, #fff 50%, #b9a0ff 88%, transparent);
+  clip-path: polygon(0 50%, 4% 20%, 9% 70%, 15% 30%, 22% 75%, 29% 25%, 36% 70%, 43% 35%, 50% 80%, 57% 30%, 64% 72%, 71% 28%, 78% 74%, 85% 32%, 91% 68%, 96% 24%, 100% 50%, 96% 62%, 91% 100%, 85% 62%, 78% 100%, 71% 60%, 64% 96%, 57% 58%, 50% 100%, 43% 62%, 36% 96%, 29% 56%, 22% 100%, 15% 58%, 9% 96%, 4% 60%);
+  filter: drop-shadow(0 0 6px #9b6bff) drop-shadow(0 0 16px #7c3aed);
+}
+.skin-glass .lane { background: rgba(6, 3, 14, 0.3); box-shadow: inset 0 0 0 2px var(--lead), inset 0 0 0 3px rgba(190, 160, 255, 0.2), inset 0 4px 14px rgba(0, 0, 0, 0.6); }
+.skin-glass .slot { border: 2px solid var(--lead); background: radial-gradient(circle at 50% 40%, rgba(167, 139, 250, 0.16), rgba(10, 6, 22, 0.5)); box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.22), inset 0 0 12px rgba(120, 80, 220, 0.25); }
+.skin-glass .bar { background: linear-gradient(#150e29, #0a0615); border-color: var(--lead); box-shadow: inset 0 0 0 1px rgba(190, 160, 255, 0.3); }
+.skin-glass .bar.top { box-shadow: inset 0 -1px 0 rgba(190, 160, 255, 0.55); }
+.skin-glass .bar.bottom { box-shadow: inset 0 1px 0 rgba(190, 160, 255, 0.55); }
+.skin-glass .zone-label { color: rgba(225, 212, 255, 0.62); }
+.skin-preview.skin-glass { background: var(--glass-window) 0 0 / 100% 100% no-repeat, linear-gradient(#1d1238, #090614); }
+@media (prefers-reduced-motion: reduce) { .skin-glass .scene i, .skin-glass .scene::after { animation: none; } }
+
+/* ------------------------------------------------------------ the Shattered Crystal board
+   One dark, glassy surface (crystal) broken into big slabs that sit slightly apart (tabletop).
+   Light leaks up through the cracks. The long cracks across the table are drawn by
+   tools/make-crystal.js; the seams inside each slab are the --crystal-seam picture below. */
+:root {
+  --ice: 205, 232, 255;
+  --crystal-seam: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cg fill='none' stroke-linejoin='round'%3E%3Cpath id='a' d='M33 0L35.5 18L32 36L36 55L33 74L35 100M35.5 18L41 27M71 0L68.5 22L72 41L69 63L71.5 82L69 100M72 41L78 49' vector-effect='non-scaling-stroke' stroke='%2302030a' stroke-width='6'/%3E%3Cpath d='M33 0L35.5 18L32 36L36 55L33 74L35 100M35.5 18L41 27M71 0L68.5 22L72 41L69 63L71.5 82L69 100M72 41L78 49' vector-effect='non-scaling-stroke' stroke='rgb(205,232,255)' stroke-opacity='.12' stroke-width='10'/%3E%3Cpath d='M33 0L35.5 18L32 36L36 55L33 74L35 100M35.5 18L41 27M71 0L68.5 22L72 41L69 63L71.5 82L69 100M72 41L78 49' vector-effect='non-scaling-stroke' stroke='rgb(205,232,255)' stroke-opacity='.75' stroke-width='1.2'/%3E%3C/g%3E%3C/svg%3E");
+}
+#stage.skin-crystal #board {
+  background:
+    var(--crystal-cracks) 0 0 / 100% 100% no-repeat,
+    radial-gradient(ellipse 85% 11% at 50% 40%, rgba(var(--ice), 0.26), transparent 75%),
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(110, 140, 255, 0.14), transparent 75%),
+    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(110, 140, 255, 0.12), transparent 75%),
+    linear-gradient(#070a18, #04050d 45%, #070a18);
+}
+.skin-crystal .scene i {
+  display: block; position: absolute; top: -40px; width: 11px; height: 17px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(160, 200, 255, 0.6) 60%, rgba(80, 110, 200, 0.4));
+  clip-path: polygon(50% 0, 100% 34%, 76% 100%, 24% 88%, 0 30%);
+  filter: drop-shadow(0 0 5px rgba(var(--ice), 0.7));
+  animation: altar-fall 18s linear infinite;
+}
+.skin-crystal .scene i:nth-child(1) { left: 5%; animation-delay: -2s; }
+.skin-crystal .scene i:nth-child(2) { left: 25%; animation-delay: -9s; animation-duration: 21s; }
+.skin-crystal .scene i:nth-child(3) { left: 44%; animation-delay: -5s; animation-duration: 15s; }
+.skin-crystal .scene i:nth-child(4) { left: 63%; animation-delay: -12s; animation-duration: 22s; }
+.skin-crystal .scene i:nth-child(5) { left: 83%; animation-delay: -7s; }
+.skin-crystal .scene i:nth-child(6) { left: 96%; animation-delay: -14s; animation-duration: 19s; }
+/* Each player's half is a slab of dark crystal with chipped corners, lit in their fracture's colour. */
+.skin-crystal .side {
+  left: 12px; right: 12px;
+  --slab: polygon(1.2% 0, 38% 0, 40% 2.5%, 98.8% 0, 100% 5%, 100% 88%, 97% 100%, 60% 100%, 57.5% 96%, 3% 100%, 0 93%, 0 6%);
+  clip-path: var(--slab);
+  background: linear-gradient(135deg, rgba(var(--ice), 0.95), rgba(120, 150, 225, 0.35) 42%, rgba(var(--ice), 0.75));
+}
+.skin-crystal .side.top { height: 300px; }
+.skin-crystal .side.bottom { top: 432px; height: 498px; --slab: polygon(2% 0, 40% 0, 42.5% 3%, 96% 0, 100% 4%, 100% 94%, 98.8% 100%, 62% 100%, 59.5% 97%, 4% 100%, 0 95%, 0 8%); }
+.skin-crystal .side::before {
+  content: ""; position: absolute; inset: 2px; clip-path: var(--slab);
+  background:
+    radial-gradient(ellipse 75% 85% at 50% 100%, color-mix(in srgb, var(--fc) 40%, transparent), transparent 75%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.07), transparent 28%, rgba(255, 255, 255, 0.04) 62%, transparent),
+    linear-gradient(rgba(8, 11, 26, 0.93), rgba(4, 6, 15, 0.96));
+}
+.skin-crystal .side.top::before {
+  background:
+    radial-gradient(ellipse 75% 85% at 50% 0%, color-mix(in srgb, var(--fc) 40%, transparent), transparent 75%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.07), transparent 28%, rgba(255, 255, 255, 0.04) 62%, transparent),
+    linear-gradient(rgba(4, 6, 15, 0.96), rgba(8, 11, 26, 0.93));
+}
+.skin-crystal .side::after {
+  content: ""; position: absolute; inset: 2px; clip-path: var(--slab);
+  background: var(--crystal-seam) 0 0 / 100% 100% no-repeat;
+  opacity: 0.8; animation: crystal-breathe 7s ease-in-out infinite alternate;
+}
+@keyframes crystal-breathe { from { opacity: 0.55; } to { opacity: 1; } }
+/* The big seam where the two halves meet: light pours up through it. */
+.skin-crystal .rift::before {
+  content: ""; position: absolute; left: 20px; right: 20px; top: 33px; height: 10px;
+  background: linear-gradient(90deg, transparent, rgb(150, 190, 255) 12%, #fff 50%, rgb(150, 190, 255) 88%, transparent);
+  clip-path: polygon(0 50%, 4% 20%, 9% 70%, 15% 30%, 22% 75%, 29% 25%, 36% 70%, 43% 35%, 50% 80%, 57% 30%, 64% 72%, 71% 28%, 78% 74%, 85% 32%, 91% 68%, 96% 24%, 100% 50%, 96% 62%, 91% 100%, 85% 62%, 78% 100%, 71% 60%, 64% 96%, 57% 58%, 50% 100%, 43% 62%, 36% 96%, 29% 56%, 22% 100%, 15% 58%, 9% 96%, 4% 60%);
+  filter: drop-shadow(0 0 6px rgb(120, 170, 255)) drop-shadow(0 0 18px rgb(80, 120, 255));
+}
+.skin-crystal .lane { background: rgba(2, 3, 10, 0.34); box-shadow: inset 0 0 0 1px rgba(var(--ice), 0.14), inset 0 4px 14px rgba(0, 0, 0, 0.6); }
+.skin-crystal .slot { border: 1px solid rgba(var(--ice), 0.3); background: rgba(8, 12, 28, 0.5); box-shadow: inset 0 0 10px rgba(120, 170, 255, 0.14); }
+.skin-crystal .bar { background: linear-gradient(#0a0f20, #05070f); border-color: rgba(var(--ice), 0.3); box-shadow: inset 0 0 0 1px rgba(var(--ice), 0.1); }
+.skin-crystal .zone-label { color: rgba(var(--ice), 0.55); }
+.skin-preview.skin-crystal { background: var(--crystal-cracks) 0 0 / 100% 100% no-repeat, linear-gradient(#0b1024, #04050d); }
+@media (prefers-reduced-motion: reduce) { .skin-crystal .scene i, .skin-crystal .side::after { animation: none; } }

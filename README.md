@@ -70,7 +70,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `index.html` | Page structure |
 | `guide.html` | The illustrated How to play guide (also shown inside the game) |
 | `guide/` | Pictures for the guide, made by `tools/guide-shots.js` |
-| `css/style.css` | All styling and animations |
+| `css/style.css` | All styling and animations, except the board skins |
+| `css/skins.css` | The board skins (Shattered Crystal, Stained Glass, Crystal Altar, Shattered Battlefield, War Map); loaded right after `css/style.css` |
 | `data/*.csv` | Cards, decks, skills and rules (see above) |
 | `js/data.js` | Loads and checks the CSV files, then starts the game |
 | `sw.js` | The offline helper: after one visit the browser keeps a copy of the game, so it starts with no internet and doesn't wait long on a slow connection. Its file list comes from `js/data.js` by itself |
@@ -127,7 +128,7 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/explain-effect.js` | Explains a card's Effect in plain English and checks the game can read it: `node tools/explain-effect.js primate`, or an Effect in quotes, or `--all` for every card |
 | `tools/make-dashboard.js` | Builds the owner's dashboard page (what's new, waiting on the owner, being built, balance, links) from the same facts as `docs/status.md`; published to claude.ai with every backup |
 | `tools/make-status.js` | Writes `docs/status.md` from the project's files (`--winrates` measures balance again, `--check` says if it is stale, `--brief` is the start-of-session summary) |
-| `tools/rules-code.js` | Used by the tests and tools: loads the game's data and rules files (the list comes from `GAME_SCRIPTS` in `js/data.js`) |
+| `tools/rules-code.js` | Used by the tests and tools: loads the game's data and rules files (the list comes from `GAME_SCRIPTS` in `js/data.js`); also the shared test kit and the prepared card table that `cards-test.js` and `card-equivalence.js` play every card on |
 | `tools/card-equivalence.js` | "Same play" check: plays each card whose Effect changed (or named cards, or `--all`) on the same table in an older version and this one, and says whether it plays the same: `node tools/card-equivalence.js <older game folder>` |
 | `tools/update-expected.js` | For a change meant to alter play: updates the play fingerprints, the number in CLAUDE.md and the recorded matches together (`--write`; without it, it only shows what would change) |
 | `tools/replay-report.js` | Replays the match inside a player's bug report (the text from the game's "Something went wrong" window, saved to a file) and shows where it breaks: `node tools/replay-report.js report.txt` |
@@ -139,8 +140,8 @@ Card art is optional: add `assets/cards/<ArtKey>.png` and it replaces the fractu
 | `tools/champions-test.js` | Checks the champion abilities: `node tools/champions-test.js .` |
 | `tools/protected-test.js` | Checks the Protected rule and the Pierce and Protected skills: `node tools/protected-test.js .` |
 | `tools/shard-test.js` | Checks the big shard fall: when it lands, attacking it, who claims it and each champion's shard bonus: `node tools/shard-test.js .` |
-| `tools/make-glass.js` | Redraws the stained-glass window behind the Stained Glass board into `css/style.css`: `node tools/make-glass.js` |
-| `tools/make-crystal.js` | Redraws the long glowing cracks across the Shattered Crystal board into `css/style.css`: `node tools/make-crystal.js` |
+| `tools/make-glass.js` | Redraws the stained-glass window behind the Stained Glass board into `css/skins.css`: `node tools/make-glass.js` |
+| `tools/make-crystal.js` | Redraws the long glowing cracks across the Shattered Crystal board into `css/skins.css`: `node tools/make-crystal.js` |
 | `tools/screen-test.js` | Automatic screen tests: a test browser clicks and drags through the menu, Settings, the Almanac, a match, the campaign, the tutorial and the deck builder, at desktop and phone size: `node tools/screen-test.js`. GitHub runs it on every pull request |
 | `tools/picture-test.js` | Picture comparison: photographs the same scenes from an older version and this one and flags any that look different, with before / after / difference pictures in a `report.html`: `node tools/picture-test.js <older game folder>`. GitHub runs it on every pull request against `main` |
 | `tools/browser-check.js` | Opens the game in a test browser at desktop and phone size, plays a few rounds, saves screenshots and checks the text is readable: `node tools/browser-check.js <folder>` (needs Node.js and Playwright) |

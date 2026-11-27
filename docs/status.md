@@ -4,11 +4,11 @@ Written by `node tools/make-status.js` from the project's own files: don't edit 
 Read this first in a new session; then CLAUDE.md, and the files it points to as the task needs.
 
 ## Version
-Update 34: **Update 34** (2026-11-24): Protected has a calmer new look: a band of light fills the ring around a Protected card, and the shards around a Protected player's health gem light up one by one.
+Update 43: **Update 43** (2026-11-27): Random events (mini shard falls) are switched off for now; they will come back in a later shake-up mode, lasting a turn for each player. The big shard fall stays. Deck codes: share a deck you built as one line of text from the deck builder, and paste a friend's code to get their deck.
+
+**Update 34** (2026-11-24): Protected has a calmer new look: a band of light fills the ring around a Protected card, and the shards around a Protected player's health gem light up one by one.
 
 **Update 31** (2026-11-23): If the card tables have a mistake, the game now says what it is and where, instead of failing to load or blaming old files.
-
-**Update 30** (2026-11-22): The menu shows which update you have; tap it to see what changed. Keyboard players can scroll the What's new list and the battle log, and screen readers announce the computer thinking.
 
 ## Waiting on the owner
 - **Real phone testing** (round two, step 9). The owner applies for BrowserStack's free open-source account (steps in `docs/real-phones.md`), then does the 15-minute phone checklist there before big releases. Once the account exists, Claude can add automatic runs.
@@ -27,22 +27,22 @@ Nothing: no round is open in docs/todo.md.
 
 ## Balance
 <!-- winrates -->
-Measured 2026-11-23 with `node tools/winrates.js 20` (20 games per pairing):
+Measured 2026-11-27 with `node tools/winrates.js 60` (60 games per pairing), random events off:
 
 ```
-monkey_starter        56.9%  (91/160)
-digital_starter       53.8%  (86/160)
-fighter_starter       50.6%  (81/160)
-zombie_starter        45.6%  (73/160)
-simple_starter        43.1%  (69/160)
-First player wins: 54.0%
-Average game: 13.9 turns (both players' turns counted)
+digital_starter       58.8%  (282/480)
+monkey_starter        53.8%  (258/480)
+simple_starter        52.1%  (250/480)
+fighter_starter       46.9%  (225/480)
+zombie_starter        38.5%  (185/480)
+First player wins: 56.7%
+Average game: 13.5 turns (both players' turns counted)
 ```
 <!-- /winrates -->
 
 ## Safety nets
 - `node tools/test-all.js` must end EVERYTHING PASSED. It runs: , every Effect explained, and the automatic games.
-- Play fingerprints: computer games (ai 2) **1727378807**, random games (rand 300) **1933343540**. They change only when play is meant to change (`node tools/update-expected.js --write`).
+- Play fingerprints: computer games (ai 2) **970658547**, random games (rand 300) **-948649911**. They change only when play is meant to change (`node tools/update-expected.js --write`).
 - On every pull request GitHub also runs the balance check, screen tests, picture comparison, speed budget and accessibility check (`ci-check` skill to read them).
 
 ## Code

@@ -10,7 +10,7 @@
 // GAME_SCRIPTS), so a new script or table is saved without editing this file.
 const CACHE = "shardfall-v1";
 const NETWORK_WAIT_MS = 2000;
-const PAGES = ["./", "index.html", "guide.html", "css/style.css", "js/data.js", "manifest.webmanifest"];
+const PAGES = ["./", "index.html", "guide.html", "css/style.css", "css/skins.css", "js/data.js", "manifest.webmanifest"];
 
 async function gameFiles() {
   const text = await (await fetch("js/data.js", { cache: "no-cache" })).text();

@@ -116,6 +116,12 @@ async function deckCodeClick(btn) {
   if (btn.dataset.dc === "copy") { await copyFromBox(byId("deck-code-out")); msg(T("deckcode_copied")); return; }
   const r = readDeckCode(byId("deck-code-in").value);
   if (r.error) { msg(r.error); return; }
+  // From the builder with unsaved changes: a second press confirms, so changes are never lost unasked.
+  if (U.screen === "builder" && builderDirty() && !btn.dataset.sure) {
+    btn.dataset.sure = "1"; btn.textContent = T("deckcode_sure");
+    msg(T("deckcode_unsaved"));
+    return;
+  }
   closeModal();
   openBuilder({ id: null, name: r.name, cards: r.cards });   // a new deck: whatever was open is left as it was saved
   if (r.left) flashNote(T("deckcode_left", { n: r.left }));

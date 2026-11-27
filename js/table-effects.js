@@ -21,8 +21,9 @@ function eventLine() {
   if (!e) return null;
   const info = DATA.events[e.id];
   const left = S.event ? 0 : e.round - S.round;
-  const last = S.event && S.event.round + RULES.eventLength - 1 <= S.round;   // its last round
-  const when = (S.event ? (last ? "Last round" : "This round and next") : left <= 1 ? "Next round" : `In ${left} rounds`) + " · mini shard fall";
+  const rest = S.event ? S.event.round + RULES.eventLength - S.round : 0;   // rounds it still lasts, this one included
+  const now = rest <= 1 ? "Last round" : rest === 2 ? "This round and next" : `${rest} more rounds`;
+  const when = (S.event ? now : left <= 1 ? "Next round" : `In ${left} rounds`) + " · mini shard fall";
   return { when, name: info.name, desc: info.desc, now: !!S.event };
 }
 function eventPill() {

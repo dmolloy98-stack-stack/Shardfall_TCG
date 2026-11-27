@@ -141,6 +141,8 @@ deckcode_load_intro_builder,"Paste a deck code here. It opens as a new deck; thi
 deckcode_in_label,Deck code to use,Deck code
 deckcode_use,Open this deck,Deck code
 deckcode_back,Back to building,Deck code
+deckcode_sure,"Yes, open it",Deck code
+deckcode_unsaved,This deck has changes you haven't saved. They will be lost. Press again to open the code anyway.,Deck code
 deckcode_cancel,Cancel,Deck code
 deckcode_empty,Paste a deck code into the box first.,Deck code
 deckcode_not,That isn't a Shardfall deck code. It should start with SFDECK1:,Deck code

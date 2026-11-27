@@ -17,7 +17,17 @@ const L = {
   bottom: { chars: 452, backline: 624 },
   backX: 214, deckX: 30, graveX: 112, slot: 80, charStep: 126, frontW: 1140,
   handY: 770,
+  midX: 720,                                   // the middle of the table, left to right
+  // Fixed pieces drawn by render() (js/board.js): where each sits, and its size
+  menuBtn:  { x: 16, y: 11, w: 110, h: 44 },   // ☰ Menu
+  phaseBtn: { x: 1220, y: 372, w: 200, h: 56 },  // Draw card / To battle → / …
+  passBtn:  { x: 1240, y: 942, w: 180, h: 48 },  // Pass turn
+  oppHand:  { x: 960, y: 7 },                    // the other player's cards, face down
+  turnInfoY: 372,                                // "Round n · whose turn"
+  splitW: 196, splitAllX: 728,                   // "Attack directly" and "All attack" side by side
 };
+// A piece's place (and size, when it has one) from L, as a style.
+const boxStyle = b => `left:${b.x}px;top:${b.y}px` + (b.w ? `;width:${b.w}px;height:${b.h}px` : "");
 
 // Heavy effects off (Settings): the html element gets "light-fx", and css/style.css stops the
 // looping background effects. js/storm.js holds the menu's falling shards still too.
@@ -92,6 +102,9 @@ function patchChildren(box, html) {
   want.forEach((el, i) => { if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null); });
 }
 
+// The screen state: everything the screen remembers that isn't the game itself (that is S). EVERY
+// field is listed here with its starting value, even ones only one file uses, so this is the one
+// place to see what U holds. Add a new field here, not with a first "U.x = ..." in another file.
 const U = {
   screen: "menu",
   deckId: DATA.decks[PREFS.get("deck")] ? PREFS.get("deck") : DATA.deckOrder[0],   // a starter or a saved custom deck
@@ -126,6 +139,30 @@ const U = {
   myTurnAt: 0,           // when your turn began, for the "your turn" moment
   hintOpen: true,
   hintNoteUntil: 0,
+  // The menus (js/menu.js, js/campaign.js)
+  menuView: "home",      // the start menu's view: "home" (the three doors) or "setup" (choosing decks)
+  setupMode: "ai",       // what the deck choice is for: "ai", "hotseat", "campaign" or "decks"
+  oppDeckId: PREFS.get("opp", "random"),   // the other side's deck: "random" or a deck id
+  lastOpp: undefined,    // the opponent of the last Quick Match, for "Play again" (undefined: random)
+  campaign: null,        // the campaign stage being played, { stage }, or null
+  almanacTribe: undefined, almanacClass: undefined,   // the Almanac's Tribe and Class filters (undefined: All)
+  // The screen's size (fitStage in this file)
+  small: false,          // a small screen: the hand is drawn bigger
+  phone: false,          // a phone held sideways: the table is cropped to fit
+  dock: null,            // where the tutorial's coach box sits beside the table, or null
+  // The table's moments, for effects (js/board.js, js/board-marks.js, js/fx.js, js/table-effects.js)
+  crackAt: [0, 0],       // per player: when a big hit last cracked their life crystal
+  hist: [], recentLog: [],   // the turn history, and log lines just written (for it)
+  clash: null,           // the fight going on now: { at, swift, n, uids }
+  lastAttacker: null, lastTarget: null, lungeWind: 0,   // the last attack: who, at whom, its wind-up
+  multiAttack: false,    // "All attack" is running (no wind-ups between attackers)
+  finalHero: null,       // uid of the character that dealt the winning blow
+  shardFellAt: 0, shardHitAt: 0,   // when the big shard landed, and was last hit
+  scar: null,            // the cracked table under the big shard, drawn once a match: { game, paths }
+  flowTimer: 0,          // the automatic draw or skip waiting to happen (Settings: auto flow)
+  // The end of a match (js/progress.js)
+  masteryGain: null,     // mastery the deck earned this match
+  newLore: [], newTrophies: [],   // card stories and trophies unlocked this match
 };
 applyHeavyFx();
 

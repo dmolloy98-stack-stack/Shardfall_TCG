@@ -1,4 +1,4 @@
-// Draws the cracked stained-glass window behind the game board and writes it into css/style.css
+// Draws the cracked stained-glass window behind the game board and writes it into css/skins.css
 // (between the "glass-window" markers) as one CSS variable, --glass-window. Run it again to get a
 // different arrangement of panes: change SEED, or the grid size.
 //
@@ -42,9 +42,9 @@ groups.forEach((g, i) => { if (g.length) svg += `<path d='${g.join("")}' fill='$
 svg += `</svg>`;
 const uri = `url("data:image/svg+xml,${svg.replace(/#/g, "%23").replace(/"/g, "'").replace(/</g, "%3C").replace(/>/g, "%3E")}")`;
 
-const file = path.join(__dirname, "..", "css", "style.css");
+const file = path.join(__dirname, "..", "css", "skins.css");
 const css = fs.readFileSync(file, "utf8");
 const re = /\/\* glass-window:start \*\/[\s\S]*?\/\* glass-window:end \*\//;
-if (!re.test(css)) throw new Error("css/style.css has no glass-window markers");
+if (!re.test(css)) throw new Error("css/skins.css has no glass-window markers");
 fs.writeFileSync(file, css.replace(re, `/* glass-window:start */\n  --glass-window: ${uri};\n  /* glass-window:end */`));
 console.log(`Wrote the window: ${groups.reduce((n, g) => n + g.length, 0)} panes, ${Math.round(uri.length / 1024)} KB.`);

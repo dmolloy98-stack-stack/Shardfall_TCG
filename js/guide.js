@@ -21,6 +21,8 @@ function fillGuide(root, data) {
       return `<li><span class="swatch" style="background:${r.color}"></span><b>${h(r.name)}</b> · saved equipment costs ${r.attachCost} mana to attach</li>`;
     }).join("");
   }
+  // The random events list: guide.html has no spot for it while events are off in normal play
+  // (27 Nov 2026); a later shake-up mode's guide section can bring <ul data-fill="events"> back.
   const events = root.querySelector("[data-fill=events]");
   if (events) {
     events.innerHTML = data.eventOrder.map(id => `<li><b>${h(data.events[id].name)}</b>: ${h(data.events[id].desc)}</li>`).join("");

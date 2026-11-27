@@ -1,4 +1,4 @@
-// Draws the big glowing cracks across the Shattered Crystal board and writes them into css/style.css
+// Draws the big glowing cracks across the Shattered Crystal board and writes them into css/skins.css
 // (between the "crystal-cracks" markers) as one CSS variable, --crystal-cracks. Run it again to get a
 // different arrangement: change SEED.
 //
@@ -47,9 +47,9 @@ const stroke = (w, a) => `<path d='${all}' fill='none' stroke='rgb(205,232,255)'
 const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${W} ${H}' preserveAspectRatio='none'>${stroke(12, 0.07)}${stroke(4.5, 0.2)}${stroke(1.4, 0.85)}</svg>`;
 const uri = `url("data:image/svg+xml,${svg.replace(/#/g, "%23").replace(/"/g, "'").replace(/</g, "%3C").replace(/>/g, "%3E")}")`;
 
-const file = path.join(__dirname, "..", "css", "style.css");
+const file = path.join(__dirname, "..", "css", "skins.css");
 const css = fs.readFileSync(file, "utf8");
 const re = /\/\* crystal-cracks:start \*\/[\s\S]*?\/\* crystal-cracks:end \*\//;
-if (!re.test(css)) throw new Error("css/style.css has no crystal-cracks markers");
+if (!re.test(css)) throw new Error("css/skins.css has no crystal-cracks markers");
 fs.writeFileSync(file, css.replace(re, `/* crystal-cracks:start */\n  --crystal-cracks: ${uri};\n  /* crystal-cracks:end */`));
 console.log(`Wrote the cracks: ${paths.length} lines, ${Math.round(uri.length / 1024)} KB.`);

@@ -41,7 +41,8 @@ const swap = (pattern, replacement) => {
 };
 swap(/<script>document\.write\('<link rel="stylesheet" href="css\/style\.css[^\n]*<\/script>/, `<style>\n${safe(read("css/style.css"))}\n</style>`);
 swap(/<script>document\.write\('<script src="js\/data\.js[^\n]*<\/script>/, `${shim}\n<script>\n${safe(dataJs)}\n</script>`);
-swap(/<noscript><link rel="stylesheet" href="css\/style\.css"><\/noscript>\n/, "");
+swap(/<script>document\.write\('<link rel="stylesheet" href="css\/skins\.css[^\n]*<\/script>/, `<style>\n${safe(read("css/skins.css"))}\n</style>`);
+swap(/<noscript><link rel="stylesheet" href="css\/style\.css"><link rel="stylesheet" href="css\/skins\.css"><\/noscript>\n/, "");
 if (pageOnly) {
   for (const tag of [/^<!doctype html>\n/i, /^<html[^>]*>\n/m, /^<head>\n/m, /^<meta charset[^>]*>\n/m,
     /^<meta name="viewport"[^>]*>\n/m, /^<\/head>\n/m, /^<body>\n/m, /^<\/body>\n/m, /^<\/html>\n?/m]) swap(tag, "");

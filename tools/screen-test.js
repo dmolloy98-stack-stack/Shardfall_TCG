@@ -208,6 +208,8 @@ const TESTS = [
     expect((await pg.textContent('#deck-code-msg')).includes("isn't a Shardfall deck code"), 'a wrong code gave no message');
     await pg.fill('#deck-code-in', code);
     await pg.click('[data-dc="use"]');
+    expect((await pg.textContent('#deck-code-msg')).includes("haven't saved"), 'unsaved changes were not warned about');
+    await pg.click('[data-dc="use"]');   // a second press opens it anyway
     await pg.waitForSelector('#modal', { state: 'hidden' });
     expect(await pg.evaluate(w => B.id === null && B.name === 'Code test deck' && JSON.stringify(B.cards) === w, want), 'the pasted deck is not the same deck');
     await pg.click('#bld-save');
