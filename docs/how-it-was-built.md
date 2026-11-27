@@ -102,6 +102,12 @@ campaign matches replay too. The tutorial rigs its hands, so lessons are marked 
 random numbers, so its private thinking changed the match's luck and replays drifted. It now
 uses `aiRand()`. (Nov 2026; this changed the play fingerprint once.)
 
+**Random events are off unless a match asks for them.** The owner switched the mini shard falls
+off in normal play (27 Nov 2026) and kept them for a later shake-up mode: `newGame({ events: true })`.
+New matches write `events: true` or `false` into `S.setup`; a recording made before that has no
+`events` and had them, so replays go through `replaySetup()`, which fills in the old default. When on,
+an event lasts two rounds (`event_length`), one turn for each player.
+
 **The computer's look-ahead must not learn secrets.** It tries moves on a copy of the game. The
 counter window never opens on a copy, because that would let the computer learn whether you hold
 a counter spell.
@@ -180,6 +186,17 @@ after 20 seconds with nothing happening. These keep phones cool and the battery 
 proven safe by the picture comparison (no picture changes), the screen tests and the speed budget,
 all run against the version before the split. (Nov 2026)
 
+**One place for each list.** Every field of the screen state `U` is declared, with its starting
+value and a note, in the `U` object in `js/ui.js`; other files don't add fields with a first
+`U.x = …`. The table's fixed pieces (Menu, phase and Pass buttons, the other player's hand) take their
+places from `L` in the same file. The board skins are their own style sheet, `css/skins.css`, loaded
+right after `css/style.css` so the rules keep the order they had; the picture comparison has a scene
+for each skin to prove a move like this changes nothing. (27 Nov 2026)
+
+**Deck codes are made of card ids.** A deck code is the deck's name and its `cardId*copies` list
+in base64, so a renamed or reworded card keeps working; a card that no longer exists, or copies over
+the limit, are left out with a note, never an error. (27 Nov 2026)
+
 **One click handler per area.** Each area of the screen has one handler that reads a `data-…`
 attribute and picks a branch. A second handler, or a second branch for the same action, causes
 double actions.
@@ -243,7 +260,7 @@ what.
 
 **Every test file runs by itself, and the rules tests share one kit.** `tools/test-all.js` runs every
 `tools/*-test.js` (the browser ones run on GitHub), so a new test can't be forgotten. The rules
-tests start from `rulesCode.kit` (`ok()`, `putCard()`) in `tools/rules-code.js` instead of each
+tests start from `rulesCode.kit` (`ok()`, `putCard()`) and the card tests from `rulesCode.cardTable` in `tools/rules-code.js` instead of each
 keeping its own copy, which had started to differ (24 Nov 2026).
 
 ## Working together
@@ -282,6 +299,8 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 - Play a Friend will use Firebase; the counter window will always pause briefly online when the
   other player has spare mana, so the pause gives nothing away (21 Nov 2026).
 - Claude merges a pull request once GitHub's tests pass (Nov 2026).
+- Random events (mini shard falls) are not part of normal play: campaign, Play vs Computer and Two
+  players have none. They wait for a later "shake-up" mode. The big shard fall stays (27 Nov 2026).
 
 ## Traps already fallen into
 
@@ -313,9 +332,13 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
   installed in one command (found on pull request #30, before merging).
 - **Looping animations** must be added to the Heavy effects list in `css/style.css`, or phones run
   hot.
+- **The computer can make two moves in one step** (strike with a blade, then pick the target). The
+  recorded-match tool once checked the table after each step, so the check stored for the first
+  move was really the table after both, and a correct replay looked wrong. It now takes each check
+  by playing the moves again one at a time (27 Nov 2026).
 - **An old saved match** can lack a newer field and crash (fixed Nov 2026). Every field in `S`
   needs a default in `baseState()`.
 
 ---
 
-Last checked: 2026-11-27, daily run (arrow keys move between the Almanac tabs; nothing new to record).
+Last checked: 2026-11-27, pull request #43 (random events off in normal play; deck codes; U, L and css/skins.css tidied; the recorded-match check fix).

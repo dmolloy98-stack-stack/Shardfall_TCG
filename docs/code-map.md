@@ -194,7 +194,10 @@ their own story or coaching, then hand over to the same engine.
 | Dozing (all looping effects pause after 20 seconds with nothing happening) | `wake()` and `DOZE_MS` in `js/ui.js`; `html.doze` in `css/style.css` |
 | Heavy effects on/off (the always-on looping effects) | `U.heavyFx` and `applyHeavyFx()` in `js/ui.js` (Settings); the `html.light-fx` rules at the end of `css/style.css`; `js/storm.js` holds still |
 | Battle log panel, computer speed | `logPanelHTML()`, `showLog()` in `js/board.js`, `AI_SPEEDS` in `js/ui.js`; both are in Settings |
-| Colours and sizes | `css/style.css` |
+| Colours and sizes | `css/style.css`; the board skins are `css/skins.css` (loaded right after it) |
+| Deck codes (a deck as one line of text, to share) | `deckCode()`, `readDeckCode()` and the window `showDeckCode()` in `js/decks.js`; its buttons are `data-dc` in the window's click handler in `js/panels.js`; words are the `deckcode_…` rows in `data/ui_text.csv` |
+| Where the table's fixed buttons sit (Menu, phase, Pass turn, the other hand) | `L` in `js/ui.js` (with `boxStyle()`), used by `render()` in `js/board.js` |
+| The screen state `U` (everything the screen remembers) | declared in full, with notes, in `js/ui.js` |
 | A new menu button | `index.html`, then `js/menu.js` |
 | Intro wording | `js/intro.js` |
 | Tutorial steps | `js/tutorial-steps.js` (`TUT_STEPS`); the Trainer and coach box are `js/tutorial.js` |
@@ -206,8 +209,8 @@ their own story or coaching, then hand over to the same engine.
 | A champion's ability or when it levels up | the words and the goal number in `data/champion_abilities.csv`; what each does is its entry in `CHAMPION_RULES` in `js/rules-champions.js` (one entry per champion; the top of that file lists the moments an entry can use, and the engine asks for them with `champHook()`); the line under the player's name is `champLine()` in `js/board.js`, with the text from each entry's `status` or `count` |
 | The Almanac's Champions tab (the full explanation and pictures of each ability) | `CHAMP_GUIDE` and `championsHTML()` in `js/menu.js`; keep its notes and numbers in step with the rules in `js/rules-champions.js` |
 | The big shard fall (round 8, once a match) | the numbers in `data/game_rules.csv` (`shard_round`, `shard_health`, `shard_draw`, `shard_draw_no_champion`); the rules are `js/rules-shard.js` (`shardFall`, `hitShard`, `claimShard`; each champion's bonus is the `shard` and `shardText` of its entry in `js/rules-champions.js`; an attack on it is `attack(uid, "shard")`); the computer's interest in it is `SHARD_CHIP` in `js/ai.js`; the crystal, the cracked table and the info window are `shardHTML()`, `scarHTML()` and `showShard()` in `js/board-marks.js`, styled at the end of `css/style.css`; test: `tools/shard-test.js` |
-| A random event (a mini shard fall in rounds 4 and 12, one round long) | names and descriptions in `data/events.csv`; what each does is `EVENT_ON_START` and `eventNow()` in `js/rules-events.js` (the top of the file says how to add one), with the cost and area-bonus effects in `costFromEffect` and `auraBonus` in `js/effects.js`; the warning card is `eventPill()` in `js/table-effects.js` |
-| The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/style.css`; the list of skins is `SKINS` in `js/board.js`; the long cracks are redrawn by `tools/make-crystal.js` |
+| A random event (a mini shard fall in rounds 4 and 12, two rounds long; off in normal play, only `newGame({ events: true })` has them, for a later shake-up mode) | names and descriptions in `data/events.csv`; what each does is `EVENT_ON_START` and `eventNow()` in `js/rules-events.js` (the top of the file says how to add one), with the cost and area-bonus effects in `costFromEffect` and `auraBonus` in `js/effects.js`; the warning card is `eventPill()` in `js/table-effects.js` |
+| The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/skins.css`; the list of skins is `SKINS` in `js/board.js`; the long cracks are redrawn by `tools/make-crystal.js` |
 | The playable single-file copy | `tools/build-single.js` |
 | The version on the menu and the What's new window | `data/whats_new.csv` (top row = the version); `showWhatsNew()` in `js/menu.js`; a row is added with each pull request (`pr-cycle` skill) |
 | The "Something went wrong" window and its bug report | `showBugReport()` and `bugReport()` in `js/panels.js` (any uncaught error opens it once per visit); replay a report with `node tools/replay-report.js <file>` |

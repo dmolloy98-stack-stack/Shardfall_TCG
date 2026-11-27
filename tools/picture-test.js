@@ -38,6 +38,8 @@ const SCENES = [
   ['match', match(4)],
   ['match-late', match(9)],
   ['end-screen', match(4) + " S.over = true; S.winner = 0; U.ended = true; render();"],
+  // the other board skins (css/skins.css), on the same match
+  ...['glass', 'altar', 'battlefield', 'warmap'].map(k => [`match-${k}`, match(4) + ` setSkin('${k}'); render();`]),
 ];
 
 async function shoot(browser, root, size, scene) {

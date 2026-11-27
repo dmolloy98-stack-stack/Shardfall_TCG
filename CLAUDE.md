@@ -59,7 +59,7 @@ builds it, tests it, and explains it.
 ## Before saying something works
 
 - `node tools/test-all.js` must end with `EVERYTHING PASSED` (GitHub runs it too). The play
-  fingerprint (currently 1727378807 for `ai 2`, in `EXPECTED` in `tools/test-all.js`) changes only
+  fingerprint (currently 970658547 for `ai 2`, in `EXPECTED` in `tools/test-all.js`) changes only
   when play is meant to change; then run `node tools/update-expected.js --write` (it updates both
   fingerprints, this line and the recorded matches together) and say so. Which focused test covers
   what: `add-feature` skill.

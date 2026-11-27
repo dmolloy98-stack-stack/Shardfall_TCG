@@ -5,6 +5,19 @@ stays short. Each entry keeps the owner's decisions, because they explain why th
 they are. (What changed for players is `data/whats_new.csv`; why the code is built as it is,
 `docs/how-it-was-built.md`.)
 
+## Events off, deck codes and code tidying — chosen by the owner (27 Nov), built
+
+- **Random events off in normal play.** Campaign, Play vs Computer and Two players have no mini
+  shard falls; they wait for a later shake-up mode. When on, an event lasts two rounds so both
+  players get it. The big shard fall stays.
+- **Deck codes.** The deck builder's Deck code button shows the deck as one line of text to copy,
+  and "Use a deck code" (there, and in Create your own deck) opens a pasted code as a new deck.
+- **Code tidying from the 24 Nov review:** the table's fixed button places are in `L`; every field
+  of `U` is declared in `js/ui.js`; the board skins are `css/skins.css`; `cards-test.js` and
+  `card-equivalence.js` share their card table (`rulesCode.cardTable`). No play or picture change.
+- Found on the way: the recorded-match tool stored a wrong check when the computer made two moves
+  in one step (a blade strike); fixed.
+
 ## Protected look that hints at the Shardfall — owner's idea, built 24 Nov
 
 The owner's idea: the Protected runes and the shell on the health gem should hint at what caused

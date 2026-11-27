@@ -3,26 +3,29 @@ const fs = require('fs');
 const dir = process.argv[2] || '.';
 const rulesCode = require(require('path').join(__dirname, 'rules-code'));
 eval(rulesCode(dir, ['champions', 'ai']) + rulesCode.kit + `
-const fresh = opts => { newGame({ deckId: 'simple_starter', opponentDeckId: 'zombie_starter', mode: 'hotseat', seed: 7, abilities: false, ...opts }); for (const p of S.players) { p.field.chars.length = 0; p.field.areas.length = 0; } return S.players[0]; };
+const fresh = opts => { newGame({ deckId: 'simple_starter', opponentDeckId: 'zombie_starter', mode: 'hotseat', seed: 7, abilities: false, events: true, ...opts }); for (const p of S.players) { p.field.chars.length = 0; p.field.areas.length = 0; } return S.players[0]; };
 const put = (p, name) => putCard(p, name);
 // Play on to the start of round n: end the turn, draw the card.
 const toRound = n => { let guard = 0; while (S.round < n && guard++ < 50) { S.pending = null; S.phase = PHASE.SETUP; endTurn(); if (S.over) return; if (S.phase === PHASE.DRAW) doDraw(); } };
 
-{ // schedule: mini shard falls in rounds 4 and 12 (game_rules.csv), announced two rounds ahead, one round long
+{ // schedule: mini shard falls in rounds 4 and 12 (game_rules.csv), announced two rounds ahead, two rounds long
   fresh();
   const seen = {};
-  for (let r = 1; r <= 14; r++) { toRound(r); seen[r] = { up: S.upcoming && S.upcoming.round, now: S.event && S.event.id, id: S.upcoming && S.upcoming.id }; if (S.over) break; }
+  for (let r = 1; r <= 15; r++) { toRound(r); seen[r] = { up: S.upcoming && S.upcoming.round, now: S.event && S.event.id, id: S.upcoming && S.upcoming.id, who: S.active }; if (S.over) break; }
   ok('the rule lists rounds 4 and 12', RULES.eventRounds.join() === '4,12', RULES.eventRounds.join());
+  ok('an event lasts two rounds', RULES.eventLength === 2, RULES.eventLength);
   ok('nothing announced in round 1', !seen[1].up);
   ok('round 2 announces an event for round 4', seen[2].up === 4);
   ok('round 3 still shows it, no event yet', seen[3].up === 4 && !seen[3].now);
   ok('round 4 the event is on', !!seen[4].now && !seen[4].up);
   ok('the event announced is the one that hits', seen[4].now === seen[2].id);
-  ok('round 5 the event is over', !seen[5].now);
-  ok('nothing is announced in rounds 5 to 9', [5, 6, 7, 8, 9].every(r => !seen[r].up && !seen[r].now));
+  ok('round 5 it is still on, for the other player', seen[5].now === seen[4].now && seen[5].who !== seen[4].who);
+  ok('round 6 the event is over', !seen[6].now);
+  ok('nothing is announced in rounds 6 to 9', [6, 7, 8, 9].every(r => !seen[r].up && !seen[r].now));
   ok('round 10 announces the next event for round 12', seen[10].up === 12);
   ok('round 12 the second event is on', !!seen[12].now);
-  ok('round 13 it is over, and no more come', !seen[13].now && !seen[13].up && !seen[14].up);
+  ok('round 13 it is still on', seen[13].now === seen[12].now);
+  ok('round 14 it is over, and no more come', !seen[14].now && !seen[14].up && !seen[15].up);
   ok('the second event is a different one', seen[12].now !== seen[4].now);
 }
 { // spell surge: spells cost 1 less, nothing else does
@@ -64,9 +67,12 @@ const toRound = n => { let guard = 0; while (S.round < n && guard++ < 50) { S.pe
   S.event = null;
   ok('amplified areas: back to normal after', stats(farmer).a === base.a && stats(farmer).h === base.h);
 }
-{ // switches: events off by rule, and off for the tutorial
+{ // switches: events are off in normal play (campaign, vs computer, two players) and the tutorial
+  fresh({ events: undefined }); toRound(13);
+  ok('a normal match has no events', !S.event && !S.upcoming && !S.lastEvent && S.setup.events === false);
   fresh({ events: false }); toRound(13);
   ok('events: false means no events', !S.event && !S.upcoming && !S.lastEvent);
+  ok('a match recorded before events were switched off still replays with them', replaySetup({ deckId: 'x' }).events === true && replaySetup({ events: false }).events === false);
   const was = RULES.eventRounds; RULES.eventRounds = []; fresh(); toRound(13); RULES.eventRounds = was;
   ok('an empty event_rounds means no events', !S.event && !S.upcoming && !S.lastEvent);
 }

@@ -75,7 +75,7 @@ onGameEvent((type, d) => {
   const id = d.card.id;
   if (!DATA.cardsById[id]?.description || loreKnown(id)) return;
   PREFS.set("lore", [...(PREFS.get("lore", []) || []), id]);
-  (U.newLore || (U.newLore = [])).push(id);
+  U.newLore.push(id);
 });
 // The end screen: one quiet line naming the stories this match unlocked; tap it to read them.
 function newLoreHTML() {
@@ -117,7 +117,7 @@ function earnTrophy(id) {
   if (won[id]) return;
   won[id] = new Date().toISOString().slice(0, 10);
   PREFS.set("trophies", won);
-  (U.newTrophies || (U.newTrophies = [])).push(id);
+  U.newTrophies.push(id);
 }
 function bumpCount(key, n = 1) {
   const c = tcount(); c[key] = (c[key] || 0) + n; PREFS.set("tcount", c);

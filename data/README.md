@@ -206,6 +206,7 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 | max_field_characters | Optional. Leave it out for no limit on characters (the default) |
 | event_rounds | The rounds a random event (a mini shard fall) hits the table, separated by `\|`, for example `4\|12` (a round is one player's turn, shown as Round). Empty turns events off |
 | event_warning_rounds | How many rounds ahead the next event is announced |
+| event_length | How many rounds a random event lasts; 2 is one turn for each player |
 | shard_round | The round the big shard falls into the middle of the table, once a match. 0 turns it off |
 | shard_health | Health of the big shard |
 | shard_draw | Cards the player who breaks the big shard draws, on top of their champion's shard bonus |
@@ -215,7 +216,7 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 
 ### events.csv: random events
 
-In the rounds listed in `event_rounds` in game_rules.csv (4 and 12), one of these hits the table for both players and lasts one round: a mini shard fall. The next one is announced two rounds ahead. (The big shard fall in round 8 is separate; see `shard_round`.)
+**Switched off for now** (27 Nov 2026): the campaign, Play vs Computer and Two players have no random events. They are kept for a later "shake-up" mode. In a match that has them, in the rounds listed in `event_rounds` in game_rules.csv (4 and 12), one of these hits the table for both players and lasts `event_length` rounds (2: one turn each): a mini shard fall. The next one is announced two rounds ahead. (The big shard fall in round 8 is separate; see `shard_round`.)
 
 | Column | Meaning |
 |---|---|
@@ -223,7 +224,7 @@ In the rounds listed in `event_rounds` in game_rules.csv (4 and 12), one of thes
 | Name | Name shown on the warning card |
 | Description | One short sentence shown under the name |
 
-You can rename an event or reword its description here. What an event *does* is written in `js/engine.js` ("Random events"), so a new event needs code. The four today: `spell_surge` (spells cost 1 less), `tremor` (every character takes 1 damage), `windfall` (each player draws an extra card; a full hand or empty deck is skipped) and `amplified_areas` (area bonuses are doubled).
+You can rename an event or reword its description here. What an event *does* is written in `js/rules-events.js`, so a new event needs code. The four today: `spell_surge` (spells cost 1 less), `tremor` (every character takes 1 damage), `windfall` (each player draws an extra card; a full hand or empty deck is skipped) and `amplified_areas` (area bonuses are doubled).
 
 ### champion_abilities.csv: the champions' abilities
 

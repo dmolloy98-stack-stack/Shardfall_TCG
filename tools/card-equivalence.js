@@ -66,7 +66,8 @@ function main() {
 
 // Runs inside one game folder: plays each card in CARDS and prints RESULT {id: [after card, after play, round, health]}.
 function runChild(dir) {
-eval(require(require('path').join(__dirname, 'rules-code'))(dir, ['champions', 'ai']) + `
+const rulesCode = require(require('path').join(__dirname, 'rules-code'));
+eval(rulesCode(dir, ['champions', 'ai']) + rulesCode.cardTable + `
 let fails = 0, passes = 0;
 if (typeof move === 'undefined') { var move = (n, ...a) => ({ play: (u, o) => playCard(u, o || {}), target: chooseTarget, choose: resolveChoice, cancel: cancelPending })[n](...a); }
 const ONLY = process.env.CARDS.split(',');
@@ -75,58 +76,8 @@ const sorted = v => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fr
 const key = () => hash(JSON.stringify(S, (k, v) => (k === 'log' || k === 'effect' || k === 'ability' || k === 'description' || k === 'moves' || k === 'setup' || k === 'prompt' || k === 'title') ? undefined : sorted(v)));
 const OUT = {};
 const bad = (card, why) => { OUT[card.id] = ['problem: ' + why]; fails++; };
-const cards = Object.values(DATA.cardsById);
-// Plain characters for the table: no ability and no skills, so they don't get in the way.
-const plain = cards.filter(c => c.type === 'Character' && !c.effect && !(c.skills || []).length && c.rarity !== 'Unknown');
-// Some cards need a particular target: a character with Level Up, or an area.
-const leveler = cards.find(c => c.type === 'Character' && (c.skills || []).includes('Level Up') && c.rarity !== 'Unknown');
-const area = cards.find(c => c.type === 'Area' && /^aura:/.test(c.effect || ''));
-if (plain.length < 2 || !leveler || !area) throw new Error('cards-test needs two plain characters (no ability, no skills), a Level Up character and an area with an aura in data/cards.csv');
-
-function problemsNow() {
-  for (const p of S.players) {
-    if (!(p.mana >= 0)) return 'negative or broken mana';
-    if (!Number.isFinite(p.health)) return 'broken health';
-    if (p.hand.length > RULES.maxHand) return 'hand over the limit';
-    for (const c of p.field.chars) {
-      const r = rawStats(c);
-      if (!Number.isFinite(r.a) || !Number.isFinite(r.h)) return 'broken stats on ' + c.name;
-      if (r.h <= 0 && !S.pending && !S.over) return c.name + ' stays on the table with no health';
-      if (c.owner !== p.idx) return c.name + ' is on the wrong side';
-    }
-  }
-  const all = S.players.flatMap(p => [...p.hand, ...p.deck, ...p.grave, ...p.field.chars, ...p.field.areas, ...p.field.equips]).map(c => c.uid);
-  if (new Set(all).size !== all.length) return 'the same card is in two places';
-  return null;
-}
-
-// Answers whatever the game is asking: the first allowed target, or the first cards and option.
-function answer() {
-  for (let k = 0; k < 20 && S.pending && !S.over; k++) {
-    const pd = S.pending;
-    if (pd.kind === 'target') {
-      const t = pendingTargets(pd)[0];
-      if (!(t ? move('target', t.isPlayer ? t : { uid: t.uid }) : move('cancel'))) return 'its question could not be answered';
-    } else {
-      const picks = pd.resolve === 'counter' ? [] : pd.cards.slice(0, pd.pick || 1).map(c => c.uid);
-      if (!move('choose', picks, pd.options ? pd.options[0].id : null)) return 'its choice could not be answered';
-    }
-  }
-  return S.pending && !S.over ? 'the game keeps asking questions' : null;
-}
-
-function table() {
-  newGame({ deckId: 'simple_starter', opponentDeckId: 'zombie_starter', mode: 'hotseat', seed: 77, events: false, shard: false, abilities: false });
-  for (const p of S.players) {
-    p.hand.length = 0;
-    p.manaMax = 10;
-    p.mana = 30;   // enough for every card, even before a discount kicks in
-    p.hasDrawn = true;
-    for (const tpl of [...plain.slice(0, 2), leveler]) putOnField(newCard(tpl), p);
-    const a = newCard(area); a.owner = p.idx; a.placed = 1; p.field.areas.push(a);
-  }
-  S.phase = PHASE.SETUP;
-}
+// The prepared table, its checks and its answers are shared with tools/cards-test.js:
+// rulesCode.cardTable in tools/rules-code.js.
 
 for (const tpl of cards) {
   if (!ONLY.includes(tpl.id)) continue;

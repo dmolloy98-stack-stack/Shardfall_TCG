@@ -24,21 +24,16 @@ them; nothing is lost while they wait.
   device" screen and the end of a match. Still in the code, one screen at a time: the deck
   builder, the Almanac and card details, the battle log and hints, the board's buttons and
   prompts, the campaign and trophies, the champions' lines, the tutorial, and the intro.
-- **Small code tidying left from the code review** (24 Nov, Claude's own housekeeping, no play
-  change): the board's positions in `render()` (`js/board.js`) are numbers in the HTML and could
-  move into `L` or the style sheet; the board-skin styles could become `css/skins.css` (needs the
-  loader, `tools/build-single.js` and `sw.js` changed too); `tools/cards-test.js` and
-  `tools/card-equivalence.js` share a small table set-up that could move into the test kit
-  (`rules-code.js`); every field of the screen state `U` could be declared in one place in `js/ui.js`.
 - **Simple Messenger and Digital Drainage** keep their own code (round two, step 4): truly
   one-of-a-kind. Nothing to do unless a future card shares their pattern.
 
 ## Open points on built features
 
-### Random events
-- A one-round event is one player's turn, so Spell Surge and Amplified Areas help only the
-  player whose turn it is. Tremor and Windfall hit both sides at once. If this feels lopsided,
-  an event can last two rounds (one turn each); this is a small change.
+### Random events (switched off in normal play, 27 Nov)
+- The owner switched them off in the campaign, Play vs Computer and Two players, and will bring
+  them back later in a **"shake-up" mode** (not designed yet). When on, an event now lasts two
+  rounds, one turn for each player. Building the mode means a menu choice that starts matches
+  with `newGame({ events: true })`.
 - The computer ignores events when it plans. It could learn to hold spells for a Spell Surge.
 - Events are not in the owner's card sheet yet (no tab for them).
 
@@ -46,14 +41,11 @@ them; nothing is lost while they wait.
 - The Man Ape's free 2/2 Monkey is a Chimp with +1 Attack, because no 2/2 Monkey card exists. The
   owner could design a card for it.
 - The big shard could carry the hint about what caused the Shardfall (see the Protected item below).
-- Round 4 and round 12 are both the second player's turns, so events that help only the active
-  player (Spell Surge, Amplified Areas) always help the second player.
 
 ## Offered, not picked yet (23 Nov)
 
 From the "what's next" list; the owner may pick them later.
 - **Watch your last match again** (a replay on the end screen, from the move list).
-- **Deck codes** to share a custom deck as a line of text.
 - **Computer difficulty: Easy / Normal / Hard.**
 
 ## Card levels and mastery (like Team Fight Tactics)
@@ -107,7 +99,7 @@ changes into a stronger version. A deck may hold one kind of champion, or none.
 
 **Notes for when this is built.**
 - Test every champion's balance on the computer players first (`tools/selftest.js`). The
-  starter decks are already uneven (Monkey wins about 41%, Simple about 58%).
+  starter decks are already uneven (23 Nov: Monkey wins about 57%, Simple about 43%).
 - Research said to make leveling happen often and keep it something the opponent can fight.
 
 ## More area cards — an idea the owner likes, not yet designed

@@ -26,11 +26,12 @@ Edit this file whenever the story changes. Open questions are listed at the end.
 - A **Shardkeeper** is someone who can command shards: the player, and each faction's
   champion.
 - Shards fall everywhere. A battle happens when two or more Shardkeepers meet.
-- Shards keep falling during a battle too: two mini shard falls (the random events, rounds 4 and 12)
-  and one big shard in round 8 that crashes into the middle of the table. The table cracks open
+- Shards keep falling during a battle too: one big shard in round 8 that crashes into the middle of the table. The table cracks open
   and glows purple, blue and green, and both Shardkeepers fight to break the shard and claim it.
   What the big shard is, and whether it hints at what caused the Shardfall, is the owner's to
   decide (see `docs/todo.md`).
+- On hold: two mini shard falls (the random events, rounds 4 and 12). The owner switched them off
+  in normal play (27 Nov 2026) and will bring them back in a later "shake-up" mode.
 - The player's goal: use creativity and knowledge of the shards to make the universe
   whole again, so the shards stop falling.
 - The story is told from a distance (no "you" in narration), for now.

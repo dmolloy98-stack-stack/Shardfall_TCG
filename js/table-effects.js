@@ -9,7 +9,8 @@ function floatText(x, y, text, color, small) {
   fxDiv("float" + (small ? " small" : ""), `left:${x}px;top:${y}px;color:${color}`, 1250).textContent = text;
 }
 // Random events (see js/rules-events.js): a small card in the middle of the table
-// that says what is coming, how soon, and what it does. During the event round it says "This round".
+// that says what is coming, how soon, and what it does. While it lasts (two rounds, one turn each)
+// it says "This round and next", then "Last round". Off in normal play (js/rules-events.js).
 // The random events are the small shard falls; the big one in round 8 shows here too when it is close.
 function eventLine() {
   const e = S.event || S.upcoming;
@@ -20,7 +21,9 @@ function eventLine() {
   if (!e) return null;
   const info = DATA.events[e.id];
   const left = S.event ? 0 : e.round - S.round;
-  const when = (S.event ? "This round" : left <= 1 ? "Next round" : `In ${left} rounds`) + " · mini shard fall";
+  const rest = S.event ? S.event.round + RULES.eventLength - S.round : 0;   // rounds it still lasts, this one included
+  const now = rest <= 1 ? "Last round" : rest === 2 ? "This round and next" : `${rest} more rounds`;
+  const when = (S.event ? now : left <= 1 ? "Next round" : `In ${left} rounds`) + " · mini shard fall";
   return { when, name: info.name, desc: info.desc, now: !!S.event };
 }
 function eventPill() {

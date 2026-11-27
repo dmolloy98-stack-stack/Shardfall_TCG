@@ -28,7 +28,7 @@ function size(root) {
   const read = f => fs.readFileSync(path.join(root, f), 'utf8');
   const data = read('js/data.js');
   const list = name => JSON.parse(data.match(new RegExp(`const ${name} = (\\[[^\\]]*\\])`))[1]);
-  const files = ['index.html', 'css/style.css', 'js/data.js', ...list('DATA_FILES').map(n => `data/${n}.csv`), ...list('GAME_SCRIPTS')];
+  const files = ['index.html', 'css/style.css', 'css/skins.css', 'js/data.js', ...list('DATA_FILES').map(n => `data/${n}.csv`), ...list('GAME_SCRIPTS')];
   return files.reduce((n, f) => n + (fs.existsSync(path.join(root, f)) ? fs.statSync(path.join(root, f)).size : 0), 0) / 1024;
 }
 

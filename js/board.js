@@ -12,7 +12,7 @@ const humanTurn = () => S && !S.over && !active().isAI && !U.curtain;
 const humanTarget = () => S && !S.over && !U.curtain && S.pending?.kind === "target" && !S.players[S.pending.owner].isAI;
 // Characters are spaced out evenly and squeeze together when there are many (there is no limit).
 function charStep(n) { return Math.min(L.charStep, (L.frontW - FIELD_W) / Math.max(1, n - 1)); }
-function charX(i, n) { const step = charStep(n); return 720 - ((n - 1) * step + FIELD_W) / 2 + i * step; }
+function charX(i, n) { const step = charStep(n); return L.midX - ((n - 1) * step + FIELD_W) / 2 + i * step; }
 // On a small screen the hand is drawn bigger, since it has the room.
 const PHONE_HAND = { w: 124, h: 176, font: 13, y: 722 };
 function handPos(i, n) {
@@ -108,7 +108,6 @@ function hpBarHTML(p) {
 // A big hit (BIG_HIT damage or more at once) to the player at the bottom: the screen's edges
 // flash red and their life crystal cracks a little more for a moment.
 const BIG_HIT = 5;
-U.crackAt = [0, 0];
 const crackFlash = idx => performance.now() - (U.crackAt[idx] || 0) < 900;
 function bigHit(idx) {
   U.crackAt[idx] = performance.now();
@@ -251,15 +250,15 @@ function render() {
     <div class="rift"></div>${scarHTML()}`;
   for (const side of ["top", "bottom"]) {
     h += `<div class="lane back" data-side="${side}" style="left:${L.backX - 26}px;top:${L[side].backline - 6}px;width:${RULES.maxBackline * L.slot + 26}px;height:${BACK_H + 12}px"></div>`;
-    h += `<div class="lane front" data-side="${side}" style="left:${720 - L.frontW / 2 - 12}px;top:${L[side].chars - 8}px;width:${L.frontW + 24}px;height:${FIELD_H + 16}px"></div>`;
+    h += `<div class="lane front" data-side="${side}" style="left:${L.midX - L.frontW / 2 - 12}px;top:${L[side].chars - 8}px;width:${L.frontW + 24}px;height:${FIELD_H + 16}px"></div>`;
   }
   h += `<div class="bar top"></div><div class="bar bottom"></div>`;
-  h += `<button type="button" class="btn stage-btn" data-act="menu" style="left:16px;top:11px;width:110px;height:44px" aria-label="Game menu">☰ Menu</button>`;
+  h += `<button type="button" class="btn stage-btn" data-act="menu" style="${boxStyle(L.menuBtn)}" aria-label="Game menu">☰ Menu</button>`;
   h += RG("players") + plateHTML(them, "top") + plateHTML(me, "bottom");
 
   // opponent hand, face down
   const oh = them.hand.map(() => `<div class="card back"></div>`).join("");
-  h += `<div class="opp-hand" style="left:${960}px;top:7px" title="${them.hand.length} cards in hand">${oh}</div>`;
+  h += `<div class="opp-hand" style="${boxStyle(L.oppHand)}" title="${them.hand.length} cards in hand">${oh}</div>`;
   h += RG("top") + fieldHTML(them, "top") + RG("bottom") + fieldHTML(me, "bottom");
   h += RG("mana") + manaHTML(them, "top") + manaHTML(me, "bottom");
   h += RG("middle");
@@ -267,7 +266,7 @@ function render() {
   // middle band
   const turnColor = PLAYER_COLORS[U.turnColor ?? S.active];
   h += `<div class="turn-crystal${performance.now() - U.turnLandedAt < 700 ? " landed" : ""}" style="--pc:${turnColor}" title="Glows in the color of the player whose turn it is">${crystalSVG("big-crystal")}</div>`;
-  h += `<div class="turn-info" style="top:372px"><b>Round ${S.round}</b><span style="color:${turnColor}">${esc(active().name)}'s turn</span></div>`;
+  h += `<div class="turn-info" style="top:${L.turnInfoY}px"><b>Round ${S.round}</b><span style="color:${turnColor}">${esc(active().name)}'s turn</span></div>`;
   h += `<div class="phases">${DATA.phases.map((ph, i) => `<div class="phase-step${i === S.phase ? " on" : ""}">${esc(ph.name)}</div>`).join("")}</div>`;
   h += eventPill();
   h += shardHTML(human);
@@ -280,7 +279,7 @@ function render() {
     h += forced.length
       ? `<div class="instruction">${forced.length === 1 ? `${esc(forced[0].name)} has ${guardSkill(forced[0])} and must be attacked first` : "Attack one of the Challenge or Tower characters first"}</div>`
       : readyN > 1
-        ? `<button type="button" class="face-btn" data-act="face" style="width:196px">⚔ Attack directly</button>${allBtn("left:728px;width:196px")}`
+        ? `<button type="button" class="face-btn" data-act="face" style="width:${L.splitW}px">⚔ Attack directly</button>${allBtn(`left:${L.splitAllX}px;width:${L.splitW}px`)}`
         : `<button type="button" class="face-btn" data-act="face">⚔ Attack ${esc(them.name)} directly</button>`;
   } else if (readyN > 0 && !forced.length && !S.over) {
     h += allBtn();
@@ -292,8 +291,8 @@ function render() {
   h += RG("buttons");
   const label = ["Draw card", "To battle →", "To end →", "Pass turn →"][S.phase];
   const canPhase = human && !S.pending && !U.armed;
-  h += `<button type="button" class="btn stage-btn${canPhase && S.phase === PHASE.DRAW ? " glow" : ""}" data-act="phase" title="Keyboard: Space" style="left:1220px;top:372px;width:200px;height:56px" ${canPhase ? "" : "disabled"}>${label}</button>`;
-  h += `<button type="button" class="btn stage-btn" data-act="pass" title="Keyboard: E" style="left:1240px;top:942px;width:180px;height:48px" ${canPhase ? "" : "disabled"}>Pass turn</button>`;
+  h += `<button type="button" class="btn stage-btn${canPhase && S.phase === PHASE.DRAW ? " glow" : ""}" data-act="phase" title="Keyboard: Space" style="${boxStyle(L.phaseBtn)}" ${canPhase ? "" : "disabled"}>${label}</button>`;
+  h += `<button type="button" class="btn stage-btn" data-act="pass" title="Keyboard: E" style="${boxStyle(L.passBtn)}" ${canPhase ? "" : "disabled"}>Pass turn</button>`;
   h += RG("log");
   if (U.showLog) h += logPanelHTML();
   h += RG("over");
@@ -327,7 +326,6 @@ function histTitle(e, c) {
   return e.kind === "play" ? `${who} played ${c.name}` : e.kind === "cast" ? `${who} cast ${c.name}`
     : e.kind === "attack" ? `${who}'s ${c.name} attacked` : `${who}'s ${c.name} hit the big shard`;
 }
-U.hist = []; U.recentLog = [];
 function histAdd(e, now) {
   if (!S) return;
   e.t = now;

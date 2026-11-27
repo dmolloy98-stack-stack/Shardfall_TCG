@@ -25,6 +25,7 @@ const RULES = {
   // The rounds a random event (a small shard fall) hits the board; each is announced eventWarn rounds ahead.
   eventRounds: String(DATA.rules.event_rounds ?? "").split("|").map(Number).filter(n => n > 0).sort((a, b) => a - b),
   eventWarn: DATA.rules.event_warning_rounds ?? 2,
+  eventLength: Math.max(1, DATA.rules.event_length ?? 2),   // rounds an event lasts: 2 is one turn for each player
   // The big shard fall: the round it lands (0 = never), its health, and what breaking it gives.
   shardRound: DATA.rules.shard_round ?? 0,
   shardHealth: DATA.rules.shard_health ?? 10,
@@ -151,7 +152,7 @@ const matchRecord = () => ({ setup: S.setup, moves: S.moves });
 // longer fits (for example after a card was changed), so a broken replay is never silent.
 function replayMatch(rec) {
   if (!rec?.setup || rec.setup.scripted) throw new Error("This match can't be replayed (no setup, or a tutorial lesson).");
-  newGame({ ...rec.setup });
+  newGame(replaySetup(rec.setup));
   rec.moves.forEach(([by, name, ...details], i) => {
     if (decider() !== by) throw new Error(`Replay went wrong at move ${i + 1} (${name}): it was player ${by + 1}'s move, but the game was waiting for player ${decider() + 1}.`);
     if (move(name, ...details) === false) throw new Error(`Replay went wrong at move ${i + 1} (${name}): the rules refused it.`);

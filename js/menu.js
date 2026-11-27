@@ -7,9 +7,6 @@
 //          the Campaign's deck ("campaign"), or just looking after your decks ("decks")
 // The deck choice lists the starter decks, then decks the player built (js/decks.js), then
 // a tile to build a new one.
-U.menuView = "home";
-U.setupMode = "ai";
-U.oppDeckId = PREFS.get("opp", "random");   // the other side's deck: "random" or a deck id
 const SETUP_MODES = {
   ai: { title: "door_quick", deck: "setup_ai_deck", opp: "setup_ai_opp", start: "menu_start_match" },
   hotseat: { title: "door_two", deck: "setup_hotseat_deck", opp: "setup_hotseat_opp", start: "menu_start_match" },
