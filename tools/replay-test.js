@@ -21,6 +21,7 @@ const MATCHES = [
   { name: 'Campaign: Soul Shepard', setup: { deckId: 'monkey_starter', opponentDeckId: 'zombie_starter', mode: 'ai', seed: 404, foeChampion: 'Soul Shepard' } },
   { name: 'Custom deck v Cyber', setup: { deckId: 'custom_test', opponentDeckId: 'digital_starter', mode: 'ai', seed: 505, lists: [mixed, DATA.decks.digital_starter.cards] } },
   { name: 'Random opponent', setup: { deckId: 'zombie_starter', mode: 'ai', seed: 606 } },
+  { name: 'Shake-up: random events on', setup: { deckId: 'fighter_starter', opponentDeckId: 'monkey_starter', mode: 'ai', seed: 707, events: true } },
 ];
 
 // What matters on the table after a move, as a short code. Names and wording are left out on
@@ -38,11 +39,18 @@ const say = ([by, name, ...d]) => 'Player ' + (by + 1) + ': ' + name + (typeof d
 if (UPDATE) {
   const out = [];
   for (const m of MATCHES) {
-    newGame(m.setup); S.players[0].isAI = true;
-    const checks = []; let steps = 0;
-    while (!S.over && steps < 6000) { const n = S.moves.length; aiStep(); steps++; while (checks.length < S.moves.length) checks.push(tableCheck()); }
+    newGame(m.setup); S.players[0].isAI = true;   // new recordings: normal play, no random events unless the setup asks
+    let steps = 0;
+    while (!S.over && steps < 6000) { aiStep(); steps++; }
     if (!S.over) throw new Error(m.name + ': the match never ended');
-    out.push({ name: m.name, setup: S.setup, moves: S.moves, checks, end: summary() });
+    // The table check after each move comes from playing the moves again one at a time: the
+    // computer can make two moves in one step (strike with a blade, then pick the target), and a
+    // check taken after the step would be wrong for the first of them.
+    const setup = S.setup, moves = S.moves, end = summary(), checks = [];
+    newGame(replaySetup(setup));
+    for (const [, name, ...d] of moves) { move(name, ...d); checks.push(tableCheck()); }
+    if (JSON.stringify(summary()) !== JSON.stringify(end)) throw new Error(m.name + ': the match ends differently when its moves are played again');
+    out.push({ name: m.name, setup, moves, checks, end });
     console.log('recorded ' + m.name + ': ' + S.moves.length + ' moves, ' + (S.winner == null ? 'a draw' : 'player ' + (S.winner + 1) + ' won') + ' in round ' + S.round);
   }
   fs.writeFileSync(FILE, '[\\n' + out.map(m => JSON.stringify(m)).join(',\\n') + '\\n]\\n');
@@ -56,7 +64,7 @@ if (recorded.length !== MATCHES.length) { console.log('FAIL the recorded matches
 for (const m of recorded) {
   let problem = null;
   try {
-    newGame({ ...m.setup });
+    newGame(replaySetup(m.setup));
     for (let i = 0; i < m.moves.length && !problem; i++) {
       const [by, name, ...d] = m.moves[i];
       const what = say(m.moves[i]);

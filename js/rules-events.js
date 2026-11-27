@@ -5,10 +5,14 @@
 // while it lasts checks eventNow("its_id") where that rule lives (costs and area bonuses are in
 // js/effects.js). Then add a check to tools/events-test.js.
 
-// On the rounds in RULES.eventRounds (4 and 12; a round is one player's turn) a random event, a small
-// shard fall, hits the board for both players and lasts that one round. The next event is chosen and
-// announced RULES.eventWarn rounds ahead, so each player gets a turn to plan for it. The big shard
-// fall in round 8 is separate: see "The big shard fall" below.
+// EVENTS ARE OFF IN NORMAL PLAY (the owner's decision, 27 Nov 2026): campaign, Play vs Computer and
+// Two players never have them. They are kept for a later "shake-up" mode, which will start its
+// matches with newGame({ events: true }). The big shard fall in round 8 is separate and stays on
+// (js/rules-shard.js).
+// In a match with events, on the rounds in RULES.eventRounds (4 and 12; a round is one player's
+// turn) a random event, a small shard fall, hits the board for both players and lasts
+// RULES.eventLength rounds (2: one turn each, so both players get it). The next event is chosen
+// and announced RULES.eventWarn rounds ahead, so each player gets a turn to plan for it.
 // What each event is called and how it is described is in data/events.csv; what it does is here.
 const eventNow = id => !!S.event && S.event.id === id;   // used by costFromEffect and auraBonus in js/effects.js
 const EVENT_ON_START = {
@@ -30,13 +34,13 @@ function updateEvent() {
   const known = (DATA.eventOrder || []).filter(id => EVENT_IDS.includes(id));
   if (!known.length) return;
   const r = S.round;
-  if (S.event && S.event.round < r) {
+  if (S.event && S.event.round + RULES.eventLength <= r) {
     const gone = S.event; S.event = null;
     log(`${DATA.events[gone.id].name} is over.`);
     emit("eventEnd", { id: gone.id });
     EVENT_ON_END[gone.id]?.();
   }
-  const at = nextEventRound(r + (S.event ? 1 : 0));
+  const at = nextEventRound(S.event ? S.event.round + RULES.eventLength : r);
   if (!S.upcoming && at - r <= RULES.eventWarn) {
     const pool = known.filter(id => id !== S.lastEvent);
     const choices = pool.length ? pool : known;

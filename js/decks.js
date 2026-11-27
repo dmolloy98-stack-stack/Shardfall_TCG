@@ -65,6 +65,63 @@ function deckProblem(deckId) {
 }
 
 // ---------------------------------------------------------------------------
+// Deck codes: a deck as one line of text, to share it with a friend or keep a copy. The code is
+// DECK_CODE_PREFIX and then, in base64 (toBase64 in js/saves.js), the deck's name on the first line
+// and its cards as "cardId*copies" separated by commas on the second. Card ids never change (see
+// data/README.md), so a code keeps working when a card is renamed or reworded.
+// ---------------------------------------------------------------------------
+const DECK_CODE_PREFIX = "SFDECK1:";
+const deckCode = (name, cards) =>
+  DECK_CODE_PREFIX + toBase64(`${String(name || "My deck").slice(0, 28)}\n${Object.entries(cards).filter(([, n]) => n > 0).map(([id, n]) => `${id}*${n}`).join(",")}`);
+
+// Reads a deck code. Returns { name, cards, left } (left: copies of cards this version doesn't have,
+// or over the copy limit, that were left out) or { error } in plain words; changes nothing.
+function readDeckCode(code) {
+  const text = String(code || "").replace(/\s+/g, "");
+  if (!text) return { error: T("deckcode_empty") };
+  if (!text.startsWith(DECK_CODE_PREFIX)) return { error: T("deckcode_not") };
+  let name, list;
+  try { [name, list] = fromBase64(text.slice(DECK_CODE_PREFIX.length)).split("\n"); } catch { return { error: T("deckcode_damaged") }; }
+  if (list === undefined) return { error: T("deckcode_damaged") };
+  const cards = {};
+  let left = 0;
+  for (const part of list.split(",").filter(Boolean)) {
+    const [id, count] = part.split("*");
+    const n = Number(count), card = DATA.cardsById[id];
+    if (!Number.isInteger(n) || n < 1) return { error: T("deckcode_damaged") };
+    if (!card || !buildable(card)) { left += n; continue; }
+    const keep = Math.min(n, copyLimit(card) - (cards[id] || 0));
+    left += n - keep;
+    if (keep > 0) cards[id] = (cards[id] || 0) + keep;
+  }
+  return { name: (name || "").trim().slice(0, 28) || "My deck", cards, left };
+}
+
+// The deck code window. From the builder (inBuilder) it shows this deck's code to copy and a box to
+// paste one; from "Create your own deck" only the box. Its clicks come through js/panels.js (data-dc).
+function showDeckCode(inBuilder) {
+  if (inBuilder) B.name = byId("bld-name").value.trim() || "My deck";
+  openModal(`<h2 id="modal-title">${esc(T("deckcode_title"))}</h2>
+    ${inBuilder ? `<p>${esc(T("deckcode_intro"))}</p>
+    <textarea id="deck-code-out" class="save-code" readonly rows="3" aria-label="${esc(T("deckcode_out_label"))}">${esc(deckCode(B.name, B.cards))}</textarea>
+    <div class="detail-actions"><button type="button" class="btn" data-dc="copy">${esc(T("deckcode_copy"))}</button></div>
+    <h3>${esc(T("deckcode_load_title"))}</h3>` : ""}
+    <p>${esc(T(inBuilder ? "deckcode_load_intro_builder" : "deckcode_load_intro"))}</p>
+    <textarea id="deck-code-in" class="save-code" rows="3" aria-label="${esc(T("deckcode_in_label"))}" placeholder="${DECK_CODE_PREFIX}…"></textarea>
+    <p id="deck-code-msg" class="save-code-msg" role="status"></p>
+    <div class="detail-actions"><button type="button" class="btn btn-primary" data-dc="use">${esc(T("deckcode_use"))}</button><button type="button" class="btn" data-close>${esc(T(inBuilder ? "deckcode_back" : "deckcode_cancel"))}</button></div>`);
+}
+async function deckCodeClick(btn) {
+  const msg = text => { const m = byId("deck-code-msg"); if (m) m.textContent = text; };
+  if (btn.dataset.dc === "copy") { await copyFromBox(byId("deck-code-out")); msg(T("deckcode_copied")); return; }
+  const r = readDeckCode(byId("deck-code-in").value);
+  if (r.error) { msg(r.error); return; }
+  closeModal();
+  openBuilder({ id: null, name: r.name, cards: r.cards });   // a new deck: whatever was open is left as it was saved
+  if (r.left) flashNote(T("deckcode_left", { n: r.left }));
+}
+
+// ---------------------------------------------------------------------------
 // Builder screen
 // ---------------------------------------------------------------------------
 const B = { id: null, name: "", cards: {}, saved: "", faction: "All", type: "All", sheet: false, walk: -1 };
@@ -77,6 +134,7 @@ function createDeck() {
     <p class="sub">Start from scratch, or copy a starter deck and change it.</p>
     <div class="menu-list">
       <button type="button" class="btn btn-primary" data-new="">Start with an empty deck</button>
+      <button type="button" class="btn" data-dc="paste">${esc(T("deckcode_paste"))}</button>
       ${starters.map(id => `<button type="button" class="btn" data-new="${id}">Copy the ${esc(DATA.decks[id].name)}</button>`).join("")}
     </div>`);
 }
@@ -266,6 +324,7 @@ byId("builder").addEventListener("click", e => {
   if (t.closest("#bld-back")) { leaveBuilder(); return; }
   if (t.closest("#bld-save")) { saveDeck(); return; }
   if (t.closest("#bld-help")) { startWalk(); return; }
+  if (t.closest("#bld-code")) { showDeckCode(true); return; }
   const w = t.closest("[data-walk]");
   if (w) {
     if (w.dataset.walk === "next") B.walk++;

@@ -128,3 +128,21 @@ float_noReply,» NO REPLY,Floating word
 float_equip,EQUIP,Floating word
 float_absorb,+{a}/+{h},Floating word
 float_plusAll,+{n} ALL,Floating word
+deckcode_button,Deck code,Deck code
+deckcode_paste,Use a deck code,Deck code
+deckcode_title,Deck code,Deck code
+deckcode_intro,"This deck as one line of text. Send it to a friend, or keep it somewhere safe. Anyone can paste it into Shardfall to get the same deck.",Deck code
+deckcode_out_label,This deck's code,Deck code
+deckcode_copy,Copy the code,Deck code
+deckcode_copied,Copied. Paste it in a message to a friend.,Deck code
+deckcode_load_title,Use a deck code,Deck code
+deckcode_load_intro,Paste a deck code here. It opens in the deck builder as a new deck; press Save deck to keep it.,Deck code
+deckcode_load_intro_builder,"Paste a deck code here. It opens as a new deck; this one stays as it was last saved.",Deck code
+deckcode_in_label,Deck code to use,Deck code
+deckcode_use,Open this deck,Deck code
+deckcode_back,Back to building,Deck code
+deckcode_cancel,Cancel,Deck code
+deckcode_empty,Paste a deck code into the box first.,Deck code
+deckcode_not,That isn't a Shardfall deck code. It should start with SFDECK1:,Deck code
+deckcode_damaged,"That deck code is damaged. Copy it again, all of it.",Deck code
+deckcode_left,"{n} cards in that code aren't in this version of Shardfall, or were over the copy limit, so they were left out.",Deck code

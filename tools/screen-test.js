@@ -190,6 +190,35 @@ const TESTS = [
     await pg.waitForTimeout(300);
     expect(await pg.evaluate(() => PREFS.get('decks', []).some(d => d.name === 'Screen test deck')), 'the deck was not saved');
   }],
+  ['deck codes: copy a deck as a code, then paste it back as a new deck', async ({ pg }) => {
+    await pg.click('#btn-decks');
+    await pg.click('[data-create]');
+    await pg.click('[data-new="monkey_starter"]');
+    await pg.waitForSelector('[data-add]');
+    await pg.fill('#bld-name', 'Code test deck');
+    const want = await pg.evaluate(() => JSON.stringify(B.cards));
+    await pg.click('#bld-code');
+    const code = await pg.inputValue('#deck-code-out');
+    expect(code.startsWith('SFDECK1:'), 'the code does not start with SFDECK1:');
+    const odd = await pg.evaluate(() => { const c = DATA.cardList[0], r = readDeckCode(DECK_CODE_PREFIX + toBase64('Odd\nno_such_card*2,' + c.id + '*9')); return r.left === 2 + 9 - copyLimit(c) && r.cards[c.id] === copyLimit(c); });
+    expect(odd, 'unknown cards or extra copies were not left out');
+    expect(!!(await pg.evaluate(() => readDeckCode(DECK_CODE_PREFIX + '%%%').error)), 'a damaged code gave no error');
+    await pg.fill('#deck-code-in', 'not a code');
+    await pg.click('[data-dc="use"]');
+    expect((await pg.textContent('#deck-code-msg')).includes("isn't a Shardfall deck code"), 'a wrong code gave no message');
+    await pg.fill('#deck-code-in', code);
+    await pg.click('[data-dc="use"]');
+    await pg.waitForSelector('#modal', { state: 'hidden' });
+    expect(await pg.evaluate(w => B.id === null && B.name === 'Code test deck' && JSON.stringify(B.cards) === w, want), 'the pasted deck is not the same deck');
+    await pg.click('#bld-save');
+    if (await pg.isVisible('#btn-decks')) await pg.click('#btn-decks');   // saving goes back to the menu's deck list
+    await pg.click('[data-create]');
+    await pg.click('[data-dc="paste"]');
+    await pg.fill('#deck-code-in', code);
+    await pg.click('[data-dc="use"]');
+    await pg.waitForSelector('#modal', { state: 'hidden' });
+    expect(await pg.evaluate(() => document.querySelector('#builder:not([hidden])') && B.name === 'Code test deck'), 'Use a deck code from Create your own deck did not open the builder');
+  }],
   ['bug report: an error opens the window, and it closes', async ({ pg, errors }) => {
     await pg.evaluate(() => setTimeout(() => { throw new Error('screen test: pretend problem'); }));
     await pg.waitForSelector('#bug-report');

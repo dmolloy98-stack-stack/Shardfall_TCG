@@ -266,6 +266,8 @@ $("#modal").addEventListener("click", e => {
   if (bug) { bugClick(bug); return; }
   const nd = t.closest("[data-new]");   // "Create your own deck" (js/decks.js)
   if (nd) { newDeckFrom(nd.dataset.new); return; }
+  const dc = t.closest("[data-dc]");   // deck codes: paste one, copy one, use one (js/decks.js)
+  if (dc) { if (dc.dataset.dc === "paste") showDeckCode(false); else deckCodeClick(dc); return; }
   const bld = t.closest("[data-bld]");   // deck builder: save, discard or delete (js/decks.js)
   if (bld) { builderChoice(bld.dataset.bld); return; }
   const camp = t.closest("[data-camp],[data-camp-go],[data-camp-back],[data-camp-close],[data-camp-deck],[data-camp-reset]");

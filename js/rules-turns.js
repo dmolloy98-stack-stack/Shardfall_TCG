@@ -93,16 +93,21 @@ function activateArea(uid) {
 // missing from a match saved by an older version of the game (the hosted page keeps a match
 // going across updates), so a newer rule never meets a match that lacks its part.
 const baseState = () => ({ players: [], active: 0, phase: PHASE.DRAW, round: 1, over: false, winner: null, pending: null, queue: [], nextUid: 1, log: [],
-  moves: [], setup: null, event: null, upcoming: null, lastEvent: null, noEvents: false, noAbilities: false, noShard: false, shard: null, shardFell: false, shardChip: [0, 0], shardBy: null, passAfterChoice: false, died: {} });
+  moves: [], setup: null, event: null, upcoming: null, lastEvent: null, noEvents: true, noAbilities: false, noShard: false, shard: null, shardFell: false, shardChip: [0, 0], shardBy: null, passAfterChoice: false, died: {} });
+
+// A recorded match's setup, ready for newGame(). Matches recorded before 27 Nov 2026 had random
+// events unless the setup said events: false; newer ones always say which.
+const replaySetup = setup => ({ ...setup, events: setup.events ?? true });
 
 // A new match. Everything needed to replay it is kept in S.setup: these same settings, the seed,
 // and both deck lists (so a replay works even where a custom deck isn't saved).
 //   foeChampion  campaign: the second player is this champion (its CardID), who starts with its card in hand
 //   lists        [deck list, deck list] to use instead of the saved decks (replays)
 //   randPick     a replay of a match whose opponent deck was picked at random
+//   events       true turns the random events on (off unless asked: kept for a later shake-up mode)
 function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard, foeChampion, lists, randPick }) {
   seed = (seed ?? newSeed()) >>> 0;
-  S = { ...baseState(), mode, seed, rng: seed, noEvents: events === false, noAbilities: abilities === false, noShard: shard === false };
+  S = { ...baseState(), mode, seed, rng: seed, noEvents: events !== true, noAbilities: abilities === false, noShard: shard === false };
   let opp = opponentDeckId;
   if (!opp || randPick) {
     randPick = true;
@@ -111,7 +116,7 @@ function newGame({ deckId, opponentDeckId, mode, seed, events, abilities, shard,
     if (!opp) opp = others.length ? others[Math.floor(pick * others.length)] : deckId;
   }
   lists = lists || [deckId, opp].map(id => DATA.decks[id].cards.map(e => ({ cardId: e.cardId, quantity: e.quantity })));
-  S.setup = { deckId, opponentDeckId: opp, mode, seed, events, abilities, shard, foeChampion, randPick: !!randPick, lists };
+  S.setup = { deckId, opponentDeckId: opp, mode, seed, events: !S.noEvents, abilities, shard, foeChampion, randPick: !!randPick, lists };
   S.players = [makePlayer(0, deckId, false), makePlayer(1, opp, mode === "ai")];
   for (const p of S.players) {
     p.deck = buildDeck(lists[p.idx]);

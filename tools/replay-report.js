@@ -17,7 +17,7 @@ console.log('Screen: ' + report.screen + (report.tutorial ? ' (tutorial)' : '') 
 const rec = report.match;
 if (!rec) { console.log('No match in the report (the error happened outside a match).'); process.exit(0); }
 if (rec.setup.scripted) { console.log('A tutorial lesson: lessons are scripted and are not replayed.'); process.exit(0); }
-newGame({ ...rec.setup });
+newGame(replaySetup(rec.setup));
 let i = 0;
 try {
   for (; i < rec.moves.length; i++) {
