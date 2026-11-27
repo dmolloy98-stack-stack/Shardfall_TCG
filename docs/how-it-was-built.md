@@ -318,4 +318,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-26, daily run (Tab stays inside pop-ups; nothing new to record).
+Last checked: 2026-11-27, daily run (arrow keys move between the Almanac tabs; nothing new to record).
