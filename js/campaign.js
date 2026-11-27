@@ -2,47 +2,10 @@
 // Each champion plays its fracture's starter deck and starts with its champion card in hand.
 // Progress is saved in the browser (PREFS "campaign"). Who the champions are, what they say
 // in a match and how the computer plays them is in js/champions.js; the story is docs/world.md.
-// Adding a champion: add a stage here, an entry in CHAMPIONS, and a starter deck for its faction.
+// Adding a champion: an entry in CHAMPIONS (js/champions.js, with its campaign stage and Almanac
+// notes), and a starter deck for its fracture.
 
-// Each stage: the champion's fracture and champion card (its CardID; the name shown is the card's), the story card before the match (intro, then a
-// short scene and the champion's words to the Shardkeeper), and the line after a win.
-const CAMPAIGN = [
-  {
-    faction: "Simple", champion: "the_simplistic",
-    scene: "The turnip rows are perfectly straight, every one exactly the same.",
-    says: "Nice turnips. Nice day. Why fight?",
-    intro: "A shard comes down in a quiet turnip field. The Simplistic is already standing over it, insisting everything was fine before all this.",
-    win: "The Simplistic shrugs and steps aside. \"Keep it simple,\" it says. \"Start small, then level up.\" It says it exactly as it said it before.",
-  },
-  {
-    faction: "Wild", champion: "the_man_ape",
-    scene: "The Man Ape peels a banana on top of its shard pile.",
-    says: "My jungle. My shards. You want some? Earn them.",
-    intro: "Deep in a jungle that wasn't there last week, The Man Ape sits on a pile of shards like a hoard of bananas. The troop watches from the trees. The ground still hums where the jungle first appeared.",
-    win: "The troop scatters. The Man Ape lets the shard go, but keeps one eye on it.",
-  },
-  {
-    faction: "Mortal", champion: "ip_man",
-    scene: "He is sweeping the courtyard. One stone is cracked in a perfect square.",
-    says: "*bows* Every fight is a lesson. Shall we study?",
-    intro: "Since his world broke, IP Man has trained on a cliff edge above the falling shards. He bows before every fight and expects a bow back. He swears the sky flickered, just once, a moment before the break.",
-    win: "IP Man bows once more. \"Again tomorrow,\" he says, and he means it.",
-  },
-  {
-    faction: "Cyber", champion: "boss_level",
-    scene: "The air hums like a computer fan. For a blink, a progress bar hangs at 99%.",
-    says: "PLAYER 2 HAS ENTERED. Difficulty: adjusting…",
-    intro: "A shard has landed in a server room humming in the middle of nowhere. Boss Level loads in with a health bar nobody has seen the end of. Its desktop wallpaper is a quiet turnip field.",
-    win: "Boss Level flickers. GAME OVER, the screens read, though nobody is sure for whom. Somewhere in the code, a turnip field keeps loading.",
-  },
-  {
-    faction: "Undead", champion: "soul_shepard",
-    scene: "Grey stones, quiet. Soul Shepard walks among them, humming.",
-    says: "They say I started all this. I only tend what's left.",
-    intro: "The other champions all say the Zombies caused the Shardfall. Soul Shepard waits among the graves, gathering the fallen, and does not argue.",
-    win: "Soul Shepard lowers its crook. Among the souls it gathered are faces from every world, not only its own. The shards keep falling.",
-  },
-];
+// The stages (CAMPAIGN) are built in js/champions.js from each champion's "campaign" entry.
 
 // A champion's name as players read it: its card's name, so renaming the card renames it everywhere.
 const champName = id => DATA.cardsById[id]?.name || id;
@@ -125,11 +88,10 @@ function campaignEndHTML(won) {
 
 // A win unlocks the next match.
 onGameEvent((type, d) => {
-  if (type !== "gameOver" || !U.campaign || U.tutorial || d.winner !== 0) return;
+  if (type !== "gameOver" || matchType() !== "campaign" || d.winner !== 0) return;
   if (U.campaign.stage >= campaignCleared()) PREFS.set("campaign", U.campaign.stage + 1);
 });
 
-document.getElementById("btn-campaign").addEventListener("click", showCampaign);
 // The campaign windows' buttons (their clicks come through the #modal handler in js/panels.js).
 function campaignClick(b) {
   const d = b.dataset;
@@ -158,7 +120,7 @@ function speakerName(foe) {
   const id = foe.champ?.id;
   return id && CHAMPIONS[id] ? id : null;
 }
-const speaking = () => typeof S !== "undefined" && S && S.mode === "ai" && !U.tutorial && S.players[1].isAI;
+const speaking = () => typeof S !== "undefined" && S && matchRule("speech") && S.players[1].isAI;
 function championSay(key, { force = false, once = false } = {}) {
   if (!speaking()) return;
   const foe = S.players[1];

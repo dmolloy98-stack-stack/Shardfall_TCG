@@ -42,6 +42,25 @@ them; nothing is lost while they wait.
   owner could design a card for it.
 - The big shard could carry the hint about what caused the Shardfall (see the Protected item below).
 
+## Growth review (27 Nov): what is left
+
+The owner picked 1, 2, 5, 6 and 7 of the review (built 27 Nov: seats, kinds of match, a world's
+look from its data row, one entry per champion, tokens as data, ability words described once, one
+menu click handler). Not now, by the owner's choice:
+- **Campaign progress saved as "stages won"** ("saving progress we'll do another time"): a new
+  world's champion placed anywhere but last would shift players' progress. Save the champions beaten
+  instead (with a save upgrade). Small.
+- **Random events as data** ("not priority for now"): an Effect column in `data/events.csv`, ready
+  for the shake-up mode. Medium.
+- Smaller, for later: the balance check samples opponents once there are many worlds;
+  `js/effects.js` splits when it passes about 600 lines.
+
+Owner's decisions these touch (no answers assumed): what the shake-up mode holds and whether its
+wins and Play a Friend wins count toward trophies and mastery (a `progress` switch in `MATCH_TYPES`);
+where new worlds' champions go in the campaign and whether a finished campaign opens new stages;
+whether tokens appear in the Almanac (today they don't); the words "Unbound" (now the
+`fracture_none` row of the word table) and "Mixed"; the balance target once there are many pairings.
+
 ## Offered, not picked yet (23 Nov)
 
 From the "what's next" list; the owner may pick them later.

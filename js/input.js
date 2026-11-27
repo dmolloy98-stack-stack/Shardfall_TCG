@@ -179,7 +179,7 @@ handLayer.addEventListener("contextmenu", e => {
 function cancelSomething() {
   if (U.armed) { U.armed = null; render(); return true; }
   if (U.selected) { U.selected = null; render(); return true; }
-  if (S?.pending?.kind === "target" && !S.players[S.pending.owner].isAI) { if (move("cancel")) { render(); return true; } }
+  if (S?.pending?.kind === "target" && isHere(S.players[S.pending.owner])) { if (move("cancel")) { render(); return true; } }
   return false;
 }
 // Keyboard: Space for the next step (Draw card, To battle, ...), E to pass the turn, Escape to

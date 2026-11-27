@@ -4,28 +4,19 @@
 //   node tools/explain-effect.js --all              every card, for reading through
 // Use it when writing an Effect (in the card sheet or data/cards.csv) to see what the game will
 // really do, and to catch mistakes: if the game can't read the text, it says why.
-// Every word of the ability language (js/effects.js) should be described here; when a word is
-// added (the ability-words skill), add its description below. tools/test-all.js runs --all and
+// The clause and "who" words are described in js/effects.js; the actions and narrowing words are
+// described below, so a new action or narrowing word (the ability-words skill) adds its description here. tools/test-all.js runs --all and
 // fails if a card uses a word this tool doesn't know.
 const fs = require('fs'), path = require('path');
 const dir = path.join(__dirname, '..');
 eval(require('./rules-code')(dir) +
-  ';globalThis.GAME = { DATA, TOKENS, RULE_WORDS };');   // functions like compileEffect are visible already
-const { DATA, TOKENS, RULE_WORDS } = GAME;
+  ';globalThis.GAME = { DATA, TOKENS, RULE_WORDS, WHEN, SELECTOR_WORDS };');   // functions like compileEffect are visible already
+const { DATA, TOKENS, RULE_WORDS, WHEN, SELECTOR_WORDS } = GAME;
 
-const WHEN_WORDS = {
-  play: 'When played',
-  enter: 'When it enters the field', endTurn: 'At the end of its owner\'s turn', attack: 'When it attacks',
-  hurt: 'When it takes damage and survives', reanimate: 'When it comes back through Reanimate',
-  allyLevelUp: 'When another of its owner\'s characters levels up', gearEnters: 'When equipment enters its owner\'s field',
-  maxLevel: 'When it reaches its last level', cost: 'Its cost', aura: 'While it is on the field',
-  grants: 'The character holding it has', rule: 'Special rule', counter: 'A counter spell: it can stop',
-};
-const BASES = {
-  self: 'this card', target: 'the picked target', holder: 'the character holding it', allies: 'your characters',
-  enemies: 'the other player\'s characters', everyone: 'every character', me: 'you', foe: 'the other player',
-  gear: 'stored equipment on both backlines', grave: 'your graveyard', graves: 'both graveyards', deck: 'your deck', hand: 'your hand',
-};
+// The words for each clause and each "who" come from js/effects.js (WHEN, SELECTOR_WORDS), so a new
+// word is described once, there.
+const WHEN_WORDS = Object.fromEntries(Object.entries(WHEN).map(([k, v]) => [k, v.says]));
+const BASES = SELECTOR_WORDS;
 const cardName = id => DATA.cardsById[id]?.name || TOKENS[id]?.name || id;
 function filterWords(f) {
   if (f === 'other') return 'not this card';

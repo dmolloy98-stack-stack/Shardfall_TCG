@@ -180,11 +180,11 @@ later), but **a deck holds only one champion card** (one kind, at most 2 copies)
 - One match per champion, in this order: The Simplistic, The Man Ape, IP Man, Boss Level,
   Soul Shepard. Zombie comes last because the other champions blame it.
 - Each match has a short story card before it (with the champion's one-line tag, a short scene
-  and the champion's words to the Shardkeeper) and a line after a win, in `js/campaign.js`
-  (`CAMPAIGN`). Gifts after a win were discussed and are on hold. The champions' in-match lines and play
+  and the champion's words to the Shardkeeper) and a line after a win, in each champion's
+  `campaign` entry in `js/champions.js`. Gifts after a win were discussed and are on hold. The champions' in-match lines and play
   styles are in `js/champions.js`. Narration stays at a distance (no "you").
-- Nothing in the code assumes five champions. To add one, add a stage to `CAMPAIGN`, an entry
-  to `CHAMPIONS` and a starter deck for its faction.
+- Nothing in the code assumes five champions. To add one, add an entry to `CHAMPIONS`
+  (with its campaign stage) and a starter deck for its world.
 
 ## Open questions
 

@@ -4,7 +4,7 @@
 // see data/README.md for what each column means. This script loads them, checks them,
 // and then starts the game scripts.
 
-const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events", "champion_abilities", "whats_new", "trophies", "mastery", "ai_styles"];
+const DATA_FILES = ["game_rules", "phases", "ui_text", "skills", "rarities", "factions", "cards", "decks", "events", "champion_abilities", "whats_new", "trophies", "mastery", "ai_styles", "tokens"];
 const GAME_SCRIPTS = ["js/saves.js", "js/engine.js", "js/rules-combat.js", "js/rules-turns.js", "js/rules-play.js", "js/rules-champions.js", "js/rules-events.js", "js/rules-shard.js", "js/effects.js", "js/ai.js", "js/dom.js", "js/tutorial.js", "js/tutorial-steps.js", "js/help.js", "js/guide.js", "js/decks.js", "js/fx.js", "js/previews.js", "js/motion.js", "js/intro.js", "js/cards.js", "js/ui.js", "js/board.js", "js/board-marks.js", "js/input.js", "js/table-effects.js", "js/panels.js", "js/menu.js", "js/storm.js", "js/champions.js", "js/campaign.js", "js/progress.js", "js/boot.js"];
 let DATA = null;
 
@@ -114,7 +114,7 @@ function readRarities(text) {
 function readFactions(text) {
   const factions = {};
   for (const r of csvTable(text, "factions", ["FactionID", "Name", "ColorR", "ColorG", "ColorB"])) {
-    factions[r.FactionID] = { id: r.FactionID, name: r.Name, color: rgb(r.ColorR, r.ColorG, r.ColorB), symbol: r.SymbolKey, desc: r.Description, order: Number(r.DisplayOrder) };
+    factions[r.FactionID] = { id: r.FactionID, name: r.Name, color: rgb(r.ColorR, r.ColorG, r.ColorB), symbol: r.SymbolKey, desc: r.Description, order: Number(r.DisplayOrder), entrance: r.Entrance || "", death: r.Death || "" };
   }
   return factions;
 }
@@ -145,7 +145,7 @@ const CARD_COLUMNS = ["CardID", "Cost", "Name", "Rarity", "Type", "Tribes", "Fra
 // The cards (data/cards.csv), checked one by one. A typing mistake stops the game with a message
 // naming the card, the same way a mistake in a deck list or an Effect does. Without this, a
 // misspelled skill or faction was ignored without a word and the card just played wrong.
-function readCards(text, { rarities, rarityOrder, factions, skills, skillOrder }) {
+function readCards(text, { rarities, rarityOrder, factions, skills, skillOrder }, file = "cards") {
   const statsOf = s => {
     // Attack+Health. An older third number (Speed, now removed) is ignored.
     const m = (s || "").match(/(-?\d+)\+(-?\d+)/);
@@ -155,18 +155,18 @@ function readCards(text, { rarities, rarityOrder, factions, skills, skillOrder }
   const fracturesOf = s => { const l = namesOf(s); return l.length ? l : ["N/A"]; };
   const cardsById = {}, cardsByName = {}, cardList = [];
   const checkCard = card => {
-    const bad = (what, value, list) => { throw new Error(`data/cards.csv, card ${card.id}: ${what} "${value}" is not known. Use one of: ${list.join(", ")}.`); };
-    if (cardsById[card.id]) throw new Error(`data/cards.csv: the CardID ${card.id} is used twice.`);
-    if (cardsByName[card.name]) throw new Error(`data/cards.csv: two cards are named "${card.name}" (${cardsByName[card.name].id} and ${card.id}).`);
+    const bad = (what, value, list) => { throw new Error(`data/${file}.csv, card ${card.id}: ${what} "${value}" is not known. Use one of: ${list.join(", ")}.`); };
+    if (cardsById[card.id]) throw new Error(`data/${file}.csv: the CardID ${card.id} is used twice.`);
+    if (cardsByName[card.name]) throw new Error(`data/${file}.csv: two cards are named "${card.name}" (${cardsByName[card.name].id} and ${card.id}).`);
     if (!CARD_TYPES.includes(card.type)) bad("the Type", card.type, CARD_TYPES);
     if (!rarities[card.rarity]) bad("the Rarity", card.rarity, rarityOrder);
     for (const g of card.groups) if (g !== "N/A" && !factions[g]) bad("the Fracture", g, [...Object.keys(factions), "N/A"]);
     if (card.groups.length > 1 && card.groups.includes("N/A")) bad("the Fracture", card.groups.join("+"), Object.keys(factions));
     for (const k of [...card.tribes, ...card.classes]) if (/[a-z]:/.test(k)) bad("the tribe or class", k, ["a plain name"]);
-    if (card.type !== "Character" && (card.tribes.length || card.classes.length)) throw new Error(`data/cards.csv, card ${card.id}: only characters have tribes and classes. Use --- for a ${card.type}.`);
+    if (card.type !== "Character" && (card.tribes.length || card.classes.length)) throw new Error(`data/${file}.csv, card ${card.id}: only characters have tribes and classes. Use --- for a ${card.type}.`);
     for (const s of card.skills) if (!skills[s]) bad("the skill", s, skillOrder);
   };
-  for (const r of csvTable(text, "cards", CARD_COLUMNS)) {
+  for (const r of csvTable(text, file, CARD_COLUMNS)) {
     if (!r.CardID || !r.Name || !r.Type) continue;
     const [attack, health] = statsOf(r.Stats);
     const card = {
@@ -221,12 +221,19 @@ function buildData(CSV) {
   const uiText = readUiText(CSV.ui_text);
   const kinds = { ...readSkills(CSV.skills), ...readRarities(CSV.rarities), factions: readFactions(CSV.factions) };
   const cards = readCards(CSV.cards, kinds);
+  // Tokens (data/tokens.csv): cards made during play, read and checked like cards but kept apart.
+  const tokens = readCards(CSV.tokens || "", kinds, "tokens");
+  for (const t of tokens.cardList) {
+    if (cards.cardsById[t.id]) throw new Error(`data/tokens.csv: the CardID ${t.id} is also a card in data/cards.csv.`);
+    t.token = true;
+  }
   const whatsNew = readWhatsNew(CSV.whats_new);
   return {
     warnings,
     whatsNew, version: whatsNew[0] ? `Update ${whatsNew[0].update}` : "",
     rules, phases: readPhases(CSV.phases), uiText, ...readEvents(CSV.events), championAbilities: readChampionAbilities(CSV.champion_abilities),
     ...kinds, ...cards, ...readDecks(CSV.decks, cards.cardsById, rules, warnings),
+    tokensById: tokens.cardsById, tokenList: tokens.cardList,
     trophies: readTrophies(CSV.trophies), mastery: readMastery(CSV.mastery), aiStyles: readAiStyles(CSV.ai_styles),
     text: (id, fallback) => uiText[id] ?? fallback ?? id,
   };

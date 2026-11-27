@@ -31,7 +31,7 @@ function masteryLine(deckId) {
 }
 onGameEvent((type, d) => {
   if (type === "newGame") U.masteryGain = null;
-  if (type !== "gameOver" || U.tutorial || !S || S.mode !== "ai" || S.players[0].isAI) return;
+  if (type !== "gameOver" || !S || !matchRule("progress") || !isHere(S.players[0])) return;
   const id = S.players[0].deckId;
   const all = PREFS.get("mastery", {}) || {};
   const before = all[id] || 0;
@@ -71,7 +71,7 @@ function loreHTML(c) {
 }
 onGameEvent((type, d) => {
   if (type === "newGame") U.newLore = [];
-  if (type !== "play" || !S || S.players[d.player]?.isAI) return;
+  if (type !== "play" || !S || !isHere(S.players[d.player])) return;
   const id = d.card.id;
   if (!DATA.cardsById[id]?.description || loreKnown(id)) return;
   PREFS.set("lore", [...(PREFS.get("lore", []) || []), id]);
@@ -124,7 +124,7 @@ function bumpCount(key, n = 1) {
   for (const t of TROPHIES) if (t.count === key && c[key] >= t.goal) earnTrophy(t.id);
 }
 // What one match tracks for the trophies (the player at the bottom against the computer).
-const trophyMatch = () => S && S.mode === "ai" && !U.tutorial && !S.players[0].isAI;
+const trophyMatch = () => S && matchRule("progress") && isHere(S.players[0]);
 let TROPHY_MATCH = null;
 onGameEvent((type, d) => {
   if (type === "newGame") { U.newTrophies = []; TROPHY_MATCH = { hurt: false, low: Infinity, spells: 0, grave: new Set() }; return; }
@@ -210,7 +210,7 @@ function endBadges(winner) {
     const w = S.players[winner];
     if (w.health >= w.maxHealth) badges.push(["Flawless", "Won without taking a hit"]);
     if ((st.low?.[winner] ?? 1) < 0.35) badges.push(["Comeback", "Won from red health"]);
-    if (S.mode === "ai" && winner === 0 && !U.tutorial) {
+    if (matchRule("progress") && isHere(S.players[winner])) {
       const wins = PREFS.get("wins", {}) || {};
       const id = S.players[0].deckId;
       if (!wins[id]) badges.push(["First win", `with ${DATA.decks[id]?.name || "this deck"}`]);

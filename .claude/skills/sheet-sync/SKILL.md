@@ -25,11 +25,12 @@ The game files are the master copy: if cards change in code, update the sheet to
 - **Decks plus Deck cards → `data/decks.csv`.** One row per card becomes the
   `CardID:copies|…` CardList. Skip rows with 0 copies (a card taken out of a deck).
 - **Fractures → `data/factions.csv`** (the tab was called Factions). Color is hex; convert to
-  0–1 RGB.
+  0–1 RGB. Entrance and Death (columns H and I) name how a world's cards enter and leave the table.
 - **Skills → `data/skills.csv`.**
 - **Mirror tabs (for the owner to read):** Game rules → `data/game_rules.csv`, Champion abilities →
   `data/champion_abilities.csv`, Random events → `data/events.csv`, Trophies → `data/trophies.csv`,
-  Deck mastery → `data/mastery.csv`, Computer styles → `data/ai_styles.csv`. Same columns, same rows
+  Deck mastery → `data/mastery.csv`, Computer styles → `data/ai_styles.csv`, Tokens →
+  `data/tokens.csv`. Same columns, same rows
   in the same order. Whenever one of those files changes, rewrite its whole tab with one
   `update_values` call (header row included). The owner asks for changes to them in words; they
   have no Status column.

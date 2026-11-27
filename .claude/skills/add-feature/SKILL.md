@@ -78,6 +78,10 @@ added, split or renamed, or the flow between them changes.
 10. **Match saving:** a match in progress survives live updates of the claude.ai page (`js/boot.js`
    restores `S` over `baseState()`). New fields in `S` need a default in `baseState()`.
 
+11. **Seats and kinds of match:** ask `isHere(p)` for "is this the person at this screen?", never
+   `!p.isAI`; ask `matchRule("progress")` (and the other `MATCH_TYPES` keys in `js/ui.js`) instead of
+   checking the mode, the campaign or the tutorial directly.
+
 ## Which focused test covers what
 
 `node tools/test-all.js` runs all of these; run one alone while working on its area:

@@ -35,7 +35,7 @@ function aimSource() {
   if (!S || U.screen !== "game" || !humanTurn()) return null;
   if (U.selected && findChar(U.selected)) return charCenter(U.selected);
   const pd = S.pending;
-  if (pd?.kind === "target" && !S.players[pd.owner].isAI) return { x: 720, y: 760 };
+  if (pd?.kind === "target" && isHere(S.players[pd.owner])) return { x: 720, y: 760 };
   return null;
 }
 function centerOf(el) {
@@ -226,11 +226,12 @@ function skillSpotlight(uid, skill) {
   setTimeout(() => flashCard(uid, "skill-glow"), 0);
 }
 
-// Each faction enters the table its own way (cheaper cards; big ones get a showcase).
-const FACTION_ENTRANCE = { Simple: "enter-sprout", Wild: "enter-bounce", Undead: "enter-rise", Mortal: "enter-stance", Cyber: "enter-glitch" };
+// Each world's cards enter the table their own way (cheaper cards; big ones get a showcase). The
+// Entrance column of data/factions.csv names it; the animation is ".enter-<name>" in css/style.css.
 function spawnClass(sp) {
   if (sp.big) return "spawn-7";
-  return FACTION_ENTRANCE[sp.faction] || "enter-assemble";
+  const e = DATA.factions[sp.faction]?.entrance;
+  return e ? "enter-" + e : "enter-assemble";
 }
 
 // ---------------------------------------------------------------------------
@@ -240,7 +241,7 @@ function finale(winner) {
   const game = S;
   U.endBadges = endBadges(winner);   // js/progress.js
 
-  if (REDUCED_MOTION || U.tutorial) { U.ended = true; return; }
+  if (REDUCED_MOTION || matchRule("coached")) { U.ended = true; return; }
   fxBusy(2400);
   // the killing blow: the table drains to black and white, all but the attacker that struck it
   const hero = U.lastAttacker && performance.now() - U.lungeAt < 1500 ? U.lastAttacker : null;

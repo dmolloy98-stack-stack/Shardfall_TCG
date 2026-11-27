@@ -45,7 +45,7 @@ top) and `docs/world.md`. Short version:
 | What | File |
 |---|---|
 | Champion in-match lines, tag, AI style | `js/champions.js` (`CHAMPIONS[...].lines`, keys: start, champion, hurt, low, hit, win, lose, shardLost, shardWon, fell, brink, outnumber, recallWin, recallLose) |
-| Campaign story card (scene, says) and the line after a win | `js/campaign.js` (`CAMPAIGN`) |
+| Campaign story card (intro, scene, says) and the line after a win | `js/champions.js` (each champion's `campaign` entry; `stage` is its place in the order) |
 | Card stories (flavor text) | `data/cards.csv` Description column **and** the card sheet's column O "Flavor text" (row = cards.csv line number); keep both the same |
 | Intro panels | `js/intro.js` (`INTRO_PANELS`) |
 

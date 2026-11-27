@@ -1,6 +1,6 @@
-FactionID,Name,ColorR,ColorG,ColorB,SymbolKey,Description,DisplayOrder
-Simple,Simple,0.30,0.64,0.36,sprout,Nature and humble beginnings,10
-Wild,Wild,0.84,0.58,0.17,paw,Agility and mischief,20
-Undead,Undead,0.40,0.63,0.42,skull,Decay and resurrection,30
-Mortal,Mortal,0.78,0.28,0.24,swords,Combat and discipline,40
-Cyber,Cyber,0.18,0.68,0.86,chip,Glass cannons that level up,50
+FactionID,Name,ColorR,ColorG,ColorB,SymbolKey,Description,DisplayOrder,Entrance,Death
+Simple,Simple,0.30,0.64,0.36,sprout,Nature and humble beginnings,10,sprout,shatter
+Wild,Wild,0.84,0.58,0.17,paw,Agility and mischief,20,bounce,tumble
+Undead,Undead,0.40,0.63,0.42,skull,Decay and resurrection,30,rise,sink
+Mortal,Mortal,0.78,0.28,0.24,swords,Combat and discipline,40,stance,slash
+Cyber,Cyber,0.18,0.68,0.86,chip,Glass cannons that level up,50,glitch,pixel

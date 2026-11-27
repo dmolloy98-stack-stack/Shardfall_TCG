@@ -114,14 +114,13 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   ok('Soul Shepard: it gains no Attack', rawStats(onField).a === card.attack);
   ok('Soul Shepard: it is bigger in the hand too, before it is played', grieveBonus(inHand) === 2);
 }
-{ // every champion is complete: a new champion touches five places, and none may be forgotten
-  const campaign = fs.readFileSync(dir + '/js/campaign.js', 'utf8'), menu = fs.readFileSync(dir + '/js/menu.js', 'utf8');
+{ // every champion is complete: its card, its rules entry, and its CHAMPIONS entry with campaign and guide
   for (const id of Object.keys(DATA.championAbilities)) {
     ok(id + ': its card exists (data/cards.csv)', !!DATA.cardsById[id]);
     ok(id + ': its rules entry (CHAMPION_RULES, js/rules-champions.js)', !!CHAMPION_RULES[id]);
     ok(id + ': its lines and play style (CHAMPIONS, js/champions.js)', !!CHAMPIONS[id]);
-    ok(id + ': its campaign stage (CAMPAIGN, js/campaign.js)', campaign.includes('champion: "' + id + '"'));
-    ok(id + ': its Almanac notes (CHAMP_GUIDE, js/menu.js)', menu.includes('  ' + id + ': {'));
+    ok(id + ': its campaign stage (campaign, in CHAMPIONS)', !!CHAMPIONS[id]?.campaign && CAMPAIGN.some(s => s.champion === id));
+    ok(id + ': its Almanac notes (guide, in CHAMPIONS)', !!CHAMPIONS[id]?.guide?.notes?.length);
   }
 }
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED');

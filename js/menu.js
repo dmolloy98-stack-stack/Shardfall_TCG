@@ -66,33 +66,38 @@ function renderSetup() {
 function showMenuHome() { U.menuView = "home"; renderMenu(); }
 function showSetup(mode) { U.setupMode = mode; U.menuView = "setup"; renderMenu(); window.scrollTo?.(0, 0); }
 
+// The start menu's buttons, by their id in index.html, and what each one does. The menu has one
+// click handler (below): a new menu button is one line here, never a handler of its own.
+const MENU_BUTTONS = {
+  "btn-campaign": () => showCampaign(),
+  "btn-back": () => (U.setupMode === "campaign" ? (showMenuHome(), showCampaign()) : showMenuHome()),
+  "btn-start": () => {
+    if (U.setupMode === "campaign") { showMenuHome(); showCampaign(); return; }
+    U.mode = U.setupMode === "hotseat" ? "hotseat" : "ai";
+    U.lastOpp = U.oppDeckId === "random" ? undefined : U.oppDeckId;
+    startGame({ opponentDeckId: U.lastOpp });
+  },
+  "btn-almanac": () => { U.almanacReturn = "menu"; showScreen("almanac"); },
+  "btn-rules": () => showGuide(),
+  "btn-settings": () => showSettings(),
+  "btn-trophies": () => showTrophies(),
+  "btn-version": () => showWhatsNew(),
+  "btn-tutorial": () => startTutorial(),
+};
 $("#menu").addEventListener("click", e => {
-  const s = e.target.closest("[data-setup]");
-  if (s) showSetup(s.dataset.setup);
-});
-$("#btn-back").addEventListener("click", () => (U.setupMode === "campaign" ? (showMenuHome(), showCampaign()) : showMenuHome()));
-$("#deck-list").addEventListener("click", e => {
-  const edit = e.target.closest("[data-edit]");
+  const t = e.target;
+  const s = t.closest("[data-setup]");                 // the doors and My Decks: choose decks for that kind of match
+  if (s) { showSetup(s.dataset.setup); return; }
+  const edit = t.closest("[data-edit]");              // the deck list: edit, create, or pick a deck
   if (edit) { editDeck(edit.dataset.edit); return; }
-  if (e.target.closest("[data-create]")) { createDeck(); return; }
-  const t = e.target.closest("[data-deck]");
-  if (t) { U.deckId = t.dataset.deck; PREFS.set("deck", U.deckId); renderMenu(); }
+  if (t.closest("[data-create]")) { createDeck(); return; }
+  const deck = t.closest("[data-deck]");
+  if (deck) { U.deckId = deck.dataset.deck; PREFS.set("deck", U.deckId); renderMenu(); return; }
+  const opp = t.closest("[data-opp]");                // the other side's deck
+  if (opp) { U.oppDeckId = opp.dataset.opp; PREFS.set("opp", U.oppDeckId); renderMenu(); return; }
+  const btn = t.closest("button[id]");
+  if (btn && MENU_BUTTONS[btn.id]) MENU_BUTTONS[btn.id]();
 });
-$("#opp-list").addEventListener("click", e => {
-  const t = e.target.closest("[data-opp]");
-  if (t) { U.oppDeckId = t.dataset.opp; PREFS.set("opp", U.oppDeckId); renderMenu(); }
-});
-$("#btn-start").addEventListener("click", () => {
-  if (U.setupMode === "campaign") { showMenuHome(); showCampaign(); return; }
-  U.mode = U.setupMode === "hotseat" ? "hotseat" : "ai";
-  U.lastOpp = U.oppDeckId === "random" ? undefined : U.oppDeckId;
-  startGame({ opponentDeckId: U.lastOpp });
-});
-$("#btn-almanac").addEventListener("click", () => { U.almanacReturn = "menu"; showScreen("almanac"); });
-$("#btn-rules").addEventListener("click", () => showGuide());
-$("#btn-settings").addEventListener("click", showSettings);
-$("#btn-trophies").addEventListener("click", () => showTrophies());
-$("#btn-version").addEventListener("click", () => showWhatsNew());
 
 // What's new (data/whats_new.csv): every update, newest first.
 function showWhatsNew() {
@@ -102,51 +107,14 @@ function showWhatsNew() {
     <div class="whats-new" tabindex="0" aria-label="Updates, newest first">${DATA.whatsNew.map((u, i) => `<section class="${i ? "" : "latest"}"><h3>${esc(T("whatsnew_update", { n: u.update }))} <small>${esc(date(u.date))}</small></h3><ul>${u.changes.map(c => `<li>${esc(c)}</li>`).join("")}</ul></section>`).join("")}</div>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>${esc(T("close"))}</button></div>`);
 }
-$("#btn-tutorial").addEventListener("click", startTutorial);
 $("#guide-back").addEventListener("click", () => showScreen(U.guideReturn === "game" && S ? "game" : "menu"));
 $("#guide-tutorial").addEventListener("click", startTutorial);
 $("#alm-back").addEventListener("click", () => showScreen(U.almanacReturn === "game" && S ? "game" : "menu"));
 
 // The Almanac's Champions tab: every champion's ability explained in full, with pictures drawn by
 // the game itself (real cards and the real status line), so they always match the current look.
-// The words come from data/champion_abilities.csv. The notes and the before-and-after examples
-// are here; keep their numbers in step with js/rules-champions.js.
-// Numbers that come from the data are written as {goal} (the Goal in champion_abilities.csv),
-// {health} (the starting health) and {phase2} / {final} (where Boss Level's phases start), so the
-// Almanac stays right when the data changes. tools/champions-test.js checks no other number drifts.
-//   status   sample status lines, as they show under a player's name
-//   pairs    before -> after pictures: a card (pick: which card; change: what the ability changes)
-//            or two short labels (from, to), each with a caption
-const CHAMP_GUIDE = {
-  the_simplistic: {
-    notes: ["Nothing happens until it levels up.", "It levels up at the start of the turn when you have {goal} mana crystals. That is the same turn for every match, so you can plan for it.", "After that, every Simple character you have gets the bonus, and so does every Simple character you play later."],
-    status: ["Lv 1 · 4/{goal} max mana", "Lv 2 · Leveled up"],
-    pairs: [{ caption: "When you reach {goal} mana crystals: every Simple character gets +1 Attack and +1 Health.", pick: c => c.id === "simple_farmer", change: { attack: 1, health: 1 } }],
-  },
-  the_man_ape: {
-    notes: ["It counts the characters on each side. With more than your opponent, every character you have gets +1 Attack, Monkey or not.", "It only works on your turn, when you attack. Your characters don't get it while defending.", "It switches on and off by itself as characters come and go, even in the middle of your attacks."],
-    status: ["4 vs 3 characters · +1 Attack", "2 vs 3 characters"],
-    pairs: [{ caption: "With more characters than your opponent, on your turn: +1 Attack.", pick: c => c.group === "Wild" && c.type === "Character" && c.manaCost === 2, change: { attack: 1 } }],
-  },
-  ip_man: {
-    notes: ["The bow happens by itself when you press To battle. The game picks your strongest character that can attack this turn.", "The +2 Attack lasts until the end of your turn.", "A fight counts as won when your character survives and the enemy character is knocked out. Attacks on the player don't count. Fights you win while defending count too.", "After {goal} won fights, your two strongest attackers get the bow each turn."],
-    status: ["Lv 1 · 3/{goal} fights won", "Lv 2 · Leveled up"],
-    pairs: [{ caption: "At the start of your Battle phase: your strongest ready attacker gets +2 Attack this turn.", pick: c => c.group === "Mortal" && c.type === "Character" && c.manaCost === 2, change: { attack: 2 } }],
-  },
-  boss_level: {
-    notes: ["It works from your starting health: with {health}, PHASE 2 starts at {phase2} health or less and FINAL PHASE at {final} or less.", "In PHASE 2 you draw 2 cards in your Draw phase instead of 1.", "FINAL PHASE keeps the extra card and gives every character you have +1 Attack and +1 Health, Digital or not.", "Healing never takes you back to an earlier phase."],
-    status: ["Phase 1", "Phase 2", "Final phase"],
-    pairs: [
-      { caption: "PHASE 2: 1 extra card each turn.", from: "🂠 1", to: "🂠 2" },
-      { caption: "FINAL PHASE: your characters also get +1 Attack and +1 Health.", pick: c => c.group === "Cyber" && c.type === "Character" && c.manaCost === 2, change: { attack: 1, health: 1 } },
-    ],
-  },
-  soul_shepard: {
-    notes: ["This one has no levels. It makes the Soul Shepard card itself bigger.", "Every Undead character that dies counts: yours and your opponent's.", "It counts from the start of the match, wherever the card is: in your deck, in your hand or on the table. So the longer the match, the bigger Soul Shepard is when you play it.", "It gains Health only, never Attack."],
-    status: ["3 undead fallen"],
-    pairs: [{ caption: "After 3 Undead characters have died: Soul Shepard has +3 Health, even in your hand.", pick: c => c.id === "soul_shepard", change: { health: 3 } }],
-  },
-};
+// The words come from data/champion_abilities.csv; the notes and before-and-after examples are each
+// champion's "guide" entry in js/champions.js.
 // Fills {goal}, {health}, {phase2} and {final} in a champion's Almanac notes.
 function champGuideText(id, text) {
   const h = RULES.startingHealth;
@@ -168,7 +136,7 @@ function championsHTML() {
     return `<figure class="champ-pair"><div class="champ-pics"><div><small>Before</small>${a}</div><span class="champ-arrow" aria-hidden="true">→</span><div class="${chg.trim()}"><small>After</small>${b}</div></div><figcaption>${esc(fill(pr.caption))}</figcaption></figure>`;
   };
   const one = id => {
-    const info = DATA.championAbilities[id], card = DATA.cardsById[id], g = CHAMP_GUIDE[id] || { notes: [], status: [], pairs: [] };
+    const info = DATA.championAbilities[id], card = DATA.cardsById[id], g = CHAMPIONS[id]?.guide || { notes: [], status: [], pairs: [] };
     fill = t => champGuideText(id, t);
     if (!card) return "";
     const grows = !info.goal;
@@ -216,13 +184,13 @@ function protectedRuleHTML() {
 
 function renderAlmanac() {
   document.querySelectorAll(".tab").forEach(t => { const on = t.dataset.tab === U.almanacTab; t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; });   // only the chosen tab is a Tab stop; arrow keys move between them
-  const filters = ["All", ...Object.keys(DATA.factions), "Unbound"];
+  const filters = ["All", ...Object.keys(DATA.factions), "N/A"];   // a world's id; the chip shows its name (groupLabel)
   $("#alm-filters").hidden = U.almanacTab !== "cards";
   // Three rows of filters: Fracture (where a card is from), Tribe (species) and Class (job).
   const tribes = ["All", ...new Set(DATA.cardList.flatMap(c => c.tribes))].sort((x, y) => (x === "All" ? -1 : y === "All" ? 1 : x.localeCompare(y)));
   const classes = ["All", ...new Set(DATA.cardList.flatMap(c => c.classes))].sort((x, y) => (x === "All" ? -1 : y === "All" ? 1 : x.localeCompare(y)));
-  const row = (label, attr, list, cur) => `<div class="chip-line"><span class="chip-label">${label}</span>${list.map(f => `<button type="button" class="chip" data-${attr}="${esc(f)}" aria-pressed="${f === cur}">${esc(f)}</button>`).join("")}</div>`;
-  $("#alm-filters").innerHTML = row("Fracture", "filter", filters, U.almanacFilter) + row("Tribe", "tribe", tribes, U.almanacTribe || "All") + row("Class", "class", classes, U.almanacClass || "All");
+  const row = (label, attr, list, cur, name = f => f) => `<div class="chip-line"><span class="chip-label">${label}</span>${list.map(f => `<button type="button" class="chip" data-${attr}="${esc(f)}" aria-pressed="${f === cur}">${esc(name(f))}</button>`).join("")}</div>`;
+  $("#alm-filters").innerHTML = row("Fracture", "filter", filters, U.almanacFilter, f => (f === "All" ? f : groupLabel(f))) + row("Tribe", "tribe", tribes, U.almanacTribe || "All") + row("Class", "class", classes, U.almanacClass || "All");
   if (U.almanacTab === "skills") {
     $("#alm-content").innerHTML = protectedRuleHTML() + `<div class="skill-list">${DATA.skillOrder.map(name => {
       const sk = DATA.skills[name];
@@ -234,7 +202,7 @@ function renderAlmanac() {
   if (U.almanacTab === "champions") { $("#alm-content").innerHTML = championsHTML(); return; }
   const fitsKinds = c => (!U.almanacTribe || U.almanacTribe === "All" || hasTribe(c, U.almanacTribe)) && (!U.almanacClass || U.almanacClass === "All" || hasClass(c, U.almanacClass));
   const groups = [...Object.keys(DATA.factions), "N/A"];
-  const want = U.almanacFilter === "Unbound" ? "N/A" : U.almanacFilter;
+  const want = U.almanacFilter;
   let h = `<p class="lore-count">📜 Card stories found: <b>${loreCount()}</b> of ${DATA.cardList.filter(c => c.description).length}. Play a card to unlock its story; tap any card to read it.</p><div class="card-grid">`;
   for (const g of groups) {
     if (want !== "All" && want !== g) continue;

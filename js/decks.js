@@ -168,16 +168,16 @@ const builderDirty = () => JSON.stringify([B.name, B.cards]) !== B.saved;
 
 function renderBuilder() {
   byId("bld-name").value = B.name;
-  const factions = ["All", ...Object.keys(DATA.factions), "Unbound"];
+  const factions = ["All", ...Object.keys(DATA.factions), "N/A"];   // a world's id; the chip shows its name (groupLabel)
   byId("bld-filters").innerHTML =
-    `<div class="chip-row" role="group" aria-label="Fracture">${factions.map(f => `<button type="button" class="chip" data-faction="${f}" aria-pressed="${f === B.faction}">${esc(f === "All" ? "All fractures" : f)}</button>`).join("")}</div>
+    `<div class="chip-row" role="group" aria-label="Fracture">${factions.map(f => `<button type="button" class="chip" data-faction="${f}" aria-pressed="${f === B.faction}">${esc(f === "All" ? "All fractures" : groupLabel(f))}</button>`).join("")}</div>
      <div class="chip-row" role="group" aria-label="Card type">${["All", ...TYPES].map(t => `<button type="button" class="chip" data-type="${t}" aria-pressed="${t === B.type}">${esc(t === "All" ? "All types" : t + "s")}</button>`).join("")}</div>`;
   renderPool();
   renderDeckPanel();
 }
 
 function renderPool() {
-  const want = B.faction === "Unbound" ? "N/A" : B.faction;
+  const want = B.faction;
   const cards = DATA.cardList
     .filter(c => buildable(c) && (want === "All" || inGroup(c, want)) && (B.type === "All" || c.type === B.type))
     .sort((a, b) => a.manaCost - b.manaCost || a.name.localeCompare(b.name));
