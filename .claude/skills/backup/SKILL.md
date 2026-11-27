@@ -70,6 +70,21 @@ Publish it with the Artifact tool, `file_path` = that file, `url:
 "https://claude.ai/artifact/VC8opzKwdKLh5srrGCBwcr"`, no `icon` (in a new session `read` that url
 first). It is built from the project's files, so never edit it by hand.
 
+**Leave out the `capabilities` field** on this publish. The page keeps its own small database and
+the right to wake a scheduled task (both declared once, 27 Nov 2026); leaving the field out keeps
+them, while passing it (even `{}`) would switch off the pull-request panel and its Merge button.
+
+**The pull-request panel** at the top reads the open pull requests from the page's database, not
+from the build. Whenever a run opens, merges or closes a pull request (and only then; the owner
+doesn't want it refreshed on a schedule), write the list with the ArtifactData tool, `url` above:
+`set` document `open` in collection `prs` (`get` it first for `if_version`) as
+`{checked_at, list: [{number, title, why, opened, branch}], latest_merged: [{number, title, merged}]}`,
+where `why` is one plain sentence (what it changes and why it was held). No links: the page makes
+them. The owner's **Merge to main** button writes `merge_requests/<number>` with status
+`requested` and wakes the "Shardfall merge from dashboard" scheduled task
+(`trig_01UAGxMNpmLNdtB7J3pyfJDV`, also in `tools/make-dashboard.js`), which merges only when every
+GitHub check passed and sets the status to `merged` or `failed` with a plain-words note.
+
 ## Restoring from the backups
 
 When the owner wants the game back from Drive (GitHub gone, or a check that the backups work):

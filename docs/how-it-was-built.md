@@ -290,6 +290,15 @@ book, `docs/look.md`, so new options stay consistent (24 Nov 2026).
 **Every change goes through a pull request,** merged once GitHub's tests pass, then backed up to
 Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main` after each merge.
 
+**Held pull requests wait on the dashboard, and the owner merges them with a button.** The
+dashboard's pull-request panel reads the open list from the page's own small database, written
+only when a pull request opens, merges or closes, because the page can't ask GitHub itself and the
+owner didn't want a timed refresh. **Merge to main** saves a request in that database and wakes the
+"Shardfall merge from dashboard" scheduled task, which still merges only when every check is green;
+the daily run picks up any request that didn't wake it. The request is saved before the wake-up so
+a failed wake-up loses nothing. Republish the dashboard without a `capabilities` field, or the
+button stops working (`backup` skill) (27 Nov 2026).
+
 ## The owner's decisions that shape the code
 
 - Card vocabulary: **Fracture** (where a card is from), **Tribes** (what it is), **Classes** (what
@@ -341,4 +350,4 @@ Drive (`pr-cycle` and `backup` skills). The work branch is restarted from `main`
 
 ---
 
-Last checked: 2026-11-27, pull request #43 (random events off in normal play; deck codes; U, L and css/skins.css tidied; the recorded-match check fix).
+Last checked: 2026-11-27, pull request #44: the dashboard pull-request panel and Merge button (tools/make-dashboard.js, backup skill).
