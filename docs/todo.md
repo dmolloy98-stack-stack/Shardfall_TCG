@@ -82,25 +82,27 @@ It applies to **cards** and to **whole decks**, to show mastery of them. The wor
   upgrade" like Team Fight Tactics, but the later answers talk only about earning levels. Ask
   again before building anything that costs money.
 
-## Champion leveling (like Legends of Runeterra) — the owner chose "no champion is a real choice"
+## Champion leveling — the owner decided what it means (27 Nov)
 
-**The idea.** Each champion (Unknown card) levels up when its deck meets a condition, and it
-changes into a stronger version. A deck may hold one kind of champion, or none.
+**Decided by the owner (27 Nov).** Leveling is about the champions' **passive abilities**, the ones
+active all match long (`data/champion_abilities.csv`). The ability levels up; **the champion
+card itself never levels up or changes** (the Legends of Runeterra style card level-up was turned
+down). A deck with **no champion gets nothing extra**; skipping the champion is the player's choice.
 
-**Decided by the owner.**
-- A deck with **no champion gets nothing extra**. Skipping the champion is the player's choice.
-- Each champion needs its own ability and level-up condition that fits its personality and play
-  style (`docs/world.md` and `js/champions.js` hold the personalities). **The owner is working
-  these out. Claude offers options and waits.** Nothing is built.
+**Where each ability stands today.**
+- Level up once already: The Simplistic (Humble Beginnings, at 6 max mana) and IP Man (The Bow,
+  after 5 fights won).
+- No level-up yet: The Man Ape (Chest Thump), Boss Level (Boss Phases: it has phases instead) and
+  Soul Shepard (Keeper of the Fallen: it grows instead). Whether these get a level-up, and what it
+  is, is the owner's to design. Claude offers options when asked and waits.
 
 **TBD (to be decided later).**
 - **Cards that reward a no-champion deck.** The owner will design these later. They are meant
   to make "no champion" a choice with its own upside, without any built-in bonus for it.
 
-**Notes for when this is built.**
-- Test every champion's balance on the computer players first (`tools/selftest.js`). The
-  starter decks are already uneven (23 Nov: Monkey wins about 57%, Simple about 43%).
-- Research said to make leveling happen often and keep it something the opponent can fight.
+**Notes for when more is built.** Test every change on the computer players first
+(`node tools/winrates.js`). Research said to make leveling happen often and keep it something the
+opponent can fight.
 
 ## More area cards — an idea the owner likes, not yet designed
 
@@ -138,5 +140,5 @@ means "not now"; the owner may pick it up later.
 - **Challenges** (special goals for a match): on hold (Nov 2026).
 - **Phone-only table layout:** discontinued; the current phone layout is good enough. Kept as a reference in `docs/phone-table/`.
 - **Card-sheet "card lab" and other early tools** (options 2 and 3 when the data moved to CSV files): on hold since the start; the My Decks builder exists now.
-- **Champion leveling:** waiting on the owner's designs (see "Champion leveling" above).
+- **Champion cards leveling up** (a Legends of Runeterra style change of the card itself): turned down 27 Nov; the passive abilities level up instead (see "Champion leveling" above).
 - **Play a Friend:** chosen (Firebase), waiting on the owner to create the Firebase project. The plan for hiding cards is `docs/online-play.md`; the owner decided (21 Nov) that the counter window always pauses briefly when the other player has spare mana.

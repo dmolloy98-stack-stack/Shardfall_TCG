@@ -310,6 +310,8 @@ button stops working (`backup` skill) (27 Nov 2026).
 - Claude merges a pull request once GitHub's tests pass (Nov 2026).
 - Random events (mini shard falls) are not part of normal play: campaign, Play vs Computer and Two
   players have none. They wait for a later "shake-up" mode. The big shard fall stays (27 Nov 2026).
+- Champion leveling means the champions' passive abilities (`CHAMPION_RULES`) level up; a champion
+  card never transforms into another version, so no "levelled card" state is needed (27 Nov 2026).
 
 ## Traps already fallen into
 
@@ -350,4 +352,4 @@ button stops working (`backup` skill) (27 Nov 2026).
 
 ---
 
-Last checked: 2026-11-27, pull request #44: the dashboard pull-request panel and Merge button (tools/make-dashboard.js, backup skill).
+Last checked: 2026-11-27, pull request #45 (Zombie balance: two card numbers; the champion leveling decision recorded).
