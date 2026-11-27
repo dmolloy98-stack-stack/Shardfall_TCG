@@ -1,0 +1,5 @@
+# Tokens: cards made during play by another card's Effect ("summon turtle 4"), never put in a deck.
+# The same columns as data/cards.csv. Tokens don't show in the Almanac or the deck builder, never go
+# back to a hand, and never come back from a graveyard.
+CardID,Cost,Name,Rarity,Type,Tribes,Fracture,Stats,Skills,Ability,Description,ArtKey,Effect,Classes
+turtle,0,Turtle,Basic,Character,Turtle,Mortal,1+1,---,Gain +1 to each stat for every other Turtle on the field,,turtle,aura: buff self #allies.turtle.other #allies.turtle.other,Student

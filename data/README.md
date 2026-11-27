@@ -135,7 +135,7 @@ Any action can end with `if <number>`: it only happens when the number is more t
 | `discardHand <me/foe>` | Discards the whole hand |
 | `fetch <CardID>` | Takes that card from your deck into your hand |
 | `shuffle` | Shuffles your deck |
-| `summon <CardID or token> <n>` | Puts n new copies onto your field. Tokens are cards made during play, defined in `TOKENS` in `js/effects.js` (`turtle`: Master Rat's Turtles) |
+| `summon <CardID or token> <n>` | Puts n new copies onto your field. Tokens are cards made during play, rows of `data/tokens.csv` (same columns as cards.csv; `turtle`: Master Rat's Turtles) |
 | `summonFromDeck <CardID>` | Moves that card from your deck onto your field |
 | `flag ripen` | Remembers that Ripen was cast |
 | `say <who> "TEXT" <color>` | Shows a word over the card, like `"+1 ATK" #ffe066` |
@@ -188,11 +188,23 @@ Deck rules (set in game_rules.csv): at least 35 cards, at most 4 copies of a car
 
 | Column | Meaning |
 |---|---|
-| FactionID / Name | The faction, as used in cards.csv and decks.csv |
-| ColorR, ColorG, ColorB | Faction color, each from 0 to 1 |
-| SymbolKey | Which medallion symbol to draw |
+| FactionID | The world (fracture), as written in cards.csv, decks.csv and ai_styles.csv |
+| Name | The world's name as players read it on cards, filters and the Almanac |
+| ColorR, ColorG, ColorB | Its color, each from 0 to 1 |
+| SymbolKey | Its medallion symbol: `sprout`, `paw`, `skull`, `swords` or `chip` (a new symbol needs code) |
 | Description | Short description |
 | DisplayOrder | Sort order |
+| Entrance | How its cards arrive on the table: `sprout`, `bounce`, `rise`, `stance` or `glitch` (empty: they assemble) |
+| Death | How its characters leave the table: `shatter`, `tumble`, `sink`, `slash` or `pixel` |
+
+A new world can reuse any symbol, entrance and death, so it needs no code. `tools/data-test.js`
+fails if one of these words is unknown.
+
+### tokens.csv
+
+Cards made during play by another card's Effect (`summon turtle 4`, Master Rat's Turtles). The same
+columns as cards.csv. Tokens never go in a deck, aren't shown in the Almanac or the deck builder,
+never go back to a hand and never come back from a graveyard.
 
 ### game_rules.csv: balance numbers
 

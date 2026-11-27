@@ -7,9 +7,9 @@
 // Beginner hints: one short tip for what you can do right now.
 // ---------------------------------------------------------------------------
 function hintText() {
-  if (!S || S.over || U.curtain || U.tutorial) return null;
+  if (!S || S.over || U.curtain || matchRule("coached")) return null;
   const p = active();
-  if (p.isAI) return `${thinkerName(p)} is taking its turn. You can tap any card to read it while you wait.`;
+  if (!isHere(p)) return `${thinkerName(p)} is taking its turn. You can tap any card to read it while you wait.`;
   const pd = S.pending;
   if (pd?.kind === "choose") return null;
   if (pd?.kind === "target") {
@@ -112,7 +112,7 @@ function renderControls() {
   else {
     h += btn("faceall", "danger");
     h += btn("face", "danger");
-    if (U.armed || U.selected || (S.pending?.kind === "target" && !S.pending.required && !S.players[S.pending.owner].isAI)) h += `<button type="button" class="btn" data-press="cancel">Cancel</button>`;
+    if (U.armed || U.selected || (S.pending?.kind === "target" && !S.pending.required && isHere(S.players[S.pending.owner]))) h += `<button type="button" class="btn" data-press="cancel">Cancel</button>`;
     h += btn("phase", S.phase === PHASE.DRAW ? "btn-primary" : "");
     if (S.phase !== PHASE.END) h += btn("pass");
   }

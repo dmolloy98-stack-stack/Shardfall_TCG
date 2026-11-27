@@ -35,15 +35,11 @@ Find them first: `grep -rnI "\bOldName\b" --exclude-dir=.git --exclude-dir=phone
 
 | Where | What |
 |---|---|
-| `data/factions.csv` | FactionID, Name, colour, SymbolKey, Description |
+| `data/factions.csv` | FactionID, Name (what players read), colour, SymbolKey (its medallion), Description, Entrance and Death (how its cards enter and leave the table) |
 | `data/cards.csv` | Fracture column (hybrids `Mortal+Wild`) |
 | `data/decks.csv` | Faction column of each starter |
 | `data/ai_styles.csv` | the Fracture column (how that world's deck plays) |
-| `js/campaign.js` | `faction:` of each campaign stage |
-| `js/fx.js` | `FACTION_ENTRANCE` (how its cards enter the table) |
-| `js/cards.js` | `GLYPHS` (world medallion symbols) |
-| `js/table-effects.js` | `DEATHS` (how its cards die) |
-| `js/menu.js` | champion ability examples (`c.group === "…"`) |
+| `js/champions.js` | each champion's Almanac examples in its `guide` (`c.group === "…"`); a campaign stage takes its world from the champion card's Fracture |
 | `css/skins.css` | `.skin-battlefield .side[data-faction="…"]` board colours |
 | `js/rules-champions.js` (and any rules file) | any rule naming it (`inGroup(c, "…")`; today the one use is The Simplistic's bonus) |
 | `tools/*-test.js` | tests that pick cards by `c.group` |
@@ -55,8 +51,8 @@ Find them first: `grep -rnI "\bOldName\b" --exclude-dir=.git --exclude-dir=phone
 
 `data/cards.csv` Tribes column; `TAG_GLYPHS` in `js/cards.js` (a placeholder symbol; a missing one
 shows the first letter, which is fine until art); scripts using `hasTribe(c, "…")` in
-`js/effects.js`, `js/engine.js`, `js/campaign.js` (trophies), `js/fx.js` (card reactions); token
-tribes in `js/effects.js` (Master Rat's turtles); `tools/kinds-test.js`; the guide's Tribe line;
+`js/effects.js`, `js/engine.js`, `js/progress.js` (trophies), `js/fx.js` (card reactions); token
+tribes in `data/tokens.csv` (Master Rat's turtles); `tools/kinds-test.js`; the guide's Tribe line;
 `data/README.md`; `docs/world.md`; the sheet's Cards column G and Lists tab.
 
 ## Adding a new tribe to a world (e.g. Skeleton in Undead)
@@ -69,20 +65,22 @@ tribes in `js/effects.js` (Master Rat's turtles); `tools/kinds-test.js`; the gui
 
 ## Adding a new world
 
-Needs, besides cards: a `factions.csv` row (colour, symbol, description, order), a `GLYPHS`
-symbol, a `FACTION_ENTRANCE` animation, a `DEATHS` style (or it shatters like crystal), an
+Needs, besides cards: a `factions.csv` row (name, colour, symbol, description, order, entrance and
+death; it can reuse an existing symbol, entrance and death, so no code is needed), a
 `data/ai_styles.csv` row, a battlefield board colour, and a starter deck. Ask the owner for the name,
-colour and feel; Claude proposes the animations.
+colour and feel; Claude proposes the animations. Only a brand-new medallion symbol (`GLYPHS` in
+`js/cards.js`, by SymbolKey), entrance (`.enter-<name>` in `css/style.css`) or death style
+(`DEATHS` in `js/table-effects.js`) needs code.
 
 ## Adding a new champion
 
 Needs: the card (Unknown rarity, its tribe), an ability (`data/champion_abilities.csv` +
-an entry in `CHAMPION_RULES` in `js/rules-champions.js`, which also holds its shard bonus), voice lines and play style in
-`js/champions.js` (`story-writing` for the words), a campaign stage if the owner wants one
-(`js/campaign.js`), and tests in `tools/champions-test.js`. Two champions of one tribe can't
+an entry in `CHAMPION_RULES` in `js/rules-champions.js`, which also holds its shard bonus), and one
+entry in `CHAMPIONS` in `js/champions.js` holding everything else about it: voice lines, play
+style, its campaign stage (if the owner wants one) and its Almanac notes (`story-writing` for the
+words); and tests in `tools/champions-test.js`. Two champions of one tribe can't
 share a deck (the one-champion rule already enforces it).
-Everything names a champion by its card's CardID (`CHAMPIONS`, `CAMPAIGN`'s `champion`, the
-Almanac's `CHAMP_GUIDE`), so **renaming a champion is only a change to its Name in
+Everything names a champion by its card's CardID (`CHAMPIONS`, which also builds `CAMPAIGN`), so **renaming a champion is only a change to its Name in
 `data/cards.csv`** (plus the story text that mentions it).
 
 ## Checking a rename or addition

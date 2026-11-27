@@ -69,7 +69,9 @@ function shatter(uid, delay = 0, group = null) {
   shatterFrom(src, group);
 }
 // Each faction leaves the table its own way. Other cards shatter like crystal.
-const DEATHS = { Undead: sinkAway, Cyber: pixelAway, Wild: tumbleAway, Mortal: slashAway };
+// How each world's characters leave the table: the Death column of data/factions.csv names one of
+// these ("shatter", the default, breaks into crystal shards).
+const DEATHS = { sink: sinkAway, pixel: pixelAway, tumble: tumbleAway, slash: slashAway };
 function deathPiece(src, cls, style = "", ms = 1000) {
   const piece = fxDiv(cls, `left:${src.offsetLeft}px;top:${src.offsetTop}px;${style}`, ms);
   piece.innerHTML = src.innerHTML;
@@ -95,7 +97,8 @@ function slashAway(src) {  // Mortal: cut in two by a clean strike
   fxDiv("death-slash-line", `left:${src.offsetLeft - 10}px;top:${src.offsetTop + FIELD_H * 0.525}px`, 500);
 }
 function shatterFrom(src, group) {
-  if (DEATHS[group]) { DEATHS[group](src); sparkle(src.offsetLeft + FIELD_W / 2, src.offsetTop + FIELD_H / 2, 6); return; }
+  const death = DEATHS[DATA.factions[group]?.death];
+  if (death) { death(src); sparkle(src.offsetLeft + FIELD_W / 2, src.offsetTop + FIELD_H / 2, 6); return; }
   const x = src.offsetLeft, y = src.offsetTop, cx = FIELD_W / 2, cy = FIELD_H / 2;
   const ring = [[0, 0], [45, 0], [95, 0], [95, 50], [95, 95], [95, 135], [50, 135], [0, 135], [0, 85], [0, 40]].map(([x, y]) => [x * FIELD_W / 95, y * FIELD_H / 135]);
   ring.forEach((p, k) => {
@@ -262,11 +265,11 @@ onGameEvent((type, d) => {
   } else if (type === "turn") {
     U.selected = null; U.armed = null;
     turnHandover(d.player);
-    if (S.mode === "hotseat") U.curtain = true;
+    if (matchRule("curtain")) U.curtain = true;
     else if (S.shard && now - (U.shardFellAt || 0) < 100) banner("The big shard falls");
     else if (S.event && S.event.round === S.round) banner(`Mini shard fall: ${DATA.events[S.event.id].name}`);
-    else banner(active().isAI ? `${active().name}'s turn` : "Your turn");
-    if (!active().isAI && S.mode !== "hotseat") yourTurnMoment();
+    else banner(isHere(active()) ? "Your turn" : `${active().name}'s turn`);
+    if (isHere(active()) && !matchRule("curtain")) yourTurnMoment();
   } else if (type === "play") {
     histAdd({ kind: d.card.type === "Spell" ? "cast" : "play", id: d.card.id, player: d.player }, now);   // the turn history
     if (U.stats) U.stats.played[d.player]++;

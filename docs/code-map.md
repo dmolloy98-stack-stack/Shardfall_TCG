@@ -172,7 +172,7 @@ their own story or coaching, then hand over to the same engine.
 | Layout, phone layout | `js/ui.js` (the screen state `U`, screens, phone layout); what is drawn on the table is `js/board.js` (special pieces: `js/board-marks.js`), taps and drags `js/input.js` |
 | How a card looks (frames, art, badges, name fitting) | `cardHTML()` and the rest of `js/cards.js` |
 | Pop-up windows: card details, game menu, choices, full log, Settings | `js/panels.js` (`openModal()`, `showDetail()`, `showSettings()`) |
-| Deaths, hits and other table reactions to game events | `js/table-effects.js` (`DEATHS`: each world dies its own way) |
+| Deaths, hits and other table reactions to game events | `js/table-effects.js` (`DEATHS`; which one a world uses is its Death column in `data/factions.csv`) |
 | The main menu, deck choice or Almanac | `js/menu.js` |
 | The falling-shards menu background | `js/storm.js` |
 | Animations and feedback | `js/fx.js` and `css/style.css`; the words that float up from a character are `float_…` rows in `data/ui_text.csv`, their colours `FLOATS` in `js/table-effects.js` |
@@ -189,7 +189,7 @@ their own story or coaching, then hand over to the same engine.
 | A deck's record and average cost | `deckRecord()` in `js/progress.js` (saved with mastery); shown by `masteryLine()` and the deck builder (`js/decks.js`) |
 | Card stories (unlock on first play), the end screen's "new stories" line, the Almanac count | `loreHTML()`, `newLoreHTML()`, `loreCount()` in `js/progress.js`; the text is the Description column of `data/cards.csv` |
 | Trophies and the Trophy case | names, words and goal numbers in `data/trophies.csv`; what each checks, `earnTrophy()` and `showTrophies()` in `js/progress.js`; the Trophies button is on the start menu |
-| Campaign story cards (scene and the champion's words) | `CAMPAIGN` in `js/campaign.js` |
+| Campaign story cards (scene and the champion's words) | each champion's `campaign` entry in `js/champions.js` (`CAMPAIGN` is built from them) |
 | Drawing the board quickly (only changed pieces are replaced) | `renderRegions()` and `patchChildren()` in `js/ui.js`; `render()` (`js/board.js`) marks regions with `RG(name)` |
 | Dozing (all looping effects pause after 20 seconds with nothing happening) | `wake()` and `DOZE_MS` in `js/ui.js`; `html.doze` in `css/style.css` |
 | Heavy effects on/off (the always-on looping effects) | `U.heavyFx` and `applyHeavyFx()` in `js/ui.js` (Settings); the `html.light-fx` rules at the end of `css/style.css`; `js/storm.js` holds still |
@@ -198,16 +198,20 @@ their own story or coaching, then hand over to the same engine.
 | Deck codes (a deck as one line of text, to share) | `deckCode()`, `readDeckCode()` and the window `showDeckCode()` in `js/decks.js`; its buttons are `data-dc` in the window's click handler in `js/panels.js`; words are the `deckcode_…` rows in `data/ui_text.csv` |
 | Where the table's fixed buttons sit (Menu, phase, Pass turn, the other hand) | `L` in `js/ui.js` (with `boxStyle()`), used by `render()` in `js/board.js` |
 | The screen state `U` (everything the screen remembers) | declared in full, with notes, in `js/ui.js` |
-| A new menu button | `index.html`, then `js/menu.js` |
+| A new menu button | `index.html`, then one line in `MENU_BUTTONS` in `js/menu.js` (the menu has one click handler) |
+| A new kind of match (a shake-up mode, Play a Friend) | one row in `MATCH_TYPES` in `js/ui.js` (pass-the-device screen, counts toward progress, champion speech, tutorial-run), read through `matchRule()` |
+| Who controls each player (the person here, the computer, a friend far away) | `seatControl()`, `isHere()` and `viewIdx()` in `js/ui.js`; ask `isHere(p)`, never "is it not the computer?" |
+| A new world's look | the SymbolKey, Entrance and Death columns of `data/factions.csv` (only a brand-new symbol, entrance or death needs code: `GLYPHS` in `js/cards.js`, `.enter-…` in `css/style.css`, `DEATHS` in `js/table-effects.js`) |
+| Tokens (cards made during play, like Master Rat's Turtles) | `data/tokens.csv` (same columns as `data/cards.csv`) |
 | Intro wording | `js/intro.js` |
 | Tutorial steps | `js/tutorial-steps.js` (`TUT_STEPS`); the Trainer and coach box are `js/tutorial.js` |
-| Campaign order and story | `js/campaign.js` |
+| Campaign order and story | the `stage` and words of each champion's `campaign` entry in `js/champions.js`; the campaign screens are `js/campaign.js` |
 | Deck-building rules | `js/decks.js` and `data/game_rules.csv` |
 | Hint wording and settings | `js/help.js` |
 | The Protected rule (half damage to a player with 3+ characters) or the Pierce and Protected skills | `protected_min_characters` in `data/game_rules.csv`; `isProtected()` and `dealDamageToPlayer()` in `js/rules-combat.js`; the plate line `protLine()` in `js/board.js`; the shard shell on the health gem (`WARD`, `wardHTML()`, `wardHit()`, `wardBreak()`) and the rune ring on Protected cards (`RUNES`, `runeRingHTML()`, `.rune-ring`) in `js/board-marks.js`; their look in `css/style.css`; the Almanac box `protectedRuleHTML()` in `js/menu.js` |
 | A "choose a card" window (pick from the graveyard, discard and draw, Soul Shepard, The Man Ape, a counter spell…) | what each kind does is its entry in `CHOICES` in `js/rules-play.js`; the computer's answer is `AI_CHOICES` in `js/ai.js` (kinds without one take the most expensive cards); the window is `showChoose()` in `js/panels.js`; `tools/cards-test.js` checks every kind has an entry |
 | A champion's ability or when it levels up | the words and the goal number in `data/champion_abilities.csv`; what each does is its entry in `CHAMPION_RULES` in `js/rules-champions.js` (one entry per champion; the top of that file lists the moments an entry can use, and the engine asks for them with `champHook()`); the line under the player's name is `champLine()` in `js/board.js`, with the text from each entry's `status` or `count` |
-| The Almanac's Champions tab (the full explanation and pictures of each ability) | `CHAMP_GUIDE` and `championsHTML()` in `js/menu.js`; keep its notes and numbers in step with the rules in `js/rules-champions.js` |
+| The Almanac's Champions tab (the full explanation and pictures of each ability) | each champion's `guide` entry in `js/champions.js`, drawn by `championsHTML()` in `js/menu.js`; keep its notes and numbers in step with the rules in `js/rules-champions.js` |
 | The big shard fall (round 8, once a match) | the numbers in `data/game_rules.csv` (`shard_round`, `shard_health`, `shard_draw`, `shard_draw_no_champion`); the rules are `js/rules-shard.js` (`shardFall`, `hitShard`, `claimShard`; each champion's bonus is the `shard` and `shardText` of its entry in `js/rules-champions.js`; an attack on it is `attack(uid, "shard")`); the computer's interest in it is `SHARD_CHIP` in `js/ai.js`; the crystal, the cracked table and the info window are `shardHTML()`, `scarHTML()` and `showShard()` in `js/board-marks.js`, styled at the end of `css/style.css`; test: `tools/shard-test.js` |
 | A random event (a mini shard fall in rounds 4 and 12, two rounds long; off in normal play, only `newGame({ events: true })` has them, for a later shake-up mode) | names and descriptions in `data/events.csv`; what each does is `EVENT_ON_START` and `eventNow()` in `js/rules-events.js` (the top of the file says how to add one), with the cost and area-bonus effects in `costFromEffect` and `auraBonus` in `js/effects.js`; the warning card is `eventPill()` in `js/table-effects.js` |
 | The board's look (Shattered Crystal and the other skins) | the `.skin-*` rules in `css/skins.css`; the list of skins is `SKINS` in `js/board.js`; the long cracks are redrawn by `tools/make-crystal.js` |

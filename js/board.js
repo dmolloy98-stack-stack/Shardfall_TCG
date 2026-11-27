@@ -5,11 +5,11 @@
 // ---------------------------------------------------------------------------
 // Layout helpers
 // ---------------------------------------------------------------------------
-const viewIdx = () => (S.mode === "ai" ? 0 : S.active);
 const sideOf = idx => (idx === viewIdx() ? "bottom" : "top");
-const humanTurn = () => S && !S.over && !active().isAI && !U.curtain;
-// A target choice a person has to make, which can come up on the other player's turn (IP Man).
-const humanTarget = () => S && !S.over && !U.curtain && S.pending?.kind === "target" && !S.players[S.pending.owner].isAI;
+// The person here may act now: it is their turn (seats: js/ui.js).
+const humanTurn = () => S && !S.over && isHere(active()) && !U.curtain;
+// A target choice the person here has to make, which can come up on the other player's turn (IP Man).
+const humanTarget = () => S && !S.over && !U.curtain && S.pending?.kind === "target" && isHere(S.players[S.pending.owner]);
 // Characters are spaced out evenly and squeeze together when there are many (there is no limit).
 function charStep(n) { return Math.min(L.charStep, (L.frontW - FIELD_W) / Math.max(1, n - 1)); }
 function charX(i, n) { const step = charStep(n); return L.midX - ((n - 1) * step + FIELD_W) / 2 + i * step; }
@@ -125,7 +125,7 @@ function plateHTML(p, side) {
   const targetable = humanTarget() && pd.targetType === "charOrPlayer" && isValidTarget({ isPlayer: true, idx: p.idx });
   const attackable = side === "top" && U.selected && !forcedTarget(p);
   const y = side === "top" ? 3 : 937;
-  const thinking = p.isAI && S.active === p.idx && !S.over && !U.ended;   // the computer is taking its turn
+  const thinking = !isHere(p) && S.active === p.idx && !S.over && !U.ended;   // the computer (or a friend far away) is taking its turn
   return `<div class="plate${crackFlash(p.idx) ? " crack-flash" : ""}${thinking ? " thinking" : ""}${targetable ? " targetable" : ""}${attackable ? " attackable" : ""}${tier === "low" ? " danger" : ""}${tier === "low" && ratio < 0.15 ? " critical" : ""}" data-act="plate" data-player="${p.idx}" style="left:530px;top:${y}px;width:380px;--pc:${PLAYER_COLORS[p.idx]}" aria-label="${esc(p.name)}: ${p.health} of ${p.maxHealth} health">
     <div class="life">${crystalSVG("life-crystal " + tier, cracks)}${wardHTML(p)}<b>${Math.max(0, p.health)}</b></div>
     <div class="who"><span class="name">${esc(p.name)}${hpBarHTML(p)}${thinking ? `<i class="thinking-dots" role="img" aria-label="thinking"><b></b><b></b><b></b></i>` : ""}</span><em>${esc(p.deckLabel ?? p.faction + " deck")} · ${Math.max(0, p.health)} / ${p.maxHealth} health</em>${champLine(p)}${protLine(p)}</div>
@@ -284,7 +284,7 @@ function render() {
   } else if (readyN > 0 && !forced.length && !S.over) {
     h += allBtn();
   } else if (!S.over) {
-    const instr = active().isAI ? `${thinkerName(active())} is taking its turn…` : DATA.phases[S.phase]?.instruction || "";
+    const instr = !isHere(active()) ? `${thinkerName(active())} is taking its turn…` : DATA.phases[S.phase]?.instruction || "";
     h += `<div class="instruction">${esc(instr)}</div>`;
   }
 
@@ -299,8 +299,8 @@ function render() {
 
   if (U.curtain) {
     h += `<div class="curtain"><p>${esc(T("curtain_pass"))}</p><h2>${esc(active().name)}</h2><p>${esc(T("curtain_round", { deck: active().deckLabel ?? active().faction + " deck", round: S.round }))}</p>${eventLine() ? `<p>${esc(eventLine().when)}: ${esc(eventLine().name)}. ${esc(eventLine().desc)}</p>` : ""}<button type="button" class="btn btn-primary" data-act="curtain">${esc(T("curtain_start"))}</button></div>`;
-  } else if (U.ended && !U.tutorial) {
-    const title = S.winner == null ? T("end_draw") : S.mode === "ai" ? T(S.winner === 0 ? "end_victory" : "end_defeat") : T("end_wins", { name: S.players[S.winner].name });
+  } else if (U.ended && !matchRule("coached")) {
+    const title = S.winner == null ? T("end_draw") : S.players.filter(isHere).length === 1 ? T(isHere(S.players[S.winner]) ? "end_victory" : "end_defeat") : T("end_wins", { name: S.players[S.winner].name });
     const sub = S.winner == null ? T("end_both_fell") : T("end_wins_round", { name: S.players[S.winner].name, round: S.round });
     const camp = U.campaign ? campaignEndHTML(S.winner === 0) : null;
     const actions = camp ? camp.actions : `<button type="button" class="btn btn-primary" data-act="again">${esc(T("end_again"))}</button><button type="button" class="btn" data-act="tomenu">${esc(T("end_menu"))}</button>`;
@@ -422,7 +422,7 @@ function renderPrompt() {
   const pd = S.pending;
   let msg = null, cancel = true;
   if (U.curtain || U.ended) msg = null;
-  else if (pd?.kind === "target" && !S.players[pd.owner].isAI) {
+  else if (pd?.kind === "target" && isHere(S.players[pd.owner])) {
     // Wording for one card (a "target_<CardID>" row in data/ui_text.csv), then the special rules, then
     // the general cases. {damage} and {heal} are the numbers in the card's play clause.
     const redirect = pd.amount != null;
@@ -441,7 +441,7 @@ function renderPrompt() {
   el.hidden = !msg;
   if (msg) el.innerHTML = `<span>${esc(msg)}</span>${cancel ? `<button type="button" class="btn" data-act="cancel">Cancel</button>` : ""}`;
 
-  if (pd?.kind === "choose" && !S.players[pd.owner].isAI && !U.curtain && !openModal.choose) showChoose();
+  if (pd?.kind === "choose" && isHere(S.players[pd.owner]) && !U.curtain && !openModal.choose) showChoose();
 }
 
 // The Strike button on a character holding equipment with "rule: strike" (Kenshi's Blade). Its words

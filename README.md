@@ -52,6 +52,7 @@ All cards, decks, skills and balance numbers are CSV files in the [`data/`](data
 | [`data/whats_new.csv`](data/whats_new.csv) | The "What's new" list: one row per update, newest first; the top row is the version shown on the menu |
 | [`data/events.csv`](data/events.csv) | The random events: their names and descriptions (what they do is in `js/rules-events.js`) |
 | [`data/trophies.csv`](data/trophies.csv), [`data/mastery.csv`](data/mastery.csv) | Trophy names, wording and goal numbers; each deck's five mastery titles (the points are `mastery_*` rows in `game_rules.csv`) |
+| [`data/tokens.csv`](data/tokens.csv) | Tokens: cards made during play (Master Rat's Turtles), same columns as cards.csv |
 | [`data/ai_styles.csv`](data/ai_styles.csv) | How the computer plays each fracture's deck: how much it values attacking, its own characters and cards in hand |
 | [`data/champion_abilities.csv`](data/champion_abilities.csv) | The champions' abilities: names, what they do, when they level up (the rules are in `js/engine.js`) |
 | [`data/rarities.csv`](data/rarities.csv), [`data/factions.csv`](data/factions.csv) | Colors, symbols, equipment attach costs |

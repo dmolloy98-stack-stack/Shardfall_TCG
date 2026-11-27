@@ -111,6 +111,8 @@ else {
     field(`${who}, Name`, f.Name, r.Name);
     field(`${who}, Symbol`, f.SymbolKey, r.Symbol);
     field(`${who}, Description`, f.Description, r.Description);
+    field(`${who}, Entrance`, f.Entrance, r.Entrance);
+    field(`${who}, Death`, f.Death, r.Death);
     const hex = (r.Color || '').replace('#', '');
     const rgb = [0, 2, 4].map(k => parseInt(hex.slice(k, k + 2), 16) / 255);
     const game = [f.ColorR, f.ColorG, f.ColorB].map(Number);
@@ -137,7 +139,7 @@ else {
 
 // Tabs that mirror a data file exactly, for the owner to read: the same columns, the same rows in the
 // same order (only rows the game reads; # comment lines are left out). Numbers are compared as numbers.
-const MIRRORS = { 'Game rules': 'game_rules', 'Champion abilities': 'champion_abilities', 'Random events': 'events', 'Trophies': 'trophies', 'Deck mastery': 'mastery', 'Computer styles': 'ai_styles' };
+const MIRRORS = { 'Game rules': 'game_rules', 'Champion abilities': 'champion_abilities', 'Random events': 'events', 'Trophies': 'trophies', 'Deck mastery': 'mastery', 'Computer styles': 'ai_styles', 'Tokens': 'tokens' };
 for (const [tabName, file] of Object.entries(MIRRORS)) {
   const rows = table(file), sRows = tab(tabName);
   if (!sRows) { differ(`The ${tabName} tab is missing from the sheet file.`); continue; }

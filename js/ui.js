@@ -26,6 +26,41 @@ const L = {
   turnInfoY: 372,                                // "Round n · whose turn"
   splitW: 196, splitAllX: 728,                   // "Attack directly" and "All attack" side by side
 };
+// ---------------------------------------------------------------------------
+// Seats: who controls each player. Ask these, never "is it not the computer?": in Play a Friend
+// the other player is a person, but not at this screen.
+// ---------------------------------------------------------------------------
+//   "here"      a person at this screen        "computer"  js/ai.js plays it
+//   "away"      a friend playing from another browser (Play a Friend, later: a player with away set)
+const seatControl = p => (p.isAI ? "computer" : p.away ? "away" : "here");
+const isHere = p => !!p && seatControl(p) === "here";
+// The seat drawn at the bottom of the table: the one person here, or (two players on one device)
+// whoever's turn it is.
+function viewIdx() {   // asked for every card on every redraw, so it builds no lists
+  const [a, b] = S.players, ha = isHere(a), hb = isHere(b);
+  return ha && !hb ? 0 : hb && !ha ? 1 : S.active;
+}
+
+// ---------------------------------------------------------------------------
+// Kinds of match, in one place. matchType() names the match being played; its row says how the
+// screen treats it. A new kind of match (a shake-up mode, Play a Friend) is one new row here.
+//   curtain    the "pass the device" screen between turns (two players on one device)
+//   progress   counts toward mastery, each deck's record, trophies and first-win badges
+//   speech     the computer's champion speaks during the match
+//   coached    the tutorial runs the match: no hints, no drawing by itself, no "pass early?"
+//              question, no end screen or final-blow effect, and the Trainer's moves are scripted
+// ---------------------------------------------------------------------------
+const MATCH_TYPES = {
+  ai:       { curtain: false, progress: true,  speech: true,  coached: false },   // Quick Match
+  campaign: { curtain: false, progress: true,  speech: true,  coached: false },
+  hotseat:  { curtain: true,  progress: false, speech: false, coached: false },   // Two Players
+  tutorial: { curtain: false, progress: false, speech: false, coached: true },
+};
+// (The tutorial's own layout, its coach panel and its game menu, still ask U.tutorial directly:
+// those are about the tutorial's screen, not about how a kind of match behaves.)
+const matchType = () => (U.tutorial ? "tutorial" : U.campaign ? "campaign" : S?.mode || "ai");
+const matchRule = key => !!MATCH_TYPES[matchType()]?.[key];
+
 // A piece's place (and size, when it has one) from L, as a style.
 const boxStyle = b => `left:${b.x}px;top:${b.y}px` + (b.w ? `;width:${b.w}px;height:${b.h}px` : "");
 
@@ -187,7 +222,7 @@ if (!AI_SPEEDS[U.aiSpeed]) U.aiSpeed = "normal";
 function scheduleAI() {
   clearTimeout(U.aiTimer);
   const aiChoice = S?.pending && S.players[S.pending.owner].isAI;
-  if (!S || S.over || !(active().isAI || aiChoice) || U.screen !== "game" || U.tutorial) return;
+  if (!S || S.over || !(active().isAI || aiChoice) || U.screen !== "game" || matchRule("coached")) return;
   const wait = Math.max(0, U.busyUntil - performance.now());
   U.aiTimer = setTimeout(() => {
     if (U.busyUntil > performance.now()) { scheduleAI(); return; }
@@ -219,8 +254,8 @@ function startGame(opts = {}) {
   U.campaign = opts.campaign ?? null;
   newGame({ deckId: U.deckId, opponentDeckId: opts.opponentDeckId, mode: U.campaign ? "ai" : U.mode, foeChampion: opts.foeChampion });
   showScreen("game");
-  if (S.mode === "hotseat") U.curtain = true; else banner("Your turn");
-  if (!U.campaign && S.mode === "ai") championMatchStarts();   // the computer's champion speaks (js/campaign.js)
+  if (matchRule("curtain")) U.curtain = true; else banner("Your turn");
+  if (matchType() === "ai" && matchRule("speech")) championMatchStarts();   // the computer's champion speaks (js/campaign.js; the campaign starts it itself)
   render();
 }
 
@@ -240,7 +275,7 @@ function passTurn() {
   const p = active();
   const playable = S.phase === PHASE.SETUP ? p.hand.filter(c => canPlay(c, p)).length : 0;
   const ready = S.phase <= PHASE.BATTLE ? p.field.chars.filter(c => !c.hasAttacked && !skillNow(c, "Tower")).length : 0;
-  if (!U.passCheck || U.tutorial || (!playable && !ready)) { act(() => move("end")); return; }
+  if (!U.passCheck || matchRule("coached") || (!playable && !ready)) { act(() => move("end")); return; }
   const left = [playable && `${p.mana} mana and ${playable} card${playable > 1 ? "s" : ""} you can play`, ready && `${ready} character${ready > 1 ? "s" : ""} that can still attack`].filter(Boolean).join(", and ");
   openModal(`<h2 id="modal-title">Pass your turn?</h2><p>You still have ${esc(left)}.</p>
     <div class="detail-actions"><button type="button" class="btn btn-primary" data-close>Keep playing</button><button type="button" class="btn" data-m="passok">Pass turn</button></div>
@@ -252,7 +287,7 @@ function passTurn() {
 // redraw; any move of yours cancels the wait.
 function autoFlow() {
   clearTimeout(U.flowTimer);
-  if (!U.autoFlow || U.tutorial || !S || S.over || U.ended || !humanTurn() || S.pending || U.armed || !$("#modal").hidden) return;
+  if (!U.autoFlow || matchRule("coached") || !S || S.over || U.ended || !humanTurn() || S.pending || U.armed || !$("#modal").hidden) return;
   const p = active();
   if (S.phase === PHASE.DRAW) U.flowTimer = setTimeout(() => { if (humanTurn() && S.phase === PHASE.DRAW && !S.pending && $("#modal").hidden) onPhaseButton(); }, 700);
   else if (S.phase === PHASE.BATTLE && !p.field.chars.some(c => canAttack(c) || canUseBlade(c)) && !p.hand.some(c => canPlay(c, p))) {

@@ -15,22 +15,23 @@
 // in the engine as a named rule, and the card's Effect switches it on: "rule: redirect".
 // One-off abilities are in SCRIPTS below, and the Effect points to them: "script messenger".
 
-// When a clause happens.
+// When a clause happens. Each word is described once, here: "says" starts the plain-English
+// explanation (tools/explain-effect.js reads it), "desc" is the full meaning for builders.
 const WHEN = {
-  play: "When the spell is cast, the Signal character enters, the area is played, or the ability is used",
-  enter: "When the character enters the field",
-  endTurn: "At the end of its owner's turn (for equipment: of the holder's owner)",
-  attack: "When the character attacks",
-  hurt: "When the character takes damage and survives",
-  reanimate: "When the character comes back through Reanimate",
-  allyLevelUp: "When another of its owner's characters levels up",
-  gearEnters: "When equipment enters its owner's field",
-  maxLevel: "When the character reaches its last level",
-  cost: "Changes the card's mana cost",
-  aura: "A lasting bonus while the character or area is on the field: stats, or a skill",
-  grants: "Equipment: the holder has this skill",
-  rule: "Switches on one of the engine's special rules for this card (see RULE_WORDS)",
-  counter: "A counter spell: the kinds of play it can stop (character, spell, spellSingle, spellMany)",
+  play: { says: "When played", desc: "When the spell is cast, the Signal character enters, the area is played, or the ability is used" },
+  enter: { says: "When it enters the field", desc: "When the character enters the field" },
+  endTurn: { says: "At the end of its owner's turn", desc: "At the end of its owner's turn (for equipment: of the holder's owner)" },
+  attack: { says: "When it attacks", desc: "When the character attacks" },
+  hurt: { says: "When it takes damage and survives", desc: "When the character takes damage and survives" },
+  reanimate: { says: "When it comes back through Reanimate", desc: "When the character comes back through Reanimate" },
+  allyLevelUp: { says: "When another of its owner's characters levels up", desc: "When another of its owner's characters levels up" },
+  gearEnters: { says: "When equipment enters its owner's field", desc: "When equipment enters its owner's field" },
+  maxLevel: { says: "When it reaches its last level", desc: "When the character reaches its last level" },
+  cost: { says: "Its cost", desc: "Changes the card's mana cost" },
+  aura: { says: "While it is on the field", desc: "A lasting bonus while the character or area is on the field: stats, or a skill" },
+  grants: { says: "The character holding it has", desc: "Equipment: the holder has this skill" },
+  rule: { says: "Special rule", desc: "Switches on one of the engine's special rules for this card (see RULE_WORDS)" },
+  counter: { says: "A counter spell: it can stop", desc: "A counter spell: the kinds of play it can stop (character, spell, spellSingle, spellMany)" },
 };
 
 // The special rules a "rule:" clause can switch on, and what must follow each name.
@@ -72,7 +73,13 @@ const words = text => (text.match(/"[^"]*"|\S+/g) || []).map(w => w.replace(/^"|
 // table, for pick and take: "grave.Monkey.character" = the Monkey characters in your graveyard.
 // Piles never hold tokens (cards made during play, like Master Rat's Turtles).
 const PILE_BASES = ["grave", "graves", "deck", "hand"];
-const SELECTOR_BASES = ["self", "target", "holder", "allies", "enemies", "everyone", "me", "foe", "gear", ...PILE_BASES];
+// Who an action can affect, each with its plain-English meaning (tools/explain-effect.js reads it).
+const SELECTOR_WORDS = {
+  self: "this card", target: "the picked target", holder: "the character holding it", allies: "your characters",
+  enemies: "the other player's characters", everyone: "every character", me: "you", foe: "the other player",
+  gear: "stored equipment on both backlines", grave: "your graveyard", graves: "both graveyards", deck: "your deck", hand: "your hand",
+};
+const SELECTOR_BASES = Object.keys(SELECTOR_WORDS);
 // Each narrowing word is worked out once, here, when the cards are read (not each time the action
 // runs), and a word that is nothing known stops the game with a message naming the card.
 function parseSelector(text, where) {
@@ -248,7 +255,7 @@ const ACTIONS = {
   discardHand: ["s", (ctx, who) => { for (const p of playersIn(who(ctx))) while (p.hand.length) p.grave.push(p.hand.pop()); }],
   fetch: ["c", (ctx, id) => { const c = takeFromDeck(ctx.owner, x => x.id === id); if (c) addToHand(ctx.owner, c); }],
   shuffle: ["", ctx => shuffle(ctx.owner.deck)],
-  summon: ["cn", (ctx, id, n) => {   // a card from cards.csv, or a token from TOKENS
+  summon: ["cn", (ctx, id, n) => {   // a card from cards.csv, or a token from tokens.csv
     for (let k = n(ctx); k > 0; k--) { const c = newCard(DATA.cardsById[id] || TOKENS[id]); if (!putOnField(c, ctx.owner)) break; }
   }],
   summonFromDeck: ["c", (ctx, id) => {
@@ -386,24 +393,16 @@ const SCRIPTS = {
   },
 };
 
-// Tokens: cards made during play that aren't in cards.csv (Master Rat's Turtles). "summon <id> <n>"
-// makes them. Tokens never go back to a hand or come back from a graveyard (pick and take skip them).
-const TOKENS = {
-  turtle: {
-    id: "turtle", name: "Turtle", rarity: "Basic", type: "Character", tribes: ["Turtle"], classes: ["Student"], group: "Mortal", groups: ["Mortal"],
-    manaCost: 0, attack: 1, health: 1, skills: [], ability: "Gain +1 to each stat for every other Turtle on the field",
-    description: "", artKey: "turtle", token: true,
-  },
-};
-// What each token does, in the same words as the Effect column.
-const TOKEN_EFFECTS = { turtle: "aura: buff self #allies.turtle.other #allies.turtle.other" };
+// Tokens (cards made during play, like Master Rat's Turtles) are data/tokens.csv: DATA.tokensById.
+// "summon <id> <n>" makes them; pick and take skip them.
+const TOKENS = DATA.tokensById;
 
 // ---------------------------------------------------------------------------
 // Building the game's tables
 // ---------------------------------------------------------------------------
 const CARD_FX = {};   // CardID -> compiled effect
 for (const card of DATA.cardList) if (card.effect) CARD_FX[card.id] = compileEffect(card.effect, `data/cards.csv, ${card.id}, Effect`);
-for (const [id, text] of Object.entries(TOKEN_EFFECTS)) CARD_FX[id] = compileEffect(text, `token ${id}`);
+for (const t of DATA.tokenList) if (t.effect) CARD_FX[t.id] = compileEffect(t.effect, `data/tokens.csv, ${t.id}, Effect`);
 
 const runSteps = (steps, ctx) => { for (const s of steps) s.run(ctx); };
 

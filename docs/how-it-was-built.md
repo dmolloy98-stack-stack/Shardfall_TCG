@@ -169,6 +169,19 @@ header, so a column can be moved or added in the card sheet without the game rea
 a missing column stops the game with a message naming it. Rule numbers a designer might tune (Evolve,
 Level Up's limit, Rally, the mana token) are rows in `data/game_rules.csv` (24 Nov 2026).
 
+**Seats and kinds of match each have one home (27 Nov 2026).** Who controls a player is asked
+through `isHere(p)` (`js/ui.js`): "here", "computer", or later "away" for Play a Friend. Code that
+asked "is it not the computer?" would have shown a far-away friend's choices on this screen. How
+the screen treats each kind of match (the pass-the-device screen, counting toward progress,
+champion speech, the tutorial running the match) is one row of `MATCH_TYPES`, read with
+`matchRule()`, so a new mode is a new row instead of checks spread over six files.
+
+**One entry per champion, one row per world (27 Nov 2026).** Everything about a champion except its
+rules is its entry in `CHAMPIONS` (`js/champions.js`): lines, play style, campaign stage and Almanac
+notes; the campaign's list is built from them. A world's look (medallion, entrance, death) is named
+in its `data/factions.csv` row, and its Name is what players read. Tokens are rows of
+`data/tokens.csv`. Each ability clause and "who" word is described once, in `js/effects.js`.
+
 ## The screen
 
 **Fast redraws.** `render()` describes the whole table, split into regions; regions whose HTML
@@ -352,4 +365,4 @@ button stops working (`backup` skill) (27 Nov 2026).
 
 ---
 
-Last checked: 2026-11-27, pull request #45 (Zombie balance: two card numbers; the champion leveling decision recorded).
+Last checked: 2026-11-27, pull request #46.

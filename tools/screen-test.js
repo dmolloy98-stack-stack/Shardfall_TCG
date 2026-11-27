@@ -153,6 +153,23 @@ const TESTS = [
     await pg.waitForSelector('.endscreen', { timeout: 8000 });
     expect(await pg.isVisible('.endscreen [data-act="tomenu"], .endscreen [data-act="again"]'), 'no buttons on the end screen');
   }],
+  ['match: a win against the computer counts toward the deck mastery', async ({ pg }) => {
+    await quickMatch(pg);
+    await pg.evaluate(() => { S.players[1].health = 1; const p = S.players[0], c = newCard(DATA.cardsById.simple_swordsman); c.owner = 0; putOnField(c, p); c.hasAttacked = false; S.players[1].field.chars.length = 0; S.phase = PHASE.BATTLE; act(() => move('attack', c.uid, null)); });
+    await pg.waitForSelector('.endscreen', { timeout: 8000 });
+    expect(await pg.evaluate(() => (PREFS.get('mastery', {}) || {}).simple_starter > 0), 'no mastery points were saved');
+    expect(await pg.isVisible('.endscreen .mastery-end'), 'the end screen shows no mastery line');
+  }],
+  ['two players: the pass-the-device screen shows between turns, and no mastery is counted', async ({ pg }) => {
+    await pg.click('#door-two');
+    await pg.click('#btn-start');
+    await pg.waitForFunction(() => U.screen === 'game' && S && S.mode === 'hotseat');
+    expect(await pg.isVisible('.curtain'), 'no pass-the-device screen at the start');
+    await pg.evaluate(() => { U.curtain = false; act(() => move('end')); });
+    await pg.waitForSelector('.curtain', { timeout: 4000 });
+    await pg.evaluate(() => { S.players[1].health = 0; checkHealthWin(); });
+    expect(await pg.evaluate(() => !Object.keys(PREFS.get('mastery', {}) || {}).length), 'a two-player match counted toward mastery');
+  }],
   ['campaign: the first champion\'s match starts', async ({ pg }) => {
     await pg.click('#btn-campaign');
     await pg.click('[data-camp="0"]');
