@@ -94,6 +94,12 @@ const TESTS = [
     await pg.click('[data-tab="skills"]');
     await pg.waitForSelector('.skill-item');
     await pg.click('[data-tab="cards"]');
+    await pg.keyboard.press('ArrowRight');
+    expect(await pg.evaluate(() => document.activeElement?.dataset.tab) === 'skills', 'the Right arrow did not move to the Skills tab');
+    await pg.waitForSelector('.skill-item');
+    await pg.keyboard.press('ArrowLeft');
+    expect(await pg.evaluate(() => document.activeElement?.dataset.tab) === 'cards', 'the Left arrow did not move back to the Cards tab');
+    await pg.waitForSelector('[data-card]');
     await pg.click('[data-card]');
     expect(await modalOpen(pg), 'the card did not open');
     await pg.keyboard.press('Escape');

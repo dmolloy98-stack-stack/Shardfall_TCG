@@ -218,7 +218,7 @@ function protectedRuleHTML() {
 }
 
 function renderAlmanac() {
-  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab === U.almanacTab));
+  document.querySelectorAll(".tab").forEach(t => { const on = t.dataset.tab === U.almanacTab; t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; });   // only the chosen tab is a Tab stop; arrow keys move between them
   const filters = ["All", ...Object.keys(DATA.factions), "Unbound"];
   $("#alm-filters").hidden = U.almanacTab !== "cards";
   // Three rows of filters: Fracture (where a card is from), Tribe (species) and Class (job).
@@ -248,6 +248,13 @@ function renderAlmanac() {
   $("#alm-content").innerHTML = h + `</div>`;
 }
 document.querySelector(".tabs").addEventListener("click", e => { const t = e.target.closest("[data-tab]"); if (t) { U.almanacTab = t.dataset.tab; renderAlmanac(); } });
+// Left/Right (and Home/End) move between the Almanac tabs, as a tab bar normally does.
+document.querySelector(".tabs").addEventListener("keydown", e => {
+  const tabs = [...document.querySelectorAll(".tabs .tab")], at = tabs.indexOf(e.target.closest(".tab"));
+  const to = { ArrowRight: (at + 1) % tabs.length, ArrowLeft: (at + tabs.length - 1) % tabs.length, Home: 0, End: tabs.length - 1 }[e.key];
+  if (at < 0 || to === undefined) return;
+  e.preventDefault(); U.almanacTab = tabs[to].dataset.tab; renderAlmanac(); tabs[to].focus();
+});
 // One handler for the three filter rows (Fracture, Tribe, Class); each button carries one of the markers.
 $("#alm-filters").addEventListener("click", e => {
   const t = e.target.closest("[data-filter],[data-tribe],[data-class]");
