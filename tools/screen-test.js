@@ -67,6 +67,12 @@ const TESTS = [
     expect(await pg.evaluate(() => !!document.activeElement?.closest('#modal')), 'Shift+Tab moved keyboard focus out of the pop-up');
     await pg.click('#modal-content [data-close]');
   }],
+  ['match: banners are also announced to screen readers', async ({ pg }) => {
+    await quickMatch(pg);
+    await pg.evaluate(() => banner('Test announcement'));
+    expect(await pg.textContent('#sr-live') === 'Test announcement', 'the banner text was not sent to the screen-reader announcer');
+    expect(await pg.getAttribute('#sr-live', 'aria-live') === 'polite', 'the announcer is not a polite live region');
+  }],
   ['settings: a switch changes and is remembered', async ({ pg }) => {
     await pg.click('#btn-settings');
     const btn = '[data-set="hints"]';

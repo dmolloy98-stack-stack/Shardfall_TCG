@@ -35,6 +35,8 @@ function eventPill() {
 function banner(text) {
   const b = $("#banner");
   b.hidden = false; b.textContent = text;
+  // The banner flashes and hides, which a screen reader can miss, so say it in a hidden live region too.
+  const live = $("#sr-live"); if (live) live.textContent = text;
   b.style.animation = "none"; void b.offsetWidth; b.style.animation = "";
   clearTimeout(banner.t);
   banner.t = setTimeout(() => { b.hidden = true; }, 1500);

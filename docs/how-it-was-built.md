@@ -360,9 +360,14 @@ button stops working (`backup` skill) (27 Nov 2026).
   recorded-match tool once checked the table after each step, so the check stored for the first
   move was really the table after both, and a correct replay looked wrong. It now takes each check
   by playing the moves again one at a time (27 Nov 2026).
+- **Screen readers and the banner.** The big banner ("Your turn") flashes and hides after 1.5
+  seconds, which a screen reader can miss, so `banner()` also writes the words into a hidden
+  polite live region (`#sr-live`, class `sr-only`). Anything new that flashes a message should go
+  through `banner()` rather than make its own. The hint box is not a live region on purpose: it is
+  redrawn on every render, which would make a reader repeat it (27 Nov 2026 run, #47).
 - **An old saved match** can lack a newer field and crash (fixed Nov 2026). Every field in `S`
   needs a default in `baseState()`.
 
 ---
 
-Last checked: 2026-11-27, pull request #46.
+Last checked: 2026-11-28, pull request #47.
