@@ -1918,3 +1918,6 @@ html.light-fx .field-card.ready, html.light-fx #stage.tense #fx-layer::before { 
 html.doze *, html.doze *::before, html.doze *::after { animation-play-state: paused !important; }
 /* with Heavy effects off the Protected runes stay frozen where they are, spread around the ring */
 html.light-fx .rune-ring > i { animation-play-state: paused !important; }
+
+/* Words only for screen readers (the live announcer on the table). */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
