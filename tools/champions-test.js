@@ -44,7 +44,25 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   ok("Chest Thump: not on the opponent's turn", rawStats(a).a === mk.attack);
   S.active = 0; destroyCharacter(c);
   ok('Chest Thump: off again when the numbers even out', !chestThump(p) && rawStats(a).a === mk.attack);
-  ok('Chest Thump: no level, no cheaper Monkeys', p.champ.level === 1 && playCost(newCard(mk), p) === mk.manaCost);
+  ok('Chest Thump: still level 1, no cheaper Monkeys', p.champ.level === 1 && playCost(newCard(mk), p) === mk.manaCost);
+}
+{ // The Man Ape: Troop Tribute, the level-up after 4 of your Monkeys die
+  const p = game('monkey_starter'); const q = S.players[1]; S.active = 0;
+  const mk = find(c => c.type === 'Character' && hasTribe(c, 'Monkey') && c.rarity !== 'Unknown' && !c.rules);
+  const other = find(c => c.type === 'Character' && c.group === 'Mortal' && c.rarity !== 'Unknown' && !c.rules);
+  const goal = DATA.championAbilities.the_man_ape.goal;
+  ok('Troop Tribute: the goal is 4 Monkeys', goal === 4);
+  destroyCharacter(put(p, other.id)); destroyCharacter(put(q, mk.id));
+  ok("Troop Tribute: a non-Monkey, or the opponent's Monkey, doesn't count", p.champ.n === 0);
+  for (let i = 0; i < goal - 1; i++) destroyCharacter(put(p, mk.id));
+  ok('Troop Tribute: 3 of your Monkeys, not yet', p.champ.level === 1 && p.champ.n === goal - 1);
+  destroyCharacter(put(p, mk.id));
+  ok('Troop Tribute: the 4th levels it up', p.champ.level === 2);
+  const a = put(p, mk.id); put(p, mk.id); put(q, other.id);
+  S.active = 1;
+  ok("Troop Tribute: then +1 Attack on the opponent's turn too", chestThump(p) && rawStats(a).a === mk.attack + 1);
+  put(q, other.id);
+  ok('Troop Tribute: still only while you have more characters', !chestThump(p) && rawStats(a).a === mk.attack);
 }
 { // IP Man: The Bow
   const p = game('fighter_starter');
@@ -97,22 +115,29 @@ const base = c => { const r = rawStats(c); return { a: r.a, h: r.h }; };
   S.phase = PHASE.DRAW; const h1 = p.hand.length; doDraw();
   ok('Boss Phases: FINAL PHASE still draws 2', p.hand.length === Math.min(RULES.maxHand, h1 + 2));
 }
-{ // Soul Shepard: Challenge, and +1 Health for every Undead that dies
+{ // Soul Shepard: Challenge, +1 Health for each of the first 10 characters that die (any world, either side), then +1 Attack
   const card = DATA.cardsById.soul_shepard;
   ok('Soul Shepard has Challenge', card.skills.includes('Challenge'));
+  const goal = DATA.championAbilities.soul_shepard.goal;
+  ok('Soul Shepard: the ability goal and the card rule say the same number (10)', goal === 10 && Number(CARD_FX.soul_shepard.rule.grieve[1]) === goal);
   const p = game('zombie_starter', 'simple_starter'); const q = S.players[1];
   const undead = find(c => c.type === 'Character' && inGroup(c, 'Undead') && c.rarity !== 'Unknown');
   const living = find(c => c.type === 'Character' && !inGroup(c, 'Undead') && c.rarity !== 'Unknown' && c.group === 'Simple');
   const inHand = newCard(card); inHand.owner = 0; p.hand.push(inHand);
   const onField = put(p, 'soul_shepard'); const h0 = rawStats(onField).h;
   destroyCharacter(put(p, undead.id));
-  ok('Soul Shepard: it grows when your Undead dies', rawStats(onField).h === h0 + 1 && grieveBonus(inHand) === 1);
-  destroyCharacter(put(q, undead.id));
-  ok("Soul Shepard: it also grows when the opponent's Undead dies", rawStats(onField).h === h0 + 2);
+  ok('Soul Shepard: it grows when your character dies', rawStats(onField).h === h0 + 1 && grieveBonus(inHand).h === 1);
   destroyCharacter(put(q, living.id));
-  ok('Soul Shepard: a living character dying changes nothing', rawStats(onField).h === h0 + 2);
-  ok('Soul Shepard: it gains no Attack', rawStats(onField).a === card.attack);
-  ok('Soul Shepard: it is bigger in the hand too, before it is played', grieveBonus(inHand) === 2);
+  ok("Soul Shepard: a living character from another world counts too, on the opponent's side", rawStats(onField).h === h0 + 2);
+  ok('Soul Shepard: it gains no Attack yet', rawStats(onField).a === card.attack);
+  sendToGraveyard(q, Object.assign(newCard(living), { owner: 1 }));   // straight from the hand or deck, as a discard does
+  ok('Soul Shepard: a card that never reached the table does not count', (S.died.Any || 0) === 2);
+  ok('Soul Shepard: it is bigger in the hand too, before it is played', grieveBonus(inHand).h === 2);
+  for (let i = 2; i < goal; i++) destroyCharacter(put(q, living.id));
+  ok('Soul Shepard: at 10 it levels up, with +10 Health', p.champ.level === 2 && rawStats(onField).h === h0 + 10 && rawStats(onField).a === card.attack);
+  destroyCharacter(put(q, living.id)); destroyCharacter(put(p, undead.id));
+  ok('Soul Shepard: after 10, each one gives +1 Attack instead', rawStats(onField).a === card.attack + 2 && rawStats(onField).h === h0 + 10);
+  ok('Soul Shepard: the card in the hand shows it too', grieveBonus(inHand).a === 2 && grieveBonus(inHand).h === 10);
 }
 { // every champion is complete: its card, its rules entry, and its CHAMPIONS entry with campaign and guide
   for (const id of Object.keys(DATA.championAbilities)) {

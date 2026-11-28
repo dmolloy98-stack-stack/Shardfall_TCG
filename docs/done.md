@@ -5,6 +5,17 @@ stays short. Each entry keeps the owner's decisions, because they explain why th
 they are. (What changed for players is `data/whats_new.csv`; why the code is built as it is,
 `docs/how-it-was-built.md`.)
 
+## Champion level-ups — the owner's design (28 Nov), built
+
+- **The Man Ape:** Chest Thump levels up (named Troop Tribute by Claude; the owner may rename it)
+  once 4 of the player's Monkeys have died, in fights or sacrificed. Then the +1 Attack works on
+  both players' turns.
+- **Soul Shepard:** Keeper of the Fallen counts every character that dies (is sent from the table to
+  a graveyard), either side. The first 10 give +1 Health; then it levels up and each gives +1 Attack.
+- **Boss Level:** unchanged; its phases already work as a level-up.
+- Win rates (2,000 games): Zombie 57.5% (was 52.3), Digital 51.8, Monkey 50.8, Simple 45.5,
+  Fighter 44.5; first player 57.3%.
+
 ## Zombie balance — chosen by the owner (27 Nov), built
 
 With random events off, Zombie won only 38%. Of six changes tested, the owner picked both of the

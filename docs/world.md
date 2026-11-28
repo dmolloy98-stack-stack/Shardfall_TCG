@@ -93,11 +93,14 @@ later), but **a deck holds only one champion card** (one kind, at most 2 copies)
 - Champions speak during campaign matches: a line in the match log and a speech bubble by
   their health plate, at most one every 7 seconds and 8 a match. The lines, the one-line
   tag on the story card and the computer's play style are in `js/champions.js`.
-- A deck that holds a champion also gets that champion's **ability** from turn one, and it levels
-  up once in a match (The Simplistic, The Man Ape, IP Man, Boss Level), or grows (Soul Shepard).
-  The words are in `data/champion_abilities.csv`. Each fits its champion: the Man Ape remembers
-  fallen cousins, IP Man bows before a fight, Boss Level raises the level cap, Soul Shepard grows
-  with every soul that is lost. The Simplistic's is Humble Beginnings, chosen by the owner; the hidden-clue phrase "Start small,
+- A deck that holds a champion also gets that champion's **ability** from turn one. The owner
+  decided (27 Nov 2026) that leveling is about these passive abilities, never the cards. The
+  Simplistic, The Man Ape, IP Man and Soul Shepard level up once in a match; Boss Level moves
+  through its phases instead.
+  The words are in `data/champion_abilities.csv`. Each fits its champion: the Man Ape's troop pays for
+  its strength (Troop Tribute: it levels up after 4 of its own Monkeys die), IP Man bows before a
+  fight, Boss Level raises the level cap, Soul Shepard grows with every soul that is lost, from
+  any world (after 10, its gathered souls give Attack instead of Health). The Simplistic's is Humble Beginnings, chosen by the owner; the hidden-clue phrase "Start small,
   then level up" was kept out of it.
 - Their art is still to come.
 
@@ -157,6 +160,7 @@ later), but **a deck holds only one champion card** (one kind, at most 2 copies)
 | Campaign, Boss Level's scene | For a blink, a progress bar hangs at 99% | The "level up" it was attempting |
 | The Protected look, every match (24 Nov 2026, owner's pick) | The ring of light around a Protected card fills like a progress bar and always stops at 99%; in the shell on a Protected player's health gem, one shard never lights | The same unfinished "level up": Protection itself carries Boss Level's failed attempt |
 | Campaign, Soul Shepard's scene | "They say I started all this. I only tend what's left." | The Zombies are blamed, and are victims |
+| Soul Shepard's ability, Keeper of the Fallen (owner's design, 27 Nov 2026) | It grows with every character that dies, from any world, not only its own Undead; after 10, the gathered souls give it Attack instead of Health | It tends the fallen of every world: the Zombies are victims like everyone else |
 
 ## Card stories
 

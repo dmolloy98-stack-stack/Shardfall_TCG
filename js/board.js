@@ -68,11 +68,13 @@ function champInfo(p) {
   const ch = p.champ;
   if (!ch) return null;
   const info = DATA.championAbilities[ch.id];
-  const grows = !info.goal;   // no levels: Chest Thump, Boss Phases, Soul Shepard (see champStatus in js/rules-champions.js)
-  if (grows) { const st = champStatus(p); return { info, ch, grows, progress: st.text, lit: st.lit, label: info.name }; }
+  const grows = !info.goal;   // no levels: Boss Phases (see champStatus in js/rules-champions.js)
+  const st = champStatus(p);
+  if (grows) return { info, ch, grows, progress: st.text, lit: st.lit, label: info.name };
   const n = champCount(p);
-  const progress = ch.level >= 2 ? "Leveled up" : `${Math.min(n, info.goal)}/${info.goal} ${info.counts.toLowerCase()}`;
-  return { info, ch, n, grows, progress, lit: ch.level >= 2, label: `${info.name} · Lv ${ch.level}` };
+  // an ability with levels can also say what it is doing right now (Chest Thump: "4 vs 3 characters")
+  const progress = (ch.level >= 2 ? "Leveled up" : `${Math.min(n, info.goal)}/${info.goal} ${info.counts.toLowerCase()}`) + (st.text ? ` · ${st.text}` : "");
+  return { info, ch, n, grows, progress, lit: ch.level >= 2 || st.lit, label: `${info.name} · Lv ${ch.level}` };
 }
 function champLine(p) {
   const c = champInfo(p);

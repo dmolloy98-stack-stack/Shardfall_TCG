@@ -197,7 +197,8 @@ function cardHTML(c, opts = {}) {
       const hpLow = c.currentHealth < (c.baseHealth ?? c.health);
       statsHTML = `<div class="stats"><span class="a${st.a > c.attack ? " up" : ""}">⚔${st.a}</span><span class="h${hpLow ? " low" : ""}${st.h > c.currentHealth ? " up" : ""}">♥${Math.max(0, raw.h)}</span></div>`;
     } else {
-      statsHTML = `<div class="stats"><span class="a">⚔${c.attack}</span><span class="h${grieveBonus(c) ? " up" : ""}">♥${c.health + grieveBonus(c)}</span></div>`;
+      const g = grieveBonus(c);   // Soul Shepard grows even in the hand
+      statsHTML = `<div class="stats"><span class="a${g.a ? " up" : ""}">⚔${c.attack + g.a}</span><span class="h${g.h ? " up" : ""}">♥${c.health + g.h}</span></div>`;
     }
   }
   const cost = opts.costOverride ?? c.manaCost;

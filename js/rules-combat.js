@@ -44,8 +44,9 @@ function sendToGraveyard(p, c) {
   if (i >= 0) p.field.chars.splice(i, 1);
   p.grave.push(c);
   if (i >= 0) {
-    // deaths counted by fracture and by tribe: Soul Shepard grows with each Undead that dies
-    for (const k of new Set([...groupsOf(c), ...tribesOf(c)])) S.died[k] = (S.died[k] || 0) + 1;
+    // deaths counted by fracture and by tribe, and all together as "Any" (Soul Shepard grows with each)
+    for (const k of new Set([...groupsOf(c), ...tribesOf(c), "Any"])) S.died[k] = (S.died[k] || 0) + 1;
+    for (const pl of S.players) champHook(pl, "died", c, p.idx);   // The Man Ape and Soul Shepard count these
   }
   updateRally(p);
   emit("death", { uid: c.uid, group: c.group });

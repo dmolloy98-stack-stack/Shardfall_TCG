@@ -252,7 +252,7 @@ A deck that holds a champion (an Unknown card) gets that champion's ability from
 | Goal | The number the progress counts up to (the code uses this number, so change it here, not in the text only) |
 | Counts | What the progress counts, in a few words ("Fights won") |
 
-You can reword the text freely. What each ability does is written in `js/rules-champions.js` (one entry per champion), so a new ability needs code. Each champion's bonus for breaking the big shard is in the same entry. Soul Shepard's growth is a `rule: grieve Undead` on its own card in cards.csv: +1 Health each time a character of that tribe dies.
+You can reword the text freely. What each ability does is written in `js/rules-champions.js` (one entry per champion), so a new ability needs code. Each champion's bonus for breaking the big shard is in the same entry. Soul Shepard's growth is a `rule: grieve Any 10` on its own card in cards.csv: +1 Health for each of the first 10 characters that die (are sent to a graveyard from the table, either side), then +1 Attack for each one after. Its Goal here must be the same number (`tools/champions-test.js` checks).
 
 ### whats_new.csv: the "What's new" list
 

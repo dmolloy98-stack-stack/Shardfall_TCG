@@ -101,8 +101,8 @@ const CHAMPIONS = {
     },
     // The Almanac's Champions tab: notes, sample status lines and before-and-after pictures.
     guide: {
-      notes: ["It counts the characters on each side. With more than your opponent, every character you have gets +1 Attack, Monkey or not.", "It only works on your turn, when you attack. Your characters don't get it while defending.", "It switches on and off by itself as characters come and go, even in the middle of your attacks."],
-      status: ["4 vs 3 characters · +1 Attack", "2 vs 3 characters"],
+      notes: ["It counts the characters on each side. With more than your opponent, every character you have gets +1 Attack, Monkey or not.", "At first it only works on your turn, when you attack. Your characters don't get it while defending.", "It switches on and off by itself as characters come and go, even in the middle of your attacks.", "It levels up (Troop Tribute) when {goal} of your Monkeys have died, in fights or sacrificed to The Man Ape. After that the +1 Attack works on both players' turns."],
+      status: ["Lv 1 · 2/{goal} monkeys fallen · 4 vs 3", "Lv 2 · Leveled up · 4 vs 3 · +1 Attack"],
       pairs: [{ caption: "With more characters than your opponent, on your turn: +1 Attack.", pick: c => c.group === "Wild" && c.type === "Character" && c.manaCost === 2, change: { attack: 1 } }],
     },
   },
@@ -206,9 +206,12 @@ const CHAMPIONS = {
     },
     // The Almanac's Champions tab: notes, sample status lines and before-and-after pictures.
     guide: {
-      notes: ["This one has no levels. It makes the Soul Shepard card itself bigger.", "Every Undead character that dies counts: yours and your opponent's.", "It counts from the start of the match, wherever the card is: in your deck, in your hand or on the table. So the longer the match, the bigger Soul Shepard is when you play it.", "It gains Health only, never Attack."],
-      status: ["3 undead fallen"],
-      pairs: [{ caption: "After 3 Undead characters have died: Soul Shepard has +3 Health, even in your hand.", pick: c => c.id === "soul_shepard", change: { health: 3 } }],
+      notes: ["It makes the Soul Shepard card itself bigger.", "Every character that dies counts, from any world: yours and your opponent's. A character dies when it is sent from the table to a graveyard.", "It counts from the start of the match, wherever the card is: in your deck, in your hand or on the table. So the longer the match, the bigger Soul Shepard is when you play it.", "The first {goal} each give +1 Health. Then it levels up, and every one after gives +1 Attack instead."],
+      status: ["Lv 1 · 3/{goal} fallen", "Lv 2 · Leveled up"],
+      pairs: [
+        { caption: "After 3 characters have died: Soul Shepard has +3 Health, even in your hand.", pick: c => c.id === "soul_shepard", change: { health: 3 } },
+        { caption: "After 12 have died: +10 Health from the first {goal}, then +2 Attack.", pick: c => c.id === "soul_shepard", change: { attack: 2, health: 10 } },
+      ],
     },
   },
 };

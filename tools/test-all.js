@@ -10,7 +10,7 @@
 //   - those games still play exactly as before: their fingerprints match the numbers below.
 //     When a change is meant to alter how the game plays, update these numbers (and the one
 //     in CLAUDE.md) in the same change.
-const EXPECTED = { ai: 976096232, rand: 802828801 };
+const EXPECTED = { ai: -281258127, rand: -1738197499 };
 
 const { execFileSync } = require('child_process');
 const fs = require('fs');

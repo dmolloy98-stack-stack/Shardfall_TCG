@@ -50,7 +50,7 @@ const RULE_WORDS = {
   activate: ": an area whose play effect can be used once in each of its owner's Setup phases",
   strike: ": equipment whose play effect its holder can use once per Battle phase",
   teach: "<Skill>: equipment that gives its holder the skill for good",
-  grieve: "<Kind>: this card gets +1 Health each time a character of that tribe dies (either side), counted from the start of the match wherever the card is",
+  grieve: "<Kind> <n>: each time a character of that fracture or tribe (Any: any character) is sent from the field to a graveyard, either side, this card gets +1 Health for the first n, then +1 Attack for each one after; counted from the start of the match wherever the card is",
 };
 
 // ---------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 //
 // A deck that holds a champion (an Unknown card with a row in data/champion_abilities.csv) gets that
 // champion's ability from turn one, whether or not the champion card has been drawn. Every ability
-// is always on. Two level up once in a match (a Goal in the csv); Boss Level moves through phases.
+// is always on. Four level up once in a match (a Goal in the csv); Boss Level moves through phases.
 // Progress lives in p.champ = { id, level, n } (for Boss Level, level is the phase: 1, 2 or 3).
 //
 // ADDING A CHAMPION: add a row to data/champion_abilities.csv and an entry to CHAMPION_RULES below,
@@ -14,11 +14,12 @@
 //   attacking(p, a, ch) one of this player's characters attacks (before the blow)
 //   fightWon(p, ch)     this player's character survived a fight and knocked the other one out
 //   hurt(p, ch)         this player just took damage
+//   died(p, c, owner, ch) a character (c, of player index owner) was sent from the field to a graveyard
 //   turnEnd(p, ch)      this player's turn ends (after its end-of-turn abilities)
 //   extraDraws(p, ch)   how many extra cards to draw in the Draw phase
 //   shard(p, ch)        claiming the big shard: do the bonus and return what happened in words
 //   shardText           the shard bonus as the big shard's info window describes it
-//   status(p, ch)       for an ability with no levels: { text, lit } under the player's name
+//   status(p, ch)       { text, lit } under the player's name (for an ability with levels, shown after its progress)
 //   count(p, ch)        for an ability with levels: progress toward its goal (default ch.n)
 // The engine never names a champion; it asks champHook(p, "moment", ...) and champion helpers here.
 
@@ -48,21 +49,24 @@ function champProgress(p, add) {
 }
 
 // Extra Attack and Health a character gets from its owner's champion ability, and from its own
-// "rule: grieve <Kind>" (Soul Shepard: Undead, a fracture).
+// "rule: grieve <Kind> <n>" (Soul Shepard: Any 10).
 function championBonus(c) {
   let a = 0, h = 0;
   if (c.type !== "Character") return { a, h };
   const p = S.players[c.owner];
   const b = p && p.champ ? CHAMPION_RULES[p.champ.id]?.bonus?.(c, p, p.champ) : null;
   if (b) { a += b.a || 0; h += b.h || 0; }
-  h += grieveBonus(c);
-  return { a, h };
+  const g = grieveBonus(c);
+  return { a: a + g.a, h: h + g.h };
 }
-// "rule: grieve <Kind>": Health gained from every character of that fracture or tribe that has died. Counted
-// from the start of the match, so it is already there when the card is still in the hand.
+// "rule: grieve <Kind> <n>": for every character of that fracture or tribe ("Any": every character)
+// sent from the field to a graveyard, on either side, +1 Health for the first n, then +1 Attack for
+// each one after. Counted from the start of the match, so it is already there in the hand.
 function grieveBonus(c) {
   const r = S && cardRule(c, "grieve");
-  return r ? S.died[r[0]] || 0 : 0;
+  if (!r) return { a: 0, h: 0 };
+  const dead = S.died[r[0]] || 0, cap = Number(r[1]);
+  return { a: Math.max(0, dead - cap), h: Math.min(dead, cap) };
 }
 
 // What an ability with no levels shows under the player's name, and whether it is "lit" (working
@@ -71,7 +75,8 @@ const champStatus = p => champHook(p, "status") || { text: "", lit: false };
 // Progress toward an ability's goal, for one with levels.
 const champCount = p => champHook(p, "count") ?? p.champ.n;
 
-// Chest Thump (The Man Ape): on, while this player has more characters than the opponent.
+// Chest Thump (The Man Ape): on, while this player has more characters than the opponent. Once it
+// has leveled up it works on both players' turns, not only its own.
 function chestThump(p) {
   return !!champOf(p, "the_man_ape") && p.field.chars.length > S.players[1 - p.idx].field.chars.length;
 }
@@ -101,13 +106,14 @@ const CHAMPION_RULES = {
   },
 
   // Chest Thump: while you have more characters than your opponent, your characters get +1 Attack
-  // on your turn.
+  // on your turn. Levels up when 4 of your Monkeys have died: then on both players' turns.
   the_man_ape: {
-    bonus: (c, p) => (S.active === c.owner && chestThump(p) ? { a: 1 } : null),
+    bonus: (c, p, ch) => ((S.active === c.owner || ch.level >= 2) && chestThump(p) ? { a: 1 } : null),
+    died(p, c, owner) { if (owner === p.idx && hasTribe(c, "Monkey")) champProgress(p, 1); },
     attacking(p, a) { if (chestThump(p)) emit("text", { uid: a.uid, say: "chestThump", n: 1 }); },
     status(p) {
       const foe = S.players[1 - p.idx];
-      return { text: `${p.field.chars.length} vs ${foe.field.chars.length} characters${chestThump(p) ? " · +1 Attack" : ""}`, lit: chestThump(p) };
+      return { text: `${p.field.chars.length} vs ${foe.field.chars.length}${chestThump(p) ? " · +1 Attack" : ""}`, lit: chestThump(p) };
     },
     shard(p) {   // a free 2/2 Monkey: a Chimp (1/2) with +1 Attack
       const c = newCard(DATA.cardsById.chimp);
@@ -160,10 +166,12 @@ const CHAMPION_RULES = {
     shardText: "Boss Level jumps to its next phase.",
   },
 
-  // Soul Shepard: "rule: grieve Undead" on the card itself (+1 Health for every Undead that dies,
-  // grieveBonus above), and Challenge.
+  // Keeper of the Fallen (Soul Shepard): "rule: grieve Any 10" on the card itself (+1 Health for each
+  // of the first 10 characters that die, either side, then +1 Attack for each one after; grieveBonus
+  // above). The ability levels up at the same moment, so the player sees the switch.
   soul_shepard: {
-    status: () => ({ text: `${S.died.Undead || 0} undead fallen`, lit: false }),
+    died(p) { if ((S.died.Any || 0) >= DATA.championAbilities.soul_shepard.goal) champLevelUp(p); },
+    count: () => S.died.Any || 0,
     shard(p) {   // its last fallen character comes back to the hand
       const i = p.grave.map(c => c.type).lastIndexOf("Character");
       if (i < 0) return "";

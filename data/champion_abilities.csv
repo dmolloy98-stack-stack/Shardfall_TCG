@@ -1,6 +1,6 @@
 ChampionID,AbilityName,Now,LevelUpWhen,Then,Goal,Counts
 the_simplistic,Humble Beginnings,Nothing yet. This ability waits until it levels up.,Your maximum mana reaches 6.,All your Simple characters get +1 Attack and +1 Health.,6,Max mana
-the_man_ape,Chest Thump,"While you have more characters on your side than your opponent, your characters get +1 Attack on your turn.",,,,
-ip_man,The Bow,"At the start of your Battle phase, your strongest ready attacker gets +2 Attack this turn.","You win 5 fights: your character survives and the enemy character is knocked out.","Your two strongest ready attackers get the bonus.",5,Fights won
+the_man_ape,Chest Thump,"While you have more characters on your side than your opponent, your characters get +1 Attack on your turn.","4 of your Monkeys have died (sent to your graveyard), in fights or sacrificed.","Troop Tribute: the +1 Attack works on both players' turns, so your characters get it while defending too.",4,Monkeys fallen
+ip_man,The Bow,"At the start of your Battle phase, your strongest ready attacker gets +2 Attack this turn.",You win 5 fights: your character survives and the enemy character is knocked out.,Your two strongest ready attackers get the bonus.,5,Fights won
 boss_level,Boss Phases,"At 2/3 of your starting health or less, PHASE 2: you draw 1 extra card each turn. At 1/3 or less, FINAL PHASE: your characters also get +1 Attack and +1 Health. A phase, once reached, stays.",,,,
-soul_shepard,Keeper of the Fallen,"This card gets +1 Health each time an Undead character dies, on either side, counted from the start of the match wherever the card is.",,,,Undead fallen
+soul_shepard,Keeper of the Fallen,"This card gets +1 Health each time any character dies (is sent to a graveyard from the table), on either side, counted from the start of the match wherever the card is.","10 characters have died, on either side.",Each character that dies gives this card +1 Attack instead of +1 Health.,10,Fallen

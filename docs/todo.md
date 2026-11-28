@@ -108,12 +108,14 @@ active all match long (`data/champion_abilities.csv`). The ability levels up; **
 card itself never levels up or changes** (the Legends of Runeterra style card level-up was turned
 down). A deck with **no champion gets nothing extra**; skipping the champion is the player's choice.
 
-**Where each ability stands today.**
-- Level up once already: The Simplistic (Humble Beginnings, at 6 max mana) and IP Man (The Bow,
-  after 5 fights won).
-- No level-up yet: The Man Ape (Chest Thump), Boss Level (Boss Phases: it has phases instead) and
-  Soul Shepard (Keeper of the Fallen: it grows instead). Whether these get a level-up, and what it
-  is, is the owner's to design. Claude offers options when asked and waits.
+**Where each ability stands today (28 Nov).** All settled by the owner:
+- Level up once: The Simplistic (Humble Beginnings, at 6 max mana), IP Man (The Bow, after 5
+  fights won), The Man Ape (Chest Thump levels up into Troop Tribute after 4 of its Monkeys die:
+  +1 Attack on both players' turns) and Soul Shepard (Keeper of the Fallen: every character that
+  dies counts; after 10, each gives +1 Attack instead of +1 Health).
+- Boss Level keeps Boss Phases as they are: the owner counts the phases as its level-up.
+- Open: the name "Troop Tribute" was Claude's pick (the owner asked for a name other than "The
+  troop remembers"); the owner can rename it.
 
 **TBD (to be decided later).**
 - **Cards that reward a no-champion deck.** The owner will design these later. They are meant
