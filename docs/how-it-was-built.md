@@ -365,4 +365,4 @@ button stops working (`backup` skill) (27 Nov 2026).
 
 ---
 
-Last checked: 2026-11-28, pull request #47 (champion level-ups for The Man Ape and Soul Shepard: a new "died" moment for champion rules; a champion line can show a level and a live status together).
+Last checked: 2026-11-28, pull request #48 (champion level-ups for The Man Ape and Soul Shepard: a new "died" moment for champion rules; a champion line can show a level and a live status together).

@@ -4,7 +4,7 @@ Written by `node tools/make-status.js` from the project's own files: don't edit 
 Read this first in a new session; then CLAUDE.md, and the files it points to as the task needs.
 
 ## Version
-Update 47: **Update 47** (2026-11-28): The Man Ape's Chest Thump levels up (Troop Tribute) once 4 of your Monkeys have died: the +1 Attack then works on both players' turns. Soul Shepard now grows from every character that dies, from any world. After 10, each one gives it +1 Attack instead of +1 Health.
+Update 48: **Update 48** (2026-11-28): The Man Ape's Chest Thump levels up (Troop Tribute) once 4 of your Monkeys have died: the +1 Attack then works on both players' turns. Soul Shepard now grows from every character that dies, from any world. After 10, each one gives it +1 Attack instead of +1 Health.
 
 **Update 45** (2026-11-27): The Zombie deck is stronger: Sneaky Skinbag costs 3 instead of 4, and Hungry Corpse is 2/2 instead of 2/1.
 

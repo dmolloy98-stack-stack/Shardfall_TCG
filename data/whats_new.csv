@@ -1,7 +1,7 @@
 # What's new: one row per update, newest first. Update is the pull request number; the top row is
 # the version the menu shows. Changes are what a player would notice, in plain words, separated by |.
 Update,Date,Changes
-47,2026-11-28,"The Man Ape's Chest Thump levels up (Troop Tribute) once 4 of your Monkeys have died: the +1 Attack then works on both players' turns.|Soul Shepard now grows from every character that dies, from any world. After 10, each one gives it +1 Attack instead of +1 Health."
+48,2026-11-28,"The Man Ape's Chest Thump levels up (Troop Tribute) once 4 of your Monkeys have died: the +1 Attack then works on both players' turns.|Soul Shepard now grows from every character that dies, from any world. After 10, each one gives it +1 Attack instead of +1 Health."
 45,2026-11-27,"The Zombie deck is stronger: Sneaky Skinbag costs 3 instead of 4, and Hungry Corpse is 2/2 instead of 2/1."
 43,2026-11-27,"Random events (mini shard falls) are switched off for now; they will come back in a later shake-up mode, lasting a turn for each player. The big shard fall stays.|Deck codes: share a deck you built as one line of text from the deck builder, and paste a friend's code to get their deck."
 34,2026-11-24,"Protected has a calmer new look: a band of light fills the ring around a Protected card, and the shards around a Protected player's health gem light up one by one."
